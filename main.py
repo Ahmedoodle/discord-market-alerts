@@ -28,11 +28,12 @@ def send_discord_alert(ticker, price, change_pct):
         print(f"Error sending Discord webhook for {ticker}: {e}")
 
 def check_market():
+    # Watchlist with NVDA removed
     watch_list = [
         "BTC-USD", "ETH-USD", "GC=F", "SI=F", "CL=F", "BZ=F", "NG=F",
         "XRP-USD", "SOL-USD", "LINK-USD", "NQ=F", "ES=F", "YM=F", "RTY=F",
         "USO", "BNO", "GLD", "SLV", "IBIT", "ETHA", "MSTR", "IREN",
-        "BLSH", "NVDA", "AMD", "MU", "SNDK", "INTC", "AVGO", "ASML",
+        "BLSH", "AMD", "MU", "SNDK", "INTC", "AVGO", "ASML",
         "CBRS", "SKHY", "IBM", "TSLA", "SPCX", "RKLB", "PLTR", "META",
         "NBIS", "ORCL", "RBLX"
     ]
@@ -48,7 +49,6 @@ def check_market():
 
     for ticker_symbol in watch_list:
         try:
-            # Fetch data individually with browser session headers
             ticker = yf.Ticker(ticker_symbol, session=session)
             hist = ticker.history(period="5d")
             
@@ -72,7 +72,7 @@ def check_market():
         except Exception as e:
             print(f"❌ {ticker_symbol:10s} | ERROR: {e}")
         
-        # Short pause to prevent rate limiting on cloud runners
+        # Short pause to prevent rate limiting
         time.sleep(0.3)
 
     print(f"\n=======================================================")
