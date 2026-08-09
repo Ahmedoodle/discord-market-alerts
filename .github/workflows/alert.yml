@@ -5,8 +5,8 @@ on:
     branches:
       - main
   schedule:
-    # 25-minute interval split into valid GitHub cron lines (00, 25, 50 past the hour)
-    - cron: '0,25,50 * * *'
+    # Runs at :00, :25, and :50 past every hour (every 25 mins)
+    - cron: '0,25,50 * * * *'
   workflow_dispatch:
 
 jobs:
