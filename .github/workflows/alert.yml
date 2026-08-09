@@ -1,10 +1,12 @@
 name: Run Market Alert Bot
 
 on:
+  push:
+    branches:
+      - main  # Automatically triggers a fresh run whenever you save/commit to main
   schedule:
-    # Runs every 15 minutes, 24/7, 365 days a year
-    - cron: '*/15 * * * *'
-  workflow_dispatch: # Allows manual trigger testing anytime
+    - cron: '*/15 * * * *'  # Runs automatically every 15 minutes 24/7
+  workflow_dispatch:        # Allows manual triggers anytime
 
 jobs:
   check-market:
