@@ -5,7 +5,8 @@ on:
     branches:
       - main
   schedule:
-    - cron: '*/15 * * * *'
+    # Runs every 25 minutes (25, 50, 15, 40 past the hour)
+    - cron: '15,40,5 * * *'
   workflow_dispatch:
 
 jobs:
