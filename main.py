@@ -22,7 +22,10 @@ def send_discord_alert(ticker, price, change_pct):
         }]
     }
     
-    requests.post(DISCORD_WEBHOOK_URL, json=payload)
+    try:
+        requests.post(DISCORD_WEBHOOK_URL, json=payload)
+    except Exception as e:
+        print(f"Error sending Discord webhook for {ticker}: {e}")
 
 def check_market():
     watch_list = [
@@ -34,35 +37,42 @@ def check_market():
         "NBIS", "ORCL", "RBLX"
     ]
     
-    print(f"Fetching bulk market data for {len(watch_list)} assets...")
+    print(f"Fetching market data for {len(watch_list)} assets...")
     
-    try:
-        # Bulk fetch all tickers at once to bypass rate limits
-        data = yf.download(watch_list, period="2d", group_by="ticker", progress=False)
-    except Exception as e:
-        print(f"Error fetching bulk data: {e}")
-        return
-
-    for ticker_symbol in watch_list:
+    # 5d period ensures enough historical trading days for both stocks and 24/7 crypto
+    data = yf.download(watch_list, period="5d", progress=False)
+    
+    alerts_sent = 0
+    print("\n=================== MARKET SUMMARY ===================")
+    
+    for ticker in watch_list:
         try:
-            # Extract ticker dataframe from bulk result
-            if ticker_symbol in data.columns.levels[0]:
-                df = data[ticker_symbol].dropna()
+            # Safely extract 'Close' price series for multi-index columns
+            series = None
+            if ('Close', ticker) in data.columns:
+                series = data[('Close', ticker)].dropna()
+            elif 'Close' in data and ticker in data['Close'].columns:
+                series = data['Close'][ticker].dropna()
+
+            if series is not None and len(series) >= 2:
+                prev_close = series.iloc[-2]
+                current_price = series.iloc[-1]
+                change_pct = ((current_price - prev_close) / prev_close) * 100
                 
-                if len(df) >= 2:
-                    prev_close = df['Close'].iloc[-2]
-                    current_price = df['Close'].iloc[-1]
-                    change_pct = ((current_price - prev_close) / prev_close) * 100
-                    
-                    print(f"{ticker_symbol}: ${current_price:.2f} ({change_pct:+.2f}%)")
-                    
-                    # Triggers alert if asset moves by 2% or more (up or down)
-                    if abs(change_pct) >= 2.0:
-                        send_discord_alert(ticker_symbol, current_price, change_pct)
-                else:
-                    print(f"{ticker_symbol}: Not enough historical data.")
+                # Print exact calculations to GitHub Logs
+                print(f"{ticker:10s} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
+                
+                # Triggers alert if asset moves by 2.0% or more (up or down)
+                if abs(change_pct) >= 2.0:
+                    send_discord_alert(ticker, current_price, change_pct)
+                    alerts_sent += 1
+            else:
+                print(f"{ticker:10s} | Insufficient data")
         except Exception as e:
-            print(f"Error processing {ticker_symbol}: {e}")
+            print(f"{ticker:10s} | Error processing: {e}")
+            
+    print(f"=======================================================")
+    print(f"Check Complete. Total Discord Alerts Sent: {alerts_sent}\n")
 
 if __name__ == "__main__":
     check_market()
