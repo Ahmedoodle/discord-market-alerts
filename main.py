@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 import yfinance as yf
 
@@ -21,7 +22,6 @@ def send_discord_alert(ticker, price, change_pct):
             "footer": {"text": "24/7 Cloud Automated Bot"}
         }]
     }
-    
     try:
         requests.post(DISCORD_WEBHOOK_URL, json=payload)
     except Exception as e:
@@ -37,42 +37,46 @@ def check_market():
         "NBIS", "ORCL", "RBLX"
     ]
     
-    print(f"Fetching market data for {len(watch_list)} assets...")
-    
-    # 5d period ensures enough historical trading days for both stocks and 24/7 crypto
-    data = yf.download(watch_list, period="5d", progress=False)
-    
+    print(f"Starting market check for {len(watch_list)} assets...\n")
     alerts_sent = 0
-    print("\n=================== MARKET SUMMARY ===================")
     
-    for ticker in watch_list:
-        try:
-            # Safely extract 'Close' price series for multi-index columns
-            series = None
-            if ('Close', ticker) in data.columns:
-                series = data[('Close', ticker)].dropna()
-            elif 'Close' in data and ticker in data['Close'].columns:
-                series = data['Close'][ticker].dropna()
+    # Custom User-Agent prevents Yahoo Finance from blocking GitHub cloud IPs
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    })
 
-            if series is not None and len(series) >= 2:
-                prev_close = series.iloc[-2]
-                current_price = series.iloc[-1]
+    for ticker_symbol in watch_list:
+        try:
+            # Fetch data individually with browser session headers
+            ticker = yf.Ticker(ticker_symbol, session=session)
+            hist = ticker.history(period="5d")
+            
+            if 'Close' in hist.columns:
+                hist = hist.dropna(subset=['Close'])
+
+            if len(hist) >= 2:
+                prev_close = hist['Close'].iloc[-2]
+                current_price = hist['Close'].iloc[-1]
                 change_pct = ((current_price - prev_close) / prev_close) * 100
                 
-                # Print exact calculations to GitHub Logs
-                print(f"{ticker:10s} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
+                print(f"✅ {ticker_symbol:10s} | Price: ${current_price:10.2f} | 1D Change: {change_pct:+6.2f}%")
                 
-                # Triggers alert if asset moves by 2.0% or more (up or down)
+                # Triggers alert if asset moves by 2.0% or more
                 if abs(change_pct) >= 2.0:
-                    send_discord_alert(ticker, current_price, change_pct)
+                    send_discord_alert(ticker_symbol, current_price, change_pct)
                     alerts_sent += 1
             else:
-                print(f"{ticker:10s} | Insufficient data")
+                print(f"⚠️ {ticker_symbol:10s} | SKIPPED: Insufficient rows returned by Yahoo (rows: {len(hist)})")
+        
         except Exception as e:
-            print(f"{ticker:10s} | Error processing: {e}")
-            
-    print(f"=======================================================")
-    print(f"Check Complete. Total Discord Alerts Sent: {alerts_sent}\n")
+            print(f"❌ {ticker_symbol:10s} | ERROR: {e}")
+        
+        # Short pause to prevent rate limiting on cloud runners
+        time.sleep(0.3)
+
+    print(f"\n=======================================================")
+    print(f"Check Complete. Total Discord Alerts Sent: {alerts_sent}")
 
 if __name__ == "__main__":
     check_market()
