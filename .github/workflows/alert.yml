@@ -3,10 +3,10 @@ name: Run Market Alert Bot
 on:
   push:
     branches:
-      - main  # Automatically triggers a fresh run whenever you save/commit to main
+      - main
   schedule:
-    - cron: '*/15 * * * *'  # Runs automatically every 15 minutes 24/7
-  workflow_dispatch:        # Allows manual triggers anytime
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 jobs:
   check-market:
@@ -28,3 +28,11 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python main.py
+
+      - name: Commit State Memory
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add alerts_state.json || true
+          git commit -m "Update alert price state [skip ci]" || true
+          git push || true
