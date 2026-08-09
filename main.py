@@ -25,7 +25,6 @@ def send_discord_alert(ticker, price, change_pct):
     requests.post(DISCORD_WEBHOOK_URL, json=payload)
 
 def check_market():
-    # Full Watchlist: Crypto, Commodities Futures, ETFs & Equities
     watch_list = [
         "BTC-USD", "ETH-USD", "GC=F", "SI=F", "CL=F", "BZ=F", "NG=F",
         "XRP-USD", "SOL-USD", "LINK-USD", "NQ=F", "ES=F", "YM=F", "RTY=F",
@@ -35,23 +34,35 @@ def check_market():
         "NBIS", "ORCL", "RBLX"
     ]
     
+    print(f"Fetching bulk market data for {len(watch_list)} assets...")
+    
+    try:
+        # Bulk fetch all tickers at once to bypass rate limits
+        data = yf.download(watch_list, period="2d", group_by="ticker", progress=False)
+    except Exception as e:
+        print(f"Error fetching bulk data: {e}")
+        return
+
     for ticker_symbol in watch_list:
         try:
-            stock = yf.Ticker(ticker_symbol)
-            hist = stock.history(period="2d")
-            
-            if len(hist) >= 2:
-                prev_close = hist['Close'].iloc[-2]
-                current_price = hist['Close'].iloc[-1]
-                change_pct = ((current_price - prev_close) / prev_close) * 100
+            # Extract ticker dataframe from bulk result
+            if ticker_symbol in data.columns.levels[0]:
+                df = data[ticker_symbol].dropna()
                 
-                print(f"{ticker_symbol}: ${current_price:.2f} ({change_pct:+.2f}%)")
-                
-                # Condition: Triggers alert if asset moves by 2% or more (up or down)
-                if abs(change_pct) >= 2.0:
-                    send_discord_alert(ticker_symbol, current_price, change_pct)
+                if len(df) >= 2:
+                    prev_close = df['Close'].iloc[-2]
+                    current_price = df['Close'].iloc[-1]
+                    change_pct = ((current_price - prev_close) / prev_close) * 100
+                    
+                    print(f"{ticker_symbol}: ${current_price:.2f} ({change_pct:+.2f}%)")
+                    
+                    # Triggers alert if asset moves by 2% or more (up or down)
+                    if abs(change_pct) >= 2.0:
+                        send_discord_alert(ticker_symbol, current_price, change_pct)
+                else:
+                    print(f"{ticker_symbol}: Not enough historical data.")
         except Exception as e:
-            print(f"Error fetching data for {ticker_symbol}: {e}")
+            print(f"Error processing {ticker_symbol}: {e}")
 
 if __name__ == "__main__":
     check_market()
