@@ -9,6 +9,7 @@ import yfinance as yf
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
+UTC_TZ = ZoneInfo("UTC")
 
 # Crypto runs 24/7/365
 CRYPTO_WATCHLIST = [
@@ -27,21 +28,12 @@ STOCK_ETF_WATCHLIST = [
 def is_us_stock_market_open():
     """Returns True if current time is Mon-Fri between 9:30 AM and 4:00 PM Eastern Time."""
     now_ny = datetime.now(NY_TZ)
-    
-    # 0 = Monday, 4 = Friday, 5 = Saturday, 6 = Sunday
     if now_ny.weekday() > 4:
         return False
-    
-    market_open = dtime(9, 30)
-    market_close = dtime(16, 0)
-    return market_open <= now_ny.time() <= market_close
+    return dtime(9, 30) <= now_ny.time() <= dtime(16, 0)
 
-def get_session_id():
-    """
-    Returns a unique identifier for the trading day.
-    A new session starts every day at 9:30 AM EST.
-    Before 9:30 AM, it belongs to the previous day's session.
-    """
+def get_stock_session_id():
+    """Stocks reset daily at 9:30 AM EST (US Market Open)."""
     now_ny = datetime.now(NY_TZ)
     if now_ny.time() < dtime(9, 30):
         session_date = now_ny.date() - timedelta(days=1)
@@ -49,28 +41,50 @@ def get_session_id():
         session_date = now_ny.date()
     return session_date.strftime("%Y-%m-%d")
 
+def get_crypto_session_id():
+    """Crypto resets daily at 00:00 UTC (Global Crypto Daily Candle Open)."""
+    return datetime.now(UTC_TZ).strftime("%Y-%m-%d")
+
 def load_alert_state():
-    """Loads saved price benchmarks. Resets memory at 9:30 AM EST daily."""
-    current_session = get_session_id()
+    """Loads state with separate reset sessions for stocks and crypto."""
+    current_stock_session = get_stock_session_id()
+    current_crypto_session = get_crypto_session_id()
+
+    state = {
+        "stock_session": current_stock_session,
+        "crypto_session": current_crypto_session,
+        "stock_tickers": {},
+        "crypto_tickers": {}
+    }
+
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
-                data = json.load(f)
-                if data.get("session") == current_session:
-                    return data.get("tickers", {})
+                saved = json.load(f)
+                
+                # Restore stock state if same session
+                if saved.get("stock_session") == current_stock_session:
+                    state["stock_tickers"] = saved.get("stock_tickers", {})
                 else:
-                    print(f"🔔 New 9:30 AM Session ({current_session}). Resetting alert memory.")
+                    print(f"🔔 New Stock Session ({current_stock_session}). Resetting stock memory.")
+
+                # Restore crypto state if same session
+                if saved.get("crypto_session") == current_crypto_session:
+                    state["crypto_tickers"] = saved.get("crypto_tickers", {})
+                else:
+                    print(f"🪙 New Crypto Session ({current_crypto_session}). Resetting crypto memory.")
         except Exception as e:
             print(f"Error loading state file: {e}")
-    return {}
 
-def save_alert_state(ticker_states):
-    """Saves updated price benchmarks with session ID."""
-    current_session = get_session_id()
+    return state
+
+def save_alert_state(state):
+    """Saves updated benchmarks for both asset classes."""
     try:
         with open(STATE_FILE, "w") as f:
-            json.dump({"session": current_session, "tickers": ticker_states}, f, indent=2)
-        print(f"State saved successfully ({len(ticker_states)} tickers tracked).")
+            json.dump(state, f, indent=2)
+        total_tracked = len(state["stock_tickers"]) + len(state["crypto_tickers"])
+        print(f"State saved successfully ({total_tracked} tickers tracked).")
     except Exception as e:
         print(f"Error saving state file: {e}")
 
@@ -113,12 +127,7 @@ def check_market():
     print(f"Current Time (NY): {now_ny}")
     print(f"US Stock Market Status: {'🟢 OPEN' if stock_market_active else '🔴 CLOSED (Crypto Only)'}\n")
 
-    # Always check crypto; check stocks/ETFs only when the market is open
-    active_watchlist = list(CRYPTO_WATCHLIST)
-    if stock_market_active:
-        active_watchlist.extend(STOCK_ETF_WATCHLIST)
-
-    ticker_states = load_alert_state()
+    state = load_alert_state()
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -126,7 +135,16 @@ def check_market():
 
     alerts_to_send = []
 
-    for ticker_symbol in active_watchlist:
+    # Build active watchlist
+    active_watchlist = []
+    for c in CRYPTO_WATCHLIST:
+        active_watchlist.append((c, "crypto"))
+    
+    if stock_market_active:
+        for s in STOCK_ETF_WATCHLIST:
+            active_watchlist.append((s, "stock"))
+
+    for ticker_symbol, asset_type in active_watchlist:
         try:
             ticker = yf.Ticker(ticker_symbol, session=session)
             hist = ticker.history(period="5d")
@@ -139,9 +157,11 @@ def check_market():
                 current_price = hist['Close'].iloc[-1]
                 daily_change_pct = ((current_price - prev_close) / prev_close) * 100
                 
-                # CASE 1: Already alerted during this session -> Check step change
-                if ticker_symbol in ticker_states:
-                    last_alert_price = ticker_states[ticker_symbol]
+                tracked_dict = state["crypto_tickers"] if asset_type == "crypto" else state["stock_tickers"]
+
+                # CASE 1: Already alerted in current session -> Check step change
+                if ticker_symbol in tracked_dict:
+                    last_alert_price = tracked_dict[ticker_symbol]
                     step_change_pct = ((current_price - last_alert_price) / last_alert_price) * 100
                     
                     if abs(step_change_pct) >= 2.0:
@@ -152,7 +172,7 @@ def check_market():
                             "daily_change": daily_change_pct,
                             "step_change": step_change_pct
                         })
-                        ticker_states[ticker_symbol] = current_price
+                        tracked_dict[ticker_symbol] = current_price
                     else:
                         print(f"⏭️ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below 2%)")
 
@@ -166,7 +186,7 @@ def check_market():
                             "daily_change": daily_change_pct,
                             "step_change": None
                         })
-                        ticker_states[ticker_symbol] = current_price
+                        tracked_dict[ticker_symbol] = current_price
                     else:
                         print(f"✅ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
             else:
@@ -177,7 +197,7 @@ def check_market():
         
         time.sleep(0.2)
 
-    # Sort alerts: Highest gainers (+8.88%) to biggest losers (-11.24%)
+    # Sort alerts: Highest gainers (+%) to biggest losers (-%)
     alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
 
     # Send alerts to Discord in sorted order
@@ -190,10 +210,10 @@ def check_market():
                 change_pct=alert["daily_change"],
                 step_change=alert["step_change"]
             )
-            time.sleep(0.5)  # Prevents hitting Discord webhook rate limits
+            time.sleep(0.5)
 
     # Persist the state
-    save_alert_state(ticker_states)
+    save_alert_state(state)
     print(f"\n=======================================================")
     print(f"Check Complete. Active Tickers Checked: {len(active_watchlist)} | Alerts Sent: {len(alerts_to_send)}")
 
