@@ -5,9 +5,13 @@ on:
     branches:
       - main
   schedule:
-    # Runs at :00, :25, and :50 past every hour (every 25 mins)
+    # Runs at :00, :25, and :50 past every hour
     - cron: '0,25,50 * * * *'
   workflow_dispatch:
+
+# REQUIRED: Allows the bot to commit and push the state file back to your repo
+permissions:
+  contents: write
 
 jobs:
   check-market:
@@ -15,6 +19,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -30,10 +36,16 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python main.py
 
-      - name: Commit State Memory
+      - name: Commit and Push State Memory
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add alerts_state.json || true
-          git commit -m "Update alert price state [skip ci]" || true
-          git push || true
+          git add alerts_state.json
+          # Only commit and push if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "Update alert price state [skip ci]"
+            git pull --rebase origin main
+            git push origin main
+          else
+            echo "No state changes to commit."
+          fi
