@@ -1,15 +1,8 @@
 name: Run Market Alert Bot
 
 on:
-  push:
-    branches:
-      - main
-  schedule:
-    # Runs at :00, :25, and :50 past every hour
-    - cron: '0,25,50 * * * *'
-  workflow_dispatch:
+  workflow_dispatch: # Allows external triggers via API
 
-# REQUIRED: Allows the bot to commit and push the state file back to your repo
 permissions:
   contents: write
 
@@ -41,7 +34,6 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add alerts_state.json
-          # Only commit and push if there are changes
           if ! git diff --staged --quiet; then
             git commit -m "Update alert price state [skip ci]"
             git pull --rebase origin main
