@@ -124,7 +124,7 @@ def check_market():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     })
 
-    new_alerts_count = 0
+    alerts_to_send = []
 
     for ticker_symbol in active_watchlist:
         try:
@@ -146,9 +146,13 @@ def check_market():
                     
                     if abs(step_change_pct) >= 2.0:
                         print(f"🔥 {ticker_symbol:10s} | STEP TRIGGER | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}%")
-                        send_discord_alert(ticker_symbol, current_price, daily_change_pct, step_change=step_change_pct)
+                        alerts_to_send.append({
+                            "ticker": ticker_symbol,
+                            "price": current_price,
+                            "daily_change": daily_change_pct,
+                            "step_change": step_change_pct
+                        })
                         ticker_states[ticker_symbol] = current_price
-                        new_alerts_count += 1
                     else:
                         print(f"⏭️ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below 2%)")
 
@@ -156,9 +160,13 @@ def check_market():
                 else:
                     if abs(daily_change_pct) >= 2.0:
                         print(f"🚨 {ticker_symbol:10s} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
-                        send_discord_alert(ticker_symbol, current_price, daily_change_pct)
+                        alerts_to_send.append({
+                            "ticker": ticker_symbol,
+                            "price": current_price,
+                            "daily_change": daily_change_pct,
+                            "step_change": None
+                        })
                         ticker_states[ticker_symbol] = current_price
-                        new_alerts_count += 1
                     else:
                         print(f"✅ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
             else:
@@ -167,12 +175,27 @@ def check_market():
         except Exception as e:
             print(f"❌ {ticker_symbol:10s} | ERROR: {e}")
         
-        time.sleep(0.3)
+        time.sleep(0.2)
+
+    # Sort alerts: Highest gainers (+8.88%) to biggest losers (-11.24%)
+    alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
+
+    # Send alerts to Discord in sorted order
+    if alerts_to_send:
+        print(f"\nSending {len(alerts_to_send)} alerts sorted from highest to lowest...")
+        for alert in alerts_to_send:
+            send_discord_alert(
+                ticker=alert["ticker"],
+                current_price=alert["price"],
+                change_pct=alert["daily_change"],
+                step_change=alert["step_change"]
+            )
+            time.sleep(0.5)  # Prevents hitting Discord webhook rate limits
 
     # Persist the state
     save_alert_state(ticker_states)
     print(f"\n=======================================================")
-    print(f"Check Complete. Active Tickers Checked: {len(active_watchlist)} | Alerts Sent: {new_alerts_count}")
+    print(f"Check Complete. Active Tickers Checked: {len(active_watchlist)} | Alerts Sent: {len(alerts_to_send)}")
 
 if __name__ == "__main__":
     check_market()
