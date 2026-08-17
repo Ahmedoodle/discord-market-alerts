@@ -9,7 +9,10 @@ from zoneinfo import ZoneInfo
 import requests
 import yfinance as yf
 
-DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+# Environment Variables (Securely pulled from GitHub Secrets)
+DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
+
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
@@ -53,7 +56,7 @@ def get_crypto_session_id():
     return datetime.now(UTC_TZ).strftime("%Y-%m-%d")
 
 def load_alert_state():
-    """Loads state for price benchmarks and all remembered news URLs."""
+    """Loads state for price benchmarks, history trails, and remembered news URLs."""
     current_stock_session = get_stock_session_id()
     current_crypto_session = get_crypto_session_id()
 
@@ -72,13 +75,23 @@ def load_alert_state():
                 
                 # Restore stock state if same session
                 if saved.get("stock_session") == current_stock_session:
-                    state["stock_tickers"] = saved.get("stock_tickers", {})
+                    raw_stocks = saved.get("stock_tickers", {})
+                    for k, v in raw_stocks.items():
+                        if isinstance(v, (int, float)):
+                            state["stock_tickers"][k] = {"last_price": v, "history": []}
+                        else:
+                            state["stock_tickers"][k] = v
                 else:
                     print(f"🔔 New Stock Session ({current_stock_session}). Resetting stock memory.")
 
                 # Restore crypto state if same session
                 if saved.get("crypto_session") == current_crypto_session:
-                    state["crypto_tickers"] = saved.get("crypto_tickers", {})
+                    raw_crypto = saved.get("crypto_tickers", {})
+                    for k, v in raw_crypto.items():
+                        if isinstance(v, (int, float)):
+                            state["crypto_tickers"][k] = {"last_price": v, "history": []}
+                        else:
+                            state["crypto_tickers"][k] = v
                 else:
                     print(f"🪙 New Crypto Session ({current_crypto_session}). Resetting crypto memory.")
                 
@@ -99,45 +112,56 @@ def save_alert_state(state):
     except Exception as e:
         print(f"Error saving state file: {e}")
 
-def send_discord_price_alert(ticker, current_price, change_pct, step_change=None):
-    """Sends a formatted price movement embed to Discord."""
-    if not DISCORD_WEBHOOK_URL:
-        print(f"Skipping price alert for {ticker}: DISCORD_WEBHOOK_URL not configured.")
+def send_discord_price_alert(ticker, current_price, change_pct, step_change=None, history_trail=None):
+    """Sends a formatted price movement embed with trigger timeline to the PRICE channel."""
+    if not DISCORD_PRICE_WEBHOOK_URL:
+        print(f"Skipping price alert for {ticker}: DISCORD_PRICE_WEBHOOK_URL not configured.")
         return
 
     title_text = f"🚨 Market Alert: {ticker}"
     desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
     if step_change is not None:
-        desc_text = f"**{ticker}** moved another **{step_change:+.2f}%** (Total 1D: **{change_pct:+.2f}%**)!"
+        desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total 1D: **{change_pct:+.2f}%**)"
+
+    fields = [
+        {"name": "Current Price", "value": f"${current_price:.2f}", "inline": True},
+        {"name": "1D Total Change", "value": f"{change_pct:+.2f}%", "inline": True}
+    ]
+
+    # Add Trigger History Timeline if previous alerts occurred today
+    if history_trail and len(history_trail) > 0:
+        trail_str = " ➔ ".join(history_trail)
+        fields.append({
+            "name": "🕒 Today's Trigger Path",
+            "value": f"`{trail_str}` ➔ **{change_pct:+.2f}%**",
+            "inline": False
+        })
 
     payload = {
-        "username": "Market Watcher",
+        "username": "Price Watcher",
         "avatar_url": "https://i.imgur.com/4M34hi2.png",
         "embeds": [{
             "title": title_text,
             "description": desc_text,
             "color": 15158332 if change_pct < 0 else 3066993,
-            "fields": [
-                {"name": "Current Price", "value": f"${current_price:.2f}", "inline": True},
-                {"name": "1D Total Change", "value": f"{change_pct:+.2f}%", "inline": True}
-            ],
-            "footer": {"text": "24/7 Cloud Bot • Price Alert Triggered"}
+            "fields": fields,
+            "footer": {"text": "24/7 Cloud Bot • Price Action Channel"}
         }]
     }
     try:
-        res = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
         res.raise_for_status()
     except Exception as e:
         print(f"Error sending price alert for {ticker}: {e}")
 
 def send_discord_news_alert(article):
-    """Sends a formatted breaking news embed to Discord."""
-    if not DISCORD_WEBHOOK_URL:
+    """Sends a formatted breaking news embed to the NEWS channel."""
+    if not DISCORD_NEWS_WEBHOOK_URL:
         print(f"Skipping news alert for {article['ticker']}: DISCORD_WEBHOOK_URL not configured.")
         return
 
     payload = {
-        "username": "Market Watcher",
+        "username": "News Watcher",
         "avatar_url": "https://i.imgur.com/4M34hi2.png",
         "embeds": [{
             "title": f"📰 Breaking News: {article['ticker']}",
@@ -147,11 +171,11 @@ def send_discord_news_alert(article):
                 {"name": "Publisher", "value": article["publisher"], "inline": True},
                 {"name": "Published (ET)", "value": article["time_str"], "inline": True}
             ],
-            "footer": {"text": "24/7 Cloud Bot • Live News Feed"}
+            "footer": {"text": "24/7 Cloud Bot • Breaking News Channel"}
         }]
     }
     try:
-        res = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        res = requests.post(DISCORD_NEWS_WEBHOOK_URL, json=payload, timeout=10)
         res.raise_for_status()
     except Exception as e:
         print(f"Error sending news alert: {e}")
@@ -272,30 +296,47 @@ def check_market():
                 daily_change_pct = ((current_price - prev_close) / prev_close) * 100
                 tracked_dict = state["crypto_tickers"] if asset_type == "crypto" else state["stock_tickers"]
 
-                # Case 1: Already alerted -> check 2.0% step change
+                # Case 1: Already alerted today -> check 2.0% step change
                 if ticker_symbol in tracked_dict:
-                    last_alert_price = tracked_dict[ticker_symbol]
+                    item_data = tracked_dict[ticker_symbol]
+                    last_alert_price = item_data["last_price"]
+                    history_trail = item_data.get("history", [])
+                    
                     step_change_pct = ((current_price - last_alert_price) / last_alert_price) * 100
                     
                     if abs(step_change_pct) >= 2.0:
                         print(f"🔥 {ticker_symbol:10s} | STEP TRIGGER | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}%")
                         price_alerts_to_send.append({
-                            "ticker": ticker_symbol, "price": current_price,
-                            "daily_change": daily_change_pct, "step_change": step_change_pct
+                            "ticker": ticker_symbol, 
+                            "price": current_price,
+                            "daily_change": daily_change_pct, 
+                            "step_change": step_change_pct,
+                            "history_trail": list(history_trail)
                         })
-                        tracked_dict[ticker_symbol] = current_price
+                        # Update state with new price and append current % to history
+                        history_trail.append(f"{daily_change_pct:+.2f}%")
+                        tracked_dict[ticker_symbol] = {
+                            "last_price": current_price,
+                            "history": history_trail
+                        }
                     else:
                         print(f"⏭️ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below 2%)")
 
-                # Case 2: Initial alert -> check 2.0% daily threshold
+                # Case 2: Initial alert today -> check 2.0% daily threshold
                 else:
                     if abs(daily_change_pct) >= 2.0:
                         print(f"🚨 {ticker_symbol:10s} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
                         price_alerts_to_send.append({
-                            "ticker": ticker_symbol, "price": current_price,
-                            "daily_change": daily_change_pct, "step_change": None
+                            "ticker": ticker_symbol, 
+                            "price": current_price,
+                            "daily_change": daily_change_pct, 
+                            "step_change": None,
+                            "history_trail": []
                         })
-                        tracked_dict[ticker_symbol] = current_price
+                        tracked_dict[ticker_symbol] = {
+                            "last_price": current_price,
+                            "history": [f"{daily_change_pct:+.2f}%"]
+                        }
                     else:
                         print(f"✅ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
             else:
@@ -338,25 +379,26 @@ def check_market():
     # ==========================================
     # 3. DISPATCH DISCORD ALERTS
     # ==========================================
-    # Send Sorted Price Alerts
+    # Send Sorted Price Alerts to the Price Channel
     price_alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
     if price_alerts_to_send:
-        print(f"\nSending {len(price_alerts_to_send)} price alert(s)...")
+        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
         for alert in price_alerts_to_send:
             send_discord_price_alert(
                 ticker=alert["ticker"],
                 current_price=alert["price"],
                 change_pct=alert["daily_change"],
-                step_change=alert["step_change"]
+                step_change=alert["step_change"],
+                history_trail=alert["history_trail"]
             )
             time.sleep(0.5)
 
-    # Send ALL Fresh Breaking News Alerts (No Cap)
+    # Send ALL Fresh Breaking News Alerts to the News Channel
     if new_articles:
-        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) (<= 45 mins old)...")
+        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
         for article in new_articles:
             send_discord_news_alert(article)
-            time.sleep(0.5)  # 0.5s pause ensures Discord webhook safety
+            time.sleep(0.5)
 
     # ==========================================
     # 4. PERSIST STATE
