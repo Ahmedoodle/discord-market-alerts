@@ -2,35 +2,116 @@
   "stock_session": "2026-08-17",
   "crypto_session": "2026-08-17",
   "stock_tickers": {
-    "MSTR": 97.95999908447266,
-    "MU": 1013.1364135742188,
-    "SNDK": 1805.8731689453125,
-    "CBRS": 251.5850067138672,
-    "SKHY": 172.68499755859375,
-    "SPCX": 146.75,
-    "RKLB": 82.63999938964844,
-    "ORCL": 146.4499969482422,
-    "GC=F": 4470.60009765625,
-    "SLV": 59.81999969482422,
-    "NBIS": 269.1499938964844,
-    "SI=F": 66.41000366210938,
-    "INTC": 104.81999969482422,
-    "META": 574.260009765625,
-    "NG=F": 2.677999973297119,
-    "IREN": 45.26679992675781,
-    "ASML": 1881.8800048828125,
-    "IBM": 229.5399932861328,
-    "BLSH": 24.959999084472656,
-    "IBIT": 36.345001220703125,
-    "CL=F": 84.37999725341797,
-    "BZ=F": 90.73999786376953,
-    "USO": 129.58799743652344,
-    "BNO": 51.790000915527344
+    "MSTR": {
+      "last_price": 97.95999908447266,
+      "history": []
+    },
+    "MU": {
+      "last_price": 1013.1364135742188,
+      "history": []
+    },
+    "SNDK": {
+      "last_price": 1805.8731689453125,
+      "history": []
+    },
+    "CBRS": {
+      "last_price": 251.5850067138672,
+      "history": []
+    },
+    "SKHY": {
+      "last_price": 172.68499755859375,
+      "history": []
+    },
+    "SPCX": {
+      "last_price": 146.75,
+      "history": []
+    },
+    "RKLB": {
+      "last_price": 82.63999938964844,
+      "history": []
+    },
+    "ORCL": {
+      "last_price": 146.4499969482422,
+      "history": []
+    },
+    "GC=F": {
+      "last_price": 4470.60009765625,
+      "history": []
+    },
+    "SLV": {
+      "last_price": 59.81999969482422,
+      "history": []
+    },
+    "NBIS": {
+      "last_price": 269.1499938964844,
+      "history": []
+    },
+    "SI=F": {
+      "last_price": 66.41000366210938,
+      "history": []
+    },
+    "INTC": {
+      "last_price": 104.81999969482422,
+      "history": []
+    },
+    "META": {
+      "last_price": 574.260009765625,
+      "history": []
+    },
+    "NG=F": {
+      "last_price": 2.677999973297119,
+      "history": []
+    },
+    "IREN": {
+      "last_price": 45.26679992675781,
+      "history": []
+    },
+    "ASML": {
+      "last_price": 1881.8800048828125,
+      "history": []
+    },
+    "IBM": {
+      "last_price": 229.5399932861328,
+      "history": []
+    },
+    "BLSH": {
+      "last_price": 24.959999084472656,
+      "history": []
+    },
+    "IBIT": {
+      "last_price": 36.345001220703125,
+      "history": []
+    },
+    "CL=F": {
+      "last_price": 84.37999725341797,
+      "history": []
+    },
+    "BZ=F": {
+      "last_price": 90.73999786376953,
+      "history": []
+    },
+    "USO": {
+      "last_price": 129.58799743652344,
+      "history": []
+    },
+    "BNO": {
+      "last_price": 51.790000915527344,
+      "history": []
+    }
   },
   "crypto_tickers": {
-    "BTC-USD": 64117.71875,
-    "SOL-USD": 76.05999755859375,
-    "ETH-USD": 1911.489990234375
+    "BTC-USD": {
+      "last_price": 64117.71875,
+      "history": []
+    },
+    "SOL-USD": {
+      "last_price": 76.05999755859375,
+      "history": []
+    },
+    "ETH-USD": {
+      "last_price": 1911.489990234375,
+      "history": []
+    }
   },
   "seen_news_links": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -1382,6 +1463,17 @@
     "https://finance.yahoo.com/m/e80d6b4c-88c2-36af-bc2f-b4aa86b29096/nvidia-lines-up-%24105-billion.html",
     "https://finance.yahoo.com/m/6597f13d-e281-3adf-8557-0f4004e15b9d/tsla-stock-in-focus-as-tesla.html",
     "https://www.fool.com/investing/2026/08/17/nvidia-lines-up-105-billion-for-openai-heres-what-it-means-for-investors/?.tsrc=rss",
-    "https://stocktwits.com/news-articles/markets/equity/tsla-stock-in-focus-as-tesla-reportedly-preps-cybercab-public-launch-in-austin-this-month/cZYGLCSRJST?.tsrc=rss"
+    "https://stocktwits.com/news-articles/markets/equity/tsla-stock-in-focus-as-tesla-reportedly-preps-cybercab-public-launch-in-austin-this-month/cZYGLCSRJST?.tsrc=rss",
+    "https://finance.yahoo.com/m/bf01f292-f3ec-338b-9898-586027a1aa77/jpmorgan-lifts-bitcoin.html",
+    "https://finance.yahoo.com/m/57bf9518-c72e-394a-bff6-984da5c79792/discord-halts-livestreams-in.html",
+    "https://finance.yahoo.com/economy/policy/articles/no-school-buses-september-grey-222000318.html",
+    "https://finance.yahoo.com/m/a7037492-737a-33e6-9bfa-60dbe7964b56/s%26p500%2C-dow%2C-nasdaq-end-lower.html",
+    "https://finance.yahoo.com/m/5008965d-f0b4-3ed1-a92b-faf92aaf3543/biosig-technologies-q2.html",
+    "https://finance.yahoo.com/m/fa7380e4-db7e-3df7-afa2-5c96c9ebab6f/situational-awareness%E2%80%99-13f.html",
+    "https://finance.yahoo.com/technology/articles/ibm-ibm-secures-fedramp-moderate-221001967.html",
+    "https://www.marketbeat.com/instant-alerts/biosig-technologies-q2-earnings-call-highlights-2026-08-17/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
+    "https://www.thestreet.com/crypto/markets/jpmorgan-lifts-bitcoin-miners-price-target-after-9-1b-anthropic-deal?.tsrc=rss",
+    "https://stocktwits.com/news-articles/markets/equity/us-stocks-drop-geopolitics-and-oil-price-risk-take-center-stage/cZYG0TMRJSc?.tsrc=rss",
+    "https://247wallst.com/investing/2026/08/17/situational-awareness-13f-reveals-an-11-billion-ai-bet-that-unraveled-in-under-a-month/?.tsrc=rss"
   ]
 }
