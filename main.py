@@ -14,6 +14,9 @@ STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 
+# Maximum allowed article age for Discord alerts (in minutes)
+MAX_NEWS_AGE_MINUTES = 45
+
 # Watchlists
 CRYPTO_WATCHLIST = [
     "BTC-USD", "ETH-USD", "XRP-USD", "SOL-USD", "LINK-USD"
@@ -79,7 +82,6 @@ def load_alert_state():
 def save_alert_state(state):
     """Saves updated benchmarks and keeps only the latest 500 news links."""
     try:
-        # Keep seen news list trimmed to prevent infinite growth
         state["seen_news_links"] = state["seen_news_links"][-500:]
         with open(STATE_FILE, "w") as f:
             json.dump(state, f, indent=2)
@@ -130,7 +132,7 @@ def send_discord_news_alert(article):
             "color": 3447003,  # Blue/Cyan
             "fields": [
                 {"name": "Publisher", "value": article["publisher"], "inline": True},
-                {"name": "Published (ET)", "value": article["time"], "inline": True}
+                {"name": "Published (ET)", "value": article["time_str"], "inline": True}
             ],
             "footer": {"text": "24/7 Cloud Bot • Live News Feed"}
         }]
@@ -140,7 +142,7 @@ def send_discord_news_alert(article):
     except Exception as e:
         print(f"Error sending news alert: {e}")
 
-# --- NEWS FETCHING FUNCTIONS ---
+# --- NEWS FETCHING FUNCTIONS WITH EXACT TIMESTAMPS ---
 def fetch_ticker_news_search(symbol, session):
     news_items = []
     try:
@@ -156,19 +158,28 @@ def fetch_ticker_news_search(symbol, session):
                 provider = item.get("publisher") or content.get("provider", {}).get("displayName") or "Yahoo Finance"
                 raw_time = item.get("providerPublishTime") or content.get("pubDate") or item.get("pubDate")
 
+                pub_dt = None
                 time_str = "N/A"
                 if isinstance(raw_time, (int, float)):
                     if raw_time > 1e11:
                         raw_time = raw_time / 1000.0
-                    time_str = datetime.fromtimestamp(raw_time, tz=NY_TZ).strftime("%a %I:%M %p")
+                    pub_dt = datetime.fromtimestamp(raw_time, tz=NY_TZ)
+                    time_str = pub_dt.strftime("%a %I:%M %p")
+                elif isinstance(raw_time, str):
+                    try:
+                        pub_dt = datetime.fromisoformat(raw_time.replace("Z", "+00:00")).astimezone(NY_TZ)
+                        time_str = pub_dt.strftime("%a %I:%M %p")
+                    except Exception:
+                        pass
 
-                if title and link:
+                if title and link and pub_dt:
                     news_items.append({
                         "ticker": symbol,
                         "title": title.strip(),
                         "link": link.strip(),
                         "publisher": provider,
-                        "time": time_str
+                        "pub_dt": pub_dt,
+                        "time_str": time_str
                     })
     except Exception:
         pass
@@ -187,21 +198,23 @@ def fetch_ticker_news_rss(symbol, session):
                 link = item.findtext("link")
                 pub_date_str = item.findtext("pubDate")
 
+                pub_dt = None
                 time_str = "N/A"
                 if pub_date_str:
                     try:
-                        dt = parsedate_to_datetime(pub_date_str).astimezone(NY_TZ)
-                        time_str = dt.strftime("%a %I:%M %p")
+                        pub_dt = parsedate_to_datetime(pub_date_str).astimezone(NY_TZ)
+                        time_str = pub_dt.strftime("%a %I:%M %p")
                     except Exception:
-                        time_str = pub_date_str
+                        pass
 
-                if title and link:
+                if title and link and pub_dt:
                     news_items.append({
                         "ticker": symbol,
                         "title": title.strip(),
                         "link": link.strip(),
                         "publisher": "Yahoo Wire",
-                        "time": time_str
+                        "pub_dt": pub_dt,
+                        "time_str": time_str
                     })
     except Exception:
         pass
@@ -209,9 +222,10 @@ def fetch_ticker_news_rss(symbol, session):
 
 def check_market():
     stock_market_active = is_us_stock_market_open()
-    now_ny = datetime.now(NY_TZ).strftime("%Y-%m-%d %I:%M %p %Z")
+    now_ny = datetime.now(NY_TZ)
+    now_ny_str = now_ny.strftime("%Y-%m-%d %I:%M %p %Z")
     
-    print(f"Current Time (NY): {now_ny}")
+    print(f"Current Time (NY): {now_ny_str}")
     print(f"US Stock Market Status: {'🟢 OPEN' if stock_market_active else '🔴 CLOSED (Crypto Only)'}\n")
 
     state = load_alert_state()
@@ -263,8 +277,9 @@ def check_market():
             print(f"❌ Error checking price for {ticker_symbol}: {e}")
         time.sleep(0.15)
 
-    # 2. SCAN BREAKING NEWS (Fast Multi-threaded)
+    # 2. SCAN BREAKING NEWS (With 45-Minute Freshness Cutoff)
     print("\nScanning breaking news across all tickers...")
+    cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
     raw_news = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
@@ -274,13 +289,21 @@ def check_market():
         for f in concurrent.futures.as_completed(futures_search + futures_rss):
             raw_news.extend(f.result())
 
-    # Filter out already-alerted news articles
     new_articles = []
     for item in raw_news:
         link = item["link"]
-        if link not in seen_news_set:
-            seen_news_set.add(link)
-            state["seen_news_links"].append(link)
+        pub_dt = item.get("pub_dt")
+
+        # Skip if we already alerted on this link before
+        if link in seen_news_set:
+            continue
+
+        # Add to seen list so we never inspect it again
+        seen_news_set.add(link)
+        state["seen_news_links"].append(link)
+
+        # STRICT FILTER: Only send alert if published within the last 45 minutes
+        if pub_dt and pub_dt >= cutoff_time:
             new_articles.append(item)
 
     # 3. DISPATCH DISCORD ALERTS
@@ -297,9 +320,9 @@ def check_market():
             )
             time.sleep(0.5)
 
-    # Send News Alerts (up to 5 per run to prevent webhook spam)
+    # Send News Alerts (up to 5 per run)
     if new_articles:
-        print(f"Sending {len(new_articles[:5])} new headline alert(s)...")
+        print(f"Sending {len(new_articles[:5])} fresh headline alert(s) (<= 45 mins old)...")
         for article in new_articles[:5]:
             send_discord_news_alert(article)
             time.sleep(0.5)
@@ -307,7 +330,7 @@ def check_market():
     # 4. PERSIST STATE
     save_alert_state(state)
     print(f"\n=======================================================")
-    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | New Articles: {len(new_articles)}")
+    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News Sent: {len(new_articles[:5])} (Total New: {len(new_articles)})")
 
 if __name__ == "__main__":
     check_market()
