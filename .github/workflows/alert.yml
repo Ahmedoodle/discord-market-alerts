@@ -1,7 +1,7 @@
 name: Run Market Alert Bot
 
 on:
-  workflow_dispatch: # Allows external triggers via API
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,6 +27,7 @@ jobs:
       - name: Run Alert Script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_PRICE_WEBHOOK_URL: ${{ secrets.DISCORD_PRICE_WEBHOOK_URL }}
         run: python main.py
 
       - name: Commit and Push State Memory
