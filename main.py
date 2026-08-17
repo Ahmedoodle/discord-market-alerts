@@ -351,19 +351,19 @@ def check_market():
             )
             time.sleep(0.5)
 
-    # Send Fresh Breaking News Alerts
+    # Send ALL Fresh Breaking News Alerts (No Cap)
     if new_articles:
-        print(f"\nSending {len(new_articles[:5])} fresh headline alert(s) (<= 45 mins old)...")
-        for article in new_articles[:5]:
+        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) (<= 45 mins old)...")
+        for article in new_articles:
             send_discord_news_alert(article)
-            time.sleep(0.5)
+            time.sleep(0.5)  # 0.5s pause ensures Discord webhook safety
 
     # ==========================================
     # 4. PERSIST STATE
     # ==========================================
     save_alert_state(state)
     print(f"\n=======================================================")
-    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News Sent: {len(new_articles[:5])} (Total New: {len(new_articles)})")
+    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News Sent: {len(new_articles)}")
 
 if __name__ == "__main__":
     check_market()
