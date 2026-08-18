@@ -14,7 +14,7 @@ import yfinance as yf
 DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
 
-# Bot Branding & Dedicated Avatars
+# Bot Branding & Avatars
 BOT_NAME = "Looney"
 BOT_PRICE_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539150514313498634/IMG_6633.png?ex=6a85451e&is=6a83f39e&hm=c973d5a79654c66b306b4d8296fdc5b1b8ca8ce0c97e3f7693c111809acf5cb1&"
 BOT_NEWS_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
@@ -23,7 +23,6 @@ STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 
-# Maximum allowed article age for Discord alerts (in minutes)
 MAX_NEWS_AGE_MINUTES = 45
 
 # Watchlists
@@ -42,7 +41,7 @@ STOCK_ETF_WATCHLIST = [
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
 
 # ====================================================================
-# 1. BUILT-IN US & CANADIAN MARKET HOLIDAY CALENDAR ENGINE
+# 1. BULLETPROOF NYSE & TSX MARKET HOLIDAY ENGINE
 # ====================================================================
 def calculate_easter(year):
     """Calculates Easter Sunday using the Anonymous Gregorian algorithm."""
@@ -62,101 +61,146 @@ def calculate_easter(year):
     day = ((h + l - 7 * m + 114) % 31) + 1
     return date(year, month, day)
 
-def get_market_holidays(year):
-    """Generates official NYSE/NASDAQ (US) and TSX (Canada) holidays for a given year."""
-    us_holidays = {}
-    ca_holidays = {}
+def _get_year_holidays(year):
+    """Generates precise NYSE (US) and TSX (Canada) holiday schedules for a single year."""
+    us_hols = {}
+    ca_hols = {}
 
     easter = calculate_easter(year)
     good_friday = easter - timedelta(days=2)
 
     # 1. New Year's Day (Jan 1)
     ny_day = date(year, 1, 1)
-    ny_obs = ny_day if ny_day.weekday() < 5 else (date(year, 1, 2) if ny_day.weekday() == 6 else date(year - 1, 12, 31))
-    us_holidays[ny_obs] = "New Year's Day"
-    ca_holidays[ny_obs] = "New Year's Day"
+    if ny_day.weekday() == 6:  # Sunday -> Observe Monday Jan 2
+        us_hols[date(year, 1, 2)] = "New Year's Day"
+        ca_hols[date(year, 1, 2)] = "New Year's Day"
+    elif ny_day.weekday() == 5:  # Saturday
+        # NYSE Rule 7.2: NYSE remains OPEN on Friday Dec 31
+        ca_hols[date(year, 1, 3)] = "New Year's Day"  # TSX observes Monday
+    else:
+        us_hols[ny_day] = "New Year's Day"
+        ca_hols[ny_day] = "New Year's Day"
 
-    # 2. MLK Day (US: 3rd Monday in Jan)
-    mlk_day = date(year, 1, 1) + timedelta(days=(0 - date(year, 1, 1).weekday() + 7) % 7 + 14)
-    us_holidays[mlk_day] = "Martin Luther King Jr. Day"
+    # 2. MLK Day (US: 3rd Monday in Jan, 1998+)
+    if year >= 1998:
+        mlk = date(year, 1, 1) + timedelta(days=(0 - date(year, 1, 1).weekday() + 7) % 7 + 14)
+        us_hols[mlk] = "Martin Luther King Jr. Day"
 
-    # 3. Presidents' Day (US: 3rd Monday in Feb) / Family Day (Canada)
-    pres_day = date(year, 2, 1) + timedelta(days=(0 - date(year, 2, 1).weekday() + 7) % 7 + 14)
-    us_holidays[pres_day] = "Presidents' Day"
-    ca_holidays[pres_day] = "Family Day"
+    # 3. Presidents' Day (US: 3rd Monday in Feb) / Family Day (TSX: 2008+)
+    pres = date(year, 2, 1) + timedelta(days=(0 - date(year, 2, 1).weekday() + 7) % 7 + 14)
+    us_hols[pres] = "Presidents' Day"
+    if year >= 2008:
+        ca_hols[pres] = "Family Day"
 
     # 4. Good Friday
-    us_holidays[good_friday] = "Good Friday"
-    ca_holidays[good_friday] = "Good Friday"
+    us_hols[good_friday] = "Good Friday"
+    ca_hols[good_friday] = "Good Friday"
 
     # 5. Victoria Day (Canada: Monday before May 25)
     may_24 = date(year, 5, 24)
-    vic_day = may_24 - timedelta(days=(may_24.weekday() - 0) % 7)
-    ca_holidays[vic_day] = "Victoria Day"
+    vic = may_24 - timedelta(days=(may_24.weekday() - 0) % 7)
+    ca_hols[vic] = "Victoria Day"
 
     # 6. Memorial Day (US: Last Monday in May)
     may_31 = date(year, 5, 31)
-    mem_day = may_31 - timedelta(days=(may_31.weekday() - 0) % 7)
-    us_holidays[mem_day] = "Memorial Day"
+    mem = may_31 - timedelta(days=(may_31.weekday() - 0) % 7)
+    us_hols[mem] = "Memorial Day"
 
-    # 7. Juneteenth (US: June 19)
-    june_19 = date(year, 6, 19)
-    june_19_obs = june_19 if june_19.weekday() < 5 else (date(year, 6, 20) if june_19.weekday() == 6 else date(year, 6, 18))
-    us_holidays[june_19_obs] = "Juneteenth"
+    # 7. Juneteenth (US: June 19, 2022+)
+    if year >= 2022:
+        june_19 = date(year, 6, 19)
+        if june_19.weekday() == 6:
+            us_hols[date(year, 6, 20)] = "Juneteenth"
+        elif june_19.weekday() == 5:
+            us_hols[date(year, 6, 18)] = "Juneteenth"
+        else:
+            us_hols[june_19] = "Juneteenth"
 
     # 8. Canada Day (Canada: July 1)
-    cad_day = date(year, 7, 1)
-    cad_obs = cad_day if cad_day.weekday() < 5 else date(year, 7, 2 if cad_day.weekday() == 6 else 3)
-    ca_holidays[cad_obs] = "Canada Day"
+    cad = date(year, 7, 1)
+    if cad.weekday() == 6:
+        ca_hols[date(year, 7, 2)] = "Canada Day"
+    elif cad.weekday() == 5:
+        ca_hols[date(year, 7, 3)] = "Canada Day"
+    else:
+        ca_hols[cad] = "Canada Day"
 
     # 9. Independence Day (US: July 4)
     july_4 = date(year, 7, 4)
-    july_4_obs = july_4 if july_4.weekday() < 5 else (date(year, 7, 5) if july_4.weekday() == 6 else date(year, 7, 3))
-    us_holidays[july_4_obs] = "Independence Day"
+    if july_4.weekday() == 6:
+        us_hols[date(year, 7, 5)] = "Independence Day"
+    elif july_4.weekday() == 5:
+        us_hols[date(year, 7, 3)] = "Independence Day"
+    else:
+        us_hols[july_4] = "Independence Day"
 
-    # 10. Civic Holiday (Canada: 1st Monday in August)
-    civic_day = date(year, 8, 1) + timedelta(days=(0 - date(year, 8, 1).weekday() + 7) % 7)
-    ca_holidays[civic_day] = "Civic Holiday"
+    # 10. Civic Holiday (Canada: 1st Monday in Aug)
+    civic = date(year, 8, 1) + timedelta(days=(0 - date(year, 8, 1).weekday() + 7) % 7)
+    ca_hols[civic] = "Civic Holiday"
 
     # 11. Labor Day (US & Canada: 1st Monday in Sept)
-    labor_day = date(year, 9, 1) + timedelta(days=(0 - date(year, 9, 1).weekday() + 7) % 7)
-    us_holidays[labor_day] = "Labor Day"
-    ca_holidays[labor_day] = "Labour Day"
+    labor = date(year, 9, 1) + timedelta(days=(0 - date(year, 9, 1).weekday() + 7) % 7)
+    us_hols[labor] = "Labor Day"
+    ca_hols[labor] = "Labour Day"
 
     # 12. Thanksgiving (Canada: 2nd Monday in Oct)
     ca_thanks = date(year, 10, 1) + timedelta(days=(0 - date(year, 10, 1).weekday() + 7) % 7 + 7)
-    ca_holidays[ca_thanks] = "Thanksgiving (Canada)"
+    ca_hols[ca_thanks] = "Thanksgiving (Canada)"
 
     # 13. Thanksgiving (US: 4th Thursday in Nov)
     us_thanks = date(year, 11, 1) + timedelta(days=(3 - date(year, 11, 1).weekday() + 7) % 7 + 21)
-    us_holidays[us_thanks] = "Thanksgiving Day"
+    us_hols[us_thanks] = "Thanksgiving Day"
 
-    # 14. Christmas Day (Dec 25)
+    # 14 & 15. Christmas & Boxing Day (TSX & NYSE Exact Rules)
     xmas = date(year, 12, 25)
-    xmas_obs = xmas if xmas.weekday() < 5 else (date(year, 12, 26) if xmas.weekday() == 6 else date(year, 12, 24))
-    us_holidays[xmas_obs] = "Christmas Day"
-    ca_holidays[xmas_obs] = "Christmas Day"
-
-    # 15. Boxing Day (Canada: Dec 26)
     boxing = date(year, 12, 26)
-    boxing_obs = boxing if boxing.weekday() < 5 else (date(year, 12, 27) if boxing.weekday() == 6 else date(year, 12, 28))
-    ca_holidays[boxing_obs] = "Boxing Day"
 
-    return us_holidays, ca_holidays
+    # US Christmas Observation
+    if xmas.weekday() == 6:
+        us_hols[date(year, 12, 26)] = "Christmas Day"
+    elif xmas.weekday() == 5:
+        us_hols[date(year, 12, 24)] = "Christmas Day"
+    else:
+        us_hols[xmas] = "Christmas Day"
+
+    # TSX Christmas & Boxing Day Observation (Handles Weekend Collisions)
+    if xmas.weekday() == 4:  # Friday
+        ca_hols[date(year, 12, 25)] = "Christmas Day"
+        ca_hols[date(year, 12, 28)] = "Boxing Day"  # Saturday Boxing Day rolls to Monday
+    elif xmas.weekday() == 5:  # Saturday
+        ca_hols[date(year, 12, 27)] = "Christmas Day"  # Rolls to Monday
+        ca_hols[date(year, 12, 28)] = "Boxing Day"     # Rolls to Tuesday
+    elif xmas.weekday() == 6:  # Sunday
+        ca_hols[date(year, 12, 26)] = "Christmas Day"  # Rolls to Monday
+        ca_hols[date(year, 12, 27)] = "Boxing Day"     # Rolls to Tuesday
+    else:  # Mon, Tue, Wed, Thu
+        ca_hols[xmas] = "Christmas Day"
+        if boxing.weekday() == 6:  # Dec 26 is Sunday
+            ca_hols[date(year, 12, 27)] = "Boxing Day"
+        else:
+            ca_hols[boxing] = "Boxing Day"
+
+    return us_hols, ca_hols
 
 def check_market_holiday(target_date):
-    """Checks if today is a US or Canadian stock market holiday."""
-    us_hols, ca_hols = get_market_holidays(target_date.year)
-    us_name = us_hols.get(target_date)
-    ca_name = ca_hols.get(target_date)
-    return us_name, ca_name
+    """
+    Checks for market holidays across a multi-year window (year-1, year, year+1)
+    to eliminate cross-year lookup errors.
+    """
+    all_us = {}
+    all_ca = {}
+    for y in [target_date.year - 1, target_date.year, target_date.year + 1]:
+        u, c = _get_year_holidays(y)
+        all_us.update(u)
+        all_ca.update(c)
+
+    return all_us.get(target_date), all_ca.get(target_date)
 
 # ====================================================================
-# 2. SESSION TIMING & CLASSIFICATION (16-Hour Stock Engine)
+# 2. SESSION TIMING & CLASSIFICATION (16-Hour Engine)
 # ====================================================================
 def get_current_session_info(now_ny):
     """
-    Classifies the current market session:
     - PRE_MARKET:   04:00 AM - 09:30 AM EST (Mon-Fri) | Threshold: 1.0%
     - REGULAR:      09:30 AM - 04:00 PM EST (Mon-Fri) | Threshold: 2.0%
     - AFTER_HOURS:  04:00 PM - 08:00 PM EST (Mon-Fri) | Threshold: 1.0%
@@ -204,7 +248,6 @@ def load_alert_state():
             with open(STATE_FILE, "r") as f:
                 saved = json.load(f)
                 
-                # Check if stock session date matches today
                 if saved.get("stock_session_date") == today_ny_str:
                     state["premarket_tickers"] = saved.get("premarket_tickers", {})
                     state["regular_tickers"] = saved.get("regular_tickers", {})
@@ -213,7 +256,6 @@ def load_alert_state():
                 else:
                     print(f"📅 New Stock Calendar Day ({today_ny_str}). Resetting daily stock memory slots.")
 
-                # Check crypto session (00:00 UTC reset)
                 if saved.get("crypto_session_date") == today_utc_str:
                     state["crypto_tickers"] = saved.get("crypto_tickers", {})
                 else:
@@ -334,13 +376,6 @@ def send_discord_news_alert(article):
 # 5. DATA EXTRACTION ENGINE (Extended Hours & Realtime Live)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
-    """
-    Fetches accurate prices and baselines across all sessions:
-    - PRE_MARKET: Live Pre-market price vs. Yesterday's 4:00 PM close
-    - REGULAR: Live regular price vs. Yesterday's 4:00 PM close
-    - AFTER_HOURS: Live After-hours price vs. Today's 4:00 PM close (Option B)
-    - CRYPTO: Live crypto price vs. Yesterday's 00:00 UTC close
-    """
     current_price = None
     baseline_price = None
 
@@ -357,10 +392,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             baseline_price = fi.previous_close
 
         elif session_type == "AFTER_HOURS":
-            # Option B: Compare live after-hours price against Today's 4:00 PM regular close
             current_price = fi.last_price
-            
-            # Fetch today's 4:00 PM regular close
             try:
                 hist = ticker.history(period="2d")
                 if 'Close' in hist.columns and len(hist['Close']) >= 1:
@@ -462,18 +494,18 @@ def check_market():
     today_ny_date = now_ny.date()
     today_ny_str = now_ny.strftime("%Y-%m-%d")
 
-    # 1. CHECK FOR STOCK MARKET HOLIDAYS
+    # 1. BULLETPROOF HOLIDAY CHECK
     us_hol, ca_hol = check_market_holiday(today_ny_date)
-    is_stock_holiday = bool(us_hol)  # Primary US exchange closure
+    is_stock_holiday = bool(us_hol)
 
     state = load_alert_state()
 
-    # Announce holiday on the morning's first run
+    # Announce holiday on morning's first run
     if is_stock_holiday and state.get("holiday_announced_date") != today_ny_str:
         send_discord_holiday_announcement(us_hol, ca_hol)
         state["holiday_announced_date"] = today_ny_str
 
-    # 2. 9:30 AM OPENING PAUSE: Sleep 120s until 9:32 AM for auction prices to settle
+    # 2. 9:30 AM OPENING PAUSE (Settles the NYSE/NASDAQ opening auction)
     if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
         target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
         sleep_seconds = max(0, (target_time - now_ny).total_seconds())
@@ -497,11 +529,9 @@ def check_market():
     })
 
     # ==========================================
-    # 3. SCAN PRICES (Pre-Market, Regular, After-Hours & Crypto)
+    # 3. SCAN PRICES
     # ==========================================
     price_alerts_to_send = []
-
-    # Build active watchlist
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
     
     if not is_stock_holiday and session_type != "CLOSED":
@@ -515,7 +545,6 @@ def check_market():
             if current_price is not None and baseline_price is not None and baseline_price > 0:
                 change_pct = ((current_price - baseline_price) / baseline_price) * 100
 
-                # Select appropriate session state dictionary
                 if s_type == "CRYPTO":
                     tracked_dict = state["crypto_tickers"]
                 elif s_type == "PRE_MARKET":
@@ -527,7 +556,7 @@ def check_market():
                 else:
                     tracked_dict = {}
 
-                # Case 1: Already alerted in this session -> Check step change
+                # Case 1: Already alerted in this session -> Step check
                 if ticker_symbol in tracked_dict:
                     item_data = tracked_dict[ticker_symbol]
                     last_alert_price = item_data["last_price"]
@@ -553,7 +582,7 @@ def check_market():
                     else:
                         print(f"⏭️ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below {req_threshold}%)")
 
-                # Case 2: Initial alert for this session -> Check initial threshold
+                # Case 2: Initial alert for this session -> Threshold check
                 else:
                     if abs(change_pct) >= req_threshold:
                         print(f"🚨 {ticker_symbol:10s} {badge} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
@@ -578,7 +607,7 @@ def check_market():
         time.sleep(0.12)
 
     # ==========================================
-    # 4. SCAN BREAKING NEWS (45-Min Cutoff & Title+Date Deduplication)
+    # 4. SCAN BREAKING NEWS
     # ==========================================
     print("\nScanning breaking news across all tickers...")
     cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
@@ -616,7 +645,7 @@ def check_market():
             new_articles.append(item)
 
     # ==========================================
-    # 5. DISPATCH DISCORD ALERTS (Fast 0.5s Spacing)
+    # 5. DISPATCH DISCORD ALERTS (0.5s Spacing)
     # ==========================================
     price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
     if price_alerts_to_send:
