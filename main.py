@@ -13,9 +13,10 @@ import yfinance as yf
 DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
 
-# Bot Branding Overrides
+# Bot Branding & Avatars
 BOT_NAME = "Looney"
-BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
+BOT_PRICE_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539150514313498634/IMG_6633.png?ex=6a85451e&is=6a83f39e&hm=c973d5a79654c66b306b4d8296fdc5b1b8ca8ce0c97e3f7693c111809acf5cb1&"
+BOT_NEWS_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
 
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
@@ -143,7 +144,7 @@ def send_discord_price_alert(ticker, current_price, change_pct, step_change=None
 
     payload = {
         "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
+        "avatar_url": BOT_PRICE_AVATAR_URL,
         "embeds": [{
             "title": title_text,
             "description": desc_text,
@@ -166,7 +167,7 @@ def send_discord_news_alert(article):
 
     payload = {
         "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
+        "avatar_url": BOT_NEWS_AVATAR_URL,
         "embeds": [{
             "title": f"📰 Breaking News: {article['ticker']}",
             "description": f"**[{article['title']}]({article['link']})**",
@@ -382,7 +383,7 @@ def check_market():
     # ==========================================
     # 3. DISPATCH DISCORD ALERTS (2.5s Spacing)
     # ==========================================
-    # Send Sorted Price Alerts with 2.5s delay
+    # Send Sorted Price Alerts to the Price Channel
     price_alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
     if price_alerts_to_send:
         print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL as '{BOT_NAME}'...")
@@ -396,7 +397,7 @@ def check_market():
             )
             time.sleep(2.5)  # 2.5s spacing ensures phone push notifications trigger reliably
 
-    # Send ALL Fresh Breaking News Alerts with 2.5s delay
+    # Send ALL Fresh Breaking News Alerts to the News Channel
     if new_articles:
         print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL as '{BOT_NAME}'...")
         for article in new_articles:
