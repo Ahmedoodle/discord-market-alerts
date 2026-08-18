@@ -15,7 +15,7 @@ DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
 
 # Bot Branding Overrides
 BOT_NAME = "Looney"
-BOT_AVATAR_URL = "https://raw.githubusercontent.com/Ahmedoodle/discord-market-alerts/main/IMG_6630.jpeg"
+BOT_AVATAR_URL = "https://i.imgur.com/2Xy0l6B.jpeg"
 
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
