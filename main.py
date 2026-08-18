@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import re
 import concurrent.futures
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, time as dtime
@@ -40,6 +41,12 @@ STOCK_ETF_WATCHLIST = [
 
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
 
+def normalize_title(title_text):
+    """Cleans title to lowercase alphanumeric words to catch identical stories with punctuation differences."""
+    if not title_text:
+        return ""
+    return re.sub(r'[^a-zA-Z0-9]', '', title_text).lower()
+
 def is_us_stock_market_open():
     """Returns True if current time is Mon-Fri between 9:30 AM and 4:00 PM Eastern Time."""
     now_ny = datetime.now(NY_TZ)
@@ -61,7 +68,7 @@ def get_crypto_session_id():
     return datetime.now(UTC_TZ).strftime("%Y-%m-%d")
 
 def load_alert_state():
-    """Loads state for price benchmarks, history trails, and remembered news URLs."""
+    """Loads state for price benchmarks, history trails, and remembered news fingerprints."""
     current_stock_session = get_stock_session_id()
     current_crypto_session = get_crypto_session_id()
 
@@ -70,7 +77,7 @@ def load_alert_state():
         "crypto_session": current_crypto_session,
         "stock_tickers": {},
         "crypto_tickers": {},
-        "seen_news_links": []
+        "seen_news_fingerprints": []
     }
 
     if os.path.exists(STATE_FILE):
@@ -100,20 +107,20 @@ def load_alert_state():
                 else:
                     print(f"🪙 New Crypto Session ({current_crypto_session}). Resetting crypto memory.")
                 
-                # Remember all past news articles permanently
-                state["seen_news_links"] = saved.get("seen_news_links", [])
+                # Backward compatibility for old state files
+                state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or saved.get("seen_news_links", [])
         except Exception as e:
             print(f"Error loading state file: {e}")
 
     return state
 
 def save_alert_state(state):
-    """Saves updated benchmarks and remembers ALL news links permanently."""
+    """Saves updated benchmarks and remembers ALL news fingerprints permanently."""
     try:
         with open(STATE_FILE, "w") as f:
             json.dump(state, f, indent=2)
         total_prices = len(state["stock_tickers"]) + len(state["crypto_tickers"])
-        print(f"State saved ({total_prices} active price benchmarks, {len(state['seen_news_links'])} total news links remembered).")
+        print(f"State saved ({total_prices} active price benchmarks, {len(state['seen_news_fingerprints'])} news fingerprints remembered).")
     except Exception as e:
         print(f"Error saving state file: {e}")
 
@@ -272,7 +279,7 @@ def check_market():
     print(f"US Stock Market Status: {'🟢 OPEN' if stock_market_active else '🔴 CLOSED (Crypto Only)'}\n")
 
     state = load_alert_state()
-    seen_news_set = set(state.get("seen_news_links", []))
+    seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
     
     session = requests.Session()
     session.headers.update({
@@ -350,7 +357,7 @@ def check_market():
         time.sleep(0.15)
 
     # ==========================================
-    # 2. SCAN BREAKING NEWS (45-Min Cutoff)
+    # 2. SCAN BREAKING NEWS (45-Min Cutoff & Title+Date Deduplication)
     # ==========================================
     print("\nScanning breaking news across all tickers...")
     cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
@@ -367,14 +374,25 @@ def check_market():
     for item in raw_news:
         link = item["link"]
         pub_dt = item.get("pub_dt")
+        title = item.get("title", "")
 
-        # Skip if already saved in memory
-        if link in seen_news_set:
+        # Create unique fingerprint combining normalized Title + exact Date
+        date_stamp = pub_dt.strftime("%Y-%m-%d") if pub_dt else "nodate"
+        norm_title = normalize_title(title)
+        
+        # Dual keys: Link key & Title+Date key
+        title_date_key = f"title_{norm_title}_{date_stamp}"
+        link_key = f"link_{link}"
+
+        # Skip if already saved either by Link or by Title+Date
+        if link_key in seen_fingerprints_set or (norm_title and title_date_key in seen_fingerprints_set):
             continue
 
-        # Add to permanent memory so it is NEVER checked again
-        seen_news_set.add(link)
-        state["seen_news_links"].append(link)
+        # Add both fingerprints to memory so neither Search nor RSS can trigger it again today
+        seen_fingerprints_set.add(link_key)
+        seen_fingerprints_set.add(title_date_key)
+        state["seen_news_fingerprints"].append(link_key)
+        state["seen_news_fingerprints"].append(title_date_key)
 
         # STRICT FILTER: Only alert if published within the last 45 minutes
         if pub_dt and pub_dt >= cutoff_time:
