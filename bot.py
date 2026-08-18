@@ -1,15 +1,32 @@
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import yfinance as yf
 import pandas as pd
 import discord
 from discord.ext import commands
 
 # -------------------------------------------------------------
-# PASTE YOUR DISCORD BOT TOKEN HERE (Or set as environment variable)
+# 1. KEEP-ALIVE SERVER (For Render Free Tier)
 # -------------------------------------------------------------
-BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "MTUzOTQxNjQ5Nzc3NTA1ODk3Ng.GGBhH6.1j0tk2kbPvL9GCWO9N8KxDK87DOCg3_tNlzrsk")
+class PingHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Looney On-Demand Discord Bot is Live 24/7!")
 
-# Setup Discord Bot with message intents
+def run_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), PingHandler)
+    server.serve_forever()
+
+threading.Thread(target=run_dummy_server, daemon=True).start()
+
+# -------------------------------------------------------------
+# 2. DISCORD BOT CLIENT
+# -------------------------------------------------------------
+BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -58,7 +75,7 @@ def get_on_demand_data(ticker_symbol):
         closes = hist['Close'].dropna()
         volumes = hist['Volume'].dropna()
 
-        # 3. 20-Day RVOL
+        # 3. 20-Day Relative Volume (RVOL)
         vol_str = "N/A"
         if len(volumes) >= 20:
             avg_vol_20 = volumes.iloc[-21:-1].mean()
@@ -75,7 +92,7 @@ def get_on_demand_data(ticker_symbol):
                 else:
                     vol_str = f"`{v_formatted}` ({rvol:.1f}x Avg 📊 Normal)"
 
-        # 4. 14-Day RSI (Wilder's Formula)
+        # 4. 14-Day RSI (Wilder's Smoothing)
         delta = closes.diff()
         gains = delta.clip(lower=0)
         losses = -1 * delta.clip(upper=0)
@@ -125,9 +142,9 @@ def get_on_demand_data(ticker_symbol):
             elif current_price < sma_50 and current_price < sma_200:
                 trend_str = "Below 50D & 200D SMA (🔴 Strong Downtrend)"
             elif current_price >= sma_200 and current_price < sma_50:
-                trend_str = "Above 200D, Below 50D SMA (🟡 Pullback in Uptrend)"
+                trend_str = "Above 200D, Below 50D SMA (🟡 Pullback)"
             else:
-                trend_str = "Above 50D, Below 200D SMA (🟡 Rebound in Downtrend)"
+                trend_str = "Above 50D, Below 200D SMA (🟡 Rebound)"
 
         return {
             "ticker": ticker_symbol,
@@ -146,7 +163,7 @@ def get_on_demand_data(ticker_symbol):
 async def on_ready():
     print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
 
-# Command 1: Trigger via `!price <ticker>` or `!p <ticker>`
+# Command Triggers: `!price <ticker>`, `!p <ticker>`, `!four <ticker>`, or `!check <ticker>`
 @bot.command(name="price", aliases=["p", "four", "check"])
 async def price_command(ctx, ticker: str):
     async with ctx.typing():
@@ -171,4 +188,7 @@ async def price_command(ctx, ticker: str):
         await ctx.send(embed=embed)
 
 if __name__ == "__main__":
-    bot.run(BOT_TOKEN)
+    if not BOT_TOKEN:
+        print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
+    else:
+        bot.run(BOT_TOKEN)
