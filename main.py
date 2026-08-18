@@ -4,7 +4,7 @@ import json
 import re
 import concurrent.futures
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, time as dtime
+from datetime import datetime, timedelta, date, time as dtime
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 import requests
@@ -14,7 +14,7 @@ import yfinance as yf
 DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
 
-# Bot Branding & Avatars
+# Bot Branding & Dedicated Avatars
 BOT_NAME = "Looney"
 BOT_PRICE_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539150514313498634/IMG_6633.png?ex=6a85451e&is=6a83f39e&hm=c973d5a79654c66b306b4d8296fdc5b1b8ca8ce0c97e3f7693c111809acf5cb1&"
 BOT_NEWS_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
@@ -41,42 +41,161 @@ STOCK_ETF_WATCHLIST = [
 
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
 
+# ====================================================================
+# 1. BUILT-IN US & CANADIAN MARKET HOLIDAY CALENDAR ENGINE
+# ====================================================================
+def calculate_easter(year):
+    """Calculates Easter Sunday using the Anonymous Gregorian algorithm."""
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = b // 4
+    e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i = c // 4
+    k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = ((h + l - 7 * m + 114) % 31) + 1
+    return date(year, month, day)
+
+def get_market_holidays(year):
+    """Generates official NYSE/NASDAQ (US) and TSX (Canada) holidays for a given year."""
+    us_holidays = {}
+    ca_holidays = {}
+
+    easter = calculate_easter(year)
+    good_friday = easter - timedelta(days=2)
+
+    # 1. New Year's Day (Jan 1)
+    ny_day = date(year, 1, 1)
+    ny_obs = ny_day if ny_day.weekday() < 5 else (date(year, 1, 2) if ny_day.weekday() == 6 else date(year - 1, 12, 31))
+    us_holidays[ny_obs] = "New Year's Day"
+    ca_holidays[ny_obs] = "New Year's Day"
+
+    # 2. MLK Day (US: 3rd Monday in Jan)
+    mlk_day = date(year, 1, 1) + timedelta(days=(0 - date(year, 1, 1).weekday() + 7) % 7 + 14)
+    us_holidays[mlk_day] = "Martin Luther King Jr. Day"
+
+    # 3. Presidents' Day (US: 3rd Monday in Feb) / Family Day (Canada)
+    pres_day = date(year, 2, 1) + timedelta(days=(0 - date(year, 2, 1).weekday() + 7) % 7 + 14)
+    us_holidays[pres_day] = "Presidents' Day"
+    ca_holidays[pres_day] = "Family Day"
+
+    # 4. Good Friday
+    us_holidays[good_friday] = "Good Friday"
+    ca_holidays[good_friday] = "Good Friday"
+
+    # 5. Victoria Day (Canada: Monday before May 25)
+    may_24 = date(year, 5, 24)
+    vic_day = may_24 - timedelta(days=(may_24.weekday() - 0) % 7)
+    ca_holidays[vic_day] = "Victoria Day"
+
+    # 6. Memorial Day (US: Last Monday in May)
+    may_31 = date(year, 5, 31)
+    mem_day = may_31 - timedelta(days=(may_31.weekday() - 0) % 7)
+    us_holidays[mem_day] = "Memorial Day"
+
+    # 7. Juneteenth (US: June 19)
+    june_19 = date(year, 6, 19)
+    june_19_obs = june_19 if june_19.weekday() < 5 else (date(year, 6, 20) if june_19.weekday() == 6 else date(year, 6, 18))
+    us_holidays[june_19_obs] = "Juneteenth"
+
+    # 8. Canada Day (Canada: July 1)
+    cad_day = date(year, 7, 1)
+    cad_obs = cad_day if cad_day.weekday() < 5 else date(year, 7, 2 if cad_day.weekday() == 6 else 3)
+    ca_holidays[cad_obs] = "Canada Day"
+
+    # 9. Independence Day (US: July 4)
+    july_4 = date(year, 7, 4)
+    july_4_obs = july_4 if july_4.weekday() < 5 else (date(year, 7, 5) if july_4.weekday() == 6 else date(year, 7, 3))
+    us_holidays[july_4_obs] = "Independence Day"
+
+    # 10. Civic Holiday (Canada: 1st Monday in August)
+    civic_day = date(year, 8, 1) + timedelta(days=(0 - date(year, 8, 1).weekday() + 7) % 7)
+    ca_holidays[civic_day] = "Civic Holiday"
+
+    # 11. Labor Day (US & Canada: 1st Monday in Sept)
+    labor_day = date(year, 9, 1) + timedelta(days=(0 - date(year, 9, 1).weekday() + 7) % 7)
+    us_holidays[labor_day] = "Labor Day"
+    ca_holidays[labor_day] = "Labour Day"
+
+    # 12. Thanksgiving (Canada: 2nd Monday in Oct)
+    ca_thanks = date(year, 10, 1) + timedelta(days=(0 - date(year, 10, 1).weekday() + 7) % 7 + 7)
+    ca_holidays[ca_thanks] = "Thanksgiving (Canada)"
+
+    # 13. Thanksgiving (US: 4th Thursday in Nov)
+    us_thanks = date(year, 11, 1) + timedelta(days=(3 - date(year, 11, 1).weekday() + 7) % 7 + 21)
+    us_holidays[us_thanks] = "Thanksgiving Day"
+
+    # 14. Christmas Day (Dec 25)
+    xmas = date(year, 12, 25)
+    xmas_obs = xmas if xmas.weekday() < 5 else (date(year, 12, 26) if xmas.weekday() == 6 else date(year, 12, 24))
+    us_holidays[xmas_obs] = "Christmas Day"
+    ca_holidays[xmas_obs] = "Christmas Day"
+
+    # 15. Boxing Day (Canada: Dec 26)
+    boxing = date(year, 12, 26)
+    boxing_obs = boxing if boxing.weekday() < 5 else (date(year, 12, 27) if boxing.weekday() == 6 else date(year, 12, 28))
+    ca_holidays[boxing_obs] = "Boxing Day"
+
+    return us_holidays, ca_holidays
+
+def check_market_holiday(target_date):
+    """Checks if today is a US or Canadian stock market holiday."""
+    us_hols, ca_hols = get_market_holidays(target_date.year)
+    us_name = us_hols.get(target_date)
+    ca_name = ca_hols.get(target_date)
+    return us_name, ca_name
+
+# ====================================================================
+# 2. SESSION TIMING & CLASSIFICATION (16-Hour Stock Engine)
+# ====================================================================
+def get_current_session_info(now_ny):
+    """
+    Classifies the current market session:
+    - PRE_MARKET:   04:00 AM - 09:30 AM EST (Mon-Fri) | Threshold: 1.0%
+    - REGULAR:      09:30 AM - 04:00 PM EST (Mon-Fri) | Threshold: 2.0%
+    - AFTER_HOURS:  04:00 PM - 08:00 PM EST (Mon-Fri) | Threshold: 1.0%
+    - CLOSED:       08:00 PM - 04:00 AM EST or Weekends
+    """
+    if now_ny.weekday() > 4:
+        return "CLOSED", 0.0, "[CLOSED]"
+
+    t = now_ny.time()
+    if dtime(4, 0) <= t < dtime(9, 30):
+        return "PRE_MARKET", 1.0, "[PRE-MARKET]"
+    elif dtime(9, 30) <= t < dtime(16, 0):
+        return "REGULAR", 2.0, "[REGULAR]"
+    elif dtime(16, 0) <= t <= dtime(20, 0):
+        return "AFTER_HOURS", 1.0, "[AFTER-HOURS]"
+    else:
+        return "CLOSED", 0.0, "[CLOSED]"
+
 def normalize_title(title_text):
-    """Cleans title to lowercase alphanumeric words to catch identical stories with punctuation differences."""
     if not title_text:
         return ""
     return re.sub(r'[^a-zA-Z0-9]', '', title_text).lower()
 
-def is_us_stock_market_open():
-    """Returns True if current time is Mon-Fri between 9:30 AM and 4:00 PM Eastern Time."""
-    now_ny = datetime.now(NY_TZ)
-    if now_ny.weekday() > 4:
-        return False
-    return dtime(9, 30) <= now_ny.time() <= dtime(16, 0)
-
-def get_stock_session_id():
-    """Stocks reset daily at 9:30 AM EST (US Market Open)."""
-    now_ny = datetime.now(NY_TZ)
-    if now_ny.time() < dtime(9, 30):
-        session_date = now_ny.date() - timedelta(days=1)
-    else:
-        session_date = now_ny.date()
-    return session_date.strftime("%Y-%m-%d")
-
-def get_crypto_session_id():
-    """Crypto resets daily at 00:00 UTC (Global Crypto Daily Candle Open)."""
-    return datetime.now(UTC_TZ).strftime("%Y-%m-%d")
-
+# ====================================================================
+# 3. STATE MEMORY & PERSISTENCE
+# ====================================================================
 def load_alert_state():
-    """Loads state for price benchmarks, history trails, and remembered news fingerprints."""
-    current_stock_session = get_stock_session_id()
-    current_crypto_session = get_crypto_session_id()
+    now_ny = datetime.now(NY_TZ)
+    today_ny_str = now_ny.strftime("%Y-%m-%d")
+    today_utc_str = datetime.now(UTC_TZ).strftime("%Y-%m-%d")
 
     state = {
-        "stock_session": current_stock_session,
-        "crypto_session": current_crypto_session,
-        "stock_tickers": {},
+        "stock_session_date": today_ny_str,
+        "crypto_session_date": today_utc_str,
+        "premarket_tickers": {},
+        "regular_tickers": {},
+        "afterhours_tickers": {},
         "crypto_tickers": {},
+        "holiday_announced_date": None,
         "seen_news_fingerprints": []
     }
 
@@ -85,27 +204,20 @@ def load_alert_state():
             with open(STATE_FILE, "r") as f:
                 saved = json.load(f)
                 
-                # Restore stock state if same session
-                if saved.get("stock_session") == current_stock_session:
-                    raw_stocks = saved.get("stock_tickers", {})
-                    for k, v in raw_stocks.items():
-                        if isinstance(v, (int, float)):
-                            state["stock_tickers"][k] = {"last_price": v, "history": []}
-                        else:
-                            state["stock_tickers"][k] = v
+                # Check if stock session date matches today
+                if saved.get("stock_session_date") == today_ny_str:
+                    state["premarket_tickers"] = saved.get("premarket_tickers", {})
+                    state["regular_tickers"] = saved.get("regular_tickers", {})
+                    state["afterhours_tickers"] = saved.get("afterhours_tickers", {})
+                    state["holiday_announced_date"] = saved.get("holiday_announced_date")
                 else:
-                    print(f"📅 New Stock Session ({current_stock_session}). Resetting stock memory.")
+                    print(f"📅 New Stock Calendar Day ({today_ny_str}). Resetting daily stock memory slots.")
 
-                # Restore crypto state if same session
-                if saved.get("crypto_session") == current_crypto_session:
-                    raw_crypto = saved.get("crypto_tickers", {})
-                    for k, v in raw_crypto.items():
-                        if isinstance(v, (int, float)):
-                            state["crypto_tickers"][k] = {"last_price": v, "history": []}
-                        else:
-                            state["crypto_tickers"][k] = v
+                # Check crypto session (00:00 UTC reset)
+                if saved.get("crypto_session_date") == today_utc_str:
+                    state["crypto_tickers"] = saved.get("crypto_tickers", {})
                 else:
-                    print(f"🪙 New Crypto Session ({current_crypto_session}). Resetting crypto memory.")
+                    print(f"🪙 New Crypto 24h Session ({today_utc_str}). Resetting crypto memory.")
                 
                 state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or saved.get("seen_news_links", [])
         except Exception as e:
@@ -114,36 +226,37 @@ def load_alert_state():
     return state
 
 def save_alert_state(state):
-    """Saves updated benchmarks and remembers ALL news fingerprints permanently."""
     try:
         with open(STATE_FILE, "w") as f:
             json.dump(state, f, indent=2)
-        total_prices = len(state["stock_tickers"]) + len(state["crypto_tickers"])
-        print(f"State saved ({total_prices} active price benchmarks, {len(state['seen_news_fingerprints'])} news fingerprints remembered).")
+        total_p = (len(state["premarket_tickers"]) + len(state["regular_tickers"]) + 
+                   len(state["afterhours_tickers"]) + len(state["crypto_tickers"]))
+        print(f"State saved ({total_p} active price benchmarks, {len(state['seen_news_fingerprints'])} news fingerprints).")
     except Exception as e:
         print(f"Error saving state file: {e}")
 
-def send_discord_price_alert(ticker, current_price, change_pct, step_change=None, history_trail=None):
-    """Sends a formatted price movement embed with trigger timeline to the PRICE channel."""
+# ====================================================================
+# 4. DISCORD WEBHOOK DISPATCHERS
+# ====================================================================
+def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, benchmark_desc="today"):
     if not DISCORD_PRICE_WEBHOOK_URL:
         print(f"Skipping price alert for {ticker}: DISCORD_PRICE_WEBHOOK_URL not configured.")
         return
 
-    title_text = f"🚨 Market Alert: {ticker}"
-    desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
+    title_text = f"🚨 Market Alert: {ticker} {session_badge}"
+    desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** {benchmark_desc}!"
     if step_change is not None:
-        desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total 1D: **{change_pct:+.2f}%**)"
+        desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total {session_badge}: **{change_pct:+.2f}%**)"
 
     fields = [
         {"name": "Current Price", "value": f"${current_price:.2f}", "inline": True},
-        {"name": "1D Total Change", "value": f"{change_pct:+.2f}%", "inline": True}
+        {"name": f"{session_badge} Change", "value": f"{change_pct:+.2f}%", "inline": True}
     ]
 
-    # Add Trigger History Timeline if previous alerts occurred today
     if history_trail and len(history_trail) > 0:
         trail_str = " ➔ ".join(history_trail)
         fields.append({
-            "name": "🕒 Today's Trigger Path",
+            "name": f"🕒 Today's {session_badge} Path",
             "value": f"`{trail_str}` ➔ **{change_pct:+.2f}%**",
             "inline": False
         })
@@ -165,10 +278,36 @@ def send_discord_price_alert(ticker, current_price, change_pct, step_change=None
     except Exception as e:
         print(f"Error sending price alert for {ticker}: {e}")
 
+def send_discord_holiday_announcement(us_name, ca_name):
+    if not DISCORD_PRICE_WEBHOOK_URL:
+        return
+
+    if us_name and ca_name:
+        headline = f"US & Canadian Stock Markets are CLOSED today for {us_name} / {ca_name}!"
+    elif us_name:
+        headline = f"US Stock Markets (NYSE / NASDAQ) are CLOSED today for {us_name}!"
+    else:
+        headline = f"Canadian Stock Market (TSX) is CLOSED today for {ca_name}!"
+
+    payload = {
+        "username": BOT_NAME,
+        "avatar_url": BOT_PRICE_AVATAR_URL,
+        "embeds": [{
+            "title": "🏛️ Market Notice: Exchange Holiday",
+            "description": f"**{headline}**\n\n• 📈 **Stocks & ETFs:** Paused for the holiday session.\n• 🪙 **Crypto Watcher:** Active 24/7.\n• 📰 **Breaking News:** Active 24/7.",
+            "color": 15844367,  # Gold / Amber
+            "footer": {"text": f"{BOT_NAME} • Market Holiday Engine"}
+        }]
+    }
+    try:
+        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
+        res.raise_for_status()
+        print(f"📢 Holiday announcement sent to Discord: {headline}")
+    except Exception as e:
+        print(f"Error sending holiday announcement: {e}")
+
 def send_discord_news_alert(article):
-    """Sends a formatted breaking news embed to the NEWS channel."""
     if not DISCORD_NEWS_WEBHOOK_URL:
-        print(f"Skipping news alert for {article['ticker']}: DISCORD_NEWS_WEBHOOK_URL not configured.")
         return
 
     payload = {
@@ -190,6 +329,52 @@ def send_discord_news_alert(article):
         res.raise_for_status()
     except Exception as e:
         print(f"Error sending news alert: {e}")
+
+# ====================================================================
+# 5. DATA EXTRACTION ENGINE (Extended Hours & Realtime Live)
+# ====================================================================
+def get_extended_stock_data(ticker_symbol, session_type, session_http):
+    """
+    Fetches accurate prices and baselines across all sessions:
+    - PRE_MARKET: Live Pre-market price vs. Yesterday's 4:00 PM close
+    - REGULAR: Live regular price vs. Yesterday's 4:00 PM close
+    - AFTER_HOURS: Live After-hours price vs. Today's 4:00 PM close (Option B)
+    - CRYPTO: Live crypto price vs. Yesterday's 00:00 UTC close
+    """
+    current_price = None
+    baseline_price = None
+
+    try:
+        ticker = yf.Ticker(ticker_symbol, session=session_http)
+        fi = ticker.fast_info
+
+        if session_type == "CRYPTO":
+            current_price = fi.last_price
+            baseline_price = fi.previous_close
+
+        elif session_type in ("PRE_MARKET", "REGULAR"):
+            current_price = fi.last_price
+            baseline_price = fi.previous_close
+
+        elif session_type == "AFTER_HOURS":
+            # Option B: Compare live after-hours price against Today's 4:00 PM regular close
+            current_price = fi.last_price
+            
+            # Fetch today's 4:00 PM regular close
+            try:
+                hist = ticker.history(period="2d")
+                if 'Close' in hist.columns and len(hist['Close']) >= 1:
+                    baseline_price = float(hist['Close'].iloc[-1])
+            except Exception:
+                pass
+            
+            if baseline_price is None:
+                baseline_price = fi.previous_close
+
+    except Exception:
+        pass
+
+    return current_price, baseline_price
 
 # --- NEWS FETCHING WITH TIME PARSING ---
 def fetch_ticker_news_search(symbol, session):
@@ -269,138 +454,141 @@ def fetch_ticker_news_rss(symbol, session):
         pass
     return news_items
 
-def get_live_price_and_prev_close(ticker_obj):
-    """
-    Fetches the true live price and yesterday's official close.
-    Uses fast_info first (most accurate realtime feed), with fallback to history.
-    """
-    current_price = None
-    prev_close = None
-
-    try:
-        fi = ticker_obj.fast_info
-        current_price = fi.last_price
-        prev_close = fi.previous_close
-    except Exception:
-        pass
-
-    if current_price is None or prev_close is None:
-        try:
-            hist = ticker_obj.history(period="2d")
-            if 'Close' in hist.columns and len(hist['Close']) >= 2:
-                prev_close = float(hist['Close'].iloc[-2])
-                current_price = float(hist['Close'].iloc[-1])
-        except Exception:
-            pass
-
-    return current_price, prev_close
-
+# ====================================================================
+# 6. MAIN EXECUTION CONTROLLER
+# ====================================================================
 def check_market():
     now_ny = datetime.now(NY_TZ)
-    
-    # -------------------------------------------------------------
-    # 9:30 AM OPENING PAUSE: If triggered between 9:30:00 and 9:31:59,
-    # sleep until 9:32:00 AM so the NYSE/NASDAQ opening cross settles!
-    # -------------------------------------------------------------
-    if now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
+    today_ny_date = now_ny.date()
+    today_ny_str = now_ny.strftime("%Y-%m-%d")
+
+    # 1. CHECK FOR STOCK MARKET HOLIDAYS
+    us_hol, ca_hol = check_market_holiday(today_ny_date)
+    is_stock_holiday = bool(us_hol)  # Primary US exchange closure
+
+    state = load_alert_state()
+
+    # Announce holiday on the morning's first run
+    if is_stock_holiday and state.get("holiday_announced_date") != today_ny_str:
+        send_discord_holiday_announcement(us_hol, ca_hol)
+        state["holiday_announced_date"] = today_ny_str
+
+    # 2. 9:30 AM OPENING PAUSE: Sleep 120s until 9:32 AM for auction prices to settle
+    if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
         target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
         sleep_seconds = max(0, (target_time - now_ny).total_seconds())
         if sleep_seconds > 0:
-            print(f"⏳ Market opening bell detected ({now_ny.strftime('%I:%M:%S %p')}).")
-            print(f"   Waiting {int(sleep_seconds)}s until 9:32 AM for opening auction prices to settle...")
+            print(f"⏳ Market opening bell ({now_ny.strftime('%I:%M:%S %p')}). Waiting {int(sleep_seconds)}s until 9:32 AM for opening cross...")
             time.sleep(sleep_seconds)
-            now_ny = datetime.now(NY_TZ)  # Update timestamp after sleep
+            now_ny = datetime.now(NY_TZ)
 
-    stock_market_active = is_us_stock_market_open()
+    session_type, threshold_pct, session_badge = get_current_session_info(now_ny)
     now_ny_str = now_ny.strftime("%Y-%m-%d %I:%M %p %Z")
-    
-    print(f"Current Time (NY): {now_ny_str}")
-    print(f"US Stock Market Status: {'🟢 OPEN' if stock_market_active else '🔴 CLOSED (Crypto Only)'}\n")
 
-    state = load_alert_state()
-    seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
-    
-    session = requests.Session()
-    session.headers.update({
+    print(f"Current Time (NY): {now_ny_str}")
+    if is_stock_holiday:
+        print(f"US Stock Market Status: 🏛️ CLOSED for Holiday ({us_hol}) - Crypto & News Active\n")
+    else:
+        print(f"US Stock Market Session: {session_badge} (Threshold: ±{threshold_pct}%)\n")
+
+    session_http = requests.Session()
+    session_http.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     })
 
     # ==========================================
-    # 1. SCAN PRICES (Realtime Fast Info)
+    # 3. SCAN PRICES (Pre-Market, Regular, After-Hours & Crypto)
     # ==========================================
     price_alerts_to_send = []
-    active_price_watchlist = [(c, "crypto") for c in CRYPTO_WATCHLIST]
-    if stock_market_active:
-        active_price_watchlist.extend([(s, "stock") for s in STOCK_ETF_WATCHLIST])
 
-    for ticker_symbol, asset_type in active_price_watchlist:
+    # Build active watchlist
+    active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
+    
+    if not is_stock_holiday and session_type != "CLOSED":
+        for s in STOCK_ETF_WATCHLIST:
+            active_watchlist.append((s, session_type, threshold_pct, session_badge))
+
+    for ticker_symbol, s_type, req_threshold, badge in active_watchlist:
         try:
-            ticker = yf.Ticker(ticker_symbol, session=session)
-            current_price, prev_close = get_live_price_and_prev_close(ticker)
+            current_price, baseline_price = get_extended_stock_data(ticker_symbol, s_type, session_http)
 
-            if current_price is not None and prev_close is not None and prev_close > 0:
-                daily_change_pct = ((current_price - prev_close) / prev_close) * 100
-                tracked_dict = state["crypto_tickers"] if asset_type == "crypto" else state["stock_tickers"]
+            if current_price is not None and baseline_price is not None and baseline_price > 0:
+                change_pct = ((current_price - baseline_price) / baseline_price) * 100
 
-                # Case 1: Already alerted today -> check 2.0% step change
+                # Select appropriate session state dictionary
+                if s_type == "CRYPTO":
+                    tracked_dict = state["crypto_tickers"]
+                elif s_type == "PRE_MARKET":
+                    tracked_dict = state["premarket_tickers"]
+                elif s_type == "REGULAR":
+                    tracked_dict = state["regular_tickers"]
+                elif s_type == "AFTER_HOURS":
+                    tracked_dict = state["afterhours_tickers"]
+                else:
+                    tracked_dict = {}
+
+                # Case 1: Already alerted in this session -> Check step change
                 if ticker_symbol in tracked_dict:
                     item_data = tracked_dict[ticker_symbol]
                     last_alert_price = item_data["last_price"]
                     history_trail = item_data.get("history", [])
-                    
+
                     step_change_pct = ((current_price - last_alert_price) / last_alert_price) * 100
-                    
-                    if abs(step_change_pct) >= 2.0:
-                        print(f"🔥 {ticker_symbol:10s} | STEP TRIGGER | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}%")
+
+                    if abs(step_change_pct) >= req_threshold:
+                        print(f"🔥 {ticker_symbol:10s} {badge} | STEP TRIGGER | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}%")
                         price_alerts_to_send.append({
-                            "ticker": ticker_symbol, 
+                            "ticker": ticker_symbol,
                             "price": current_price,
-                            "daily_change": daily_change_pct, 
+                            "change_pct": change_pct,
+                            "badge": badge,
                             "step_change": step_change_pct,
                             "history_trail": list(history_trail)
                         })
-                        history_trail.append(f"{daily_change_pct:+.2f}%")
+                        history_trail.append(f"{change_pct:+.2f}%")
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
                             "history": history_trail
                         }
                     else:
-                        print(f"⏭️ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below 2%)")
+                        print(f"⏭️ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below {req_threshold}%)")
 
-                # Case 2: Initial alert today -> check 2.0% daily threshold
+                # Case 2: Initial alert for this session -> Check initial threshold
                 else:
-                    if abs(daily_change_pct) >= 2.0:
-                        print(f"🚨 {ticker_symbol:10s} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
+                    if abs(change_pct) >= req_threshold:
+                        print(f"🚨 {ticker_symbol:10s} {badge} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
                         price_alerts_to_send.append({
-                            "ticker": ticker_symbol, 
+                            "ticker": ticker_symbol,
                             "price": current_price,
-                            "daily_change": daily_change_pct, 
+                            "change_pct": change_pct,
+                            "badge": badge,
                             "step_change": None,
                             "history_trail": []
                         })
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
-                            "history": [f"{daily_change_pct:+.2f}%"]
+                            "history": [f"{change_pct:+.2f}%"]
                         }
                     else:
-                        print(f"✅ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
+                        print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
             else:
-                print(f"⚠️ {ticker_symbol:10s} | SKIPPED: Insufficient realtime price data")
+                print(f"⚠️ {ticker_symbol:10s} {badge} | SKIPPED: Insufficient realtime price data")
         except Exception as e:
-            print(f"❌ Error checking price for {ticker_symbol}: {e}")
-        time.sleep(0.15)
+            print(f"❌ Error checking {ticker_symbol}: {e}")
+        time.sleep(0.12)
 
     # ==========================================
-    # 2. SCAN BREAKING NEWS (45-Min Cutoff & Title+Date Deduplication)
+    # 4. SCAN BREAKING NEWS (45-Min Cutoff & Title+Date Deduplication)
     # ==========================================
     print("\nScanning breaking news across all tickers...")
     cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
+    seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
     raw_news = []
-    
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures_search = [executor.submit(fetch_ticker_news_search, sym, session) for sym in ALL_TICKERS]
-        futures_rss = [executor.submit(fetch_ticker_news_rss, sym, session) for sym in ALL_TICKERS]
-        
+        futures_search = [executor.submit(fetch_ticker_news_search, sym, session_http) for sym in ALL_TICKERS]
+        futures_rss = [executor.submit(fetch_ticker_news_rss, sym, session_http) for sym in ALL_TICKERS]
+
         for f in concurrent.futures.as_completed(futures_search + futures_rss):
             raw_news.extend(f.result())
 
@@ -410,57 +598,52 @@ def check_market():
         pub_dt = item.get("pub_dt")
         title = item.get("title", "")
 
-        # Create unique fingerprint combining normalized Title + exact Date
         date_stamp = pub_dt.strftime("%Y-%m-%d") if pub_dt else "nodate"
         norm_title = normalize_title(title)
-        
+
         title_date_key = f"title_{norm_title}_{date_stamp}"
         link_key = f"link_{link}"
 
-        # Skip if already saved either by Link or by Title+Date
         if link_key in seen_fingerprints_set or (norm_title and title_date_key in seen_fingerprints_set):
             continue
 
-        # Add both fingerprints to memory so neither Search nor RSS can trigger it again today
         seen_fingerprints_set.add(link_key)
         seen_fingerprints_set.add(title_date_key)
         state["seen_news_fingerprints"].append(link_key)
         state["seen_news_fingerprints"].append(title_date_key)
 
-        # STRICT FILTER: Only alert if published within the last 45 minutes
         if pub_dt and pub_dt >= cutoff_time:
             new_articles.append(item)
 
     # ==========================================
-    # 3. DISPATCH DISCORD ALERTS (0.5s Fast Spacing)
+    # 5. DISPATCH DISCORD ALERTS (Fast 0.5s Spacing)
     # ==========================================
-    # Send Sorted Price Alerts to the Price Channel
-    price_alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
+    price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
     if price_alerts_to_send:
-        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL as '{BOT_NAME}'...")
+        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
         for alert in price_alerts_to_send:
             send_discord_price_alert(
                 ticker=alert["ticker"],
                 current_price=alert["price"],
-                change_pct=alert["daily_change"],
+                change_pct=alert["change_pct"],
+                session_badge=alert["badge"],
                 step_change=alert["step_change"],
                 history_trail=alert["history_trail"]
             )
             time.sleep(0.5)
 
-    # Send ALL Fresh Breaking News Alerts to the News Channel
     if new_articles:
-        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL as '{BOT_NAME}'...")
+        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
         for article in new_articles:
             send_discord_news_alert(article)
             time.sleep(0.5)
 
     # ==========================================
-    # 4. PERSIST STATE
+    # 6. PERSIST STATE
     # ==========================================
     save_alert_state(state)
     print(f"\n=======================================================")
-    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News Sent: {len(new_articles)}")
+    print(f"Check Complete. Price Alerts Sent: {len(price_alerts_to_send)} | Fresh News Sent: {len(new_articles)}")
 
 if __name__ == "__main__":
     check_market()
