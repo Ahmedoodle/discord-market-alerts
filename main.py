@@ -380,9 +380,9 @@ def check_market():
             new_articles.append(item)
 
     # ==========================================
-    # 3. DISPATCH DISCORD ALERTS
+    # 3. DISPATCH DISCORD ALERTS (2.5s Spacing)
     # ==========================================
-    # Send Sorted Price Alerts to the Price Channel as "Looney"
+    # Send Sorted Price Alerts with 2.5s delay
     price_alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
     if price_alerts_to_send:
         print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL as '{BOT_NAME}'...")
@@ -394,14 +394,14 @@ def check_market():
                 step_change=alert["step_change"],
                 history_trail=alert["history_trail"]
             )
-            time.sleep(0.5)
+            time.sleep(2.5)  # 2.5s spacing ensures phone push notifications trigger reliably
 
-    # Send ALL Fresh Breaking News Alerts to the News Channel as "Looney"
+    # Send ALL Fresh Breaking News Alerts with 2.5s delay
     if new_articles:
         print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL as '{BOT_NAME}'...")
         for article in new_articles:
             send_discord_news_alert(article)
-            time.sleep(0.5)
+            time.sleep(2.5)  # 2.5s spacing ensures phone push notifications trigger reliably
 
     # ==========================================
     # 4. PERSIST STATE
