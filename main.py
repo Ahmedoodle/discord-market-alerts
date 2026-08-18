@@ -15,7 +15,7 @@ DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
 
 # Bot Branding Overrides
 BOT_NAME = "Looney"
-BOT_AVATAR_URL = "https://i.imgur.com/2Xy0l6B.jpeg"
+BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
 
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
@@ -149,7 +149,7 @@ def send_discord_price_alert(ticker, current_price, change_pct, step_change=None
             "description": desc_text,
             "color": 15158332 if change_pct < 0 else 3066993,
             "fields": fields,
-            "footer": {"text": "Looney • 24/7 Price Action Channel"}
+            "footer": {"text": f"{BOT_NAME} • 24/7 Price Action Channel"}
         }]
     }
     try:
@@ -175,7 +175,7 @@ def send_discord_news_alert(article):
                 {"name": "Publisher", "value": article["publisher"], "inline": True},
                 {"name": "Published (ET)", "value": article["time_str"], "inline": True}
             ],
-            "footer": {"text": "Looney • 24/7 Breaking News Channel"}
+            "footer": {"text": f"{BOT_NAME} • 24/7 Breaking News Channel"}
         }]
     }
     try:
