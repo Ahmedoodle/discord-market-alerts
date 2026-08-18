@@ -13,6 +13,10 @@ import yfinance as yf
 DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
 
+# Bot Branding Overrides
+BOT_NAME = "Looney"
+BOT_AVATAR_URL = "https://raw.githubusercontent.com/Ahmedoodle/discord-market-alerts/main/IMG_6630.jpeg"
+
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
@@ -138,14 +142,14 @@ def send_discord_price_alert(ticker, current_price, change_pct, step_change=None
         })
 
     payload = {
-        "username": "Price Watcher",
-        "avatar_url": "https://i.imgur.com/4M34hi2.png",
+        "username": BOT_NAME,
+        "avatar_url": BOT_AVATAR_URL,
         "embeds": [{
             "title": title_text,
             "description": desc_text,
             "color": 15158332 if change_pct < 0 else 3066993,
             "fields": fields,
-            "footer": {"text": "24/7 Cloud Bot • Price Action Channel"}
+            "footer": {"text": "Looney • 24/7 Price Action Channel"}
         }]
     }
     try:
@@ -157,12 +161,12 @@ def send_discord_price_alert(ticker, current_price, change_pct, step_change=None
 def send_discord_news_alert(article):
     """Sends a formatted breaking news embed to the NEWS channel."""
     if not DISCORD_NEWS_WEBHOOK_URL:
-        print(f"Skipping news alert for {article['ticker']}: DISCORD_WEBHOOK_URL not configured.")
+        print(f"Skipping news alert for {article['ticker']}: DISCORD_NEWS_WEBHOOK_URL not configured.")
         return
 
     payload = {
-        "username": "News Watcher",
-        "avatar_url": "https://i.imgur.com/4M34hi2.png",
+        "username": BOT_NAME,
+        "avatar_url": BOT_AVATAR_URL,
         "embeds": [{
             "title": f"📰 Breaking News: {article['ticker']}",
             "description": f"**[{article['title']}]({article['link']})**",
@@ -171,7 +175,7 @@ def send_discord_news_alert(article):
                 {"name": "Publisher", "value": article["publisher"], "inline": True},
                 {"name": "Published (ET)", "value": article["time_str"], "inline": True}
             ],
-            "footer": {"text": "24/7 Cloud Bot • Breaking News Channel"}
+            "footer": {"text": "Looney • 24/7 Breaking News Channel"}
         }]
     }
     try:
@@ -313,7 +317,6 @@ def check_market():
                             "step_change": step_change_pct,
                             "history_trail": list(history_trail)
                         })
-                        # Update state with new price and append current % to history
                         history_trail.append(f"{daily_change_pct:+.2f}%")
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
@@ -379,10 +382,10 @@ def check_market():
     # ==========================================
     # 3. DISPATCH DISCORD ALERTS
     # ==========================================
-    # Send Sorted Price Alerts to the Price Channel
+    # Send Sorted Price Alerts to the Price Channel as "Looney"
     price_alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
     if price_alerts_to_send:
-        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
+        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL as '{BOT_NAME}'...")
         for alert in price_alerts_to_send:
             send_discord_price_alert(
                 ticker=alert["ticker"],
@@ -393,9 +396,9 @@ def check_market():
             )
             time.sleep(0.5)
 
-    # Send ALL Fresh Breaking News Alerts to the News Channel
+    # Send ALL Fresh Breaking News Alerts to the News Channel as "Looney"
     if new_articles:
-        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
+        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL as '{BOT_NAME}'...")
         for article in new_articles:
             send_discord_news_alert(article)
             time.sleep(0.5)
