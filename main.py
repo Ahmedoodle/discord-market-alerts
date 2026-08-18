@@ -9,15 +9,18 @@ from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 import requests
 import yfinance as yf
+import pandas as pd
 
 # Environment Variables (Securely pulled from GitHub Secrets)
 DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
-DISCORD_PRICE_WEBHOOK_URL = os.getenv("DISCORD_PRICE_WEBHOOK_URL")
+DISCORD_PRICE_WEBHOOK_URL = os.getenv(
+    "DISCORD_PRICE_WEBHOOK_URL",
+    "https://discord.com/api/webhooks/1539395404502671440/HCuVM2hd2t7OV8r1DaLk46iTNz3xgD1Li_Mdt05RAU7m3W2ZTYLIaYKrQyMti81axOxV"
+)
 
-# Bot Branding & Avatars
+# Bot Branding & Unified Avatar (Rocket Image across both channels)
 BOT_NAME = "Looney"
-BOT_PRICE_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539150514313498634/IMG_6633.png?ex=6a85451e&is=6a83f39e&hm=c973d5a79654c66b306b4d8296fdc5b1b8ca8ce0c97e3f7693c111809acf5cb1&"
-BOT_NEWS_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
+BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
 
 STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
@@ -41,7 +44,7 @@ STOCK_ETF_WATCHLIST = [
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
 
 # ====================================================================
-# 1. NYSE & TSX MARKET HOLIDAY & EARLY CLOSE ENGINE
+# 1. BULLETPROOF NYSE & TSX MARKET HOLIDAY & EARLY CLOSE ENGINE
 # ====================================================================
 def calculate_easter(year):
     """Calculates Easter Sunday using the Anonymous Gregorian algorithm."""
@@ -62,7 +65,6 @@ def calculate_easter(year):
     return date(year, month, day)
 
 def _get_year_holidays(year):
-    """Generates precise NYSE (US) and TSX (Canada) full-day holiday schedules."""
     us_hols = {}
     ca_hols = {}
 
@@ -80,7 +82,7 @@ def _get_year_holidays(year):
         us_hols[ny_day] = "New Year's Day"
         ca_hols[ny_day] = "New Year's Day"
 
-    # 2. MLK Day (US: 3rd Monday in Jan, 1998+)
+    # 2. MLK Day (US: 3rd Mon in Jan, 1998+)
     if year >= 1998:
         mlk = date(year, 1, 1) + timedelta(days=(0 - date(year, 1, 1).weekday() + 7) % 7 + 14)
         us_hols[mlk] = "Martin Luther King Jr. Day"
@@ -180,7 +182,6 @@ def _get_year_holidays(year):
     return us_hols, ca_hols
 
 def check_market_holiday(target_date):
-    """Checks full-day closures across a multi-year window."""
     all_us = {}
     all_ca = {}
     for y in [target_date.year - 1, target_date.year, target_date.year + 1]:
@@ -190,27 +191,17 @@ def check_market_holiday(target_date):
     return all_us.get(target_date), all_ca.get(target_date)
 
 def check_early_close(target_date):
-    """
-    Detects 1:00 PM EST Early Market Close Days:
-    1. July 3rd (Day before July 4, if July 4 is Tue-Fri)
-    2. Black Friday (Day after Thanksgiving)
-    3. Christmas Eve (Dec 24, if on Monday-Friday)
-    """
     year = target_date.year
-
-    # 1. July 3rd
     if target_date.month == 7 and target_date.day == 3 and target_date.weekday() < 5:
         july_4 = date(year, 7, 4)
-        if july_4.weekday() in (1, 2, 3, 4):  # Tue, Wed, Thu, Fri
+        if july_4.weekday() in (1, 2, 3, 4):
             return True, "Independence Day Eve (1:00 PM Close)"
 
-    # 2. Black Friday
     us_thanks = date(year, 11, 1) + timedelta(days=(3 - date(year, 11, 1).weekday() + 7) % 7 + 21)
     black_friday = us_thanks + timedelta(days=1)
     if target_date == black_friday:
         return True, "Black Friday (1:00 PM Close)"
 
-    # 3. Christmas Eve
     if target_date.month == 12 and target_date.day == 24 and target_date.weekday() < 5:
         return True, "Christmas Eve (1:00 PM Close)"
 
@@ -220,11 +211,6 @@ def check_early_close(target_date):
 # 2. SESSION TIMING & DYNAMIC EARLY-CLOSE CLASSIFIER
 # ====================================================================
 def get_current_session_info(now_ny, is_early_close):
-    """
-    Dynamically adjusts Regular and After-Hours cutoffs on Early Close Days:
-    - Normal Day: Regular (9:30 AM - 4:00 PM), After-Hours (4:00 PM - 8:00 PM)
-    - Early Close: Regular (9:30 AM - 1:00 PM), After-Hours (1:00 PM - 5:00 PM)
-    """
     if now_ny.weekday() > 4:
         return "CLOSED", 0.0, "[CLOSED]"
 
@@ -276,7 +262,7 @@ def load_alert_state():
                     state["afterhours_tickers"] = saved.get("afterhours_tickers", {})
                     state["holiday_announced_date"] = saved.get("holiday_announced_date")
                 else:
-                    print(f"📅 New Stock Calendar Day ({today_ny_str}). Resetting stock memory slots.")
+                    print(f"📅 New Stock Calendar Day ({today_ny_str}). Resetting daily stock memory slots.")
 
                 if saved.get("crypto_session_date") == today_utc_str:
                     state["crypto_tickers"] = saved.get("crypto_tickers", {})
@@ -300,15 +286,126 @@ def save_alert_state(state):
         print(f"Error saving state file: {e}")
 
 # ====================================================================
-# 4. DISCORD WEBHOOK DISPATCHERS
+# 4. TECHNICAL INDICATOR CALCULATION ENGINE (Volume, RSI, 52W, SMAs)
 # ====================================================================
-def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, benchmark_desc="today"):
+def format_large_number(num):
+    if num is None:
+        return "N/A"
+    if num >= 1e9:
+        return f"{num / 1e9:.2f}B"
+    elif num >= 1e6:
+        return f"{num / 1e6:.1f}M"
+    elif num >= 1e3:
+        return f"{num / 1e3:.1f}K"
+    return str(int(num))
+
+def calculate_technical_metrics(ticker_obj, current_price, session_type):
+    """
+    Computes institutional indicators:
+    - 20D RVOL (Relative Volume)
+    - 14-Day RSI (Wilder's Smoothing)
+    - 52-Week Range Proximity
+    - 50D & 200D SMA Trend Health
+    """
+    metrics = {
+        "volume_str": None,
+        "rsi_str": None,
+        "range_52w_str": None,
+        "trend_health_str": None
+    }
+
+    try:
+        hist = ticker_obj.history(period="1y")
+        if hist.empty or 'Close' not in hist or len(hist['Close']) < 15:
+            return metrics
+
+        closes = hist['Close'].dropna()
+        volumes = hist['Volume'].dropna()
+
+        # 1. 20-DAY RELATIVE VOLUME (RVOL)
+        if len(volumes) >= 20:
+            avg_vol_20 = volumes.iloc[-21:-1].mean()
+            vol_today = volumes.iloc[-1]
+            if avg_vol_20 > 0:
+                rvol = vol_today / avg_vol_20
+                v_formatted = format_large_number(vol_today)
+                if rvol >= 2.0:
+                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg 🔥 Unusual Surge)"
+                elif rvol >= 1.3:
+                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg ⚡ Strong Volume)"
+                elif rvol < 0.6:
+                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg 💤 Low Volume)"
+                else:
+                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg 📊 Normal)"
+
+        # 2. 14-DAY RSI (Wilder's Formula)
+        delta = closes.diff()
+        gains = delta.clip(lower=0)
+        losses = -1 * delta.clip(upper=0)
+        avg_gain = gains.ewm(com=13, adjust=False).mean().iloc[-1]
+        avg_loss = losses.ewm(com=13, adjust=False).mean().iloc[-1]
+
+        if avg_loss == 0:
+            rsi = 100.0
+        else:
+            rs = avg_gain / avg_loss
+            rsi = 100.0 - (100.0 / (1.0 + rs))
+
+        if rsi >= 75:
+            metrics["rsi_str"] = f"`{rsi:.1f}` (⚠️ Extreme Overbought)"
+        elif rsi >= 70:
+            metrics["rsi_str"] = f"`{rsi:.1f}` (⚠️ Overbought Zone)"
+        elif rsi <= 25:
+            metrics["rsi_str"] = f"`{rsi:.1f}` (🟢 Extreme Oversold)"
+        elif rsi <= 30:
+            metrics["rsi_str"] = f"`{rsi:.1f}` (🟢 Oversold Zone)"
+        elif rsi >= 50:
+            metrics["rsi_str"] = f"`{rsi:.1f}` (Neutral / Bullish 📈)"
+        else:
+            metrics["rsi_str"] = f"`{rsi:.1f}` (Neutral / Bearish 📉)"
+
+        # 3. 52-WEEK RANGE & PROXIMITY
+        high_52w = hist['High'].max()
+        low_52w = hist['Low'].min()
+        if high_52w and low_52w and high_52w > low_52w:
+            pos_pct = ((current_price - low_52w) / (high_52w - low_52w)) * 100
+            dist_high = ((high_52w - current_price) / high_52w) * 100
+            
+            if dist_high <= 2.0:
+                metrics["range_52w_str"] = f"`{pos_pct:.1f}%` (🔥 {dist_high:.1f}% from 52W High!)"
+            elif dist_high <= 5.0:
+                metrics["range_52w_str"] = f"`{pos_pct:.1f}%` (⚡ {dist_high:.1f}% from 52W High)"
+            else:
+                metrics["range_52w_str"] = f"`{pos_pct:.1f}%` ({dist_high:.1f}% below 52W High)"
+
+        # 4. 50-DAY & 200-DAY SMA TREND HEALTH
+        if len(closes) >= 200:
+            sma_50 = closes.iloc[-50:].mean()
+            sma_200 = closes.iloc[-200:].mean()
+            if current_price >= sma_50 and current_price >= sma_200:
+                metrics["trend_health_str"] = "Above 50D & 200D SMA (🟢 Strong Uptrend)"
+            elif current_price < sma_50 and current_price < sma_200:
+                metrics["trend_health_str"] = "Below 50D & 200D SMA (🔴 Strong Downtrend)"
+            elif current_price >= sma_200 and current_price < sma_50:
+                metrics["trend_health_str"] = "Above 200D, Below 50D SMA (🟡 Pullback)"
+            else:
+                metrics["trend_health_str"] = "Above 50D, Below 200D SMA (🟡 Rebound)"
+
+    except Exception:
+        pass
+
+    return metrics
+
+# ====================================================================
+# 5. DISCORD WEBHOOK DISPATCHERS
+# ====================================================================
+def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, metrics=None):
     if not DISCORD_PRICE_WEBHOOK_URL:
         print(f"Skipping price alert for {ticker}: DISCORD_PRICE_WEBHOOK_URL not configured.")
         return
 
     title_text = f"🚨 Market Alert: {ticker} {session_badge}"
-    desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** {benchmark_desc}!"
+    desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
     if step_change is not None:
         desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total {session_badge}: **{change_pct:+.2f}%**)"
 
@@ -317,6 +414,18 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
         {"name": f"{session_badge} Change", "value": f"{change_pct:+.2f}%", "inline": True}
     ]
 
+    # Attach Institutional Indicator Metrics if available
+    if metrics:
+        if metrics.get("volume_str"):
+            fields.append({"name": "📊 Volume (20D)", "value": metrics["volume_str"], "inline": False})
+        if metrics.get("rsi_str"):
+            fields.append({"name": "📈 RSI (14D)", "value": metrics["rsi_str"], "inline": True})
+        if metrics.get("range_52w_str"):
+            fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_52w_str"], "inline": True})
+        if metrics.get("trend_health_str"):
+            fields.append({"name": "📈 Trend Health", "value": metrics["trend_health_str"], "inline": False})
+
+    # Add Trigger History Timeline
     if history_trail and len(history_trail) > 0:
         trail_str = " ➔ ".join(history_trail)
         fields.append({
@@ -327,7 +436,7 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
 
     payload = {
         "username": BOT_NAME,
-        "avatar_url": BOT_PRICE_AVATAR_URL,
+        "avatar_url": BOT_AVATAR_URL,
         "embeds": [{
             "title": title_text,
             "description": desc_text,
@@ -355,11 +464,11 @@ def send_discord_holiday_announcement(us_name, ca_name):
 
     payload = {
         "username": BOT_NAME,
-        "avatar_url": BOT_PRICE_AVATAR_URL,
+        "avatar_url": BOT_AVATAR_URL,
         "embeds": [{
             "title": "🏛️ Market Notice: Exchange Holiday",
             "description": f"**{headline}**\n\n• 📈 **Stocks & ETFs:** Paused for the holiday session.\n• 🪙 **Crypto Watcher:** Active 24/7.\n• 📰 **Breaking News:** Active 24/7.",
-            "color": 15844367,
+            "color": 15844367,  # Gold / Amber
             "footer": {"text": f"{BOT_NAME} • Market Holiday Engine"}
         }]
     }
@@ -376,7 +485,7 @@ def send_discord_news_alert(article):
 
     payload = {
         "username": BOT_NAME,
-        "avatar_url": BOT_NEWS_AVATAR_URL,
+        "avatar_url": BOT_AVATAR_URL,
         "embeds": [{
             "title": f"📰 Breaking News: {article['ticker']}",
             "description": f"**[{article['title']}]({article['link']})**",
@@ -395,11 +504,12 @@ def send_discord_news_alert(article):
         print(f"Error sending news alert: {e}")
 
 # ====================================================================
-# 5. DATA EXTRACTION ENGINE (Extended Hours & Realtime Live)
+# 6. DATA EXTRACTION ENGINE (Extended Hours & Realtime Live)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
+    ticker = None
 
     try:
         ticker = yf.Ticker(ticker_symbol, session=session_http)
@@ -414,7 +524,6 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             baseline_price = fi.previous_close
 
         elif session_type == "AFTER_HOURS":
-            # Compare live after-hours price against the regular closing price (1 PM on early close, 4 PM normal)
             current_price = fi.last_price
             try:
                 hist = ticker.history(period="2d")
@@ -429,7 +538,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
     except Exception:
         pass
 
-    return current_price, baseline_price
+    return current_price, baseline_price, ticker
 
 # --- NEWS FETCHING WITH TIME PARSING ---
 def fetch_ticker_news_search(symbol, session):
@@ -510,7 +619,7 @@ def fetch_ticker_news_rss(symbol, session):
     return news_items
 
 # ====================================================================
-# 6. MAIN EXECUTION CONTROLLER
+# 7. MAIN EXECUTION CONTROLLER
 # ====================================================================
 def check_market():
     now_ny = datetime.now(NY_TZ)
@@ -555,7 +664,7 @@ def check_market():
     })
 
     # ==========================================
-    # 3. SCAN PRICES
+    # 3. SCAN PRICES (With Institutional Indicators)
     # ==========================================
     price_alerts_to_send = []
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
@@ -566,7 +675,7 @@ def check_market():
 
     for ticker_symbol, s_type, req_threshold, badge in active_watchlist:
         try:
-            current_price, baseline_price = get_extended_stock_data(ticker_symbol, s_type, session_http)
+            current_price, baseline_price, ticker_obj = get_extended_stock_data(ticker_symbol, s_type, session_http)
 
             if current_price is not None and baseline_price is not None and baseline_price > 0:
                 change_pct = ((current_price - baseline_price) / baseline_price) * 100
@@ -582,24 +691,22 @@ def check_market():
                 else:
                     tracked_dict = {}
 
+                # Calculate Institutional Indicators for triggered alerts
+                should_alert = False
+                step_change_pct = None
+                history_trail = []
+
                 # Case 1: Already alerted in this session -> Step check
                 if ticker_symbol in tracked_dict:
                     item_data = tracked_dict[ticker_symbol]
                     last_alert_price = item_data["last_price"]
-                    history_trail = item_data.get("history", [])
+                    history_trail = list(item_data.get("history", []))
 
                     step_change_pct = ((current_price - last_alert_price) / last_alert_price) * 100
 
                     if abs(step_change_pct) >= req_threshold:
+                        should_alert = True
                         print(f"🔥 {ticker_symbol:10s} {badge} | STEP TRIGGER | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}%")
-                        price_alerts_to_send.append({
-                            "ticker": ticker_symbol,
-                            "price": current_price,
-                            "change_pct": change_pct,
-                            "badge": badge,
-                            "step_change": step_change_pct,
-                            "history_trail": list(history_trail)
-                        })
                         history_trail.append(f"{change_pct:+.2f}%")
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
@@ -611,21 +718,29 @@ def check_market():
                 # Case 2: Initial alert for this session -> Threshold check
                 else:
                     if abs(change_pct) >= req_threshold:
+                        should_alert = True
                         print(f"🚨 {ticker_symbol:10s} {badge} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
-                        price_alerts_to_send.append({
-                            "ticker": ticker_symbol,
-                            "price": current_price,
-                            "change_pct": change_pct,
-                            "badge": badge,
-                            "step_change": None,
-                            "history_trail": []
-                        })
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
                             "history": [f"{change_pct:+.2f}%"]
                         }
+                        history_trail = []
                     else:
                         print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
+
+                if should_alert:
+                    # Calculate live institutional metrics on demand
+                    metrics = calculate_technical_metrics(ticker_obj, current_price, s_type)
+                    price_alerts_to_send.append({
+                        "ticker": ticker_symbol,
+                        "price": current_price,
+                        "change_pct": change_pct,
+                        "badge": badge,
+                        "step_change": step_change_pct,
+                        "history_trail": history_trail[:-1] if step_change_pct is not None else [],
+                        "metrics": metrics
+                    })
+
             else:
                 print(f"⚠️ {ticker_symbol:10s} {badge} | SKIPPED: Insufficient realtime price data")
         except Exception as e:
@@ -683,7 +798,8 @@ def check_market():
                 change_pct=alert["change_pct"],
                 session_badge=alert["badge"],
                 step_change=alert["step_change"],
-                history_trail=alert["history_trail"]
+                history_trail=alert["history_trail"],
+                metrics=alert["metrics"]
             )
             time.sleep(0.5)
 
