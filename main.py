@@ -48,11 +48,11 @@ def normalize_title(title_text):
     return re.sub(r'[^a-zA-Z0-9]', '', title_text).lower()
 
 def is_us_stock_market_open():
-    """Returns True if current time is Mon-Fri between 9:30 AM and 4:00 PM Eastern Time."""
+    """Returns True if current time is Mon-Fri between 9:32 AM (after opening cross settles) and 4:00 PM Eastern Time."""
     now_ny = datetime.now(NY_TZ)
     if now_ny.weekday() > 4:
         return False
-    return dtime(9, 30) <= now_ny.time() <= dtime(16, 0)
+    return dtime(9, 32) <= now_ny.time() <= dtime(16, 0)
 
 def get_stock_session_id():
     """Stocks reset daily at 9:30 AM EST (US Market Open)."""
@@ -94,7 +94,7 @@ def load_alert_state():
                         else:
                             state["stock_tickers"][k] = v
                 else:
-                    print(f"🔔 New Stock Session ({current_stock_session}). Resetting stock memory.")
+                    print(f"📅 New Stock Session ({current_stock_session}). Resetting stock memory.")
 
                 # Restore crypto state if same session
                 if saved.get("crypto_session") == current_crypto_session:
@@ -270,6 +270,34 @@ def fetch_ticker_news_rss(symbol, session):
         pass
     return news_items
 
+def get_live_price_and_prev_close(ticker_obj):
+    """
+    Fetches the true live price and yesterday's official close.
+    Uses fast_info first (most accurate realtime feed), with fallback to history.
+    """
+    current_price = None
+    prev_close = None
+
+    try:
+        # Method 1: fast_info (Direct live streaming exchange feed)
+        fi = ticker_obj.fast_info
+        current_price = fi.last_price
+        prev_close = fi.previous_close
+    except Exception:
+        pass
+
+    # Method 2: Fallback if fast_info is unavailable
+    if current_price is None or prev_close is None:
+        try:
+            hist = ticker_obj.history(period="2d")
+            if 'Close' in hist.columns and len(hist['Close']) >= 2:
+                prev_close = float(hist['Close'].iloc[-2])
+                current_price = float(hist['Close'].iloc[-1])
+        except Exception:
+            pass
+
+    return current_price, prev_close
+
 def check_market():
     stock_market_active = is_us_stock_market_open()
     now_ny = datetime.now(NY_TZ)
@@ -287,7 +315,7 @@ def check_market():
     })
 
     # ==========================================
-    # 1. SCAN PRICES
+    # 1. SCAN PRICES (Realtime Fast Info)
     # ==========================================
     price_alerts_to_send = []
     active_price_watchlist = [(c, "crypto") for c in CRYPTO_WATCHLIST]
@@ -297,14 +325,9 @@ def check_market():
     for ticker_symbol, asset_type in active_price_watchlist:
         try:
             ticker = yf.Ticker(ticker_symbol, session=session)
-            hist = ticker.history(period="5d")
-            
-            if 'Close' in hist.columns:
-                hist = hist.dropna(subset=['Close'])
+            current_price, prev_close = get_live_price_and_prev_close(ticker)
 
-            if len(hist) >= 2:
-                prev_close = hist['Close'].iloc[-2]
-                current_price = hist['Close'].iloc[-1]
+            if current_price is not None and prev_close is not None and prev_close > 0:
                 daily_change_pct = ((current_price - prev_close) / prev_close) * 100
                 tracked_dict = state["crypto_tickers"] if asset_type == "crypto" else state["stock_tickers"]
 
@@ -351,7 +374,7 @@ def check_market():
                     else:
                         print(f"✅ {ticker_symbol:10s} | Price: ${current_price:10.2f} | Change: {daily_change_pct:+6.2f}%")
             else:
-                print(f"⚠️ {ticker_symbol:10s} | SKIPPED: Insufficient historical data")
+                print(f"⚠️ {ticker_symbol:10s} | SKIPPED: Insufficient realtime price data")
         except Exception as e:
             print(f"❌ Error checking price for {ticker_symbol}: {e}")
         time.sleep(0.15)
@@ -380,7 +403,6 @@ def check_market():
         date_stamp = pub_dt.strftime("%Y-%m-%d") if pub_dt else "nodate"
         norm_title = normalize_title(title)
         
-        # Dual keys: Link key & Title+Date key
         title_date_key = f"title_{norm_title}_{date_stamp}"
         link_key = f"link_{link}"
 
@@ -413,14 +435,14 @@ def check_market():
                 step_change=alert["step_change"],
                 history_trail=alert["history_trail"]
             )
-            time.sleep(2.5)  # 2.5s spacing ensures phone push notifications trigger reliably
+            time.sleep(2.5)
 
     # Send ALL Fresh Breaking News Alerts to the News Channel
     if new_articles:
         print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL as '{BOT_NAME}'...")
         for article in new_articles:
             send_discord_news_alert(article)
-            time.sleep(2.5)  # 2.5s spacing ensures phone push notifications trigger reliably
+            time.sleep(2.5)
 
     # ==========================================
     # 4. PERSIST STATE
