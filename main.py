@@ -48,11 +48,11 @@ def normalize_title(title_text):
     return re.sub(r'[^a-zA-Z0-9]', '', title_text).lower()
 
 def is_us_stock_market_open():
-    """Returns True if current time is Mon-Fri between 9:32 AM (after opening cross settles) and 4:00 PM Eastern Time."""
+    """Returns True if current time is Mon-Fri between 9:30 AM and 4:00 PM Eastern Time."""
     now_ny = datetime.now(NY_TZ)
     if now_ny.weekday() > 4:
         return False
-    return dtime(9, 32) <= now_ny.time() <= dtime(16, 0)
+    return dtime(9, 30) <= now_ny.time() <= dtime(16, 0)
 
 def get_stock_session_id():
     """Stocks reset daily at 9:30 AM EST (US Market Open)."""
@@ -107,7 +107,6 @@ def load_alert_state():
                 else:
                     print(f"🪙 New Crypto Session ({current_crypto_session}). Resetting crypto memory.")
                 
-                # Backward compatibility for old state files
                 state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or saved.get("seen_news_links", [])
         except Exception as e:
             print(f"Error loading state file: {e}")
@@ -297,8 +296,22 @@ def get_live_price_and_prev_close(ticker_obj):
     return current_price, prev_close
 
 def check_market():
-    stock_market_active = is_us_stock_market_open()
     now_ny = datetime.now(NY_TZ)
+    
+    # -------------------------------------------------------------
+    # 9:30 AM OPENING PAUSE: If triggered between 9:30:00 and 9:31:59,
+    # sleep until 9:32:00 AM so the NYSE/NASDAQ opening cross settles!
+    # -------------------------------------------------------------
+    if now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
+        target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
+        sleep_seconds = max(0, (target_time - now_ny).total_seconds())
+        if sleep_seconds > 0:
+            print(f"⏳ Market opening bell detected ({now_ny.strftime('%I:%M:%S %p')}).")
+            print(f"   Waiting {int(sleep_seconds)}s until 9:32 AM for opening auction prices to settle...")
+            time.sleep(sleep_seconds)
+            now_ny = datetime.now(NY_TZ)  # Update timestamp after sleep
+
+    stock_market_active = is_us_stock_market_open()
     now_ny_str = now_ny.strftime("%Y-%m-%d %I:%M %p %Z")
     
     print(f"Current Time (NY): {now_ny_str}")
