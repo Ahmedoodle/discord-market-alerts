@@ -279,14 +279,12 @@ def get_live_price_and_prev_close(ticker_obj):
     prev_close = None
 
     try:
-        # Method 1: fast_info (Direct live streaming exchange feed)
         fi = ticker_obj.fast_info
         current_price = fi.last_price
         prev_close = fi.previous_close
     except Exception:
         pass
 
-    # Method 2: Fallback if fast_info is unavailable
     if current_price is None or prev_close is None:
         try:
             hist = ticker_obj.history(period="2d")
@@ -421,7 +419,7 @@ def check_market():
             new_articles.append(item)
 
     # ==========================================
-    # 3. DISPATCH DISCORD ALERTS (2.5s Spacing)
+    # 3. DISPATCH DISCORD ALERTS (0.5s Fast Spacing)
     # ==========================================
     # Send Sorted Price Alerts to the Price Channel
     price_alerts_to_send.sort(key=lambda x: x["daily_change"], reverse=True)
@@ -435,14 +433,14 @@ def check_market():
                 step_change=alert["step_change"],
                 history_trail=alert["history_trail"]
             )
-            time.sleep(2.5)
+            time.sleep(0.5)
 
     # Send ALL Fresh Breaking News Alerts to the News Channel
     if new_articles:
         print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL as '{BOT_NAME}'...")
         for article in new_articles:
             send_discord_news_alert(article)
-            time.sleep(2.5)
+            time.sleep(0.5)
 
     # ==========================================
     # 4. PERSIST STATE
