@@ -32,14 +32,35 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSION
+# 2. DUAL BROWSER & YAHOO CRUMB SESSION ENGINE
 # -------------------------------------------------------------
-http_session = requests.Session()
-http_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.9"
-})
+class YahooCrumbManager:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9"
+        })
+        self.crumb = None
+        self._init_crumb()
+
+    def _init_crumb(self):
+        try:
+            self.session.get("https://fc.yahoo.com", timeout=4)
+            res = self.session.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=4)
+            if res.status_code == 200 and res.text:
+                self.crumb = res.text.strip()
+        except Exception:
+            pass
+
+    def get_crumb(self):
+        if not self.crumb:
+            self._init_crumb()
+        return self.crumb
+
+data_mgr = YahooCrumbManager()
+http_session = data_mgr.session
 
 # -------------------------------------------------------------
 # 3. DISCORD BOT CLIENT
@@ -197,28 +218,31 @@ def get_rsi_tag(rsi):
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
-def fetch_analyst_targets_multi_engine(ticker_symbol, current_price, t_obj, http_session):
-    """4-Tier Pipeline for Wall Street Targets (Never returns N/A)."""
+def fetch_wallstreet_targets(ticker_symbol, current_price, t_obj):
+    """5-Tier Failover Engine for Wall Street Targets & Consensus."""
     low_t = None
     mean_t = None
     high_t = None
+    rating = None
 
-    # Tier 1: Built-in yfinance analyst_price_targets
+    # Tier 1: Yahoo Crumb-Powered financialData Module
     try:
-        apt = t_obj.analyst_price_targets
-        if apt is not None:
-            if isinstance(apt, dict):
-                low_t = apt.get("low")
-                mean_t = apt.get("mean")
-                high_t = apt.get("high")
-            elif hasattr(apt, "get"):
-                low_t = apt.get("low")
-                mean_t = apt.get("mean")
-                high_t = apt.get("high")
+        crumb = data_mgr.get_crumb()
+        crumb_str = f"&crumb={crumb}" if crumb else ""
+        y_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=financialData{crumb_str}"
+        y_res = http_session.get(y_url, timeout=3)
+        if y_res.status_code == 200:
+            fin_d = y_res.json().get("quoteSummary", {}).get("result", [{}])[0].get("financialData", {})
+            low_t = fin_d.get("targetLowPrice", {}).get("raw")
+            mean_t = fin_d.get("targetMeanPrice", {}).get("raw")
+            high_t = fin_d.get("targetHighPrice", {}).get("raw")
+            rec_key = fin_d.get("recommendationKey")
+            if rec_key:
+                rating = rec_key.replace("_", " ").title()
     except Exception:
         pass
 
-    # Tier 2: MarketWatch Realtime HTML Parser (100% Unblocked on Render)
+    # Tier 2: MarketWatch Realtime HTML Parser
     if not mean_t:
         try:
             mw_url = f"https://www.marketwatch.com/investing/stock/{ticker_symbol.lower()}/analystestimates"
@@ -228,6 +252,7 @@ def fetch_analyst_targets_multi_engine(ticker_symbol, current_price, t_obj, http
                 mean_m = re.search(r'Average Target[^\$]+[\$]([\d,.]+)', text, re.IGNORECASE)
                 high_m = re.search(r'High Target[^\$]+[\$]([\d,.]+)', text, re.IGNORECASE)
                 low_m = re.search(r'Low Target[^\$]+[\$]([\d,.]+)', text, re.IGNORECASE)
+                rec_m = re.search(r'Recommendation:[^<]+<span[^>]*>([^<]+)</span>', text, re.IGNORECASE)
                 
                 if mean_m:
                     mean_t = float(mean_m.group(1).replace(',', ''))
@@ -235,6 +260,8 @@ def fetch_analyst_targets_multi_engine(ticker_symbol, current_price, t_obj, http
                     high_t = float(high_m.group(1).replace(',', ''))
                 if low_m:
                     low_t = float(low_m.group(1).replace(',', ''))
+                if rec_m:
+                    rating = rec_m.group(1).strip()
         except Exception:
             pass
 
@@ -249,22 +276,36 @@ def fetch_analyst_targets_multi_engine(ticker_symbol, current_price, t_obj, http
                 tp = rec.get("targetPrice") or inst_info.get("targetPrice")
                 if tp:
                     mean_t = float(tp)
+                if rec.get("rating"):
+                    rating = rec.get("rating").title()
         except Exception:
             pass
 
-    # Format Output String
+    # Tier 4: yfinance analyst_price_targets
+    if not mean_t:
+        try:
+            apt = t_obj.analyst_price_targets
+            if apt is not None:
+                low_t = getattr(apt, "low", None) or (apt.get("low") if isinstance(apt, dict) else None)
+                mean_t = getattr(apt, "mean", None) or (apt.get("mean") if isinstance(apt, dict) else None)
+                high_t = getattr(apt, "high", None) or (apt.get("high") if isinstance(apt, dict) else None)
+        except Exception:
+            pass
+
+    # Format Output
     if mean_t and current_price > 0:
         upside = ((mean_t - current_price) / current_price) * 100
         up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
+        rating_part = f" | Rating: `{rating} 🟢`" if rating else ""
         if low_t and high_t:
-            return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`"
+            return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`{rating_part}"
         else:
-            return f"Mean Target: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**)"
+            return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
 
     return "N/A"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Multi-Tier Institutional Fundamental Engine."""
+    """Direct Chart API + Multi-Tier Institutional Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -520,8 +561,8 @@ def get_on_demand_data(ticker_symbol):
                     except Exception:
                         pass
 
-                # 2. 4-Tier Wall Street Price Targets Pipeline
-                targets_line_str = fetch_analyst_targets_multi_engine(ticker_symbol, current_price, t_obj, http_session)
+                # 2. Multi-Engine Wall Street Targets (Yahoo FinancialData + MarketWatch + Insights)
+                targets_line_str = fetch_wallstreet_targets(ticker_symbol, current_price, t_obj)
 
                 # 3. Beta calculation vs SPY
                 beta_val = calculate_beta_vs_spy(closes, http_session)
