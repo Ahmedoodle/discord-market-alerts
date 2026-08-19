@@ -1,5 +1,6 @@
 import os
 import threading
+import asyncio
 import math
 import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -46,6 +47,8 @@ BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
 
 def format_large_number(num):
     if num is None:
@@ -167,12 +170,12 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Real Financial Statement Calculation Engine."""
+    """Direct Chart API + Smart Non-Blocking Asset Classifier."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
-        res = http_session.get(url, timeout=6)
+        res = http_session.get(url, timeout=5)
         
         if res.status_code != 200:
             return None, f"Could not fetch data for `{ticker_symbol}` (Status: {res.status_code})."
@@ -299,11 +302,12 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. BULLETPROOF FINANCIAL STATEMENT CALCULATION ENGINE
+        # 2. SMART ASSET CLASSIFIER & STATEMENT ENGINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
-        if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
+        # 1. CRYPTO
+        if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
             t_obj = yf.Ticker(ticker_symbol)
             m_cap = getattr(t_obj.fast_info, "market_cap", None)
@@ -314,7 +318,8 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
                 f"• **Valuation:** `Digital Asset / Network Utility`"
             )
-        elif quote_type == "ETF":
+        # 2. ETFs
+        elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             fund_title = "🏢 Fund Profile & Structure"
             t_obj = yf.Ticker(ticker_symbol)
             m_cap = getattr(t_obj.fast_info, "market_cap", None)
@@ -324,26 +329,26 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Total Net Assets:** `{cap_fmt}`\n"
                 f"• **Strategy:** `Diversified Index / Holdings Basket`"
             )
+        # 3. FUTURES
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
             profile_block = (
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
+        # 4. EQUITIES / STOCKS
         else:
-            # Equities / Stocks — Computed directly from Balance Sheet & Statements!
             fund_title = "🏢 Valuation, Earnings & Growth"
-            
             t_obj = yf.Ticker(ticker_symbol)
             fi = t_obj.fast_info
             
-            # 1. Real Market Cap
+            # Fast Market Cap
             market_cap = getattr(fi, "market_cap", None)
             shares = getattr(fi, "shares", None)
             if not market_cap and shares and current_price:
                 market_cap = current_price * shares
 
-            # 2. Sector & Industry from Open Search
+            # Sector / Industry from Search API
             sector = None
             industry = None
             try:
@@ -357,7 +362,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # 3. Direct Statement Financial Calculations
+            # Statement Calculations (With Instant Timeout Safety)
             trailing_pe = None
             rev_growth_pct = None
             net_inc_growth_pct = None
@@ -366,7 +371,6 @@ def get_on_demand_data(ticker_symbol):
             try:
                 q_inc = t_obj.quarterly_income_stmt
                 if q_inc is not None and not q_inc.empty:
-                    # Revenue Growth (YoY)
                     if "Total Revenue" in q_inc.index:
                         rev_s = q_inc.loc["Total Revenue"].dropna()
                         if len(rev_s) >= 4:
@@ -380,7 +384,6 @@ def get_on_demand_data(ticker_symbol):
                     else:
                         ttm_rev = None
 
-                    # Net Income Growth (YoY), Trailing P/E, & Profit Margin
                     if "Net Income" in q_inc.index:
                         inc_s = q_inc.loc["Net Income"].dropna()
                         if len(inc_s) >= 4:
@@ -392,20 +395,17 @@ def get_on_demand_data(ticker_symbol):
                         else:
                             ttm_net_inc = inc_s.sum()
 
-                        # Compute Real Trailing P/E
                         if ttm_net_inc > 0 and shares and shares > 0:
                             trailing_eps = ttm_net_inc / shares
                             if trailing_eps > 0:
                                 trailing_pe = current_price / trailing_eps
 
-                        # Compute Profit Margin
                         if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
                             profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
             except Exception:
                 pass
 
             # Construct Output Lines
-            # Line 1: Sector & Industry
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -413,7 +413,6 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
-            # Line 2: Market Cap & Tier
             if market_cap and market_cap > 0:
                 cap_fmt = format_large_number(market_cap)
                 tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
@@ -421,13 +420,11 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            # Line 3: Valuation (Calculated Trailing P/E)
             if trailing_pe and trailing_pe > 0:
                 line_val = f"• **Valuation:** Trailing P/E: `{trailing_pe:.1f}x`"
             else:
                 line_val = f"• **Valuation:** `High-Growth / Reinvestment Phase`"
 
-            # Line 4: YoY Growth (Revenue & Net Income)
             growth_parts = []
             if rev_growth_pct is not None:
                 growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
@@ -436,7 +433,6 @@ def get_on_demand_data(ticker_symbol):
 
             line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
 
-            # Line 5: Profit Margin
             if profit_margin_pct is not None:
                 tag = " (High Margin 💎)" if profit_margin_pct >= 20.0 else (" (Healthy 🟢)" if profit_margin_pct >= 10.0 else "")
                 line_margin = f"• **Profit Margin:** `{profit_margin_pct:.1f}%`{tag}"
@@ -495,7 +491,7 @@ async def on_ready():
     print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
 
 # -------------------------------------------------------------
-# 4. INSTANT AUTO-TRIGGER (e.g. `!NVDA`, `!PLTR`, `$BTC-USD`)
+# 4. INSTANT AUTO-TRIGGER (Async Non-Blocking Thread Execution)
 # -------------------------------------------------------------
 @bot.event
 async def on_message(message):
@@ -515,7 +511,8 @@ async def on_message(message):
         potential_ticker = raw_cmd.split()[0].upper()
         if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
             async with message.channel.typing():
-                data, err = get_on_demand_data(potential_ticker)
+                # Non-blocking async execution
+                data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
                 if not err:
                     embed = create_market_embed(data)
                     await message.channel.send(embed=embed)
@@ -527,7 +524,7 @@ async def on_message(message):
 @bot.command(name="price", aliases=["p", "four", "check"])
 async def price_command(ctx, ticker: str):
     async with ctx.typing():
-        data, err = get_on_demand_data(ticker)
+        data, err = await asyncio.to_thread(get_on_demand_data, ticker)
         if err:
             await ctx.send(f"❌ {err}")
             return
