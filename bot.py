@@ -6,6 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
 from discord.ext import commands
+import yfinance as yf
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -28,14 +29,34 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSION
+# 2. AUTOMATED YAHOO CRUMB & COOKIE SESSION ENGINE
 # -------------------------------------------------------------
-http_session = requests.Session()
-http_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.9"
-})
+class YahooSessionManager:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9"
+        })
+        self.crumb = None
+        self.init_crumb()
+
+    def init_crumb(self):
+        try:
+            self.session.get("https://fc.yahoo.com", timeout=4)
+            res = self.session.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=4)
+            if res.status_code == 200 and res.text:
+                self.crumb = res.text.strip()
+        except Exception:
+            pass
+
+    def get_crumb(self):
+        if not self.crumb:
+            self.init_crumb()
+        return self.crumb
+
+yahoo_session_mgr = YahooSessionManager()
 
 # -------------------------------------------------------------
 # 3. DISCORD BOT CLIENT
@@ -166,11 +187,13 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart & Open Discovery Engine — 100% Guaranteed Profile."""
+    """Direct Yahoo Chart & Crumb-Powered Fundamental Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
+    session = yahoo_session_mgr.session
     try:
+        # 1. Pull Chart Data (Live price & Historical arrays)
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
-        res = http_session.get(url, timeout=6)
+        res = session.get(url, timeout=6)
         
         if res.status_code != 200:
             return None, f"Could not fetch data for `{ticker_symbol}` (Status: {res.status_code})."
@@ -197,12 +220,12 @@ def get_on_demand_data(ticker_symbol):
         if len(closes) < 2:
             return None, f"Insufficient price history for `{ticker_symbol}`."
 
-        # 1. Price & 1D Change
+        # Price & 1D Change
         current_price = meta.get("regularMarketPrice") or closes[-1]
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # 2. Volume Multipliers (20D, 50D, 90D)
+        # Volume Multipliers (20D, 50D, 90D)
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -217,7 +240,7 @@ def get_on_demand_data(ticker_symbol):
             f"• **90D (Long-Term):** {get_volume_tag(rvol_90)}"
         )
 
-        # 3. Multi-Timeframe RSI (7D, 14D, 30D)
+        # Multi-Timeframe RSI (7D, 14D, 30D)
         rsi_7 = calculate_rsi(closes, 7)
         rsi_14 = calculate_rsi(closes, 14)
         rsi_30 = calculate_rsi(closes, 30)
@@ -228,7 +251,7 @@ def get_on_demand_data(ticker_symbol):
             f"• **30D (Macro Trend):** {get_rsi_tag(rsi_30)}"
         )
 
-        # 4. 52-Week Range in Dollars
+        # 52-Week Range in Dollars
         range_str = "N/A"
         high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
         low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
@@ -241,7 +264,7 @@ def get_on_demand_data(ticker_symbol):
             else:
                 range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
-        # 5. Broken-Down 50D & 200D SMA Trend Health
+        # 50D & 200D SMA Trend Health
         sma_50_str = "N/A"
         sma_200_str = "N/A"
         verdict_str = "N/A"
@@ -251,17 +274,11 @@ def get_on_demand_data(ticker_symbol):
 
         if sma_50:
             pct_50 = ((current_price - sma_50) / sma_50) * 100
-            if pct_50 >= 0:
-                sma_50_str = f"`${sma_50:.2f}` (Above by +{pct_50:.1f}% 🟢)"
-            else:
-                sma_50_str = f"`${sma_50:.2f}` (Below by {pct_50:.1f}% 🔴)"
+            sma_50_str = f"`${sma_50:.2f}` (Above by +{pct_50:.1f}% 🟢)" if pct_50 >= 0 else f"`${sma_50:.2f}` (Below by {pct_50:.1f}% 🔴)"
 
         if sma_200:
             pct_200 = ((current_price - sma_200) / sma_200) * 100
-            if pct_200 >= 0:
-                sma_200_str = f"`${sma_200:.2f}` (Above by +{pct_200:.1f}% 🟢)"
-            else:
-                sma_200_str = f"`${sma_200:.2f}` (Below by {pct_200:.1f}% 🔴)"
+            sma_200_str = f"`${sma_200:.2f}` (Above by +{pct_200:.1f}% 🟢)" if pct_200 >= 0 else f"`${sma_200:.2f}` (Below by {pct_200:.1f}% 🔴)"
 
         if sma_50 and sma_200:
             if current_price >= sma_50 and current_price >= sma_200:
@@ -281,64 +298,92 @@ def get_on_demand_data(ticker_symbol):
             f"• **Overall Verdict:** {verdict_str}"
         )
 
-        # 6. MACD (12, 26, 9)
+        # MACD (12, 26, 9)
         macd_str = calculate_macd(closes)
 
-        # 7. Daily Pivot Levels (Support S1 & Resistance R1)
+        # Daily Pivot Levels (Support S1 & Resistance R1)
         pivot_str = "N/A"
         if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
-            h_prev = highs[-2]
-            l_prev = lows[-2]
-            c_prev = closes[-2]
+            h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
             p = (h_prev + l_prev + c_prev) / 3.0
             r1 = (2.0 * p) - l_prev
             s1 = (2.0 * p) - h_prev
             pivot_str = f"`Support (S1): ${s1:.2f}` | `Resistance (R1): ${r1:.2f}`"
 
-        # 8. Expected Daily Move (14D ATR)
+        # Expected Daily Move (14D ATR)
         atr_str = "N/A"
         atr = calculate_atr(highs, lows, closes, 14)
         if atr and current_price > 0:
             atr_pct = (atr / current_price) * 100
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
-        # 9. 100% GUARANTEED CRUMB-FREE COMPANY PROFILE & VALUATION
+        # =================================================================
+        # CRUMB-POWERED FUNDAMENTALS, VALUATION, GROWTH & MARGINS ENGINE
+        # =================================================================
+        profile_block = None
+        fund_title = "🏢 Valuation, Earnings & Growth"
         quote_type = meta.get("instrumentType", "EQUITY")
-        sector_str = None
-        industry_str = None
+        
+        sector = None
+        industry = None
         market_cap = None
         trailing_pe = None
         forward_pe = None
+        peg_ratio = None
+        rev_growth = None
+        eps_growth = None
+        profit_margin = None
 
-        # Source A: Open Discovery Search
+        # Query Official QuoteSummary with Crumb
         try:
-            s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-            s_res = http_session.get(s_url, timeout=3)
-            if s_res.status_code == 200:
-                quotes = s_res.json().get("quotes", [])
-                if quotes:
-                    q = quotes[0]
-                    quote_type = q.get("quoteType", quote_type)
-                    sector_str = q.get("sector")
-                    industry_str = q.get("industry")
-                    market_cap = q.get("marketCap")
-        except Exception:
-            pass
-
-        # Source B: Direct Fast Info Quote (Crumb-free)
-        try:
-            q_url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker_symbol}"
-            q_res = http_session.get(q_url, timeout=3)
+            crumb = yahoo_session_mgr.get_crumb()
+            crumb_param = f"&crumb={crumb}" if crumb else ""
+            q_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics,financialData,assetProfile,quoteType{crumb_param}"
+            q_res = session.get(q_url, timeout=4)
+            
             if q_res.status_code == 200:
-                q_data = q_res.json().get("quoteResponse", {}).get("result", [])
-                if q_data:
-                    q = q_data[0]
-                    market_cap = q.get("marketCap") or market_cap
-                    trailing_pe = q.get("trailingPE")
-                    forward_pe = q.get("forwardPE")
-                    quote_type = q.get("quoteType", quote_type)
+                q_json = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                
+                sum_det = q_json.get("summaryDetail", {})
+                key_stats = q_json.get("defaultKeyStatistics", {})
+                fin_data = q_json.get("financialData", {})
+                asset_prof = q_json.get("assetProfile", {})
+                q_type_dict = q_json.get("quoteType", {})
+
+                quote_type = q_type_dict.get("quoteType", quote_type)
+                sector = asset_prof.get("sector")
+                industry = asset_prof.get("industry")
+                
+                # Market Cap
+                market_cap = sum_det.get("marketCap", {}).get("raw") or (key_stats.get("sharesOutstanding", {}).get("raw", 0) * current_price)
+                
+                # Valuation Multiples
+                trailing_pe = sum_det.get("trailingPE", {}).get("raw")
+                forward_pe = sum_det.get("forwardPE", {}).get("raw")
+                peg_ratio = key_stats.get("pegRatio", {}).get("raw")
+
+                # Growth & Margins
+                rev_growth = fin_data.get("revenueGrowth", {}).get("raw")
+                eps_growth = fin_data.get("earningsGrowth", {}).get("raw") or key_stats.get("earningsQuarterlyGrowth", {}).get("raw")
+                profit_margin = fin_data.get("profitMargins", {}).get("raw")
         except Exception:
             pass
+
+        # Fallback discovery search if sector/industry/cap were missed
+        if not sector or not market_cap:
+            try:
+                s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
+                s_res = session.get(s_url, timeout=3)
+                if s_res.status_code == 200:
+                    quotes = s_res.json().get("quotes", [])
+                    if quotes:
+                        q = quotes[0]
+                        sector = sector or q.get("sector")
+                        industry = industry or q.get("industry")
+                        market_cap = market_cap or q.get("marketCap")
+                        quote_type = q.get("quoteType", quote_type)
+            except Exception:
+                pass
 
         # Construct Profile Block
         if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
@@ -356,7 +401,7 @@ def get_on_demand_data(ticker_symbol):
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
                 f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                f"• **Strategy:** `Diversified Holdings Basket`"
             )
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
@@ -366,14 +411,17 @@ def get_on_demand_data(ticker_symbol):
             )
         else:
             # Equities / Stocks
-            fund_title = "🏢 Valuation, Earnings & Profile"
-            if sector_str and industry_str:
-                line_sector = f"• **Sector / Industry:** `{sector_str} • {industry_str}`"
-            elif sector_str:
-                line_sector = f"• **Sector:** `{sector_str}`"
+            fund_title = "🏢 Valuation, Earnings & Growth"
+            
+            # Line 1: Sector & Industry
+            if sector and industry:
+                line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
+            elif sector:
+                line_sector = f"• **Sector:** `{sector}`"
             else:
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
+            # Line 2: Market Cap & Tier
             if market_cap:
                 cap_fmt = format_large_number(market_cap)
                 tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
@@ -381,18 +429,41 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            val_items = []
+            # Line 3: Valuation (Trailing PE, Forward PE, PEG)
+            val_parts = []
             if trailing_pe:
-                val_items.append(f"Trailing P/E: `{trailing_pe:.1f}`")
+                val_parts.append(f"Trailing P/E: `{trailing_pe:.1f}`")
             if forward_pe:
-                val_items.append(f"Forward P/E: `{forward_pe:.1f}`")
+                val_parts.append(f"Forward P/E: `{forward_pe:.1f}`")
+            if peg_ratio:
+                val_parts.append(f"PEG: `{peg_ratio:.2f}`" + (" 🔥" if peg_ratio < 1.0 else ""))
+            
+            line_val = f"• **Valuation:** {' | '.join(val_parts)}" if val_parts else "• **Valuation:** `High-Growth / Pre-Profit Phase`"
 
-            if val_items:
-                line_val = f"• **P/E Ratios:** {' | '.join(val_items)}"
+            # Line 4: YoY Growth (Revenue & EPS)
+            growth_parts = []
+            if rev_growth is not None:
+                growth_parts.append(f"Revenue: `{rev_growth * 100:+.1f}%`")
+            if eps_growth is not None:
+                growth_parts.append(f"EPS: `{eps_growth * 100:+.1f}% 🚀`")
+            
+            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+
+            # Line 5: Profit Margin
+            if profit_margin is not None:
+                p_pct = profit_margin * 100
+                tag = " (High Margin 💎)" if p_pct >= 25.0 else (" (Healthy 🟢)" if p_pct >= 10.0 else "")
+                line_margin = f"• **Profit Margin:** `{p_pct:.1f}%`{tag}"
             else:
-                line_val = f"• **Valuation:** `High-Growth / Pre-Profit Phase`"
+                line_margin = ""
 
-            profile_block = f"{line_sector}\n{line_cap}\n{line_val}"
+            elements = [line_sector, line_cap, line_val]
+            if line_growth:
+                elements.append(line_growth)
+            if line_margin:
+                elements.append(line_margin)
+            
+            profile_block = "\n".join(elements)
 
         return {
             "ticker": ticker_symbol,
@@ -428,7 +499,7 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
     if data.get("profile_block"):
-        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Profile"), value=data['profile_block'], inline=False)
+        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Growth"), value=data['profile_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
@@ -438,7 +509,7 @@ async def on_ready():
     print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
 
 # -------------------------------------------------------------
-# 4. INSTANT AUTO-TRIGGER (e.g. `!NVDA`, `!TSLA`, `$BTC-USD`)
+# 4. INSTANT AUTO-TRIGGER (e.g. `!NVDA`, `!PLTR`, `$BTC-USD`)
 # -------------------------------------------------------------
 @bot.event
 async def on_message(message):
