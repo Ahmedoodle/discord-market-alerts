@@ -20,6 +20,7 @@ BOT_NAME = "Looney"
 BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
 
 NY_TZ = ZoneInfo("America/New_York")
+LOOKAHEAD_DAYS = 45
 
 # Your Curated Watchlist
 WATCHLIST = [
@@ -105,7 +106,6 @@ def fetch_dynamic_tsx_universe():
     if len(tickers) < 20:
         try:
             xic = yf.Ticker("XIC.TO", session=yahoo_session)
-            # Fetch top weights dynamically
             h_df = xic.get_holdings() if hasattr(xic, "get_holdings") else None
             if h_df is not None and not h_df.empty and "Symbol" in h_df.columns:
                 for sym in h_df["Symbol"].dropna():
@@ -114,7 +114,7 @@ def fetch_dynamic_tsx_universe():
         except Exception:
             pass
 
-    # Safety Baseline: Fallback pool if screeners encounter API rate limits
+    # Safety Baseline
     if len(tickers) < 20:
         tickers.update([
             "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO",
@@ -144,7 +144,7 @@ def fetch_nasdaq_calendar_day(target_date):
                     continue
                 
                 mcap = parse_market_cap_str(r.get("marketCap", "0"))
-                if mcap < 2e9:  # Filter out small caps (< $2B)
+                if mcap < 2e9:  # Mid-Caps and Mega-Caps only ($2B+)
                     continue
 
                 time_code = r.get("time", "time-not-supplied").lower()
@@ -217,7 +217,7 @@ def fetch_us_yesterday_actuals(target_date):
 # 3. CANADIAN (TSX) TICKER PROCESSOR & DEDUPLICATION
 # ====================================================================
 def scan_single_tsx_ticker(sym, check_dates):
-    """Fetches upcoming earnings & recent scorecard reports for a Canadian stock."""
+    """Fetches upcoming 45-day earnings & recent scorecard reports for a Canadian stock."""
     upcoming_item = None
     scorecard_item = None
     try:
@@ -225,13 +225,12 @@ def scan_single_tsx_ticker(sym, check_dates):
         today = datetime.now(NY_TZ).date()
         m_cap = getattr(t_obj.fast_info, "market_cap", 0) or 0
         
-        # Ensure it meets the $2B threshold
         if m_cap < 2e9:
             return None, None
 
         name = getattr(t_obj.fast_info, "name", None) or sym
 
-        # 1. Upcoming Calendar
+        # 1. Upcoming Calendar (45 Days)
         cal = t_obj.calendar
         nxt_d = None
         eps_est = "Pending"
@@ -250,7 +249,7 @@ def scan_single_tsx_ticker(sym, check_dates):
 
         if nxt_d and nxt_d >= today:
             days_away = (nxt_d - today).days
-            if days_away <= 30:
+            if days_away <= LOOKAHEAD_DAYS:
                 upcoming_item = {
                     "ticker": sym,
                     "name": name,
@@ -301,20 +300,9 @@ def scan_single_tsx_ticker(sym, check_dates):
     return upcoming_item, scorecard_item
 
 def deduplicate_dual_listings(us_items, ca_items):
-    """
-    Prevents dual-listed stocks (like RY / RY.TO or SHOP / SHOP.TO)
-    from showing up as duplicates under both the US and Canadian sections.
-    """
+    """Prevents dual-listed Canadian stocks from duplicating across cards."""
     ca_base_symbols = {item["ticker"].replace(".TO", "").replace(".V", "").upper(): item for item in ca_items}
-    
-    filtered_us_items = []
-    for us_item in us_items:
-        sym = us_item["ticker"].upper()
-        if sym in ca_base_symbols:
-            # Already handled natively by TSX engine
-            continue
-        filtered_us_items.append(us_item)
-        
+    filtered_us_items = [us_item for us_item in us_items if us_item["ticker"].upper() not in ca_base_symbols]
     return filtered_us_items, ca_items
 
 def format_earnings_entry(idx, item):
@@ -337,7 +325,7 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
             "title": title,
             "description": f"{description}\n\n{entries_text}"[:4000],
             "color": color,
-            "footer": {"text": "Looney • Daily 6:00 AM Earnings Intelligence"}
+            "footer": {"text": f"Looney • Daily 6:00 AM Earnings Radar (Next {LOOKAHEAD_DAYS} Days)"}
         }]
     }
     try:
@@ -354,28 +342,30 @@ def run_earnings_daily():
     now_ny = datetime.now(NY_TZ)
     today = now_ny.date()
     today_str = now_ny.strftime("%A, %B %d, %Y")
-    logging.info(f"Starting Live Multi-Market Earnings Radar for {today_str}...")
+    logging.info(f"Starting Live {LOOKAHEAD_DAYS}-Day Multi-Market Earnings Radar for {today_str}...")
 
     prev_dates = [today - timedelta(days=i) for i in (range(1, 4) if today.weekday() == 0 else range(1, 2))]
 
-    # 1. FETCH US SCORECARD (Nasdaq API)
+    # 1. FETCH US SCORECARD
     logging.info("Pulling US reported earnings scorecard...")
     scorecard_items = []
     for d in prev_dates:
         scorecard_items.extend(fetch_us_yesterday_actuals(d))
 
-    # 2. FETCH US UPCOMING CALENDAR (Next 30 Days via Nasdaq API)
-    logging.info("Pulling 30-day US market calendar...")
+    # 2. FETCH US UPCOMING CALENDAR (Parallel 45-Day Fetch)
+    logging.info(f"Pulling {LOOKAHEAD_DAYS}-day US market calendar in parallel...")
     upcoming_us_items = []
-    for i in range(1, 31):
-        target_d = today + timedelta(days=i)
-        upcoming_us_items.extend(fetch_nasdaq_calendar_day(target_d))
+    dates_to_scan = [today + timedelta(days=i) for i in range(1, LOOKAHEAD_DAYS + 1)]
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        for day_res in executor.map(fetch_nasdaq_calendar_day, dates_to_scan):
+            upcoming_us_items.extend(day_res)
 
     # 3. DYNAMICALLY SCAN TSX CANADIAN UNIVERSE
     dynamic_tsx_list = fetch_dynamic_tsx_universe()
     upcoming_ca_items = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
         futures = [executor.submit(scan_single_tsx_ticker, sym, prev_dates) for sym in dynamic_tsx_list]
         for f in concurrent.futures.as_completed(futures):
             up, sc = f.result()
@@ -391,10 +381,10 @@ def run_earnings_daily():
     # 5. WATCHLIST PROCESSING
     all_upcoming = filtered_us_upcoming + upcoming_ca_items
     watchlist_set = set(WATCHLIST)
-    watchlist_results = [item for item in all_upcoming if item["ticker"] in watchlist_set and item["days_away"] <= 30]
+    watchlist_results = [item for item in all_upcoming if item["ticker"] in watchlist_set and item["days_away"] <= LOOKAHEAD_DAYS]
     watchlist_results.sort(key=lambda x: x["date"])
 
-    # 6. SEGMENT MEGA AND MID CAPS ONLY (No Small-Caps)
+    # 6. SEGMENT MEGA AND MID CAPS (Full 45 Days)
     mega_us, mega_ca = [], []
     mid_us, mid_ca = [], []
 
@@ -403,11 +393,11 @@ def run_earnings_daily():
         is_ca = item["badge"] == "🍁"
         days = item["days_away"]
 
-        # Mega-Cap: >= $200B (Next 30 Days)
-        if m_cap >= 2e11 and days <= 30:
+        # Mega-Cap: >= $200B (Next 45 Days)
+        if m_cap >= 2e11 and days <= LOOKAHEAD_DAYS:
             (mega_ca if is_ca else mega_us).append(item)
-        # Mid-Cap: $2B to $200B (Next 14 Days)
-        elif 2e9 <= m_cap < 2e11 and days <= 14:
+        # Mid-Cap: $2B to $200B (Next 45 Days)
+        elif 2e9 <= m_cap < 2e11 and days <= LOOKAHEAD_DAYS:
             (mid_ca if is_ca else mid_us).append(item)
 
     # Sort each tier chronologically then by market cap
@@ -435,17 +425,17 @@ def run_earnings_daily():
             color=15844367  # Gold
         )
 
-    # CARD 2: Watchlist
+    # CARD 2: Watchlist (Next 45 Days)
     if watchlist_results:
-        wl_txt = "\n".join([format_earnings_entry(i, item) for i, item in enumerate(watchlist_results[:10], 1)])
+        wl_txt = "\n".join([format_earnings_entry(i, item) for i, item in enumerate(watchlist_results[:12], 1)])
         dispatch_discord_earnings_embed(
-            title="🗓️ Watchlist Earnings Calendar [NEXT 30 DAYS]",
+            title=f"🗓️ Watchlist Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]",
             description=f"*Sorted by nearest report date across your watchlist as of {today_str}.*",
             entries_text=wl_txt,
             color=3066993  # Green
         )
 
-    # CARD 3: Mega-Caps (≥ $200B)
+    # CARD 3: Mega-Caps (Next 45 Days — ≥ $200B)
     mega_combined = mega_us + mega_ca
     if mega_combined:
         mega_txt = ""
@@ -454,13 +444,13 @@ def run_earnings_daily():
         if mega_ca:
             mega_txt += "**🇨🇦 CANADIAN MEGA-CAPS (TSX 🍁):**\n" + "\n".join([format_earnings_entry(i, item) for i, item in enumerate(mega_ca[:8], 1)])
         dispatch_discord_earnings_embed(
-            title="👑 Mega-Cap Earnings Calendar [NEXT 30 DAYS — ≥ $200B]",
-            description="*Major market-moving corporate reports over the next month.*",
+            title=f"👑 Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
+            description="*Major market-moving corporate reports over the next 45 days.*",
             entries_text=mega_txt,
             color=10181046  # Purple
         )
 
-    # CARD 4: Mid-Caps ($2B to $200B)
+    # CARD 4: Mid-Caps (Next 45 Days — $2B to $200B)
     mid_combined = mid_us + mid_ca
     if mid_combined:
         mid_txt = ""
@@ -469,13 +459,13 @@ def run_earnings_daily():
         if mid_ca:
             mid_txt += "**🇨🇦 CANADIAN MID-CAPS (TSX 🍁):**\n" + "\n".join([format_earnings_entry(i, item) for i, item in enumerate(mid_ca[:8], 1)])
         dispatch_discord_earnings_embed(
-            title="📈 Mid-Cap Earnings Calendar [NEXT 14 DAYS — $2B to $200B]",
-            description="*Institutional and momentum leaders reporting in the next two weeks.*",
+            title=f"📈 Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $2B to $200B]",
+            description="*Institutional and momentum leaders reporting over the next 45 days.*",
             entries_text=mid_txt,
             color=3447003  # Blue
         )
 
-    logging.info("Earnings Intelligence flow completed successfully.")
+    logging.info("Earnings Intelligence 45-day flow completed successfully.")
 
 if __name__ == "__main__":
     run_earnings_daily()
