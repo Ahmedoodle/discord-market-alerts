@@ -171,7 +171,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Pure Statement-Based Calculation Engine."""
+    """Direct Chart API + Robust Statement Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -303,33 +303,26 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. PURE STATEMENT-BASED FUNDAMENTALS & BALANCE SHEET ENGINE
+        # 2. ISOLATED ASSET PROFILER & FUNDAMENTAL ENGINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
         # 1. CRYPTO
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
-            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
-                f"• **Valuation:** `Digital Asset / Network Utility`"
+                f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
+                f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
 
         # 2. ETFs
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             fund_title = "🏢 Fund Profile & Structure"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                f"• **Structure:** `Diversified Market Basket Holding`\n"
+                f"• **Type:** `Open-End Fund Vehicle`"
             )
 
         # 3. FUTURES
@@ -340,19 +333,11 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
 
-        # 4. EQUITIES / STOCKS (Computed directly from filed balance sheet & statements)
+        # 4. EQUITIES / STOCKS (Computed safely from filed financial statements)
         else:
             fund_title = "🏢 Valuation, Earnings & Growth"
-            t_obj = yf.Ticker(ticker_symbol)
-            fi = t_obj.fast_info
             
-            # Market Cap & Shares
-            market_cap = getattr(fi, "market_cap", None)
-            shares = getattr(fi, "shares", None)
-            if not market_cap and shares and current_price:
-                market_cap = current_price * shares
-
-            # Sector / Industry from Search API
+            # Safe Sector/Industry Lookup
             sector = None
             industry = None
             try:
@@ -366,22 +351,32 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Direct Calculations from Filed Financial Statements
+            # Safe Statement Calculations
+            market_cap = None
             trailing_pe = None
             rev_growth_pct = None
             net_inc_growth_pct = None
             profit_margin_pct = None
 
             try:
+                t_obj = yf.Ticker(ticker_symbol)
+                
+                # Shares & Market Cap
+                shares = None
+                try:
+                    shares = t_obj.fast_info.shares
+                    market_cap = t_obj.fast_info.market_cap
+                except Exception:
+                    pass
+
+                if not market_cap and shares and current_price:
+                    market_cap = current_price * shares
+
+                # Financial Statement Rows
                 q_inc = t_obj.quarterly_income_stmt
                 if q_inc is not None and not q_inc.empty:
-                    # Find Revenue Row
-                    rev_row = None
-                    for row_name in ["Total Revenue", "Operating Revenue", "Revenue"]:
-                        if row_name in q_inc.index:
-                            rev_row = row_name
-                            break
-
+                    # Revenue Row
+                    rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
                     if rev_row:
                         rev_s = q_inc.loc[rev_row].dropna()
                         if len(rev_s) >= 4:
@@ -395,13 +390,8 @@ def get_on_demand_data(ticker_symbol):
                     else:
                         ttm_rev = None
 
-                    # Find Net Income Row
-                    inc_row = None
-                    for row_name in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"]:
-                        if row_name in q_inc.index:
-                            inc_row = row_name
-                            break
-
+                    # Net Income Row
+                    inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
                     if inc_row:
                         inc_s = q_inc.loc[inc_row].dropna()
                         if len(inc_s) >= 4:
@@ -413,15 +403,16 @@ def get_on_demand_data(ticker_symbol):
                         else:
                             ttm_net_inc = float(inc_s.sum())
 
-                        # Calculate Real Trailing P/E from Balance Sheet Net Income!
+                        # Compute Trailing P/E
                         if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
                             trailing_eps = ttm_net_inc / shares
                             if trailing_eps > 0:
                                 trailing_pe = current_price / trailing_eps
 
-                        # Calculate Profit Margin
+                        # Compute Profit Margin
                         if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
                             profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
+
             except Exception:
                 pass
 
