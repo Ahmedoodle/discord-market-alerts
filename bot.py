@@ -271,7 +271,7 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     return "N/A"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Full Statement & YoY Growth Engine."""
+    """Direct Chart API + 12-Month Aligned Financial Statement Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -442,7 +442,7 @@ def get_on_demand_data(ticker_symbol):
             smart_money_block = None
             health_block = None
 
-        # 4. EQUITIES / STOCKS (Full Institutional Audit with YoY Growth)
+        # 4. EQUITIES / STOCKS (12-Month Aligned Statements & Growth)
         else:
             profile_title = "🏢 Company Profile"
             
@@ -534,36 +534,42 @@ def get_on_demand_data(ticker_symbol):
                     tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
                     beta_str = f"`{beta_val:.2f}x`{tag}"
 
-                # 3. Financial Statements Calculations (Income, Balance Sheet, Cash Flow)
+                # 3. Financial Statements Calculations (12-Month Aligned YoY Indexing)
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
                 if q_inc is not None and not q_inc.empty:
-                    # Net Income Row
-                    inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
-                    if inc_row:
-                        inc_s = q_inc.loc[inc_row].dropna()
-                        if len(inc_s) >= 4:
-                            i0 = float(inc_s.iloc[0])
-                            i4 = float(inc_s.iloc[3]) if len(inc_s) >= 4 else float(inc_s.iloc[-1])
-                            if i4 != 0:
-                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
-                            ttm_net_inc = float(inc_s.iloc[:4].sum())
-                        else:
-                            ttm_net_inc = float(inc_s.sum())
-
-                    # Revenue Row
+                    # Revenue Row (Q0 vs Q4 = Exact 12-Month YoY Match!)
                     rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
                     if rev_row:
                         rev_s = q_inc.loc[rev_row].dropna()
-                        if len(rev_s) >= 4:
+                        if len(rev_s) >= 5:
                             r0 = float(rev_s.iloc[0])
-                            r4 = float(rev_s.iloc[3]) if len(rev_s) >= 4 else float(rev_s.iloc[-1])
+                            r4 = float(rev_s.iloc[4]) # Exactly 4 quarters / 1 year back
                             if r4 > 0:
                                 rev_growth_pct = ((r0 - r4) / r4) * 100
-                            ttm_rev = float(rev_s.iloc[:4].sum())
-                        else:
-                            ttm_rev = float(rev_s.sum())
+                        elif len(rev_s) >= 2:
+                            r0 = float(rev_s.iloc[0])
+                            r4 = float(rev_s.iloc[-1])
+                            if r4 > 0:
+                                rev_growth_pct = ((r0 - r4) / r4) * 100
+                        ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
+
+                    # Net Income Row (Q0 vs Q4 = Exact 12-Month YoY Match!)
+                    inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
+                    if inc_row:
+                        inc_s = q_inc.loc[inc_row].dropna()
+                        if len(inc_s) >= 5:
+                            i0 = float(inc_s.iloc[0])
+                            i4 = float(inc_s.iloc[4]) # Exactly 4 quarters / 1 year back
+                            if i4 != 0:
+                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
+                        elif len(inc_s) >= 2:
+                            i0 = float(inc_s.iloc[0])
+                            i4 = float(inc_s.iloc[-1])
+                            if i4 != 0:
+                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
+                        ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
 
                 # Balance Sheet
                 q_bs = t_obj.quarterly_balance_sheet
@@ -655,7 +661,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pe_str = "`N/A`"
 
-            # 4. Multi-Source Wall Street Price Targets
+            # 5. Multi-Source Wall Street Price Targets
             targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
             # Construct Blocks
@@ -686,7 +692,7 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Expected Daily Move (ATR):** `{atr_fmt}`"
             )
 
-            # Line 2 in Health: YoY Growth
+            # Growth Line
             growth_parts = []
             if rev_growth_pct is not None:
                 growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
