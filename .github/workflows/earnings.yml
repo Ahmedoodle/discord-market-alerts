@@ -1,31 +1,21 @@
-name: Run Daily Earnings Intelligence Bot
+name: Run Daily Earnings Radar
 
 on:
-  schedule:
-    # Runs at 11:00 UTC every day (Which is 6:00 AM EST New York Time!)
-    - cron: '0 11 * * *'
-  workflow_dispatch: # Allows you to run it on demand anytime with 1 click!
-
-permissions:
-  contents: write
+  workflow_dispatch:   # <--- This allows cron-job.org to trigger it instantly
+  # You can remove or keep the schedule block
 
 jobs:
   run-earnings:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-
+          python-version: '3.11'
       - name: Install Dependencies
         run: |
-          pip install -r requirements.txt
-
-      - name: Run Earnings Script
+          pip install requests yfinance pandas
+      - name: Run Script
         env:
           DISCORD_EARNINGS_WEBHOOK_URL: ${{ secrets.DISCORD_EARNINGS_WEBHOOK_URL }}
         run: python earnings.py
