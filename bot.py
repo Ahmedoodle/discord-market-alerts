@@ -4,6 +4,7 @@ import asyncio
 import math
 import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from datetime import datetime, date, timedelta
 import requests
 import discord
 from discord.ext import commands
@@ -142,12 +143,36 @@ def calculate_atr(highs, lows, closes, period=14):
         trs.append(tr)
     return sum(trs[-period:]) / period
 
+def calculate_beta_vs_spy(closes, http_session):
+    """Calculates 1-Year Beta directly vs SPY."""
+    try:
+        if len(closes) < 50:
+            return None
+        url_spy = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y"
+        res_spy = http_session.get(url_spy, timeout=4)
+        if res_spy.status_code == 200:
+            spy_closes = [c for c in res_spy.json()["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
+            min_len = min(len(closes), len(spy_closes))
+            if min_len >= 50:
+                s_ret = [closes[i] / closes[i-1] - 1 for i in range(len(closes) - min_len + 1, len(closes))]
+                m_ret = [spy_closes[i] / spy_closes[i-1] - 1 for i in range(len(spy_closes) - min_len + 1, len(spy_closes))]
+                
+                mean_s = sum(s_ret) / len(s_ret)
+                mean_m = sum(m_ret) / len(m_ret)
+                
+                cov = sum((s_ret[i] - mean_s) * (m_ret[i] - mean_m) for i in range(len(s_ret)))
+                var_m = sum((m_ret[i] - mean_m) ** 2 for i in range(len(m_ret)))
+                
+                if var_m > 0:
+                    return cov / var_m
+    except Exception:
+        pass
+    return None
+
 def get_volume_tag(rvol, avg_vol):
     if rvol is None or avg_vol is None:
         return "N/A"
-    
     avg_fmt = format_large_number(avg_vol).replace("$", "") + " shares" if avg_vol >= 1000 else str(int(avg_vol)) + " shares"
-    
     if rvol >= 2.0:
         return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
     elif rvol >= 1.3:
@@ -174,7 +199,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Institutional Balance Sheet & Cash Flow Audit."""
+    """Direct Chart API + Institutional Fundamental Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -303,14 +328,10 @@ def get_on_demand_data(ticker_symbol):
             pivot_str = f"`Support (S1): ${s1:.2f}` | `Resistance (R1): ${r1:.2f}`"
 
         # Expected Daily Move (14D ATR)
-        atr_str = "N/A"
         atr = calculate_atr(highs, lows, closes, 14)
-        if atr and current_price > 0:
-            atr_pct = (atr / current_price) * 100
-            atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. ASSET CLASSIFICATION & HEDGE FUND BALANCE SHEET AUDIT
+        # 2. ASSET CLASSIFICATION & INSTITUTIONAL HEALTH ENGINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
@@ -322,6 +343,8 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
                 f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
+            catalysts_block = None
+            smart_money_block = None
             health_block = None
 
         # 2. ETFs
@@ -332,6 +355,8 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Structure:** `Diversified Market Basket Holding`\n"
                 f"• **Type:** `Open-End Fund Vehicle`"
             )
+            catalysts_block = None
+            smart_money_block = None
             health_block = None
 
         # 3. FUTURES
@@ -341,9 +366,11 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
+            catalysts_block = None
+            smart_money_block = None
             health_block = None
 
-        # 4. EQUITIES / STOCKS (Full Balance Sheet & Cash Flow Health Audit)
+        # 4. EQUITIES / STOCKS (Full Institutional Audit)
         else:
             profile_title = "🏢 Company Profile"
             
@@ -361,7 +388,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Step B: Financial Statement Calculations (Income, Balance Sheet, Cash Flow)
+            # Step B: Financial Statement & Catalysts Extraction
             market_cap = None
             shares = None
             trailing_pe = None
@@ -373,10 +400,18 @@ def get_on_demand_data(ticker_symbol):
             quality_str = "N/A"
             pfcf_str = ""
 
+            # Catalysts & Smart Money
+            earnings_date_str = "N/A"
+            prev_surprise_str = ""
+            target_str = "N/A"
+            rating_str = ""
+            beta_str = "N/A"
+            short_str = "N/A"
+
             try:
                 t_obj = yf.Ticker(ticker_symbol)
                 
-                # Shares & Market Cap
+                # Fast info for shares & cap
                 try:
                     shares = t_obj.fast_info.shares
                     market_cap = t_obj.fast_info.market_cap
@@ -386,7 +421,60 @@ def get_on_demand_data(ticker_symbol):
                 if not market_cap and shares and current_price:
                     market_cap = current_price * shares
 
-                # 1. Income Statement
+                # 1. Earnings Timing
+                try:
+                    cal = t_obj.calendar
+                    if cal is not None:
+                        ed = None
+                        if isinstance(cal, dict) and "Earnings Date" in cal:
+                            ed = cal["Earnings Date"]
+                        elif hasattr(cal, "loc") and "Earnings Date" in cal.index:
+                            ed = cal.loc["Earnings Date"].values
+
+                        if ed is not None and len(ed) > 0:
+                            target_ed = ed[0]
+                            if isinstance(target_ed, (datetime, date)):
+                                ed_d = target_ed.date() if isinstance(target_ed, datetime) else target_ed
+                                days_left = (ed_d - datetime.now().date()).days
+                                if days_left >= 0:
+                                    earnings_date_str = f"`In {days_left} Days ({ed_d.strftime('%b %d')})`"
+                                else:
+                                    earnings_date_str = f"`{ed_d.strftime('%b %d')}`"
+                except Exception:
+                    pass
+
+                # 2. Previous Earnings Beat %
+                try:
+                    ed_df = t_obj.earnings_dates
+                    if ed_df is not None and not ed_df.empty and "Surprise(%)" in ed_df.columns:
+                        surp_s = ed_df["Surprise(%)"].dropna()
+                        if not surp_s.empty:
+                            last_s = float(surp_s.iloc[0]) * 100
+                            tag = "🎯" if last_s >= 0 else "⚠️"
+                            prev_surprise_str = f" | `Prev Beat: {last_s:+.1f}% {tag}`"
+                except Exception:
+                    pass
+
+                # 3. Wall Street Target & Rating
+                try:
+                    apt = t_obj.analyst_price_targets
+                    if apt is not None:
+                        mean_t = getattr(apt, "mean", None) or (apt.get("mean") if isinstance(apt, dict) else None)
+                        if mean_t and current_price > 0:
+                            upside = ((mean_t - current_price) / current_price) * 100
+                            tag = " 🔥" if upside >= 15 else ""
+                            target_str = f"`${mean_t:.2f}` (**{upside:+.1f}% Upside{tag}**)"
+                except Exception:
+                    pass
+
+                # 4. Beta calculation vs SPY
+                beta_val = calculate_beta_vs_spy(closes, http_session)
+                if beta_val:
+                    tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
+                    beta_str = f"`{beta_val:.2f}x`{tag}"
+
+                # 5. Financial Statements Calculations
+                # Income Statement
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
@@ -401,7 +489,7 @@ def get_on_demand_data(ticker_symbol):
                         rev_s = q_inc.loc[rev_row].dropna()
                         ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
 
-                # 2. Balance Sheet
+                # Balance Sheet
                 q_bs = t_obj.quarterly_balance_sheet
                 stockholders_equity = None
                 total_debt = None
@@ -422,7 +510,7 @@ def get_on_demand_data(ticker_symbol):
                         current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
                         current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
 
-                # 3. Cash Flow (Free Cash Flow)
+                # Cash Flow (FCF)
                 q_cf = t_obj.quarterly_cash_flow
                 ttm_fcf = None
                 if q_cf is not None and not q_cf.empty:
@@ -437,8 +525,7 @@ def get_on_demand_data(ticker_symbol):
                             ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
                         ttm_fcf = ttm_ocf - ttm_capex
 
-                # 4. Compute Health Indicators
-                # ROE & Margin
+                # 6. Compute Health Metrics
                 if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
                     roe_pct = (ttm_net_inc / stockholders_equity) * 100
                     roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
@@ -449,7 +536,6 @@ def get_on_demand_data(ticker_symbol):
                     margin_tag = " 💎" if margin_pct >= 25.0 else (" 🟢" if margin_pct >= 10.0 else "")
                     margin_str = f"`{margin_pct:.1f}%`{margin_tag}"
 
-                # Leverage (Debt/Equity) & Current Ratio
                 if total_debt is not None and stockholders_equity and stockholders_equity > 0:
                     de_ratio = total_debt / stockholders_equity
                     de_tag = " (Low Debt 🟢)" if de_ratio <= 0.6 else (" (Moderate 🟡)" if de_ratio <= 1.5 else " (High Debt ⚠️)")
@@ -460,7 +546,6 @@ def get_on_demand_data(ticker_symbol):
                     cr_tag = " 🟢" if cr >= 1.5 else (" 🟡" if cr >= 1.0 else " ⚠️")
                     curr_ratio_str = f"`{cr:.2f}x`{cr_tag}"
 
-                # FCF Yield & Earnings Quality
                 if ttm_fcf is not None:
                     fcf_fmt = format_large_number(ttm_fcf)
                     if market_cap and market_cap > 0:
@@ -478,7 +563,6 @@ def get_on_demand_data(ticker_symbol):
                     else:
                         quality_str = f"`{quality_ratio:.2f}x` ⚠️ (Accrual / Paper Earnings)"
 
-                # Trailing P/E & P/FCF
                 if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
                     trailing_eps = ttm_net_inc / shares
                     if trailing_eps > 0:
@@ -495,7 +579,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pe_str = "`N/A`"
 
-            # Construct Profile Block
+            # Construct Blocks
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -512,7 +596,17 @@ def get_on_demand_data(ticker_symbol):
 
             profile_block = f"{line_sector}\n{line_cap}"
 
-            # Construct Health Audit Block
+            catalysts_block = (
+                f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n"
+                f"• **Wall St. Target:** {target_str}"
+            )
+
+            atr_fmt = f"±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)" if atr and current_price > 0 else "N/A"
+            smart_money_block = (
+                f"• **Beta (Market Volatility):** {beta_str}\n"
+                f"• **Expected Daily Move (ATR):** `{atr_fmt}`"
+            )
+
             health_block = (
                 f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}\n"
                 f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}\n"
@@ -531,7 +625,8 @@ def get_on_demand_data(ticker_symbol):
             "trend_block": trend_block,
             "macd_str": macd_str,
             "pivot_str": pivot_str,
-            "atr_str": atr_str,
+            "catalysts_block": catalysts_block,
+            "smart_money_block": smart_money_block,
             "profile_title": profile_title,
             "profile_block": profile_block,
             "health_block": health_block
@@ -554,7 +649,11 @@ def create_market_embed(data):
     embed.add_field(name="📈 Moving Averages & Trend", value=data['trend_block'], inline=False)
     embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
-    embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
+    
+    if data.get("catalysts_block"):
+        embed.add_field(name="🗓️ Catalysts & Wall Street Consensus", value=data['catalysts_block'], inline=False)
+    if data.get("smart_money_block"):
+        embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
     if data.get("profile_block"):
         embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
     if data.get("health_block"):
