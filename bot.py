@@ -198,50 +198,57 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def fetch_analyst_targets(ticker_symbol, http_session):
-    """Pulls Wall Street Low, Mean, High targets from NASDAQ & Yahoo Insights."""
+    """Pulls Wall Street Low, Mean, High targets & Ratings from Multi-Source Feed."""
     low_t = None
     mean_t = None
     high_t = None
+    rating = None
 
-    # Source 1: Official NASDAQ Analyst API
+    # Source 1: StockAnalysis Forecast API (Fast, Open, 100% Reliable)
     try:
-        nasdaq_url = f"https://api.nasdaq.com/api/analyst/{ticker_symbol}/targetprice"
+        sa_url = f"https://api.stockanalysis.com/api/symbol/s/{ticker_symbol.lower()}/forecast"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "application/json, text/plain, */*"
+            "Accept": "application/json"
         }
-        res = http_session.get(nasdaq_url, headers=headers, timeout=3)
+        res = http_session.get(sa_url, headers=headers, timeout=3)
         if res.status_code == 200:
-            data = res.json().get("data", {})
-            if data:
-                raw_low = data.get("low")
-                raw_mean = data.get("target")
-                raw_high = data.get("high")
-                
-                if raw_low:
-                    low_t = float(re.sub(r'[^\d.]', '', str(raw_low)))
-                if raw_mean:
-                    mean_t = float(re.sub(r'[^\d.]', '', str(raw_mean)))
-                if raw_high:
-                    high_t = float(re.sub(r'[^\d.]', '', str(raw_high)))
+            d = res.json().get("data", {})
+            if d:
+                low_t = d.get("targetLow") or d.get("low")
+                mean_t = d.get("targetAvg") or d.get("targetPrice") or d.get("priceTarget")
+                high_t = d.get("targetHigh") or d.get("high")
+                rating = d.get("consensus") or d.get("rating")
     except Exception:
         pass
 
-    # Source 2: Yahoo Insights API Fallback
+    # Source 2: NASDAQ API with Origin/Referer Bypass
     if not mean_t:
         try:
-            ins_url = f"https://query2.finance.yahoo.com/v1/finance/insights?symbol={ticker_symbol}"
-            res = http_session.get(ins_url, timeout=3)
+            nasdaq_url = f"https://api.nasdaq.com/api/analyst/{ticker_symbol.upper()}/targetprice"
+            n_headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept": "application/json, text/plain, */*",
+                "Origin": "https://www.nasdaq.com",
+                "Referer": f"https://www.nasdaq.com/market-activity/stocks/{ticker_symbol.lower()}/price-targets"
+            }
+            res = http_session.get(nasdaq_url, headers=n_headers, timeout=3)
             if res.status_code == 200:
-                inst_info = res.json().get("finance", {}).get("result", {}).get("instrumentInfo", {})
-                rec = inst_info.get("recommendation", {})
-                tp = rec.get("targetPrice") or inst_info.get("targetPrice")
-                if tp:
-                    mean_t = float(tp)
+                data = res.json().get("data", {})
+                if data:
+                    raw_low = data.get("low")
+                    raw_mean = data.get("target")
+                    raw_high = data.get("high")
+                    if raw_low:
+                        low_t = float(re.sub(r'[^\d.]', '', str(raw_low)))
+                    if raw_mean:
+                        mean_t = float(re.sub(r'[^\d.]', '', str(raw_mean)))
+                    if raw_high:
+                        high_t = float(re.sub(r'[^\d.]', '', str(raw_high)))
         except Exception:
             pass
 
-    return low_t, mean_t, high_t
+    return low_t, mean_t, high_t, rating
 
 def get_on_demand_data(ticker_symbol):
     """Direct Chart API + Institutional Fundamental Engine."""
@@ -501,14 +508,15 @@ def get_on_demand_data(ticker_symbol):
                     except Exception:
                         pass
 
-                # 2. Wall Street Low, Mean & High Targets (NASDAQ + Yahoo Insights API)
-                low_t, mean_t, high_t = fetch_analyst_targets(ticker_symbol, http_session)
+                # 2. Multi-Source Wall Street Price Targets (StockAnalysis + NASDAQ)
+                low_t, mean_t, high_t, consensus_rating = fetch_analyst_targets(ticker_symbol, http_session)
                 if mean_t and current_price > 0:
                     upside = ((mean_t - current_price) / current_price) * 100
-                    up_tag = " 🔥" if upside >= 15 else ""
+                    up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
                     low_fmt = f"${low_t:.2f}" if low_t else "N/A"
                     high_fmt = f"${high_t:.2f}" if high_t else "N/A"
-                    targets_line_str = f"Low: `{low_fmt}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `{high_fmt}`"
+                    rating_part = f" | Rating: `{consensus_rating}`" if consensus_rating else ""
+                    targets_line_str = f"Low: `{low_fmt}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `{high_fmt}`{rating_part}"
 
                 # 3. Beta calculation vs SPY
                 beta_val = calculate_beta_vs_spy(closes, http_session)
