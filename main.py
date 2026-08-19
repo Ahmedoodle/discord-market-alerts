@@ -182,6 +182,7 @@ def _get_year_holidays(year):
     return us_hols, ca_hols
 
 def check_market_holiday(target_date):
+    """Checks full-day closures across a multi-year window."""
     all_us = {}
     all_ca = {}
     for y in [target_date.year - 1, target_date.year, target_date.year + 1]:
@@ -191,6 +192,7 @@ def check_market_holiday(target_date):
     return all_us.get(target_date), all_ca.get(target_date)
 
 def check_early_close(target_date):
+    """Detects 1:00 PM EST Early Market Close Days."""
     year = target_date.year
     if target_date.month == 7 and target_date.day == 3 and target_date.weekday() < 5:
         july_4 = date(year, 7, 4)
@@ -208,7 +210,7 @@ def check_early_close(target_date):
     return False, None
 
 # ====================================================================
-# 2. SESSION TIMING & DYNAMIC EARLY-CLOSE CLASSIFIER
+# 2. SESSION TIMING & DYNAMIC CLASSIFIER
 # ====================================================================
 def get_current_session_info(now_ny, is_early_close):
     if now_ny.weekday() > 4:
@@ -286,110 +288,247 @@ def save_alert_state(state):
         print(f"Error saving state file: {e}")
 
 # ====================================================================
-# 4. TECHNICAL INDICATOR CALCULATION ENGINE (Volume, RSI, 52W, SMAs)
+# 4. INSTITUTIONAL TECHNICAL INDICATOR ENGINE
 # ====================================================================
 def format_large_number(num):
     if num is None:
         return "N/A"
-    if num >= 1e9:
-        return f"{num / 1e9:.2f}B"
+    if num >= 1e12:
+        return f"${num / 1e12:.2f} Trillion"
+    elif num >= 1e9:
+        return f"${num / 1e9:.2f} Billion"
     elif num >= 1e6:
-        return f"{num / 1e6:.1f}M"
+        return f"{num / 1e6:.1f} Million"
     elif num >= 1e3:
         return f"{num / 1e3:.1f}K"
     return str(int(num))
 
-def calculate_technical_metrics(ticker_obj, current_price, session_type):
-    """
-    Computes institutional indicators:
-    - 20D RVOL (Relative Volume)
-    - 14-Day RSI (Wilder's Smoothing)
-    - 52-Week Range Proximity
-    - 50D & 200D SMA Trend Health
-    """
-    metrics = {
-        "volume_str": None,
-        "rsi_str": None,
-        "range_52w_str": None,
-        "trend_health_str": None
-    }
+def calculate_rsi(closes, period=14):
+    if len(closes) < period + 1:
+        return None
+    deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    gains = [max(d, 0) for d in deltas]
+    losses = [max(-d, 0) for d in deltas]
 
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+
+    for i in range(period, len(deltas)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+
+    if avg_loss == 0:
+        return 100.0
+    rs = avg_gain / avg_loss
+    return 100.0 - (100.0 / (1.0 + rs))
+
+def calculate_macd(closes):
+    if len(closes) < 35:
+        return "N/A"
+    
+    alpha_12 = 2.0 / (12 + 1)
+    alpha_26 = 2.0 / (26 + 1)
+    curr_12 = sum(closes[:12]) / 12
+    curr_26 = sum(closes[:26]) / 26
+    ema_12_full = []
+    ema_26_full = []
+
+    for i, c in enumerate(closes):
+        if i >= 12:
+            curr_12 = c * alpha_12 + curr_12 * (1 - alpha_12)
+        if i >= 26:
+            curr_26 = c * alpha_26 + curr_26 * (1 - alpha_26)
+            ema_12_full.append(curr_12)
+            ema_26_full.append(curr_26)
+
+    macd_line = [e12 - e26 for e12, e26 in zip(ema_12_full, ema_26_full)]
+    if len(macd_line) < 9:
+        return "N/A"
+
+    alpha_9 = 2.0 / (9 + 1)
+    sig = sum(macd_line[:9]) / 9
+    sig_line = [sig]
+    for m in macd_line[9:]:
+        sig = m * alpha_9 + sig * (1 - alpha_9)
+        sig_line.append(sig)
+
+    curr_macd = macd_line[-1]
+    curr_sig = sig_line[-1]
+    hist_curr = curr_macd - curr_sig
+    hist_prev = (macd_line[-2] - sig_line[-2]) if len(macd_line) >= 2 else hist_curr
+
+    if curr_macd >= curr_sig:
+        if hist_curr >= hist_prev:
+            return "Bullish Momentum 🟢 (Signal Expanding Upward)"
+        else:
+            return "Bullish Trend 🟢 (Momentum Slowing)"
+    else:
+        if hist_curr <= hist_prev:
+            return "Bearish Momentum 🔴 (Expanding Downward)"
+        else:
+            return "Bearish Trend 🔴 (Weakening / Slowing)"
+
+def calculate_atr(highs, lows, closes, period=14):
+    if len(closes) < period + 1:
+        return None
+    trs = []
+    for i in range(1, len(closes)):
+        h = highs[i]
+        l = lows[i]
+        c_prev = closes[i - 1]
+        tr = max(h - l, abs(h - c_prev), abs(l - c_prev))
+        trs.append(tr)
+    return sum(trs[-period:]) / period
+
+def get_volume_tag(rvol):
+    if rvol is None:
+        return "N/A"
+    if rvol >= 2.0:
+        return f"**{rvol:.1f}x** (🔥 Unusual Surge)"
+    elif rvol >= 1.3:
+        return f"**{rvol:.1f}x** (⚡ Strong)"
+    elif rvol < 0.6:
+        return f"**{rvol:.1f}x** (💤 Low)"
+    else:
+        return f"**{rvol:.1f}x** (📊 Normal)"
+
+def get_rsi_tag(rsi):
+    if rsi is None:
+        return "N/A"
+    if rsi >= 75:
+        return f"**{rsi:.1f}** (⚠️ Extreme Overbought)"
+    elif rsi >= 70:
+        return f"**{rsi:.1f}** (⚠️ Overbought Zone)"
+    elif rsi <= 25:
+        return f"**{rsi:.1f}** (🟢 Extreme Oversold)"
+    elif rsi <= 30:
+        return f"**{rsi:.1f}** (🟢 Oversold Zone)"
+    elif rsi >= 50:
+        return f"**{rsi:.1f}** (🟢 Bullish Trend)"
+    else:
+        return f"**{rsi:.1f}** (🔴 Bearish Trend)"
+
+def get_technical_metrics_direct(ticker_symbol, current_price, http_session):
+    """Calculates the full 8-part institutional indicator suite via Direct Yahoo Chart API."""
+    metrics = {}
     try:
-        hist = ticker_obj.history(period="1y")
-        if hist.empty or 'Close' not in hist or len(hist['Close']) < 15:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
+        res = http_session.get(url, timeout=5)
+        if res.status_code != 200:
             return metrics
 
-        closes = hist['Close'].dropna()
-        volumes = hist['Volume'].dropna()
+        data = res.json()
+        result = data.get("chart", {}).get("result")
+        if not result:
+            return metrics
 
-        # 1. 20-DAY RELATIVE VOLUME (RVOL)
-        if len(volumes) >= 20:
-            avg_vol_20 = volumes.iloc[-21:-1].mean()
-            vol_today = volumes.iloc[-1]
-            if avg_vol_20 > 0:
-                rvol = vol_today / avg_vol_20
-                v_formatted = format_large_number(vol_today)
-                if rvol >= 2.0:
-                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg 🔥 Unusual Surge)"
-                elif rvol >= 1.3:
-                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg ⚡ Strong Volume)"
-                elif rvol < 0.6:
-                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg 💤 Low Volume)"
-                else:
-                    metrics["volume_str"] = f"`{v_formatted}` ({rvol:.1f}x Avg 📊 Normal)"
+        chart_data = result[0]
+        meta = chart_data.get("meta", {})
+        indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
 
-        # 2. 14-DAY RSI (Wilder's Formula)
-        delta = closes.diff()
-        gains = delta.clip(lower=0)
-        losses = -1 * delta.clip(upper=0)
-        avg_gain = gains.ewm(com=13, adjust=False).mean().iloc[-1]
-        avg_loss = losses.ewm(com=13, adjust=False).mean().iloc[-1]
+        closes = [c for c in indicators.get("close", []) if c is not None]
+        volumes = [v for v in indicators.get("volume", []) if v is not None]
+        highs = [h for h in indicators.get("high", []) if h is not None]
+        lows = [l for l in indicators.get("low", []) if l is not None]
 
-        if avg_loss == 0:
-            rsi = 100.0
-        else:
-            rs = avg_gain / avg_loss
-            rsi = 100.0 - (100.0 / (1.0 + rs))
+        if len(closes) < 2:
+            return metrics
 
-        if rsi >= 75:
-            metrics["rsi_str"] = f"`{rsi:.1f}` (⚠️ Extreme Overbought)"
-        elif rsi >= 70:
-            metrics["rsi_str"] = f"`{rsi:.1f}` (⚠️ Overbought Zone)"
-        elif rsi <= 25:
-            metrics["rsi_str"] = f"`{rsi:.1f}` (🟢 Extreme Oversold)"
-        elif rsi <= 30:
-            metrics["rsi_str"] = f"`{rsi:.1f}` (🟢 Oversold Zone)"
-        elif rsi >= 50:
-            metrics["rsi_str"] = f"`{rsi:.1f}` (Neutral / Bullish 📈)"
-        else:
-            metrics["rsi_str"] = f"`{rsi:.1f}` (Neutral / Bearish 📉)"
+        # 1. Volume Multipliers (20D, 50D, 90D)
+        vol_today = volumes[-1] if volumes else 0
+        v_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
+        rvol_20 = (vol_today / (sum(volumes[-21:-1]) / len(volumes[-21:-1]))) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
+        rvol_50 = (vol_today / (sum(volumes[-51:-1]) / len(volumes[-51:-1]))) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
+        rvol_90 = (vol_today / (sum(volumes[-91:-1]) / len(volumes[-91:-1]))) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
 
-        # 3. 52-WEEK RANGE & PROXIMITY
-        high_52w = hist['High'].max()
-        low_52w = hist['Low'].min()
+        metrics["volume_block"] = (
+            f"• **Today's Vol:** `{v_fmt}`\n"
+            f"• **20D (1-Month):** {get_volume_tag(rvol_20)}\n"
+            f"• **50D (Quarterly):** {get_volume_tag(rvol_50)}\n"
+            f"• **90D (Long-Term):** {get_volume_tag(rvol_90)}"
+        )
+
+        # 2. Multi-Timeframe RSI (7D, 14D, 30D)
+        rsi_7 = calculate_rsi(closes, 7)
+        rsi_14 = calculate_rsi(closes, 14)
+        rsi_30 = calculate_rsi(closes, 30)
+
+        metrics["rsi_block"] = (
+            f"• **7D (Fast / Scalp):** {get_rsi_tag(rsi_7)}\n"
+            f"• **14D (Standard):** {get_rsi_tag(rsi_14)}\n"
+            f"• **30D (Macro Trend):** {get_rsi_tag(rsi_30)}"
+        )
+
+        # 3. 52-Week Range in Dollars
+        high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
+        low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
         if high_52w and low_52w and high_52w > low_52w:
-            pos_pct = ((current_price - low_52w) / (high_52w - low_52w)) * 100
             dist_high = ((high_52w - current_price) / high_52w) * 100
-            
             if dist_high <= 2.0:
-                metrics["range_52w_str"] = f"`{pos_pct:.1f}%` (🔥 {dist_high:.1f}% from 52W High!)"
+                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
             elif dist_high <= 5.0:
-                metrics["range_52w_str"] = f"`{pos_pct:.1f}%` (⚡ {dist_high:.1f}% from 52W High)"
+                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
             else:
-                metrics["range_52w_str"] = f"`{pos_pct:.1f}%` ({dist_high:.1f}% below 52W High)"
+                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
-        # 4. 50-DAY & 200-DAY SMA TREND HEALTH
-        if len(closes) >= 200:
-            sma_50 = closes.iloc[-50:].mean()
-            sma_200 = closes.iloc[-200:].mean()
+        # 4. Moving Averages & Trend
+        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else None
+        sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else None
+
+        sma_50_str = f"`${sma_50:.2f}` (Above by +{((current_price-sma_50)/sma_50)*100:.1f}% 🟢)" if sma_50 and current_price >= sma_50 else (f"`${sma_50:.2f}` (Below by {((current_price-sma_50)/sma_50)*100:.1f}% 🔴)" if sma_50 else "N/A")
+        sma_200_str = f"`${sma_200:.2f}` (Above by +{((current_price-sma_200)/sma_200)*100:.1f}% 🟢)" if sma_200 and current_price >= sma_200 else (f"`${sma_200:.2f}` (Below by {((current_price-sma_200)/sma_200)*100:.1f}% 🔴)" if sma_200 else "N/A")
+
+        verdict_str = "N/A"
+        if sma_50 and sma_200:
             if current_price >= sma_50 and current_price >= sma_200:
-                metrics["trend_health_str"] = "Above 50D & 200D SMA (🟢 Strong Uptrend)"
+                verdict_str = "`🟢 Strong Bullish Uptrend` *(Institutional Support)*"
             elif current_price < sma_50 and current_price < sma_200:
-                metrics["trend_health_str"] = "Below 50D & 200D SMA (🔴 Strong Downtrend)"
+                verdict_str = "`🔴 Strong Bearish Downtrend` *(Institutional Selling)*"
             elif current_price >= sma_200 and current_price < sma_50:
-                metrics["trend_health_str"] = "Above 200D, Below 50D SMA (🟡 Pullback)"
+                verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
             else:
-                metrics["trend_health_str"] = "Above 50D, Below 200D SMA (🟡 Rebound)"
+                verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
+        elif sma_50:
+            verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
+
+        metrics["trend_block"] = (
+            f"• **50-Day SMA:** {sma_50_str}\n"
+            f"• **200-Day SMA:** {sma_200_str}\n"
+            f"• **Overall Verdict:** {verdict_str}"
+        )
+
+        # 5. MACD (12, 26, 9)
+        metrics["macd_str"] = calculate_macd(closes)
+
+        # 6. Pivot Levels (S1 & R1)
+        if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
+            h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
+            p = (h_prev + l_prev + c_prev) / 3.0
+            r1 = (2.0 * p) - l_prev
+            s1 = (2.0 * p) - h_prev
+            metrics["pivot_str"] = f"`Support (S1): ${s1:.2f}` | `Resistance (R1): ${r1:.2f}`"
+
+        # 7. 14D ATR
+        atr = calculate_atr(highs, lows, closes, 14)
+        if atr and current_price > 0:
+            metrics["atr_str"] = f"`±${atr:.2f}` (±{(atr/current_price)*100:.1f}% typical daily swing)"
+
+        # 8. Valuation & Market Cap Tier
+        try:
+            q_url = f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics"
+            q_res = http_session.get(q_url, timeout=3)
+            if q_res.status_code == 200:
+                q_data = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                sum_det = q_data.get("summaryDetail", {})
+                m_cap = sum_det.get("marketCap", {}).get("raw")
+                pe_val = sum_det.get("trailingPE", {}).get("raw") or sum_det.get("forwardPE", {}).get("raw")
+                if m_cap:
+                    cap_fmt = format_large_number(m_cap)
+                    tier = "Mega-Cap" if m_cap >= 2e11 else ("Large-Cap" if m_cap >= 1e10 else ("Mid-Cap" if m_cap >= 2e9 else "Small-Cap"))
+                    pe_txt = f" • Trailing P/E: `{pe_val:.1f}`" if pe_val else ""
+                    metrics["val_str"] = f"`{cap_fmt} ({tier})`{pe_txt}"
+        except Exception:
+            pass
 
     except Exception:
         pass
@@ -414,16 +553,24 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
         {"name": f"{session_badge} Change", "value": f"{change_pct:+.2f}%", "inline": True}
     ]
 
-    # Attach Institutional Indicator Metrics if available
+    # Attach Institutional Indicator Suite
     if metrics:
-        if metrics.get("volume_str"):
-            fields.append({"name": "📊 Volume (20D)", "value": metrics["volume_str"], "inline": False})
-        if metrics.get("rsi_str"):
-            fields.append({"name": "📈 RSI (14D)", "value": metrics["rsi_str"], "inline": True})
-        if metrics.get("range_52w_str"):
-            fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_52w_str"], "inline": True})
-        if metrics.get("trend_health_str"):
-            fields.append({"name": "📈 Trend Health", "value": metrics["trend_health_str"], "inline": False})
+        if metrics.get("volume_block"):
+            fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
+        if metrics.get("rsi_block"):
+            fields.append({"name": "📈 Multi-Timeframe RSI", "value": metrics["rsi_block"], "inline": False})
+        if metrics.get("range_str"):
+            fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_str"], "inline": False})
+        if metrics.get("trend_block"):
+            fields.append({"name": "📈 Moving Averages & Trend", "value": metrics["trend_block"], "inline": False})
+        if metrics.get("macd_str"):
+            fields.append({"name": "📊 MACD (12,26,9)", "value": metrics["macd_str"], "inline": False})
+        if metrics.get("pivot_str"):
+            fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
+        if metrics.get("atr_str"):
+            fields.append({"name": "⚡ Expected Daily Move", "value": metrics["atr_str"], "inline": True})
+        if metrics.get("val_str"):
+            fields.append({"name": "🏢 Valuation & Cap", "value": metrics["val_str"], "inline": True})
 
     # Add Trigger History Timeline
     if history_trail and len(history_trail) > 0:
@@ -468,7 +615,7 @@ def send_discord_holiday_announcement(us_name, ca_name):
         "embeds": [{
             "title": "🏛️ Market Notice: Exchange Holiday",
             "description": f"**{headline}**\n\n• 📈 **Stocks & ETFs:** Paused for the holiday session.\n• 🪙 **Crypto Watcher:** Active 24/7.\n• 📰 **Breaking News:** Active 24/7.",
-            "color": 15844367,  # Gold / Amber
+            "color": 15844367,
             "footer": {"text": f"{BOT_NAME} • Market Holiday Engine"}
         }]
     }
@@ -504,41 +651,48 @@ def send_discord_news_alert(article):
         print(f"Error sending news alert: {e}")
 
 # ====================================================================
-# 6. DATA EXTRACTION ENGINE (Extended Hours & Realtime Live)
+# 6. DATA EXTRACTION ENGINE (3-Layer Bulletproof Fallback)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
-    ticker = None
 
     try:
         ticker = yf.Ticker(ticker_symbol, session=session_http)
-        fi = ticker.fast_info
+        
+        # Layer 1: fast_info
+        try:
+            fi = ticker.fast_info
+            current_price = float(fi.last_price) if fi.last_price is not None else None
+            baseline_price = float(fi.previous_close) if fi.previous_close is not None else None
+        except Exception:
+            pass
 
-        if session_type == "CRYPTO":
-            current_price = fi.last_price
-            baseline_price = fi.previous_close
+        # Layer 2: Realtime history fallback (Essential for Futures like NQ=F, GC=F)
+        if current_price is None or baseline_price is None:
+            try:
+                hist = ticker.history(period="2d")
+                if 'Close' in hist.columns and len(hist['Close']) >= 2:
+                    baseline_price = float(hist['Close'].iloc[-2])
+                    current_price = float(hist['Close'].iloc[-1])
+                elif 'Close' in hist.columns and len(hist['Close']) == 1:
+                    current_price = float(hist['Close'].iloc[-1])
+            except Exception:
+                pass
 
-        elif session_type in ("PRE_MARKET", "REGULAR"):
-            current_price = fi.last_price
-            baseline_price = fi.previous_close
-
-        elif session_type == "AFTER_HOURS":
-            current_price = fi.last_price
+        # Layer 3: After-Hours Baseline (Today's Closing Bell)
+        if session_type == "AFTER_HOURS" and current_price is not None:
             try:
                 hist = ticker.history(period="2d")
                 if 'Close' in hist.columns and len(hist['Close']) >= 1:
                     baseline_price = float(hist['Close'].iloc[-1])
             except Exception:
                 pass
-            
-            if baseline_price is None:
-                baseline_price = fi.previous_close
 
     except Exception:
         pass
 
-    return current_price, baseline_price, ticker
+    return current_price, baseline_price
 
 # --- NEWS FETCHING WITH TIME PARSING ---
 def fetch_ticker_news_search(symbol, session):
@@ -675,7 +829,7 @@ def check_market():
 
     for ticker_symbol, s_type, req_threshold, badge in active_watchlist:
         try:
-            current_price, baseline_price, ticker_obj = get_extended_stock_data(ticker_symbol, s_type, session_http)
+            current_price, baseline_price = get_extended_stock_data(ticker_symbol, s_type, session_http)
 
             if current_price is not None and baseline_price is not None and baseline_price > 0:
                 change_pct = ((current_price - baseline_price) / baseline_price) * 100
@@ -691,7 +845,6 @@ def check_market():
                 else:
                     tracked_dict = {}
 
-                # Calculate Institutional Indicators for triggered alerts
                 should_alert = False
                 step_change_pct = None
                 history_trail = []
@@ -729,8 +882,8 @@ def check_market():
                         print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
 
                 if should_alert:
-                    # Calculate live institutional metrics on demand
-                    metrics = calculate_technical_metrics(ticker_obj, current_price, s_type)
+                    # Calculate live institutional indicators on demand
+                    metrics = get_technical_metrics_direct(ticker_symbol, current_price, session_http)
                     price_alerts_to_send.append({
                         "ticker": ticker_symbol,
                         "price": current_price,
