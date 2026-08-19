@@ -3,10 +3,10 @@ import threading
 import math
 import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import requests
 import discord
 from discord.ext import commands
 import yfinance as yf
+from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -29,17 +29,7 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSION
-# -------------------------------------------------------------
-http_session = requests.Session()
-http_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.9"
-})
-
-# -------------------------------------------------------------
-# 3. DISCORD BOT CLIENT
+# 2. DISCORD BOT CLIENT
 # -------------------------------------------------------------
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
@@ -167,12 +157,12 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart Engine + Fast Info + Referer Quote Engine."""
+    """Direct Yahoo Chart + Chrome TLS Impersonation Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
-        # 1. Pull Chart Data (Price, History Arrays, Range)
+        # 1. Pull Chart Data (Price, History Arrays, Range) via Chrome TLS
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
-        res = http_session.get(url, timeout=6)
+        res = cureq.get(url, impersonate="chrome124", timeout=6)
         
         if res.status_code != 200:
             return None, f"Could not fetch data for `{ticker_symbol}` (Status: {res.status_code})."
@@ -299,60 +289,54 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 3. BULLETPROOF FUNDAMENTALS ENGINE (Fast Info + Referer Headers)
+        # 3. TLS CHROME IMPERSONATION FOR FUNDAMENTALS, PE, PEG & GROWTH
         # =================================================================
+        sector = None
+        industry = None
         market_cap = None
         trailing_pe = None
         forward_pe = None
-        sector_str = None
-        industry_str = None
+        peg_ratio = None
+        rev_growth = None
+        eps_growth = None
+        profit_margin = None
         quote_type = meta.get("instrumentType", "EQUITY")
-        
-        # Step A: Fast Info (Direct Engine)
-        try:
-            t_fast = yf.Ticker(ticker_symbol)
-            fi = t_fast.fast_info
-            if hasattr(fi, "market_cap") and fi.market_cap:
-                market_cap = float(fi.market_cap)
-            elif hasattr(fi, "shares") and fi.shares:
-                market_cap = float(fi.shares) * current_price
-        except Exception:
-            pass
 
-        # Step B: Quote API with Official Referer / Origin Bypass Headers
+        # Query QuoteSummary with Chrome TLS Fingerprint
         try:
-            q_headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                "Referer": f"https://finance.yahoo.com/quote/{ticker_symbol}/",
-                "Origin": "https://finance.yahoo.com",
-                "Accept": "application/json"
-            }
-            q_url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker_symbol}"
-            q_res = requests.get(q_url, headers=q_headers, timeout=4)
+            q_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics,financialData,assetProfile,quoteType"
+            q_res = cureq.get(q_url, impersonate="chrome124", timeout=5)
             if q_res.status_code == 200:
-                q_json = q_res.json().get("quoteResponse", {}).get("result", [])
-                if q_json:
-                    q_item = q_json[0]
-                    market_cap = market_cap or q_item.get("marketCap")
-                    trailing_pe = q_item.get("trailingPE")
-                    forward_pe = q_item.get("forwardPE")
-                    quote_type = q_item.get("quoteType", quote_type)
+                q_json = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                
+                sum_det = q_json.get("summaryDetail", {})
+                key_stats = q_json.get("defaultKeyStatistics", {})
+                fin_data = q_json.get("financialData", {})
+                asset_prof = q_json.get("assetProfile", {})
+                q_type_dict = q_json.get("quoteType", {})
+
+                quote_type = q_type_dict.get("quoteType", quote_type)
+                sector = asset_prof.get("sector")
+                industry = asset_prof.get("industry")
+                
+                market_cap = sum_det.get("marketCap", {}).get("raw") or (key_stats.get("sharesOutstanding", {}).get("raw", 0) * current_price)
+                trailing_pe = sum_det.get("trailingPE", {}).get("raw")
+                forward_pe = sum_det.get("forwardPE", {}).get("raw")
+                peg_ratio = key_stats.get("pegRatio", {}).get("raw")
+
+                rev_growth = fin_data.get("revenueGrowth", {}).get("raw")
+                eps_growth = fin_data.get("earningsGrowth", {}).get("raw") or key_stats.get("earningsQuarterlyGrowth", {}).get("raw")
+                profit_margin = fin_data.get("profitMargins", {}).get("raw")
         except Exception:
             pass
 
-        # Step C: Discovery Search for Sector & Industry
-        try:
-            s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-            s_res = requests.get(s_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=3)
-            if s_res.status_code == 200:
-                quotes = s_res.json().get("quotes", [])
-                if quotes:
-                    sector_str = quotes[0].get("sector")
-                    industry_str = quotes[0].get("industry")
-                    market_cap = market_cap or quotes[0].get("marketCap")
-                    quote_type = quotes[0].get("quoteType", quote_type)
-        except Exception:
-            pass
+        # Fallback to fast_info for market_cap if needed
+        if not market_cap:
+            try:
+                t_obj = yf.Ticker(ticker_symbol)
+                market_cap = float(t_obj.fast_info.market_cap)
+            except Exception:
+                pass
 
         # Construct Profile Block
         if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
@@ -370,7 +354,7 @@ def get_on_demand_data(ticker_symbol):
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
                 f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                f"• **Strategy:** `Diversified Holdings Basket`"
             )
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
@@ -380,44 +364,59 @@ def get_on_demand_data(ticker_symbol):
             )
         else:
             # Equities / Stocks
-            fund_title = "🏢 Valuation, Earnings & Profile"
-
+            fund_title = "🏢 Valuation, Earnings & Growth"
+            
             # Line 1: Sector & Industry
-            if sector_str and industry_str:
-                line_sector = f"• **Sector / Industry:** `{sector_str} • {industry_str}`"
-            elif sector_str:
-                line_sector = f"• **Sector:** `{sector_str}`"
+            if sector and industry:
+                line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
+            elif sector:
+                line_sector = f"• **Sector:** `{sector}`"
             else:
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
             # Line 2: Market Cap & Tier
             if market_cap and market_cap > 0:
                 cap_fmt = format_large_number(market_cap)
-                if market_cap >= 2e11:
-                    tier = "Mega-Cap 👑"
-                elif market_cap >= 1e10:
-                    tier = "Large-Cap 🏢"
-                elif market_cap >= 2e9:
-                    tier = "Mid-Cap 📈"
-                else:
-                    tier = "Small-Cap 🌱"
+                tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
                 line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
             else:
-                line_cap = f"• **Market Cap:** `N/A`"
+                line_cap = "• **Market Cap:** `N/A`"
 
-            # Line 3: Valuation (Trailing PE, Forward PE)
-            val_items = []
+            # Line 3: Valuation (Trailing PE, Forward PE, PEG)
+            val_parts = []
             if trailing_pe:
-                val_items.append(f"Trailing P/E: `{trailing_pe:.1f}`")
+                val_parts.append(f"Trailing P/E: `{trailing_pe:.1f}`")
             if forward_pe:
-                val_items.append(f"Forward P/E: `{forward_pe:.1f}`")
+                val_parts.append(f"Forward P/E: `{forward_pe:.1f}`")
+            if peg_ratio:
+                val_parts.append(f"PEG: `{peg_ratio:.2f}`" + (" 🔥" if peg_ratio < 1.0 else ""))
+            
+            line_val = f"• **Valuation:** {' | '.join(val_parts)}" if val_parts else "• **Valuation:** `Pre-Profit / High-Growth`"
 
-            if val_items:
-                line_val = f"• **Valuation:** {' | '.join(val_items)}"
+            # Line 4: YoY Growth (Revenue & EPS)
+            growth_parts = []
+            if rev_growth is not None:
+                growth_parts.append(f"Revenue: `{rev_growth * 100:+.1f}%`")
+            if eps_growth is not None:
+                growth_parts.append(f"EPS: `{eps_growth * 100:+.1f}% 🚀`")
+            
+            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+
+            # Line 5: Profit Margin
+            if profit_margin is not None:
+                p_pct = profit_margin * 100
+                tag = " (High Margin 💎)" if p_pct >= 25.0 else (" (Healthy 🟢)" if p_pct >= 10.0 else "")
+                line_margin = f"• **Profit Margin:** `{p_pct:.1f}%`{tag}"
             else:
-                line_val = f"• **Valuation:** `High-Growth / Innovation Valuation`"
+                line_margin = ""
 
-            profile_block = f"{line_sector}\n{line_cap}\n{line_val}"
+            elements = [line_sector, line_cap, line_val]
+            if line_growth:
+                elements.append(line_growth)
+            if line_margin:
+                elements.append(line_margin)
+            
+            profile_block = "\n".join(elements)
 
         return {
             "ticker": ticker_symbol,
@@ -453,7 +452,7 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
     if data.get("profile_block"):
-        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Profile"), value=data['profile_block'], inline=False)
+        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Growth"), value=data['profile_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
