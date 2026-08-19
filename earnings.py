@@ -89,7 +89,7 @@ def fetch_dynamic_tsx_universe():
                 "operator": "AND",
                 "operands": [
                     {"operator": "EQ", "operands": ["region", "ca"]},
-                    {"operator": "GTE", "operands": ["intradaymarketcap", 1000000000]}  # Filter >= $1.0B USD
+                    {"operator": "GTE", "operands": ["intradaymarketcap", 1000000000]}  # >= $1.0B USD
                 ]
             }
         }
@@ -103,7 +103,7 @@ def fetch_dynamic_tsx_universe():
     except Exception as e:
         logging.warning(f"Yahoo dynamic TSX screener note: {e}")
 
-    # Ensure Core Mid/Mega TSX coverage
+    # Core Mid/Mega TSX coverage
     tickers.update([
         "BB.TO", "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO",
         "ENB.TO", "CNQ.TO", "SU.TO", "TRP.TO", "CVE.TO", "IMO.TO", "TOU.TO", "ARX.TO", "PPL.TO", "KEY.TO",
@@ -196,7 +196,8 @@ def fetch_us_yesterday_actuals(target_date):
                     "badge": "🍁" if is_canadian else "🇺🇸",
                     "reported_date": target_date.strftime("%b %d, %Y"),
                     "market_cap": mcap,
-                    "eps_line": f"Actual: `{act_str}` | Estimate: `{est_str}`{surp_str}"
+                    "eps_line": f"Actual: `{act_str}` | Estimate: `{est_str}`{surp_str}",
+                    "is_canadian": is_canadian
                 })
     except Exception:
         pass
@@ -278,7 +279,8 @@ def scan_single_tsx_ticker(sym, check_dates):
                         "badge": "🍁",
                         "reported_date": last_date.strftime("%b %d, %Y"),
                         "market_cap": m_cap,
-                        "eps_line": eps_line
+                        "eps_line": eps_line,
+                        "is_canadian": True
                     }
     except Exception:
         pass
@@ -318,6 +320,14 @@ def format_earnings_entry(idx, item):
         f"• **Actual Reported:** `{item['actual_reported']}`\n"
     )
 
+def format_scorecard_entry(idx, item):
+    tier = "Mega-Cap 👑" if item.get("market_cap", 0) >= 2e11 else "Mid-Cap 📈"
+    return (
+        f"**{idx}. {item['ticker']} — {item['name']}** {item['badge']} `({tier})`\n"
+        f"• **Reported Date:** `{item['reported_date']}`\n"
+        f"• **EPS Result:** {item['eps_line']}\n"
+    )
+
 def dispatch_discord_earnings_embed(title, description, entries_text, color=3447003, footer_text=None):
     if not DISCORD_EARNINGS_WEBHOOK_URL:
         return
@@ -341,9 +351,9 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
         logging.error(f"Error sending embed: {e}")
 
 # ====================================================================
-# UNIVERSAL PAGINATION DISPATCHER (Sends 100% of data in 15-item chunks)
+# UNIVERSAL PAGINATION DISPATCHER (100% of data delivered in batches)
 # ====================================================================
-def dispatch_paginated_category(items, base_title, base_description, color, category_tag):
+def dispatch_paginated_category(items, base_title, base_description, color, category_tag, is_scorecard=False):
     if not items:
         return
 
@@ -353,7 +363,11 @@ def dispatch_paginated_category(items, base_title, base_description, color, cate
 
     for chunk_idx, chunk in enumerate(chunks, 1):
         start_num = (chunk_idx - 1) * CHUNK_SIZE + 1
-        chunk_txt = "\n".join([format_earnings_entry(start_num + j, item) for j, item in enumerate(chunk)])
+        
+        if is_scorecard:
+            chunk_txt = "\n".join([format_scorecard_entry(start_num + j, item) for j, item in enumerate(chunk)])
+        else:
+            chunk_txt = "\n".join([format_earnings_entry(start_num + j, item) for j, item in enumerate(chunk)])
         
         if total_chunks > 1:
             title = f"{base_title} [Part {chunk_idx}/{total_chunks}]"
@@ -385,9 +399,9 @@ def run_earnings_daily():
 
     # 1. FETCH US SCORECARD
     logging.info("Pulling US reported earnings scorecard...")
-    scorecard_items = []
+    scorecard_raw_us = []
     for d in prev_dates:
-        scorecard_items.extend(fetch_us_yesterday_actuals(d))
+        scorecard_raw_us.extend(fetch_us_yesterday_actuals(d))
 
     # 2. FETCH US UPCOMING CALENDAR (Parallel 45-Day Fetch)
     logging.info(f"Pulling {LOOKAHEAD_DAYS}-day US market calendar in parallel...")
@@ -401,6 +415,7 @@ def run_earnings_daily():
     # 3. DYNAMICALLY SCAN TSX CANADIAN UNIVERSE
     dynamic_tsx_list = fetch_dynamic_tsx_universe()
     upcoming_ca_items = []
+    scorecard_raw_ca = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
         futures = [executor.submit(scan_single_tsx_ticker, sym, prev_dates) for sym in dynamic_tsx_list]
@@ -409,19 +424,43 @@ def run_earnings_daily():
             if up:
                 upcoming_ca_items.append(up)
             if sc:
-                scorecard_items.append(sc)
+                scorecard_raw_ca.append(sc)
 
     # 4. SMART DUAL-LISTING RESOLUTION
     filtered_us_upcoming, upcoming_ca_items = deduplicate_dual_listings(upcoming_us_items, upcoming_ca_items)
-    scorecard_items.sort(key=lambda x: x["market_cap"], reverse=True)
+    filtered_us_scorecard, scorecard_ca = deduplicate_dual_listings(scorecard_raw_us, scorecard_raw_ca)
 
-    # 5. WATCHLIST PROCESSING
+    # -------------------------------------------------------------
+    # 5. SCORECARD HIERARCHICAL ORDERING:
+    # CAD Mega -> US Mega -> CAD Mid -> US Mid
+    # -------------------------------------------------------------
+    sc_mega_ca, sc_mega_us = [], []
+    sc_mid_ca, sc_mid_us = [], []
+
+    for sc in (scorecard_ca + filtered_us_scorecard):
+        mcap = sc.get("market_cap", 0)
+        is_ca = sc["badge"] == "🍁"
+
+        if mcap >= 2e11:
+            (sc_mega_ca if is_ca else sc_mega_us).append(sc)
+        else:
+            (sc_mid_ca if is_ca else sc_mid_us).append(sc)
+
+    # Sort each scorecard tier by market cap descending
+    sc_mega_ca.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
+    sc_mega_us.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
+    sc_mid_ca.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
+    sc_mid_us.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
+
+    ordered_scorecard = sc_mega_ca + sc_mega_us + sc_mid_ca + sc_mid_us
+
+    # 6. WATCHLIST PROCESSING
     all_upcoming = filtered_us_upcoming + upcoming_ca_items
     watchlist_set = set(WATCHLIST)
     watchlist_results = [item for item in all_upcoming if (item["ticker"] in watchlist_set or item["ticker"].replace(".TO", "") in watchlist_set) and item["days_away"] <= LOOKAHEAD_DAYS]
     watchlist_results.sort(key=lambda x: x["date"])
 
-    # 6. SEGMENT MEGA AND MID CAPS
+    # 7. SEGMENT MEGA AND MID CAPS
     mega_us, mega_ca = [], []
     mid_us, mid_ca = [], []
 
@@ -447,23 +486,17 @@ def run_earnings_daily():
     # DISPATCH ALL CARDS WITH UNIVERSAL PAGINATION
     # =================================================================
     
-    # CARD 1: Unified Scorecard (US + TSX)
-    if scorecard_items:
-        scorecard_txt = ""
-        for i, sc in enumerate(scorecard_items[:12], 1):
-            scorecard_txt += (
-                f"**{i}. {sc['ticker']} — {sc['name']}** {sc['badge']}\n"
-                f"• **Reported Date:** `{sc['reported_date']}`\n"
-                f"• **EPS Result:** {sc['eps_line']}\n\n"
-            )
-        dispatch_discord_earnings_embed(
-            title="📢 Yesterday's Reported Earnings Scorecard [ACTUALS & SURPRISES]",
-            description="*Official results reported in previous session across US and Canadian (TSX) markets.*",
-            entries_text=scorecard_txt,
-            color=15844367  # Gold
-        )
+    # CARD 1: Hierarchical Scorecard (CAD Mega -> US Mega -> CAD Mid -> US Mid)
+    dispatch_paginated_category(
+        items=ordered_scorecard,
+        base_title="📢 Yesterday's Reported Earnings Scorecard [ACTUALS & SURPRISES]",
+        base_description="*Official results reported in previous session. Ordered by: 🍁 CAD Mega ➔ 🇺🇸 US Mega ➔ 🍁 CAD Mid ➔ 🇺🇸 US Mid.*",
+        color=15844367,  # Gold
+        category_tag="Earnings Scorecard",
+        is_scorecard=True
+    )
 
-    # CARD 2: Watchlist Calendar
+    # CARD 2: Watchlist Calendar (Next 45 Days)
     dispatch_paginated_category(
         items=watchlist_results,
         base_title=f"🗓️ Watchlist Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]",
@@ -472,7 +505,7 @@ def run_earnings_daily():
         category_tag="Watchlist"
     )
 
-    # CARD 3A: Canadian Mega-Caps (≥ $200B)
+    # CARD 3A: Canadian Mega-Caps (Next 45 Days — ≥ $200B)
     dispatch_paginated_category(
         items=mega_ca,
         base_title=f"👑 Canadian Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
@@ -481,7 +514,7 @@ def run_earnings_daily():
         category_tag="TSX Mega-Caps"
     )
 
-    # CARD 3B: US Mega-Caps (≥ $200B)
+    # CARD 3B: US Mega-Caps (Next 45 Days — ≥ $200B)
     dispatch_paginated_category(
         items=mega_us,
         base_title=f"👑 US Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
@@ -490,7 +523,7 @@ def run_earnings_daily():
         category_tag="US Mega-Caps"
     )
 
-    # CARD 4A: Canadian Mid-Caps ($1.5B to $200B)
+    # CARD 4A: Canadian Mid-Caps (Next 45 Days — $1.5B to $200B)
     dispatch_paginated_category(
         items=mid_ca,
         base_title=f"🍁 Canadian Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
@@ -499,7 +532,7 @@ def run_earnings_daily():
         category_tag="TSX Mid-Caps"
     )
 
-    # CARD 4B: US Mid-Caps ($1.5B to $200B)
+    # CARD 4B: US Mid-Caps (Next 45 Days — $1.5B to $200B)
     dispatch_paginated_category(
         items=mid_us,
         base_title=f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
