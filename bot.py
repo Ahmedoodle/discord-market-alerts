@@ -199,62 +199,53 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
-    """Pulls Wall Street Targets using TLS Chrome Impersonation (Bypasses all cloud blocks)."""
+    """4-Tier Failover Engine for Wall Street Targets & Ratings."""
     low_t = None
     mean_t = None
     high_t = None
     rating = None
 
-    # Source 1: Finviz via Chrome TLS
+    # Tier 1: Yahoo Finance financialData via Chrome TLS (Most Accurate)
     try:
-        fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
-        fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
-        if fz_res.status_code == 200:
-            text = fz_res.text
-            tp_match = re.search(r'Target Price</td>\s*<td[^>]*><b>([\d.]+)</b>', text, re.IGNORECASE)
-            rec_match = re.search(r'Recom</td>\s*<td[^>]*><b>([\d.]+)</b>', text, re.IGNORECASE)
-            
-            if tp_match:
-                mean_t = float(tp_match.group(1))
-            if rec_match:
-                score = float(rec_match.group(1))
-                rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
+        y_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=financialData,defaultKeyStatistics"
+        y_res = cureq.get(y_url, impersonate="chrome124", timeout=4)
+        if y_res.status_code == 200:
+            fin_d = y_res.json().get("quoteSummary", {}).get("result", [{}])[0].get("financialData", {})
+            low_t = fin_d.get("targetLowPrice", {}).get("raw")
+            mean_t = fin_d.get("targetMeanPrice", {}).get("raw")
+            high_t = fin_d.get("targetHighPrice", {}).get("raw")
+            rec = fin_d.get("recommendationKey")
+            if rec:
+                rating = rec.replace("_", " ").title() + " 🟢"
     except Exception:
         pass
 
-    # Source 2: TipRanks via Chrome TLS
+    # Tier 2: Finviz via Chrome TLS
     if not mean_t:
         try:
-            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
-            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
-            if tr_res.status_code == 200:
-                tr_data = tr_res.json()
-                pt = tr_data.get("ptConsensus", {})
-                if pt:
-                    low_t = pt.get("low")
-                    mean_t = pt.get("priceTarget")
-                    high_t = pt.get("high")
-                c_rating = tr_data.get("consensuses", {}).get("consensusRating")
-                if c_rating:
-                    rating = c_rating.title() + " 🟢"
+            fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
+            fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
+            if fz_res.status_code == 200:
+                text = fz_res.text
+                tp_match = re.search(r'Target Price</td>\s*<td[^>]*>(?:<b>)?([\d.]+)(?:</b>)?</td>', text, re.IGNORECASE)
+                rec_match = re.search(r'Recom</td>\s*<td[^>]*>(?:<b>)?([\d.]+)(?:</b>)?</td>', text, re.IGNORECASE)
+                if tp_match:
+                    mean_t = float(tp_match.group(1))
+                if rec_match and not rating:
+                    score = float(rec_match.group(1))
+                    rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else "Hold 🟡")
         except Exception:
             pass
 
-    # Source 3: CNN Forecast via Chrome TLS
+    # Tier 3: MarketBeat Consensus
     if not mean_t:
         try:
-            cnn_url = f"https://money.cnn.com/quote/forecast/forecast.html?symb={ticker_symbol}"
-            cnn_res = cureq.get(cnn_url, impersonate="chrome124", timeout=4)
-            if cnn_res.status_code == 200:
-                m = re.search(r'median target of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
-                h = re.search(r'high estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
-                l = re.search(r'low estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
-                if m:
-                    mean_t = float(m.group(1).replace(',', ''))
-                if h:
-                    high_t = float(h.group(1).replace(',', ''))
-                if l:
-                    low_t = float(l.group(1).replace(',', ''))
+            mb_url = f"https://www.marketbeat.com/stocks/NASDAQ/{ticker_symbol}/price-target/"
+            mb_res = cureq.get(mb_url, impersonate="chrome124", timeout=4)
+            if mb_res.status_code == 200:
+                mb_m = re.search(r'consensus price target of \$([\d,.]+)', mb_res.text, re.IGNORECASE)
+                if mb_m:
+                    mean_t = float(mb_m.group(1).replace(',', ''))
         except Exception:
             pass
 
@@ -266,7 +257,7 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         if low_t and high_t:
             return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`{rating_part}"
         else:
-            return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
+            return f"Consensus Target: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
 
     return "N/A"
 
@@ -635,7 +626,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pe_str = "`N/A`"
 
-            # 4. Multi-Source Wall Street Price Targets (Finviz / TipRanks / CNN via Chrome TLS)
+            # 4. Multi-Tier Wall Street Price Targets Pipeline (Yahoo TLS + Finviz TLS + MarketBeat)
             targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
             # Construct Blocks
