@@ -8,6 +8,7 @@ import requests
 import discord
 from discord.ext import commands
 import yfinance as yf
+import pandas as pd
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -170,7 +171,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Selective Fundamental Engine."""
+    """Direct Chart API + Pure Statement-Based Calculation Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -302,44 +303,33 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. SELECTIVE ASSET CLASSIFIER & RAW VALUATION PIPELINE
+        # 2. PURE STATEMENT-BASED FUNDAMENTALS & BALANCE SHEET ENGINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
-        long_name = meta.get("shortName") or ticker_symbol
-        sector = None
-        industry = None
-
-        # Step A: Query Open Search Discovery for Sector/Industry
-        try:
-            s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-            s_res = http_session.get(s_url, timeout=3)
-            if s_res.status_code == 200:
-                sq = s_res.json().get("quotes", [])
-                if sq:
-                    q0 = sq[0]
-                    long_name = q0.get("longname") or q0.get("shortname") or long_name
-                    quote_type = q0.get("quoteType", quote_type)
-                    sector = q0.get("sector")
-                    industry = q0.get("industry")
-        except Exception:
-            pass
-
+        
         # 1. CRYPTO
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
+            t_obj = yf.Ticker(ticker_symbol)
+            m_cap = getattr(t_obj.fast_info, "market_cap", None)
+            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
+            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Network Name:** `{long_name}`\n"
-                f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
+                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
+                f"• **Valuation:** `Digital Asset / Network Utility`"
             )
 
         # 2. ETFs
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             fund_title = "🏢 Fund Profile & Structure"
+            t_obj = yf.Ticker(ticker_symbol)
+            m_cap = getattr(t_obj.fast_info, "market_cap", None)
+            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Fund Name:** `{long_name}`\n"
-                f"• **Strategy:** `Diversified Market Basket Holding`"
+                f"• **Total Net Assets:** `{cap_fmt}`\n"
+                f"• **Strategy:** `Diversified Index / Holdings Basket`"
             )
 
         # 3. FUTURES
@@ -347,47 +337,95 @@ def get_on_demand_data(ticker_symbol):
             fund_title = "🏢 Asset Class & Profile"
             profile_block = (
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
-                f"• **Contract Name:** `{long_name}`\n"
-                f"• **Settlement:** `Standardized Delivery Futures`"
+                f"• **Contract Type:** `Standardized Delivery Futures`"
             )
 
-        # 4. EQUITIES / STOCKS (Pulls Raw Quote for P/E & Market Cap)
+        # 4. EQUITIES / STOCKS (Computed directly from filed balance sheet & statements)
         else:
             fund_title = "🏢 Valuation, Earnings & Growth"
+            t_obj = yf.Ticker(ticker_symbol)
+            fi = t_obj.fast_info
             
-            market_cap = None
-            trailing_pe = None
-            forward_pe = None
-            eps_ttm = None
-            eps_fwd = None
+            # Market Cap & Shares
+            market_cap = getattr(fi, "market_cap", None)
+            shares = getattr(fi, "shares", None)
+            if not market_cap and shares and current_price:
+                market_cap = current_price * shares
 
-            # Pull Raw Quote Data via Options Endpoint
+            # Sector / Industry from Search API
+            sector = None
+            industry = None
             try:
-                opt_url = f"https://query1.finance.yahoo.com/v7/finance/options/{ticker_symbol}"
-                opt_res = http_session.get(opt_url, timeout=4)
-                if opt_res.status_code == 200:
-                    opt_data = opt_res.json()
-                    res_list = opt_data.get("optionChain", {}).get("result", [])
-                    if res_list and "quote" in res_list[0]:
-                        q_dict = res_list[0]["quote"]
-                        market_cap = q_dict.get("marketCap")
-                        trailing_pe = q_dict.get("trailingPE")
-                        forward_pe = q_dict.get("forwardPE")
-                        eps_ttm = q_dict.get("epsTrailingTwelveMonths")
-                        eps_fwd = q_dict.get("epsForward")
+                s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
+                s_res = http_session.get(s_url, timeout=3)
+                if s_res.status_code == 200:
+                    sq = s_res.json().get("quotes", [])
+                    if sq:
+                        sector = sq[0].get("sector")
+                        industry = sq[0].get("industry")
             except Exception:
                 pass
 
-            # Fallback for Market Cap if missing
-            if not market_cap:
-                try:
-                    t_fast = yf.Ticker(ticker_symbol)
-                    market_cap = float(t_fast.fast_info.market_cap)
-                except Exception:
-                    pass
+            # Direct Calculations from Filed Financial Statements
+            trailing_pe = None
+            rev_growth_pct = None
+            net_inc_growth_pct = None
+            profit_margin_pct = None
+
+            try:
+                q_inc = t_obj.quarterly_income_stmt
+                if q_inc is not None and not q_inc.empty:
+                    # Find Revenue Row
+                    rev_row = None
+                    for row_name in ["Total Revenue", "Operating Revenue", "Revenue"]:
+                        if row_name in q_inc.index:
+                            rev_row = row_name
+                            break
+
+                    if rev_row:
+                        rev_s = q_inc.loc[rev_row].dropna()
+                        if len(rev_s) >= 4:
+                            r0 = float(rev_s.iloc[0])
+                            r4 = float(rev_s.iloc[3]) if len(rev_s) >= 4 else float(rev_s.iloc[-1])
+                            if r4 > 0:
+                                rev_growth_pct = ((r0 - r4) / r4) * 100
+                            ttm_rev = float(rev_s.iloc[:4].sum())
+                        else:
+                            ttm_rev = float(rev_s.sum())
+                    else:
+                        ttm_rev = None
+
+                    # Find Net Income Row
+                    inc_row = None
+                    for row_name in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"]:
+                        if row_name in q_inc.index:
+                            inc_row = row_name
+                            break
+
+                    if inc_row:
+                        inc_s = q_inc.loc[inc_row].dropna()
+                        if len(inc_s) >= 4:
+                            i0 = float(inc_s.iloc[0])
+                            i4 = float(inc_s.iloc[3]) if len(inc_s) >= 4 else float(inc_s.iloc[-1])
+                            if i4 != 0:
+                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
+                            ttm_net_inc = float(inc_s.iloc[:4].sum())
+                        else:
+                            ttm_net_inc = float(inc_s.sum())
+
+                        # Calculate Real Trailing P/E from Balance Sheet Net Income!
+                        if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
+                            trailing_eps = ttm_net_inc / shares
+                            if trailing_eps > 0:
+                                trailing_pe = current_price / trailing_eps
+
+                        # Calculate Profit Margin
+                        if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
+                            profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
+            except Exception:
+                pass
 
             # Construct Output Lines
-            # Line 1: Sector & Industry
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -395,7 +433,6 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
-            # Line 2: Market Cap & Tier
             if market_cap and market_cap > 0:
                 cap_fmt = format_large_number(market_cap)
                 tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
@@ -403,26 +440,31 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            # Line 3: Valuation (Trailing PE, Forward PE)
-            val_items = []
-            if trailing_pe:
-                val_items.append(f"Trailing P/E: `{trailing_pe:.1f}`")
-            if forward_pe:
-                val_items.append(f"Forward P/E: `{forward_pe:.1f}`")
-            
-            line_val = f"• **Valuation:** {' | '.join(val_items)}" if val_items else "• **Valuation:** `High-Growth / Reinvestment Phase`"
-
-            # Line 4: Expected EPS Growth
-            if eps_ttm and eps_fwd and eps_ttm > 0:
-                eps_growth = ((eps_fwd - eps_ttm) / eps_ttm) * 100
-                line_growth = f"• **Growth Outlook:** Exp. EPS Growth: `+{eps_growth:.1f}% 🚀`"
+            if trailing_pe and trailing_pe > 0:
+                line_val = f"• **Valuation:** Trailing P/E: `{trailing_pe:.1f}x`"
             else:
-                line_growth = ""
+                line_val = f"• **Valuation:** `High-Growth / Reinvestment Phase`"
+
+            growth_parts = []
+            if rev_growth_pct is not None:
+                growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
+            if net_inc_growth_pct is not None:
+                growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
+
+            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+
+            if profit_margin_pct is not None:
+                tag = " (High Margin 💎)" if profit_margin_pct >= 20.0 else (" (Healthy 🟢)" if profit_margin_pct >= 10.0 else "")
+                line_margin = f"• **Profit Margin:** `{profit_margin_pct:.1f}%`{tag}"
+            else:
+                line_margin = ""
 
             elements = [line_sector, line_cap, line_val]
             if line_growth:
                 elements.append(line_growth)
-
+            if line_margin:
+                elements.append(line_margin)
+            
             profile_block = "\n".join(elements)
 
         return {
