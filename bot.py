@@ -3,6 +3,7 @@ import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import yfinance as yf
 import pandas as pd
+import requests
 import discord
 from discord.ext import commands
 
@@ -23,7 +24,18 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. DISCORD BOT CLIENT
+# 2. BROWSER SESSION FOR YAHOO FINANCE (Bypasses Rate Limits)
+# -------------------------------------------------------------
+http_session = requests.Session()
+http_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "DNT": "1"
+})
+
+# -------------------------------------------------------------
+# 3. DISCORD BOT CLIENT
 # -------------------------------------------------------------
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
@@ -43,37 +55,31 @@ def format_large_number(num):
     return str(int(num))
 
 def get_on_demand_data(ticker_symbol):
-    """Pulls live price, 20D RVOL, 14D RSI, 52W Range, and 50/200 SMAs on demand."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
-        t = yf.Ticker(ticker_symbol)
+        t = yf.Ticker(ticker_symbol, session=http_session)
         
-        # 1. Live Price & Previous Close
-        fi = t.fast_info
-        current_price = fi.last_price
-        prev_close = fi.previous_close
-
-        if current_price is None or prev_close is None:
-            hist_2d = t.history(period="2d")
-            if len(hist_2d) >= 2:
-                prev_close = float(hist_2d['Close'].iloc[-2])
-                current_price = float(hist_2d['Close'].iloc[-1])
-            elif len(hist_2d) == 1:
-                current_price = float(hist_2d['Close'].iloc[-1])
-                prev_close = current_price
-
-        if current_price is None or prev_close is None or prev_close == 0:
-            return None, f"Could not find valid price data for `{ticker_symbol}`."
-
-        change_pct = ((current_price - prev_close) / prev_close) * 100
-
-        # 2. 1-Year History for Indicators
+        # 1. Pull 1-Year History
         hist = t.history(period="1y")
-        if hist.empty or 'Close' not in hist or len(hist['Close']) < 15:
-            return None, f"Insufficient historical data to compute indicators for `{ticker_symbol}`."
+        if hist.empty or 'Close' not in hist or len(hist['Close']) < 2:
+            return None, f"Insufficient price data found for `{ticker_symbol}`."
 
         closes = hist['Close'].dropna()
         volumes = hist['Volume'].dropna()
+
+        # 2. Live Price & Day Change
+        current_price = float(closes.iloc[-1])
+        prev_close = float(closes.iloc[-2]) if len(closes) >= 2 else current_price
+        
+        # Try getting realtime fast_info price if available
+        try:
+            if t.fast_info.last_price is not None and t.fast_info.previous_close is not None:
+                current_price = float(t.fast_info.last_price)
+                prev_close = float(t.fast_info.previous_close)
+        except Exception:
+            pass
+
+        change_pct = ((current_price - prev_close) / prev_close) * 100
 
         # 3. 20-Day Relative Volume (RVOL)
         vol_str = "N/A"
