@@ -182,7 +182,6 @@ def _get_year_holidays(year):
     return us_hols, ca_hols
 
 def check_market_holiday(target_date):
-    """Checks full-day closures across a multi-year window."""
     all_us = {}
     all_ca = {}
     for y in [target_date.year - 1, target_date.year, target_date.year + 1]:
@@ -192,7 +191,6 @@ def check_market_holiday(target_date):
     return all_us.get(target_date), all_ca.get(target_date)
 
 def check_early_close(target_date):
-    """Detects 1:00 PM EST Early Market Close Days."""
     year = target_date.year
     if target_date.month == 7 and target_date.day == 3 and target_date.weekday() < 5:
         july_4 = date(year, 7, 4)
@@ -288,7 +286,7 @@ def save_alert_state(state):
         print(f"Error saving state file: {e}")
 
 # ====================================================================
-# 4. INSTITUTIONAL TECHNICAL INDICATOR ENGINE
+# 4. INSTITUTIONAL TECHNICAL INDICATOR & STATEMENT ENGINE
 # ====================================================================
 def format_large_number(num):
     if num is None:
@@ -298,9 +296,9 @@ def format_large_number(num):
     elif num >= 1e9:
         return f"${num / 1e9:.2f} Billion"
     elif num >= 1e6:
-        return f"{num / 1e6:.1f} Million"
+        return f"${num / 1e6:.1f} Million"
     elif num >= 1e3:
-        return f"{num / 1e3:.1f}K"
+        return f"${num / 1e3:.1f}K"
     return str(int(num))
 
 def calculate_rsi(closes, period=14):
@@ -408,8 +406,8 @@ def get_rsi_tag(rsi):
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
-def get_technical_metrics_direct(ticker_symbol, current_price, http_session):
-    """Calculates the full 8-part institutional indicator suite via Direct Yahoo Chart API."""
+def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_session):
+    """Calculates all 8 institutional indicators & statement-based fundamentals directly."""
     metrics = {}
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -467,7 +465,8 @@ def get_technical_metrics_direct(ticker_symbol, current_price, http_session):
             if dist_high <= 2.0:
                 metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
             elif dist_high <= 5.0:
-                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
+                metrics["range_str"] = range_str
             else:
                 metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
@@ -513,22 +512,147 @@ def get_technical_metrics_direct(ticker_symbol, current_price, http_session):
         if atr and current_price > 0:
             metrics["atr_str"] = f"`±${atr:.2f}` (±{(atr/current_price)*100:.1f}% typical daily swing)"
 
-        # 8. Valuation & Market Cap Tier
-        try:
-            q_url = f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics"
-            q_res = http_session.get(q_url, timeout=3)
-            if q_res.status_code == 200:
-                q_data = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                sum_det = q_data.get("summaryDetail", {})
-                m_cap = sum_det.get("marketCap", {}).get("raw")
-                pe_val = sum_det.get("trailingPE", {}).get("raw") or sum_det.get("forwardPE", {}).get("raw")
-                if m_cap:
-                    cap_fmt = format_large_number(m_cap)
-                    tier = "Mega-Cap" if m_cap >= 2e11 else ("Large-Cap" if m_cap >= 1e10 else ("Mid-Cap" if m_cap >= 2e9 else "Small-Cap"))
-                    pe_txt = f" • Trailing P/E: `{pe_val:.1f}`" if pe_val else ""
-                    metrics["val_str"] = f"`{cap_fmt} ({tier})`{pe_txt}"
-        except Exception:
-            pass
+        # =================================================================
+        # 8. DIRECT FINANCIAL STATEMENT & FUNDAMENTAL ENGINE
+        # =================================================================
+        quote_type = meta.get("instrumentType", "EQUITY")
+        
+        if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
+            metrics["fund_title"] = "🏢 Asset Class & Profile"
+            t_obj = yf.Ticker(ticker_symbol)
+            m_cap = getattr(t_obj.fast_info, "market_cap", None)
+            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
+            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
+            metrics["profile_block"] = (
+                f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
+                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
+                f"• **Valuation:** `Digital Asset / Network Utility`"
+            )
+        elif quote_type == "ETF":
+            metrics["fund_title"] = "🏢 Fund Profile & Structure"
+            t_obj = yf.Ticker(ticker_symbol)
+            m_cap = getattr(t_obj.fast_info, "market_cap", None)
+            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
+            metrics["profile_block"] = (
+                f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
+                f"• **Total Net Assets:** `{cap_fmt}`\n"
+                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+            )
+        elif quote_type == "FUTURE" or "=F" in ticker_symbol:
+            metrics["fund_title"] = "🏢 Asset Class & Profile"
+            metrics["profile_block"] = (
+                f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
+                f"• **Contract Type:** `Standardized Delivery Futures`"
+            )
+        else:
+            # Equities / Stocks — Computed directly from Balance Sheet Statements
+            metrics["fund_title"] = "🏢 Valuation, Earnings & Growth"
+            t_obj = yf.Ticker(ticker_symbol)
+            fi = t_obj.fast_info
+            
+            # Market Cap
+            market_cap = getattr(fi, "market_cap", None)
+            shares = getattr(fi, "shares", None)
+            if not market_cap and shares and current_price:
+                market_cap = current_price * shares
+
+            # Sector & Industry
+            sector = None
+            industry = None
+            try:
+                s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
+                s_res = http_session.get(s_url, timeout=3)
+                if s_res.status_code == 200:
+                    sq = s_res.json().get("quotes", [])
+                    if sq:
+                        sector = sq[0].get("sector")
+                        industry = sq[0].get("industry")
+            except Exception:
+                pass
+
+            # Statement Calculations
+            trailing_pe = None
+            rev_growth_pct = None
+            net_inc_growth_pct = None
+            profit_margin_pct = None
+
+            try:
+                q_inc = t_obj.quarterly_income_stmt
+                if q_inc is not None and not q_inc.empty:
+                    if "Total Revenue" in q_inc.index:
+                        rev_s = q_inc.loc["Total Revenue"].dropna()
+                        if len(rev_s) >= 4:
+                            r0 = rev_s.iloc[0]
+                            r4 = rev_s.iloc[3] if len(rev_s) >= 4 else rev_s.iloc[-1]
+                            if r4 > 0:
+                                rev_growth_pct = ((r0 - r4) / r4) * 100
+                            ttm_rev = rev_s.iloc[:4].sum()
+                        else:
+                            ttm_rev = rev_s.sum()
+                    else:
+                        ttm_rev = None
+
+                    if "Net Income" in q_inc.index:
+                        inc_s = q_inc.loc["Net Income"].dropna()
+                        if len(inc_s) >= 4:
+                            i0 = inc_s.iloc[0]
+                            i4 = inc_s.iloc[3] if len(inc_s) >= 4 else inc_s.iloc[-1]
+                            if i4 != 0:
+                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
+                            ttm_net_inc = inc_s.iloc[:4].sum()
+                        else:
+                            ttm_net_inc = inc_s.sum()
+
+                        if ttm_net_inc > 0 and shares and shares > 0:
+                            trailing_eps = ttm_net_inc / shares
+                            if trailing_eps > 0:
+                                trailing_pe = current_price / trailing_eps
+
+                        if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
+                            profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
+            except Exception:
+                pass
+
+            if sector and industry:
+                line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
+            elif sector:
+                line_sector = f"• **Sector:** `{sector}`"
+            else:
+                line_sector = f"• **Asset Class:** `Equities / Common Stock`"
+
+            if market_cap and market_cap > 0:
+                cap_fmt = format_large_number(market_cap)
+                tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
+                line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
+            else:
+                line_cap = "• **Market Cap:** `N/A`"
+
+            if trailing_pe and trailing_pe > 0:
+                line_val = f"• **Valuation:** Trailing P/E: `{trailing_pe:.1f}x`"
+            else:
+                line_val = f"• **Valuation:** `High-Growth / Reinvestment Phase`"
+
+            growth_parts = []
+            if rev_growth_pct is not None:
+                growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
+            if net_inc_growth_pct is not None:
+                growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
+
+            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+
+            if profit_margin_pct is not None:
+                tag = " (High Margin 💎)" if profit_margin_pct >= 20.0 else (" (Healthy 🟢)" if profit_margin_pct >= 10.0 else "")
+                line_margin = f"• **Profit Margin:** `{profit_margin_pct:.1f}%`{tag}"
+            else:
+                line_margin = ""
+
+            elements = [line_sector, line_cap, line_val]
+            if line_growth:
+                elements.append(line_growth)
+            if line_margin:
+                elements.append(line_margin)
+            
+            metrics["profile_block"] = "\n".join(elements)
 
     except Exception:
         pass
@@ -548,12 +672,22 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
     if step_change is not None:
         desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total {session_badge}: **{change_pct:+.2f}%**)"
 
+    # 1. Price & % Change
     fields = [
         {"name": "Current Price", "value": f"${current_price:.2f}", "inline": True},
         {"name": f"{session_badge} Change", "value": f"{change_pct:+.2f}%", "inline": True}
     ]
 
-    # Attach Institutional Indicator Suite
+    # 2. Today's Path (Positioned immediately below Price & Change!)
+    if history_trail and len(history_trail) > 0:
+        trail_str = " ➔ ".join(history_trail)
+        fields.append({
+            "name": f"🕒 Today's {session_badge} Path",
+            "value": f"`{trail_str}` ➔ **{change_pct:+.2f}%**",
+            "inline": False
+        })
+
+    # 3. Attach Full Institutional Indicators
     if metrics:
         if metrics.get("volume_block"):
             fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
@@ -568,18 +702,9 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
         if metrics.get("pivot_str"):
             fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
         if metrics.get("atr_str"):
-            fields.append({"name": "⚡ Expected Daily Move", "value": metrics["atr_str"], "inline": True})
-        if metrics.get("val_str"):
-            fields.append({"name": "🏢 Valuation & Cap", "value": metrics["val_str"], "inline": True})
-
-    # Add Trigger History Timeline
-    if history_trail and len(history_trail) > 0:
-        trail_str = " ➔ ".join(history_trail)
-        fields.append({
-            "name": f"🕒 Today's {session_badge} Path",
-            "value": f"`{trail_str}` ➔ **{change_pct:+.2f}%**",
-            "inline": False
-        })
+            fields.append({"name": "⚡ Expected Daily Move", "value": metrics["atr_str"], "inline": False})
+        if metrics.get("profile_block"):
+            fields.append({"name": metrics.get("fund_title", "🏢 Valuation, Earnings & Growth"), "value": metrics["profile_block"], "inline": False})
 
     payload = {
         "username": BOT_NAME,
@@ -668,7 +793,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
         except Exception:
             pass
 
-        # Layer 2: Realtime history fallback (Essential for Futures like NQ=F, GC=F)
+        # Layer 2: Realtime history fallback
         if current_price is None or baseline_price is None:
             try:
                 hist = ticker.history(period="2d")
@@ -680,7 +805,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             except Exception:
                 pass
 
-        # Layer 3: After-Hours Baseline (Today's Closing Bell)
+        # Layer 3: After-Hours Baseline
         if session_type == "AFTER_HOURS" and current_price is not None:
             try:
                 hist = ticker.history(period="2d")
@@ -882,8 +1007,8 @@ def check_market():
                         print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
 
                 if should_alert:
-                    # Calculate live institutional indicators on demand
-                    metrics = get_technical_metrics_direct(ticker_symbol, current_price, session_http)
+                    # Calculate live institutional indicators & balance sheet metrics on demand
+                    metrics = get_technical_and_fundamental_metrics(ticker_symbol, current_price, session_http)
                     price_alerts_to_send.append({
                         "ticker": ticker_symbol,
                         "price": current_price,
