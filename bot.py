@@ -79,31 +79,19 @@ def calculate_rsi(closes, period=14):
     rs = avg_gain / avg_loss
     return 100.0 - (100.0 / (1.0 + rs))
 
-def calculate_ema(data, span):
-    if not data or len(data) < span:
-        return []
-    alpha = 2.0 / (span + 1.0)
-    ema = [sum(data[:span]) / span]
-    for price in data[span:]:
-        ema.append(price * alpha + ema[-1] * (1 - alpha))
-    return ema
-
 def calculate_macd(closes):
     """Calculates MACD (12, 26, 9) and momentum status."""
     if len(closes) < 35:
         return "N/A"
-    
-    # Calculate 12 & 26 EMAs
-    ema_12_full = []
-    ema_26_full = []
     
     alpha_12 = 2.0 / (12 + 1)
     alpha_26 = 2.0 / (26 + 1)
 
     curr_12 = sum(closes[:12]) / 12
     curr_26 = sum(closes[:26]) / 26
+    ema_12_full = []
+    ema_26_full = []
 
-    # Align starting point
     for i, c in enumerate(closes):
         if i >= 12:
             curr_12 = c * alpha_12 + curr_12 * (1 - alpha_12)
@@ -116,7 +104,6 @@ def calculate_macd(closes):
     if len(macd_line) < 9:
         return "N/A"
 
-    # Signal Line (9 EMA of MACD)
     alpha_9 = 2.0 / (9 + 1)
     sig = sum(macd_line[:9]) / 9
     sig_line = [sig]
@@ -141,7 +128,6 @@ def calculate_macd(closes):
             return "Bearish Trend 🔴 (Weakening / Slowing)"
 
 def calculate_atr(highs, lows, closes, period=14):
-    """Calculates 14-Day Average True Range (Expected Daily Move)."""
     if len(closes) < period + 1:
         return None
     trs = []
@@ -258,19 +244,45 @@ def get_on_demand_data(ticker_symbol):
             else:
                 range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
-        # 5. 50D & 200D SMA Trend Health
-        trend_str = "N/A"
-        if len(closes) >= 200:
-            sma_50 = sum(closes[-50:]) / 50
-            sma_200 = sum(closes[-200:]) / 200
-            if current_price >= sma_50 and current_price >= sma_200:
-                trend_str = "Above 50D & 200D SMA (🟢 Strong Uptrend)"
-            elif current_price < sma_50 and current_price < sma_200:
-                trend_str = "Below 50D & 200D SMA (🔴 Strong Downtrend)"
-            elif current_price >= sma_200 and current_price < sma_50:
-                trend_str = "Above 200D, Below 50D SMA (🟡 Pullback)"
+        # 5. Broken-Down 50D & 200D SMA Trend Health
+        sma_50_str = "N/A"
+        sma_200_str = "N/A"
+        verdict_str = "N/A"
+
+        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else None
+        sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else None
+
+        if sma_50:
+            pct_50 = ((current_price - sma_50) / sma_50) * 100
+            if pct_50 >= 0:
+                sma_50_str = f"`${sma_50:.2f}` (Above by +{pct_50:.1f}% 🟢)"
             else:
-                trend_str = "Above 50D, Below 200D SMA (🟡 Rebound)"
+                sma_50_str = f"`${sma_50:.2f}` (Below by {pct_50:.1f}% 🔴)"
+
+        if sma_200:
+            pct_200 = ((current_price - sma_200) / sma_200) * 100
+            if pct_200 >= 0:
+                sma_200_str = f"`${sma_200:.2f}` (Above by +{pct_200:.1f}% 🟢)"
+            else:
+                sma_200_str = f"`${sma_200:.2f}` (Below by {pct_200:.1f}% 🔴)"
+
+        if sma_50 and sma_200:
+            if current_price >= sma_50 and current_price >= sma_200:
+                verdict_str = "`🟢 Strong Bullish Uptrend` *(Institutional Support)*"
+            elif current_price < sma_50 and current_price < sma_200:
+                verdict_str = "`🔴 Strong Bearish Downtrend` *(Institutional Selling)*"
+            elif current_price >= sma_200 and current_price < sma_50:
+                verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
+            else:
+                verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
+        elif sma_50:
+            verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
+
+        trend_block = (
+            f"• **50-Day SMA:** {sma_50_str}\n"
+            f"• **200-Day SMA:** {sma_200_str}\n"
+            f"• **Overall Verdict:** {verdict_str}"
+        )
 
         # 6. MACD (12, 26, 9)
         macd_str = calculate_macd(closes)
@@ -295,8 +307,6 @@ def get_on_demand_data(ticker_symbol):
 
         # 9. Company Valuation & Market Cap Tier
         val_str = "N/A"
-        market_cap = None
-        # Fetch fundamental quote summary for cap & pe
         try:
             q_url = f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics"
             q_res = http_session.get(q_url, timeout=3)
@@ -322,7 +332,7 @@ def get_on_demand_data(ticker_symbol):
             "volume_block": volume_block,
             "rsi_block": rsi_block,
             "range_str": range_str,
-            "trend_str": trend_str,
+            "trend_block": trend_block,
             "macd_str": macd_str,
             "pivot_str": pivot_str,
             "atr_str": atr_str,
@@ -343,7 +353,7 @@ def create_market_embed(data):
     embed.add_field(name="📊 Volume Multipliers", value=data['volume_block'], inline=False)
     embed.add_field(name="📈 Multi-Timeframe RSI", value=data['rsi_block'], inline=False)
     embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=False)
-    embed.add_field(name="📈 Trend Health", value=data['trend_str'], inline=False)
+    embed.add_field(name="📈 Moving Averages & Trend", value=data['trend_block'], inline=False)
     embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=True)
