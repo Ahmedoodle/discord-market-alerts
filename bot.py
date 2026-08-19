@@ -33,35 +33,14 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. DUAL BROWSER & YAHOO CRUMB SESSION ENGINE
+# 2. BROWSER SESSION
 # -------------------------------------------------------------
-class YahooCrumbManager:
-    def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.9"
-        })
-        self.crumb = None
-        self._init_crumb()
-
-    def _init_crumb(self):
-        try:
-            self.session.get("https://fc.yahoo.com", timeout=4)
-            res = self.session.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=4)
-            if res.status_code == 200 and res.text:
-                self.crumb = res.text.strip()
-        except Exception:
-            pass
-
-    def get_crumb(self):
-        if not self.crumb:
-            self._init_crumb()
-        return self.crumb
-
-data_mgr = YahooCrumbManager()
-http_session = data_mgr.session
+http_session = requests.Session()
+http_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9"
+})
 
 # -------------------------------------------------------------
 # 3. DISCORD BOT CLIENT
@@ -219,79 +198,63 @@ def get_rsi_tag(rsi):
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
-def fetch_wallstreet_targets_bulletproof(ticker_symbol, current_price):
-    """4-Tier Resilient Engine for Wall Street Targets & Ratings."""
+def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
+    """Pulls Wall Street Targets using TLS Chrome Impersonation."""
     low_t = None
     mean_t = None
     high_t = None
     rating = None
 
-    # Tier 1: Yahoo Finance financialData with Crumb & Chrome TLS
+    # Source 1: Finviz via Chrome TLS
     try:
-        crumb = data_mgr.get_crumb()
-        crumb_param = f"&crumb={crumb}" if crumb else ""
-        y_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=financialData{crumb_param}"
-        y_res = cureq.get(y_url, impersonate="chrome124", timeout=4)
-        if y_res.status_code == 200:
-            fin_d = y_res.json().get("quoteSummary", {}).get("result", [{}])[0].get("financialData", {})
-            low_t = fin_d.get("targetLowPrice", {}).get("raw")
-            mean_t = fin_d.get("targetMeanPrice", {}).get("raw")
-            high_t = fin_d.get("targetHighPrice", {}).get("raw")
-            rec = fin_d.get("recommendationKey")
-            if rec:
-                rating = rec.replace("_", " ").title() + " 🟢"
+        fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
+        fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
+        if fz_res.status_code == 200:
+            text = fz_res.text
+            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', text, re.IGNORECASE)
+            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', text, re.IGNORECASE)
+            
+            if tp_match:
+                mean_t = float(tp_match.group(1).replace(',', ''))
+            if rec_match:
+                score = float(rec_match.group(1))
+                rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
     except Exception:
         pass
 
-    # Tier 2: StockAnalysis API via Chrome TLS
+    # Source 2: TipRanks via Chrome TLS
     if not mean_t:
         try:
-            sa_url = f"https://api.stockanalysis.com/api/symbol/s/{ticker_symbol.lower()}/forecast"
-            sa_res = cureq.get(sa_url, impersonate="chrome124", timeout=3)
-            if sa_res.status_code == 200:
-                d = sa_res.json().get("data", {})
-                if d:
-                    low_t = d.get("targetLow") or d.get("low")
-                    mean_t = d.get("targetAvg") or d.get("targetPrice")
-                    high_t = d.get("targetHigh") or d.get("high")
-                    if d.get("consensus"):
-                        rating = str(d.get("consensus")) + " 🟢"
+            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
+            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
+            if tr_res.status_code == 200:
+                tr_data = tr_res.json()
+                pt = tr_data.get("ptConsensus", {})
+                if pt:
+                    low_t = pt.get("low")
+                    mean_t = pt.get("priceTarget")
+                    high_t = pt.get("high")
+                c_rating = tr_data.get("consensuses", {}).get("consensusRating")
+                if c_rating:
+                    rating = c_rating.title() + " 🟢"
         except Exception:
             pass
 
-    # Tier 3: Finviz Universal Regex (Immune to HTML layout changes)
+    # Source 3: CNN Forecast via Chrome TLS
     if not mean_t:
         try:
-            fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
-            fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
-            if fz_res.status_code == 200:
-                text = fz_res.text
-                tp_m = re.search(r'Target\s*Price[^\d]+([\d,.]+)', text, re.IGNORECASE)
-                rec_m = re.search(r'Recom[^\d]+([\d,.]+)', text, re.IGNORECASE)
-                if tp_m:
-                    mean_t = float(tp_m.group(1).replace(',', ''))
-                if rec_m and not rating:
-                    score = float(rec_m.group(1))
-                    rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else "Hold 🟡")
-        except Exception:
-            pass
-
-    # Tier 4: MarketWatch Universal Regex
-    if not mean_t:
-        try:
-            mw_url = f"https://www.marketwatch.com/investing/stock/{ticker_symbol.lower()}/analystestimates"
-            mw_res = cureq.get(mw_url, impersonate="chrome124", timeout=3)
-            if mw_res.status_code == 200:
-                text = mw_res.text
-                mean_m = re.search(r'Average\s*Target[^\d\$]+[\$]?([\d,.]+)', text, re.IGNORECASE)
-                high_m = re.search(r'High\s*Target[^\d\$]+[\$]?([\d,.]+)', text, re.IGNORECASE)
-                low_m = re.search(r'Low\s*Target[^\d\$]+[\$]?([\d,.]+)', text, re.IGNORECASE)
-                if mean_m:
-                    mean_t = float(mean_m.group(1).replace(',', ''))
-                if high_m:
-                    high_t = float(high_m.group(1).replace(',', ''))
-                if low_m:
-                    low_t = float(low_m.group(1).replace(',', ''))
+            cnn_url = f"https://money.cnn.com/quote/forecast/forecast.html?symb={ticker_symbol}"
+            cnn_res = cureq.get(cnn_url, impersonate="chrome124", timeout=4)
+            if cnn_res.status_code == 200:
+                m = re.search(r'median target of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
+                h = re.search(r'high estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
+                l = re.search(r'low estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
+                if m:
+                    mean_t = float(m.group(1).replace(',', ''))
+                if h:
+                    high_t = float(h.group(1).replace(',', ''))
+                if l:
+                    low_t = float(l.group(1).replace(',', ''))
         except Exception:
             pass
 
@@ -308,7 +271,7 @@ def fetch_wallstreet_targets_bulletproof(ticker_symbol, current_price):
     return "N/A"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Institutional Fundamental Engine."""
+    """Direct Chart API + Full Statement & YoY Growth Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -479,7 +442,7 @@ def get_on_demand_data(ticker_symbol):
             smart_money_block = None
             health_block = None
 
-        # 4. EQUITIES / STOCKS (Full Institutional Audit)
+        # 4. EQUITIES / STOCKS (Full Institutional Audit with YoY Growth)
         else:
             profile_title = "🏢 Company Profile"
             
@@ -508,6 +471,8 @@ def get_on_demand_data(ticker_symbol):
             fcf_str = "N/A"
             quality_str = "N/A"
             pfcf_str = ""
+            rev_growth_pct = None
+            net_inc_growth_pct = None
 
             earnings_date_str = "N/A"
             prev_surprise_str = ""
@@ -569,21 +534,38 @@ def get_on_demand_data(ticker_symbol):
                     tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
                     beta_str = f"`{beta_val:.2f}x`{tag}"
 
-                # 3. Financial Statements Calculations
+                # 3. Financial Statements Calculations (Income, Balance Sheet, Cash Flow)
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
                 if q_inc is not None and not q_inc.empty:
+                    # Net Income Row
                     inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
                     if inc_row:
                         inc_s = q_inc.loc[inc_row].dropna()
-                        ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
+                        if len(inc_s) >= 4:
+                            i0 = float(inc_s.iloc[0])
+                            i4 = float(inc_s.iloc[3]) if len(inc_s) >= 4 else float(inc_s.iloc[-1])
+                            if i4 != 0:
+                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
+                            ttm_net_inc = float(inc_s.iloc[:4].sum())
+                        else:
+                            ttm_net_inc = float(inc_s.sum())
 
+                    # Revenue Row
                     rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
                     if rev_row:
                         rev_s = q_inc.loc[rev_row].dropna()
-                        ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
+                        if len(rev_s) >= 4:
+                            r0 = float(rev_s.iloc[0])
+                            r4 = float(rev_s.iloc[3]) if len(rev_s) >= 4 else float(rev_s.iloc[-1])
+                            if r4 > 0:
+                                rev_growth_pct = ((r0 - r4) / r4) * 100
+                            ttm_rev = float(rev_s.iloc[:4].sum())
+                        else:
+                            ttm_rev = float(rev_s.sum())
 
+                # Balance Sheet
                 q_bs = t_obj.quarterly_balance_sheet
                 stockholders_equity = None
                 total_debt = None
@@ -604,6 +586,7 @@ def get_on_demand_data(ticker_symbol):
                         current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
                         current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
 
+                # Cash Flow (FCF)
                 q_cf = t_obj.quarterly_cash_flow
                 ttm_fcf = None
                 if q_cf is not None and not q_cf.empty:
@@ -672,8 +655,8 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pe_str = "`N/A`"
 
-            # 4. Multi-Source Wall Street Price Targets (Finviz / TipRanks / CNN via Chrome TLS)
-            targets_line_str = fetch_wallstreet_targets_bulletproof(ticker_symbol, current_price)
+            # 4. Multi-Source Wall Street Price Targets
+            targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
             # Construct Blocks
             if sector and industry:
@@ -703,13 +686,27 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Expected Daily Move (ATR):** `{atr_fmt}`"
             )
 
-            health_block = (
-                f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}\n"
-                f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}\n"
-                f"• **Free Cash Flow:** {fcf_str}\n"
-                f"• **Earnings Quality (FCF / Net Income):** {quality_str}\n"
+            # Line 2 in Health: YoY Growth
+            growth_parts = []
+            if rev_growth_pct is not None:
+                growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
+            if net_inc_growth_pct is not None:
+                growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
+            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+
+            health_elements = [
+                f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}"
+            ]
+            if line_growth:
+                health_elements.append(line_growth)
+            health_elements.extend([
+                f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}",
+                f"• **Free Cash Flow:** {fcf_str}",
+                f"• **Earnings Quality (FCF / Net Income):** {quality_str}",
                 f"• **Valuation Multiples:** Trailing P/E: {pe_str}{pfcf_str}"
-            )
+            ])
+
+            health_block = "\n".join(health_elements)
 
         return {
             "ticker": ticker_symbol,
