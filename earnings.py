@@ -21,7 +21,7 @@ BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/153
 
 NY_TZ = ZoneInfo("America/New_York")
 LOOKAHEAD_DAYS = 45
-US_MIDCAP_CHUNK_SIZE = 15
+CHUNK_SIZE = 15  # Maximum safe entries per Discord embed
 
 # Your Curated Watchlist
 WATCHLIST = [
@@ -89,7 +89,7 @@ def fetch_dynamic_tsx_universe():
                 "operator": "AND",
                 "operands": [
                     {"operator": "EQ", "operands": ["region", "ca"]},
-                    {"operator": "GTE", "operands": ["intradaymarketcap", 1000000000]}  # Filter >= $1.0B USD to capture all CAD Mid-Caps
+                    {"operator": "GTE", "operands": ["intradaymarketcap", 1000000000]}  # Filter >= $1.0B USD
                 ]
             }
         }
@@ -136,7 +136,6 @@ def fetch_nasdaq_calendar_day(target_date):
                 time_badge = "Before Open 🌅" if "pre" in time_code or "bmo" in time_code else "After Close 🌙"
                 eps_forecast = clean_currency(r.get("epsForecast"))
 
-                # Check if it's a Canadian dual-listed stock
                 is_canadian = sym.upper() in KNOWN_CANADIAN_CROSS_LISTED
 
                 items.append({
@@ -213,7 +212,6 @@ def scan_single_tsx_ticker(sym, check_dates):
         t_obj = yf.Ticker(sym, session=yahoo_session)
         today = datetime.now(NY_TZ).date()
         m_cap = getattr(t_obj.fast_info, "market_cap", 0) or 0
-        
         name = getattr(t_obj.fast_info, "name", None) or sym
 
         # Upcoming Calendar
@@ -287,21 +285,15 @@ def scan_single_tsx_ticker(sym, check_dates):
     return upcoming_item, scorecard_item
 
 def deduplicate_dual_listings(us_items, ca_items):
-    """
-    Reroutes Canadian companies found on US exchanges into the Canadian section
-    and eliminates duplicate tickers.
-    """
     seen_ca_bases = set()
     unique_ca_items = []
     
-    # 1. Add direct TSX items
     for item in ca_items:
         base = item["ticker"].replace(".TO", "").replace(".V", "").upper()
         if base not in seen_ca_bases:
             seen_ca_bases.add(base)
             unique_ca_items.append(item)
 
-    # 2. Process US items and re-route any Canadian cross-listed items
     final_us_items = []
     for item in us_items:
         base = item["ticker"].replace(".TO", "").replace(".V", "").upper()
@@ -349,6 +341,38 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
         logging.error(f"Error sending embed: {e}")
 
 # ====================================================================
+# UNIVERSAL PAGINATION DISPATCHER (Sends 100% of data in 15-item chunks)
+# ====================================================================
+def dispatch_paginated_category(items, base_title, base_description, color, category_tag):
+    if not items:
+        return
+
+    total_items = len(items)
+    chunks = [items[i:i + CHUNK_SIZE] for i in range(0, total_items, CHUNK_SIZE)]
+    total_chunks = len(chunks)
+
+    for chunk_idx, chunk in enumerate(chunks, 1):
+        start_num = (chunk_idx - 1) * CHUNK_SIZE + 1
+        chunk_txt = "\n".join([format_earnings_entry(start_num + j, item) for j, item in enumerate(chunk)])
+        
+        if total_chunks > 1:
+            title = f"{base_title} [Part {chunk_idx}/{total_chunks}]"
+            desc = f"{base_description}\n*Showing entries {start_num} to {start_num + len(chunk) - 1} of {total_items} total.*"
+        else:
+            title = base_title
+            desc = f"{base_description}\n*Showing all {total_items} corporate reports.*"
+
+        footer = f"Looney • {category_tag} (Part {chunk_idx} of {total_chunks} • {total_items} Total)" if total_chunks > 1 else f"Looney • {category_tag} ({total_items} Total)"
+
+        dispatch_discord_earnings_embed(
+            title=title,
+            description=desc,
+            entries_text=chunk_txt,
+            color=color,
+            footer_text=footer
+        )
+
+# ====================================================================
 # MAIN RUNNER
 # ====================================================================
 def run_earnings_daily():
@@ -387,7 +411,7 @@ def run_earnings_daily():
             if sc:
                 scorecard_items.append(sc)
 
-    # 4. SMART DUAL-LISTING RESOLUTION (BB, SHOP, RY, TD, etc.)
+    # 4. SMART DUAL-LISTING RESOLUTION
     filtered_us_upcoming, upcoming_ca_items = deduplicate_dual_listings(upcoming_us_items, upcoming_ca_items)
     scorecard_items.sort(key=lambda x: x["market_cap"], reverse=True)
 
@@ -413,15 +437,16 @@ def run_earnings_daily():
         elif 1.5e9 <= m_cap < 2e11 and days <= LOOKAHEAD_DAYS:
             (mid_ca if is_ca else mid_us).append(item)
 
-    # Sort each tier chronologically
+    # Sort each category chronologically
     mega_us.sort(key=lambda x: (x["date"], -x["market_cap"]))
     mega_ca.sort(key=lambda x: (x["date"], -x["market_cap"]))
     mid_us.sort(key=lambda x: (x["date"], -x["market_cap"]))
     mid_ca.sort(key=lambda x: (x["date"], -x["market_cap"]))
 
     # =================================================================
-    # DISPATCH ALL CARDS TO DISCORD
+    # DISPATCH ALL CARDS WITH UNIVERSAL PAGINATION
     # =================================================================
+    
     # CARD 1: Unified Scorecard (US + TSX)
     if scorecard_items:
         scorecard_txt = ""
@@ -438,62 +463,50 @@ def run_earnings_daily():
             color=15844367  # Gold
         )
 
-    # CARD 2: Watchlist (Next 45 Days)
-    if watchlist_results:
-        wl_txt = "\n".join([format_earnings_entry(i, item) for i, item in enumerate(watchlist_results[:12], 1)])
-        dispatch_discord_earnings_embed(
-            title=f"🗓️ Watchlist Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]",
-            description=f"*Sorted by nearest report date across your watchlist as of {today_str}.*",
-            entries_text=wl_txt,
-            color=3066993  # Green
-        )
+    # CARD 2: Watchlist Calendar
+    dispatch_paginated_category(
+        items=watchlist_results,
+        base_title=f"🗓️ Watchlist Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]",
+        base_description=f"*Sorted by nearest report date across your personal watchlist as of {today_str}.*",
+        color=3066993,  # Green
+        category_tag="Watchlist"
+    )
 
-    # CARD 3: Mega-Caps (Next 45 Days — ≥ $200B)
-    mega_combined = mega_us + mega_ca
-    if mega_combined:
-        mega_txt = ""
-        if mega_us:
-            mega_txt += "**🇺🇸 UNITED STATES MEGA-CAPS:**\n" + "\n".join([format_earnings_entry(i, item) for i, item in enumerate(mega_us[:8], 1)]) + "\n\n"
-        if mega_ca:
-            mega_txt += "**🇨🇦 CANADIAN MEGA-CAPS (TSX 🍁):**\n" + "\n".join([format_earnings_entry(i, item) for i, item in enumerate(mega_ca[:8], 1)])
-        dispatch_discord_earnings_embed(
-            title=f"👑 Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
-            description="*Major market-moving corporate reports over the next 45 days.*",
-            entries_text=mega_txt,
-            color=10181046  # Purple
-        )
+    # CARD 3A: Canadian Mega-Caps (≥ $200B)
+    dispatch_paginated_category(
+        items=mega_ca,
+        base_title=f"👑 Canadian Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
+        base_description="*Canadian market giants reporting over the next 45 days.*",
+        color=15158332,  # Crimson Red
+        category_tag="TSX Mega-Caps"
+    )
 
-    # CARD 4A: Canadian Mid-Caps (Next 45 Days — $1.5B to $200B)
-    if mid_ca:
-        mid_ca_txt = "\n".join([format_earnings_entry(i, item) for i, item in enumerate(mid_ca, 1)])
-        dispatch_discord_earnings_embed(
-            title=f"🍁 Canadian Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
-            description=f"*All {len(mid_ca)} Canadian institutional & momentum leaders reporting in the next 45 days.*",
-            entries_text=mid_ca_txt,
-            color=15158332,  # Crimson/Maple Red
-            footer_text=f"Looney • TSX Mid-Cap Calendar ({len(mid_ca)} Total)"
-        )
+    # CARD 3B: US Mega-Caps (≥ $200B)
+    dispatch_paginated_category(
+        items=mega_us,
+        base_title=f"👑 US Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
+        base_description="*US mega-cap leaders reporting over the next 45 days.*",
+        color=10181046,  # Purple
+        category_tag="US Mega-Caps"
+    )
 
-    # CARD 4B: US Mid-Caps (Paginated Sequentially in batches of 15)
-    if mid_us:
-        total_us = len(mid_us)
-        chunks = [mid_us[i:i + US_MIDCAP_CHUNK_SIZE] for i in range(0, total_us, US_MIDCAP_CHUNK_SIZE)]
-        total_chunks = len(chunks)
+    # CARD 4A: Canadian Mid-Caps ($1.5B to $200B)
+    dispatch_paginated_category(
+        items=mid_ca,
+        base_title=f"🍁 Canadian Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
+        base_description="*Canadian institutional & momentum mid-caps reporting in the next 45 days.*",
+        color=15158332,  # Crimson Red
+        category_tag="TSX Mid-Caps"
+    )
 
-        for chunk_idx, chunk in enumerate(chunks, 1):
-            start_num = (chunk_idx - 1) * US_MIDCAP_CHUNK_SIZE + 1
-            chunk_txt = "\n".join([format_earnings_entry(start_num + j, item) for j, item in enumerate(chunk)])
-            
-            part_title = f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — Part {chunk_idx}/{total_chunks}]" if total_chunks > 1 else f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]"
-            part_desc = f"*Showing entries {start_num} to {start_num + len(chunk) - 1} of {total_us} total upcoming US Mid-Caps ($1.5B–$200B).*"
-            
-            dispatch_discord_earnings_embed(
-                title=part_title,
-                description=part_desc,
-                entries_text=chunk_txt,
-                color=3447003,  # Blue
-                footer_text=f"Looney • US Mid-Caps (Part {chunk_idx} of {total_chunks} • {total_us} Total)"
-            )
+    # CARD 4B: US Mid-Caps ($1.5B to $200B)
+    dispatch_paginated_category(
+        items=mid_us,
+        base_title=f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
+        base_description="*US institutional & momentum mid-caps reporting in the next 45 days.*",
+        color=3447003,  # Blue
+        category_tag="US Mid-Caps"
+    )
 
     logging.info("Earnings Intelligence 45-day flow completed successfully.")
 
