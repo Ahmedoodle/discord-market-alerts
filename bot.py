@@ -1,5 +1,7 @@
 import os
 import threading
+import math
+import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
@@ -188,11 +190,58 @@ def get_on_demand_data(ticker_symbol):
     except Exception as e:
         return None, f"Error fetching `{ticker_symbol}`: {e}"
 
+def create_market_embed(data):
+    embed = discord.Embed(
+        title=f"🚨 Market Snapshot: {data['ticker']} [LIVE ON-DEMAND]",
+        description=f"**{data['ticker']}** is currently **{data['change_pct']:+.2f}%** today.",
+        color=0x2ecc71 if data['change_pct'] >= 0 else 0xe74c3c
+    )
+    embed.add_field(name="Current Price", value=f"${data['price']:.2f}", inline=True)
+    embed.add_field(name="1D Total Change", value=f"{data['change_pct']:+.2f}%", inline=True)
+    embed.add_field(name="📊 Volume (20D)", value=data['volume_str'], inline=False)
+    embed.add_field(name="📈 RSI (14D)", value=data['rsi_str'], inline=True)
+    embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=True)
+    embed.add_field(name="📈 Trend Health", value=data['trend_str'], inline=False)
+    embed.set_footer(text="Looney • On-Demand Market Terminal")
+    return embed
+
 @bot.event
 async def on_ready():
     print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
 
-# Command Triggers: `!price <ticker>`, `!p <ticker>`, `!four <ticker>`, or `!check <ticker>`
+# -------------------------------------------------------------
+# 4. INSTANT AUTO-TRIGGER (e.g. `!NVDA`, `!TSLA`, `$BTC-USD`)
+# -------------------------------------------------------------
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+
+    content = message.content.strip()
+
+    # If message starts with `!` or `$`
+    if content.startswith("!") or content.startswith("$"):
+        raw_cmd = content[1:].strip()
+        first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
+
+        # If they used standard command `!price NVDA` or `!p TSLA`
+        if first_word in ["price", "p", "four", "check"]:
+            await bot.process_commands(message)
+            return
+
+        # If they just typed direct ticker `!NVDA`, `!TSLA`, `$BTC-USD`, `$SPY`
+        potential_ticker = raw_cmd.split()[0].upper()
+        if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
+            async with message.channel.typing():
+                data, err = get_on_demand_data(potential_ticker)
+                if not err:
+                    embed = create_market_embed(data)
+                    await message.channel.send(embed=embed)
+                    return
+
+    await bot.process_commands(message)
+
+# Standard Fallback Commands
 @bot.command(name="price", aliases=["p", "four", "check"])
 async def price_command(ctx, ticker: str):
     async with ctx.typing():
@@ -200,20 +249,7 @@ async def price_command(ctx, ticker: str):
         if err:
             await ctx.send(f"❌ {err}")
             return
-
-        embed = discord.Embed(
-            title=f"🚨 Market Snapshot: {data['ticker']} [LIVE ON-DEMAND]",
-            description=f"**{data['ticker']}** is currently **{data['change_pct']:+.2f}%** today.",
-            color=0x2ecc71 if data['change_pct'] >= 0 else 0xe74c3c
-        )
-        embed.add_field(name="Current Price", value=f"${data['price']:.2f}", inline=True)
-        embed.add_field(name="1D Total Change", value=f"{data['change_pct']:+.2f}%", inline=True)
-        embed.add_field(name="📊 Volume (20D)", value=data['volume_str'], inline=False)
-        embed.add_field(name="📈 RSI (14D)", value=data['rsi_str'], inline=True)
-        embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=True)
-        embed.add_field(name="📈 Trend Health", value=data['trend_str'], inline=False)
-        embed.set_footer(text="Looney • On-Demand Market Terminal")
-
+        embed = create_market_embed(data)
         await ctx.send(embed=embed)
 
 if __name__ == "__main__":
