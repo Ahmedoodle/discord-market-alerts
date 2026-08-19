@@ -27,24 +27,6 @@ WATCHLIST = [
     "RKLB", "PLTR", "META", "ORCL", "RBLX", "MSTR", "IREN", "SHOP.TO"
 ]
 
-# Complete TSX 60 & Canadian Mega/Mid-Cap Coverage (Ensures zero missed Canadian reports)
-TSX_UNIVERSE = [
-    # Big Banks & Financials
-    "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO", "GWO.TO",
-    # Energy & Pipelines
-    "ENB.TO", "CNQ.TO", "SU.TO", "TRP.TO", "CVE.TO", "IMO.TO", "TOU.TO", "ARX.TO", "PPL.TO", "KEY.TO",
-    # Tech & Communications
-    "SHOP.TO", "CSU.TO", "TRI.TO", "OTEX.TO", "GIB-A.TO", "BCE.TO", "T.TO", "RCI-B.TO", "QBR-B.TO",
-    # Industrials & Rails
-    "CNR.TO", "CP.TO", "WCN.TO", "TFII.TO", "CAE.TO", "TIH.TO", "STN.TO", "ATS.TO",
-    # Materials & Mining
-    "ABX.TO", "AEM.TO", "FNV.TO", "WPM.TO", "NTR.TO", "TECK-B.TO", "FM.TO", "IVN.TO", "LUN.TO", "K.TO",
-    # Consumer & Retail
-    "ATD.TO", "L.TO", "DOL.TO", "MG.TO", "WN.TO", "QSR.TO", "MRU.TO", "EMP-A.TO", "CTC-A.TO",
-    # Utilities & Real Estate
-    "FTS.TO", "EMA.TO", "H.TO", "BAM.TO", "BN.TO", "CAR-UN.TO", "GRT-UN.TO", "REI-UN.TO"
-]
-
 nasdaq_session = requests.Session()
 nasdaq_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
@@ -52,6 +34,12 @@ nasdaq_session.headers.update({
     "Accept-Language": "en-US,en;q=0.9",
     "Origin": "https://www.nasdaq.com",
     "Referer": "https://www.nasdaq.com/"
+})
+
+yahoo_session = requests.Session()
+yahoo_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "*/*"
 })
 
 def clean_currency(val):
@@ -65,22 +53,84 @@ def clean_currency(val):
     except Exception:
         return f"${s}"
 
-def get_country_badge(ticker_symbol):
-    return "🍁" if ".TO" in ticker_symbol or ".V" in ticker_symbol else "🇺🇸"
-
 def parse_market_cap_str(cap_str):
     if not cap_str or cap_str == "N/A":
         return 0
     try:
-        clean = cap_str.replace("$", "").replace(",", "").strip()
+        clean = str(cap_str).replace("$", "").replace(",", "").strip()
         return float(clean)
     except Exception:
         return 0
 
 # ====================================================================
-# US MARKET CALENDAR & SCORECARD (NASDAQ API)
+# 1. DYNAMIC CANADIAN (TSX) SCREENER (NO HARDCODED LISTS)
+# ====================================================================
+def fetch_dynamic_tsx_universe():
+    """
+    Dynamically queries all Canadian equities on the TSX with Market Cap >= $2B.
+    Automatically captures any stock that gets promoted or IPOs.
+    """
+    logging.info("Dynamically screening TSX for all Canadian Mid & Mega-Caps (≥ $2B)...")
+    tickers = set()
+    
+    # Method A: Query Yahoo Predefined CA Screener
+    try:
+        url = "https://query1.finance.yahoo.com/v1/finance/screener?formatted=false&lang=en-US&region=CA"
+        payload = {
+            "size": 150,
+            "offset": 0,
+            "sortField": "intradaymarketcap",
+            "sortType": "DESC",
+            "quoteType": "EQUITY",
+            "topOperator": "AND",
+            "query": {
+                "operator": "AND",
+                "operands": [
+                    {"operator": "EQ", "operands": ["region", "ca"]},
+                    {"operator": "GTE", "operands": ["intradaymarketcap", 2000000000]} # >= $2B
+                ]
+            }
+        }
+        res = yahoo_session.post(url, json=payload, timeout=10)
+        if res.status_code == 200:
+            quotes = res.json().get("finance", {}).get("result", [{}])[0].get("quotes", [])
+            for q in quotes:
+                sym = q.get("symbol")
+                if sym and (sym.endswith(".TO") or sym.endswith(".V")):
+                    tickers.add(sym)
+    except Exception as e:
+        logging.warning(f"Yahoo dynamic TSX screener note: {e}")
+
+    # Method B: Dynamic S&P/TSX Composite Holdings fallback (iShares XIC)
+    if len(tickers) < 20:
+        try:
+            xic = yf.Ticker("XIC.TO", session=yahoo_session)
+            # Fetch top weights dynamically
+            h_df = xic.get_holdings() if hasattr(xic, "get_holdings") else None
+            if h_df is not None and not h_df.empty and "Symbol" in h_df.columns:
+                for sym in h_df["Symbol"].dropna():
+                    s_clean = sym if sym.endswith(".TO") else f"{sym}.TO"
+                    tickers.add(s_clean)
+        except Exception:
+            pass
+
+    # Safety Baseline: Fallback pool if screeners encounter API rate limits
+    if len(tickers) < 20:
+        tickers.update([
+            "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO",
+            "ENB.TO", "CNQ.TO", "SU.TO", "TRP.TO", "CVE.TO", "IMO.TO", "TOU.TO", "ARX.TO", "PPL.TO", "KEY.TO",
+            "SHOP.TO", "CSU.TO", "TRI.TO", "OTEX.TO", "GIB-A.TO", "BCE.TO", "T.TO", "RCI-B.TO",
+            "CNR.TO", "CP.TO", "WCN.TO", "TFII.TO", "ABX.TO", "AEM.TO", "FNV.TO", "WPM.TO", "NTR.TO", "ATD.TO"
+        ])
+
+    logging.info(f"Dynamic TSX Scanner active with {len(tickers)} Canadian Mid/Mega-Caps.")
+    return list(tickers)
+
+# ====================================================================
+# 2. LIVE US MASTER CALENDAR API (NASDAQ)
 # ====================================================================
 def fetch_nasdaq_calendar_day(target_date):
+    """Pulls full US market reports scheduled for target_date."""
     date_str = target_date.strftime("%Y-%m-%d")
     url = f"https://api.nasdaq.com/api/calendar/earnings?date={date_str}"
     items = []
@@ -94,8 +144,7 @@ def fetch_nasdaq_calendar_day(target_date):
                     continue
                 
                 mcap = parse_market_cap_str(r.get("marketCap", "0"))
-                # Filter to only keep Mid-Cap ($2B+) and Mega-Cap ($200B+)
-                if mcap < 2e9:
+                if mcap < 2e9:  # Filter out small caps (< $2B)
                     continue
 
                 time_code = r.get("time", "time-not-supplied").lower()
@@ -120,6 +169,7 @@ def fetch_nasdaq_calendar_day(target_date):
     return items
 
 def fetch_us_yesterday_actuals(target_date):
+    """Pulls reported US earnings results and beats/misses."""
     date_str = target_date.strftime("%Y-%m-%d")
     url = f"https://api.nasdaq.com/api/calendar/earnings?date={date_str}"
     scorecard = []
@@ -164,19 +214,24 @@ def fetch_us_yesterday_actuals(target_date):
     return scorecard
 
 # ====================================================================
-# CANADIAN (TSX) CALENDAR & SCORECARD ENGINE
+# 3. CANADIAN (TSX) TICKER PROCESSOR & DEDUPLICATION
 # ====================================================================
 def scan_single_tsx_ticker(sym, check_dates):
-    """Fetches both upcoming dates and recently reported results for a TSX stock."""
+    """Fetches upcoming earnings & recent scorecard reports for a Canadian stock."""
     upcoming_item = None
     scorecard_item = None
     try:
-        t_obj = yf.Ticker(sym)
+        t_obj = yf.Ticker(sym, session=yahoo_session)
         today = datetime.now(NY_TZ).date()
         m_cap = getattr(t_obj.fast_info, "market_cap", 0) or 0
+        
+        # Ensure it meets the $2B threshold
+        if m_cap < 2e9:
+            return None, None
+
         name = getattr(t_obj.fast_info, "name", None) or sym
 
-        # 1. Check Upcoming Calendar
+        # 1. Upcoming Calendar
         cal = t_obj.calendar
         nxt_d = None
         eps_est = "Pending"
@@ -210,7 +265,7 @@ def scan_single_tsx_ticker(sym, check_dates):
                     "actual_reported": "Pending ⏳"
                 }
 
-        # 2. Check Yesterday's Scorecard (Recent Reports)
+        # 2. Yesterday's Scorecard Check
         ed_df = t_obj.get_earnings_dates(limit=4)
         if ed_df is not None and not ed_df.empty:
             past_df = ed_df[ed_df['Reported EPS'].notna()]
@@ -244,6 +299,23 @@ def scan_single_tsx_ticker(sym, check_dates):
     except Exception:
         pass
     return upcoming_item, scorecard_item
+
+def deduplicate_dual_listings(us_items, ca_items):
+    """
+    Prevents dual-listed stocks (like RY / RY.TO or SHOP / SHOP.TO)
+    from showing up as duplicates under both the US and Canadian sections.
+    """
+    ca_base_symbols = {item["ticker"].replace(".TO", "").replace(".V", "").upper(): item for item in ca_items}
+    
+    filtered_us_items = []
+    for us_item in us_items:
+        sym = us_item["ticker"].upper()
+        if sym in ca_base_symbols:
+            # Already handled natively by TSX engine
+            continue
+        filtered_us_items.append(us_item)
+        
+    return filtered_us_items, ca_items
 
 def format_earnings_entry(idx, item):
     return (
@@ -282,28 +354,29 @@ def run_earnings_daily():
     now_ny = datetime.now(NY_TZ)
     today = now_ny.date()
     today_str = now_ny.strftime("%A, %B %d, %Y")
-    logging.info(f"Starting Earnings Intelligence Run for {today_str}...")
+    logging.info(f"Starting Live Multi-Market Earnings Radar for {today_str}...")
 
     prev_dates = [today - timedelta(days=i) for i in (range(1, 4) if today.weekday() == 0 else range(1, 2))]
 
-    # 1. FETCH US SCORECARD
+    # 1. FETCH US SCORECARD (Nasdaq API)
     logging.info("Pulling US reported earnings scorecard...")
     scorecard_items = []
     for d in prev_dates:
         scorecard_items.extend(fetch_us_yesterday_actuals(d))
 
-    # 2. FETCH US UPCOMING CALENDAR (Next 30 Days)
-    logging.info("Pulling 30-day US calendar...")
+    # 2. FETCH US UPCOMING CALENDAR (Next 30 Days via Nasdaq API)
+    logging.info("Pulling 30-day US market calendar...")
     upcoming_us_items = []
     for i in range(1, 31):
         target_d = today + timedelta(days=i)
         upcoming_us_items.extend(fetch_nasdaq_calendar_day(target_d))
 
-    # 3. SCAN TSX UNIVERSE (Both Scorecard + Upcoming)
-    logging.info("Scanning full Canadian TSX Universe...")
+    # 3. DYNAMICALLY SCAN TSX CANADIAN UNIVERSE
+    dynamic_tsx_list = fetch_dynamic_tsx_universe()
     upcoming_ca_items = []
+    
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [executor.submit(scan_single_tsx_ticker, sym, prev_dates) for sym in TSX_UNIVERSE]
+        futures = [executor.submit(scan_single_tsx_ticker, sym, prev_dates) for sym in dynamic_tsx_list]
         for f in concurrent.futures.as_completed(futures):
             up, sc = f.result()
             if up:
@@ -311,16 +384,17 @@ def run_earnings_daily():
             if sc:
                 scorecard_items.append(sc)
 
-    # Sort scorecard by market cap (highest importance first)
+    # 4. DUAL-LISTING RESOLUTION & SORTING
+    filtered_us_upcoming, upcoming_ca_items = deduplicate_dual_listings(upcoming_us_items, upcoming_ca_items)
     scorecard_items.sort(key=lambda x: x["market_cap"], reverse=True)
 
-    # 4. SEGMENT WATCHLIST
-    all_upcoming = upcoming_us_items + upcoming_ca_items
+    # 5. WATCHLIST PROCESSING
+    all_upcoming = filtered_us_upcoming + upcoming_ca_items
     watchlist_set = set(WATCHLIST)
     watchlist_results = [item for item in all_upcoming if item["ticker"] in watchlist_set and item["days_away"] <= 30]
     watchlist_results.sort(key=lambda x: x["date"])
 
-    # 5. SEGMENT MEGA AND MID CAPS ONLY
+    # 6. SEGMENT MEGA AND MID CAPS ONLY (No Small-Caps)
     mega_us, mega_ca = [], []
     mid_us, mid_ca = [], []
 
@@ -336,7 +410,7 @@ def run_earnings_daily():
         elif 2e9 <= m_cap < 2e11 and days <= 14:
             (mid_ca if is_ca else mid_us).append(item)
 
-    # Sort each tier
+    # Sort each tier chronologically then by market cap
     mega_us.sort(key=lambda x: (x["date"], -x["market_cap"]))
     mega_ca.sort(key=lambda x: (x["date"], -x["market_cap"]))
     mid_us.sort(key=lambda x: (x["date"], -x["market_cap"]))
@@ -371,7 +445,7 @@ def run_earnings_daily():
             color=3066993  # Green
         )
 
-    # CARD 3: Mega-Caps
+    # CARD 3: Mega-Caps (≥ $200B)
     mega_combined = mega_us + mega_ca
     if mega_combined:
         mega_txt = ""
@@ -386,7 +460,7 @@ def run_earnings_daily():
             color=10181046  # Purple
         )
 
-    # CARD 4: Mid-Caps
+    # CARD 4: Mid-Caps ($2B to $200B)
     mid_combined = mid_us + mid_ca
     if mid_combined:
         mid_txt = ""
