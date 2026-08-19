@@ -174,7 +174,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Pure Statement Engine with Exact Average Volumes."""
+    """Direct Chart API + Institutional Balance Sheet & Cash Flow Audit."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -310,56 +310,44 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. PURE STATEMENT-BASED FUNDAMENTALS & BALANCE SHEET ENGINE
+        # 2. ASSET CLASSIFICATION & HEDGE FUND BALANCE SHEET AUDIT
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
         # 1. CRYPTO
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
-            fund_title = "🏢 Asset Class & Profile"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
-            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
+            profile_title = "🏢 Asset Class & Profile"
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
-                f"• **Valuation:** `Digital Asset / Network Utility`"
+                f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
+                f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
+            health_block = None
 
         # 2. ETFs
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
-            fund_title = "🏢 Fund Profile & Structure"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
+            profile_title = "🏢 Fund Profile & Structure"
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                f"• **Structure:** `Diversified Market Basket Holding`\n"
+                f"• **Type:** `Open-End Fund Vehicle`"
             )
+            health_block = None
 
         # 3. FUTURES
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
-            fund_title = "🏢 Asset Class & Profile"
+            profile_title = "🏢 Asset Class & Profile"
             profile_block = (
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
+            health_block = None
 
-        # 4. EQUITIES / STOCKS (Computed directly from filed balance sheet & statements)
+        # 4. EQUITIES / STOCKS (Full Balance Sheet & Cash Flow Health Audit)
         else:
-            fund_title = "🏢 Valuation, Earnings & Growth"
-            t_obj = yf.Ticker(ticker_symbol)
-            fi = t_obj.fast_info
+            profile_title = "🏢 Company Profile"
             
-            # Market Cap & Shares
-            market_cap = getattr(fi, "market_cap", None)
-            shares = getattr(fi, "shares", None)
-            if not market_cap and shares and current_price:
-                market_cap = current_price * shares
-
-            # Sector / Industry from Search API
+            # Step A: Sector & Industry
             sector = None
             industry = None
             try:
@@ -373,56 +361,141 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Direct Calculations from Filed Financial Statements
+            # Step B: Financial Statement Calculations (Income, Balance Sheet, Cash Flow)
+            market_cap = None
+            shares = None
             trailing_pe = None
-            rev_growth_pct = None
-            net_inc_growth_pct = None
-            profit_margin_pct = None
+            roe_str = "N/A"
+            margin_str = "N/A"
+            de_str = "N/A"
+            curr_ratio_str = "N/A"
+            fcf_str = "N/A"
+            quality_str = "N/A"
+            pfcf_str = ""
 
             try:
-                q_inc = t_obj.quarterly_income_stmt
-                if q_inc is not None and not q_inc.empty:
-                    # Find Revenue Row
-                    rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
-                    if rev_row:
-                        rev_s = q_inc.loc[rev_row].dropna()
-                        if len(rev_s) >= 4:
-                            r0 = float(rev_s.iloc[0])
-                            r4 = float(rev_s.iloc[3]) if len(rev_s) >= 4 else float(rev_s.iloc[-1])
-                            if r4 > 0:
-                                rev_growth_pct = ((r0 - r4) / r4) * 100
-                            ttm_rev = float(rev_s.iloc[:4].sum())
-                        else:
-                            ttm_rev = float(rev_s.sum())
-                    else:
-                        ttm_rev = None
+                t_obj = yf.Ticker(ticker_symbol)
+                
+                # Shares & Market Cap
+                try:
+                    shares = t_obj.fast_info.shares
+                    market_cap = t_obj.fast_info.market_cap
+                except Exception:
+                    pass
 
-                    # Find Net Income Row
+                if not market_cap and shares and current_price:
+                    market_cap = current_price * shares
+
+                # 1. Income Statement
+                q_inc = t_obj.quarterly_income_stmt
+                ttm_net_inc = None
+                ttm_rev = None
+                if q_inc is not None and not q_inc.empty:
                     inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
                     if inc_row:
                         inc_s = q_inc.loc[inc_row].dropna()
-                        if len(inc_s) >= 4:
-                            i0 = float(inc_s.iloc[0])
-                            i4 = float(inc_s.iloc[3]) if len(inc_s) >= 4 else float(inc_s.iloc[-1])
-                            if i4 != 0:
-                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
-                            ttm_net_inc = float(inc_s.iloc[:4].sum())
-                        else:
-                            ttm_net_inc = float(inc_s.sum())
+                        ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
 
-                        # Compute Real Trailing P/E from Balance Sheet Net Income!
-                        if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
-                            trailing_eps = ttm_net_inc / shares
-                            if trailing_eps > 0:
-                                trailing_pe = current_price / trailing_eps
+                    rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
+                    if rev_row:
+                        rev_s = q_inc.loc[rev_row].dropna()
+                        ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
 
-                        # Compute Profit Margin
-                        if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
-                            profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
+                # 2. Balance Sheet
+                q_bs = t_obj.quarterly_balance_sheet
+                stockholders_equity = None
+                total_debt = None
+                current_assets = None
+                current_liab = None
+                if q_bs is not None and not q_bs.empty:
+                    eq_row = next((r for r in ["Stockholders Equity", "Total Stockholder Equity", "Common Stock Equity"] if r in q_bs.index), None)
+                    if eq_row:
+                        stockholders_equity = float(q_bs.loc[eq_row].dropna().iloc[0])
+
+                    debt_row = next((r for r in ["Total Debt", "Long Term Debt And Capital Lease Obligation", "Total Non Current Liabilities Net Minority Interest"] if r in q_bs.index), None)
+                    if debt_row:
+                        total_debt = float(q_bs.loc[debt_row].dropna().iloc[0])
+
+                    ca_row = next((r for r in ["Current Assets", "Total Current Assets"] if r in q_bs.index), None)
+                    cl_row = next((r for r in ["Current Liabilities", "Total Current Liabilities"] if r in q_bs.index), None)
+                    if ca_row and cl_row:
+                        current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
+                        current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
+
+                # 3. Cash Flow (Free Cash Flow)
+                q_cf = t_obj.quarterly_cash_flow
+                ttm_fcf = None
+                if q_cf is not None and not q_cf.empty:
+                    ocf_row = next((r for r in ["Operating Cash Flow", "Cash Flow From Continuing Operating Activities"] if r in q_cf.index), None)
+                    capex_row = next((r for r in ["Capital Expenditure", "Capital Expenditures"] if r in q_cf.index), None)
+                    if ocf_row:
+                        ocf_s = q_cf.loc[ocf_row].dropna()
+                        ttm_ocf = float(ocf_s.iloc[:4].sum()) if len(ocf_s) >= 1 else 0
+                        ttm_capex = 0
+                        if capex_row:
+                            capex_s = q_cf.loc[capex_row].dropna()
+                            ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
+                        ttm_fcf = ttm_ocf - ttm_capex
+
+                # 4. Compute Health Indicators
+                # ROE & Margin
+                if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
+                    roe_pct = (ttm_net_inc / stockholders_equity) * 100
+                    roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
+                    roe_str = f"`{roe_pct:.1f}%`{roe_tag}"
+
+                if ttm_net_inc and ttm_rev and ttm_rev > 0:
+                    margin_pct = (ttm_net_inc / ttm_rev) * 100
+                    margin_tag = " 💎" if margin_pct >= 25.0 else (" 🟢" if margin_pct >= 10.0 else "")
+                    margin_str = f"`{margin_pct:.1f}%`{margin_tag}"
+
+                # Leverage (Debt/Equity) & Current Ratio
+                if total_debt is not None and stockholders_equity and stockholders_equity > 0:
+                    de_ratio = total_debt / stockholders_equity
+                    de_tag = " (Low Debt 🟢)" if de_ratio <= 0.6 else (" (Moderate 🟡)" if de_ratio <= 1.5 else " (High Debt ⚠️)")
+                    de_str = f"`{de_ratio:.2f}x`{de_tag}"
+
+                if current_assets and current_liab and current_liab > 0:
+                    cr = current_assets / current_liab
+                    cr_tag = " 🟢" if cr >= 1.5 else (" 🟡" if cr >= 1.0 else " ⚠️")
+                    curr_ratio_str = f"`{cr:.2f}x`{cr_tag}"
+
+                # FCF Yield & Earnings Quality
+                if ttm_fcf is not None:
+                    fcf_fmt = format_large_number(ttm_fcf)
+                    if market_cap and market_cap > 0:
+                        fcf_yield = (ttm_fcf / market_cap) * 100
+                        fcf_str = f"`{fcf_fmt}` (Yield: `{fcf_yield:.1f}%`)"
+                    else:
+                        fcf_str = f"`{fcf_fmt}`"
+
+                if ttm_fcf is not None and ttm_net_inc and ttm_net_inc > 0:
+                    quality_ratio = ttm_fcf / ttm_net_inc
+                    if quality_ratio >= 1.0:
+                        quality_str = f"`{quality_ratio:.2f}x` 🟢 (Real Cash Backing)"
+                    elif quality_ratio >= 0.6:
+                        quality_str = f"`{quality_ratio:.2f}x` 🟡 (Moderate Cash Conversion)"
+                    else:
+                        quality_str = f"`{quality_ratio:.2f}x` ⚠️ (Accrual / Paper Earnings)"
+
+                # Trailing P/E & P/FCF
+                if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
+                    trailing_eps = ttm_net_inc / shares
+                    if trailing_eps > 0:
+                        trailing_pe = current_price / trailing_eps
+                        pe_str = f"`{trailing_pe:.1f}x`"
+                    else:
+                        pe_str = "`N/A (Pre-Profit)`"
+                else:
+                    pe_str = "`N/A (Pre-Profit)`"
+
+                if ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0:
+                    pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`"
+
             except Exception:
-                pass
+                pe_str = "`N/A`"
 
-            # Construct Output Lines
+            # Construct Profile Block
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -437,32 +510,16 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            if trailing_pe and trailing_pe > 0:
-                line_val = f"• **Valuation:** Trailing P/E: `{trailing_pe:.1f}x`"
-            else:
-                line_val = f"• **Valuation:** `High-Growth / Reinvestment Phase`"
+            profile_block = f"{line_sector}\n{line_cap}"
 
-            growth_parts = []
-            if rev_growth_pct is not None:
-                growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
-            if net_inc_growth_pct is not None:
-                growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
-
-            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
-
-            if profit_margin_pct is not None:
-                tag = " (High Margin 💎)" if profit_margin_pct >= 20.0 else (" (Healthy 🟢)" if profit_margin_pct >= 10.0 else "")
-                line_margin = f"• **Profit Margin:** `{profit_margin_pct:.1f}%`{tag}"
-            else:
-                line_margin = ""
-
-            elements = [line_sector, line_cap, line_val]
-            if line_growth:
-                elements.append(line_growth)
-            if line_margin:
-                elements.append(line_margin)
-            
-            profile_block = "\n".join(elements)
+            # Construct Health Audit Block
+            health_block = (
+                f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}\n"
+                f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}\n"
+                f"• **Free Cash Flow:** {fcf_str}\n"
+                f"• **Earnings Quality (FCF / Net Income):** {quality_str}\n"
+                f"• **Valuation Multiples:** Trailing P/E: {pe_str}{pfcf_str}"
+            )
 
         return {
             "ticker": ticker_symbol,
@@ -475,8 +532,9 @@ def get_on_demand_data(ticker_symbol):
             "macd_str": macd_str,
             "pivot_str": pivot_str,
             "atr_str": atr_str,
-            "fund_title": fund_title,
-            "profile_block": profile_block
+            "profile_title": profile_title,
+            "profile_block": profile_block,
+            "health_block": health_block
         }, None
 
     except Exception as e:
@@ -498,7 +556,9 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
     if data.get("profile_block"):
-        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Growth"), value=data['profile_block'], inline=False)
+        embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
+    if data.get("health_block"):
+        embed.add_field(name="📊 Balance Sheet & Cash Flow Health", value=data['health_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
