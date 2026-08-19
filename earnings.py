@@ -21,6 +21,7 @@ BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/153
 
 NY_TZ = ZoneInfo("America/New_York")
 LOOKAHEAD_DAYS = 45
+US_MIDCAP_LOOKAHEAD_DAYS = 7  # Specifically narrowed to 7 Days for US Mid-Caps
 CHUNK_SIZE = 15  # Maximum safe entries per Discord embed
 
 # Your Curated Watchlist
@@ -332,7 +333,7 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
     if not DISCORD_EARNINGS_WEBHOOK_URL:
         return
 
-    footer = footer_text or f"Looney • Daily 6:00 AM Earnings Radar (Next {LOOKAHEAD_DAYS} Days)"
+    footer = footer_text or f"Looney • Daily 6:00 AM Earnings Radar"
     payload = {
         "username": BOT_NAME,
         "avatar_url": BOT_AVATAR_URL,
@@ -393,7 +394,7 @@ def run_earnings_daily():
     now_ny = datetime.now(NY_TZ)
     today = now_ny.date()
     today_str = now_ny.strftime("%A, %B %d, %Y")
-    logging.info(f"Starting Live {LOOKAHEAD_DAYS}-Day Multi-Market Earnings Radar for {today_str}...")
+    logging.info(f"Starting Live Multi-Market Earnings Radar for {today_str}...")
 
     prev_dates = [today - timedelta(days=i) for i in (range(1, 4) if today.weekday() == 0 else range(1, 2))]
 
@@ -446,7 +447,6 @@ def run_earnings_daily():
         else:
             (sc_mid_ca if is_ca else sc_mid_us).append(sc)
 
-    # Sort each scorecard tier by market cap descending
     sc_mega_ca.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
     sc_mega_us.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
     sc_mid_ca.sort(key=lambda x: x.get("market_cap", 0), reverse=True)
@@ -460,7 +460,7 @@ def run_earnings_daily():
     watchlist_results = [item for item in all_upcoming if (item["ticker"] in watchlist_set or item["ticker"].replace(".TO", "") in watchlist_set) and item["days_away"] <= LOOKAHEAD_DAYS]
     watchlist_results.sort(key=lambda x: x["date"])
 
-    # 7. SEGMENT MEGA AND MID CAPS
+    # 7. SEGMENT MEGA AND MID CAPS (US Mid-Caps strictly filtered to 7 Days)
     mega_us, mega_ca = [], []
     mid_us, mid_ca = [], []
 
@@ -472,9 +472,13 @@ def run_earnings_daily():
         # Mega-Cap: >= $200B (Next 45 Days)
         if m_cap >= 2e11 and days <= LOOKAHEAD_DAYS:
             (mega_ca if is_ca else mega_us).append(item)
-        # Mid-Cap: $1.5B to $200B (Next 45 Days)
-        elif 1.5e9 <= m_cap < 2e11 and days <= LOOKAHEAD_DAYS:
-            (mid_ca if is_ca else mid_us).append(item)
+            
+        # Mid-Cap: $1.5B to $200B (CAD Next 45 Days | US Next 7 Days)
+        elif 1.5e9 <= m_cap < 2e11:
+            if is_ca and days <= LOOKAHEAD_DAYS:
+                mid_ca.append(item)
+            elif not is_ca and days <= US_MIDCAP_LOOKAHEAD_DAYS:
+                mid_us.append(item)
 
     # Sort each category chronologically
     mega_us.sort(key=lambda x: (x["date"], -x["market_cap"]))
@@ -532,16 +536,16 @@ def run_earnings_daily():
         category_tag="TSX Mid-Caps"
     )
 
-    # CARD 4B: US Mid-Caps (Next 45 Days — $1.5B to $200B)
+    # CARD 4B: US Mid-Caps (Next 7 Days — $1.5B to $200B)
     dispatch_paginated_category(
         items=mid_us,
-        base_title=f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
-        base_description="*US institutional & momentum mid-caps reporting in the next 45 days.*",
+        base_title=f"📈 US Mid-Cap Earnings Calendar [NEXT {US_MIDCAP_LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
+        base_description=f"*US institutional & momentum mid-caps reporting over the next {US_MIDCAP_LOOKAHEAD_DAYS} days.*",
         color=3447003,  # Blue
-        category_tag="US Mid-Caps"
+        category_tag=f"US Mid-Caps ({US_MIDCAP_LOOKAHEAD_DAYS} Days)"
     )
 
-    logging.info("Earnings Intelligence 45-day flow completed successfully.")
+    logging.info("Earnings Intelligence flow completed successfully.")
 
 if __name__ == "__main__":
     run_earnings_daily()
