@@ -167,7 +167,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart & Open Metadata Engine — 100% Guaranteed Profile."""
+    """Direct Yahoo Chart & Fundamental Engine — Comprehensive Institutional Terminal."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -303,73 +303,112 @@ def get_on_demand_data(ticker_symbol):
             atr_pct = (atr / current_price) * 100
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
-        # 9. Company Profile & Valuation (Crumb-Free Multi-Source Discovery)
+        # 9. Company Profile, Valuation, Earnings Growth & Margins
         profile_block = None
-        long_name = meta.get("shortName") or ticker_symbol
+        fund_title = "🏢 Valuation, Earnings & Growth"
         quote_type = meta.get("instrumentType", "EQUITY")
-        sector_str = None
-        industry_str = None
-        market_cap = None
-
-        # Source 1: Open Discovery Search endpoint
-        try:
-            s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-            s_res = http_session.get(s_url, timeout=3)
-            if s_res.status_code == 200:
-                s_data = s_res.json()
-                quotes = s_data.get("quotes", [])
-                if quotes:
-                    q = quotes[0]
-                    long_name = q.get("longname") or q.get("shortname") or long_name
-                    quote_type = q.get("quoteType", quote_type)
-                    sector_str = q.get("sector")
-                    industry_str = q.get("industry")
-        except Exception:
-            pass
-
-        # Source 2: Fast Info Market Cap
+        
         try:
             t_obj = yf.Ticker(ticker_symbol, session=http_session)
-            if t_obj.fast_info.market_cap:
-                market_cap = t_obj.fast_info.market_cap
+            info = t_obj.info
+            
+            sector = info.get("sector")
+            industry = info.get("industry")
+            market_cap = info.get("marketCap") or (t_obj.fast_info.market_cap if hasattr(t_obj, "fast_info") else None)
+            trailing_pe = info.get("trailingPE")
+            forward_pe = info.get("forwardPE")
+            peg_ratio = info.get("pegRatio")
+            rev_growth = info.get("revenueGrowth")
+            eps_growth = info.get("earningsGrowth") or info.get("earningsQuarterlyGrowth")
+            profit_margin = info.get("profitMargins")
+
+            if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
+                fund_title = "🏢 Asset Class & Profile"
+                cap_fmt = format_large_number(market_cap) if market_cap else "N/A"
+                tier = "Mega-Cap 👑" if market_cap and market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap and market_cap >= 1e10 else "Mid/Small-Cap 📈")
+                profile_block = (
+                    f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
+                    f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
+                    f"• **Valuation:** `Digital Asset / Network Utility`"
+                )
+            elif quote_type == "ETF":
+                fund_title = "🏢 Fund Profile & Structure"
+                cap_fmt = format_large_number(market_cap) if market_cap else "N/A"
+                profile_block = (
+                    f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
+                    f"• **Total Net Assets:** `{cap_fmt}`\n"
+                    f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                )
+            elif quote_type == "FUTURE" or "=F" in ticker_symbol:
+                fund_title = "🏢 Asset Class & Profile"
+                profile_block = (
+                    f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
+                    f"• **Contract Type:** `Standardized Delivery Futures`"
+                )
+            else:
+                # Standard Stocks / Equities
+                # Line 1: Sector & Industry
+                if sector and industry:
+                    line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
+                elif sector:
+                    line_sector = f"• **Sector:** `{sector}`"
+                else:
+                    line_sector = f"• **Asset Class:** `Equities / Common Stock`"
+
+                # Line 2: Market Cap & Tier
+                if market_cap:
+                    cap_fmt = format_large_number(market_cap)
+                    if market_cap >= 2e11:
+                        tier = "Mega-Cap 👑"
+                    elif market_cap >= 1e10:
+                        tier = "Large-Cap 🏢"
+                    elif market_cap >= 2e9:
+                        tier = "Mid-Cap 📈"
+                    else:
+                        tier = "Small-Cap 🌱"
+                    line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
+                else:
+                    line_cap = "• **Market Cap:** `N/A`"
+
+                # Line 3: Valuation (Trailing PE, Forward PE, PEG)
+                val_parts = []
+                if trailing_pe:
+                    val_parts.append(f"Trailing P/E: `{trailing_pe:.1f}`")
+                if forward_pe:
+                    val_parts.append(f"Forward P/E: `{forward_pe:.1f}`")
+                if peg_ratio:
+                    val_parts.append(f"PEG: `{peg_ratio:.2f}`" + (" 🔥" if peg_ratio < 1.0 else ""))
+                
+                line_val = f"• **Valuation:** {' | '.join(val_parts)}" if val_parts else "• **Valuation:** `Pre-Profit / High-Growth`"
+
+                # Line 4: YoY Growth (Revenue & EPS)
+                growth_parts = []
+                if rev_growth is not None:
+                    growth_parts.append(f"Revenue: `{rev_growth * 100:+.1f}%`")
+                if eps_growth is not None:
+                    growth_parts.append(f"EPS: `{eps_growth * 100:+.1f}% 🚀`")
+                
+                line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+
+                # Line 5: Profit Margin
+                if profit_margin is not None:
+                    p_pct = profit_margin * 100
+                    tag = " (High Margin 💎)" if p_pct >= 25.0 else (" (Healthy 🟢)" if p_pct >= 10.0 else "")
+                    line_margin = f"• **Profit Margin:** `{p_pct:.1f}%`{tag}"
+                else:
+                    line_margin = ""
+
+                # Assemble block
+                elements = [line_sector, line_cap, line_val]
+                if line_growth:
+                    elements.append(line_growth)
+                if line_margin:
+                    elements.append(line_margin)
+                
+                profile_block = "\n".join(elements)
+
         except Exception:
             pass
-
-        # Construct Cap Line
-        if market_cap:
-            cap_fmt = format_large_number(market_cap)
-            if market_cap >= 2e11:
-                tier = "Mega-Cap 👑"
-            elif market_cap >= 1e10:
-                tier = "Large-Cap 🏢"
-            elif market_cap >= 2e9:
-                tier = "Mid-Cap 📈"
-            else:
-                tier = "Small-Cap 🌱"
-            cap_line = f"• **Market Cap:** `{cap_fmt}` ({tier})"
-        else:
-            cap_line = "• **Market Cap:** `N/A`"
-
-        # Construct Sector / Class Line
-        if quote_type == "CRYPTOCURRENCY":
-            class_line = "• **Asset Class:** `Cryptocurrency (24/7 Digital Asset)`"
-            val_line = "• **Valuation:** `Decentralized Protocol / Network`"
-        elif quote_type == "ETF":
-            class_line = "• **Asset Class:** `Exchange-Traded Fund (ETF)`"
-            val_line = "• **Valuation:** `Basket of Underlying Holdings`"
-        elif quote_type == "FUTURE":
-            class_line = "• **Asset Class:** `Futures / Commodity Derivative`"
-            val_line = "• **Valuation:** `Derivative Delivery Contract`"
-        else:
-            if sector_str and industry_str:
-                class_line = f"• **Sector / Industry:** `{sector_str} • {industry_str}`"
-            elif sector_str:
-                class_line = f"• **Sector:** `{sector_str}`"
-            else:
-                class_line = f"• **Company:** `{long_name}`"
-            val_line = f"• **Company Name:** `{long_name}`"
-
-        profile_block = f"{class_line}\n{cap_line}\n{val_line}"
 
         return {
             "ticker": ticker_symbol,
@@ -382,6 +421,7 @@ def get_on_demand_data(ticker_symbol):
             "macd_str": macd_str,
             "pivot_str": pivot_str,
             "atr_str": atr_str,
+            "fund_title": fund_title,
             "profile_block": profile_block
         }, None
 
@@ -404,7 +444,7 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
     if data.get("profile_block"):
-        embed.add_field(name="🏢 Company Profile & Valuation", value=data['profile_block'], inline=False)
+        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Growth"), value=data['profile_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
