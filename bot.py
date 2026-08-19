@@ -6,6 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
 from discord.ext import commands
+import yfinance as yf
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -166,7 +167,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart + Open Quote Options Pipeline (100% Crumb-Free)."""
+    """Direct Yahoo Chart Engine + Fast Info + Referer Quote Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -256,8 +257,7 @@ def get_on_demand_data(ticker_symbol):
 
         if sma_200:
             pct_200 = ((current_price - sma_200) / sma_200) * 100
-            if pct_200 >= 0:
-                sma_200_str = f"`${sma_200:.2f}` (Above by +{pct_200:.1f}% 🟢)" if pct_200 >= 0 else f"`${sma_200:.2f}` (Below by {pct_200:.1f}% 🔴)"
+            sma_200_str = f"`${sma_200:.2f}` (Above by +{pct_200:.1f}% 🟢)" if pct_200 >= 0 else f"`${sma_200:.2f}` (Below by {pct_200:.1f}% 🔴)"
 
         if sma_50 and sma_200:
             if current_price >= sma_50 and current_price >= sma_200:
@@ -283,7 +283,9 @@ def get_on_demand_data(ticker_symbol):
         # Daily Pivot Levels (Support S1 & Resistance R1)
         pivot_str = "N/A"
         if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
-            h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
+            h_prev = highs[-2]
+            l_prev = lows[-2]
+            c_prev = closes[-2]
             p = (h_prev + l_prev + c_prev) / 3.0
             r1 = (2.0 * p) - l_prev
             s1 = (2.0 * p) - h_prev
@@ -297,47 +299,62 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. BULLETPROOF CRUMB-FREE FUNDAMENTALS (Via Options Quote Feed)
+        # 3. BULLETPROOF FUNDAMENTALS ENGINE (Fast Info + Referer Headers)
         # =================================================================
-        quote_dict = {}
+        market_cap = None
+        trailing_pe = None
+        forward_pe = None
         sector_str = None
         industry_str = None
         quote_type = meta.get("instrumentType", "EQUITY")
         
-        # Primary: Open Options Quote Endpoint (Never blocked!)
+        # Step A: Fast Info (Direct Engine)
         try:
-            opt_url = f"https://query1.finance.yahoo.com/v7/finance/options/{ticker_symbol}"
-            opt_res = http_session.get(opt_url, timeout=4)
-            if opt_res.status_code == 200:
-                opt_data = opt_res.json()
-                quotes = opt_data.get("optionChain", {}).get("result", [{}])[0].get("quote", {})
-                if quotes:
-                    quote_dict = quotes
-                    quote_type = quotes.get("quoteType", quote_type)
+            t_fast = yf.Ticker(ticker_symbol)
+            fi = t_fast.fast_info
+            if hasattr(fi, "market_cap") and fi.market_cap:
+                market_cap = float(fi.market_cap)
+            elif hasattr(fi, "shares") and fi.shares:
+                market_cap = float(fi.shares) * current_price
         except Exception:
             pass
 
-        # Secondary: Discovery Search for Sector/Industry
+        # Step B: Quote API with Official Referer / Origin Bypass Headers
+        try:
+            q_headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Referer": f"https://finance.yahoo.com/quote/{ticker_symbol}/",
+                "Origin": "https://finance.yahoo.com",
+                "Accept": "application/json"
+            }
+            q_url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker_symbol}"
+            q_res = requests.get(q_url, headers=q_headers, timeout=4)
+            if q_res.status_code == 200:
+                q_json = q_res.json().get("quoteResponse", {}).get("result", [])
+                if q_json:
+                    q_item = q_json[0]
+                    market_cap = market_cap or q_item.get("marketCap")
+                    trailing_pe = q_item.get("trailingPE")
+                    forward_pe = q_item.get("forwardPE")
+                    quote_type = q_item.get("quoteType", quote_type)
+        except Exception:
+            pass
+
+        # Step C: Discovery Search for Sector & Industry
         try:
             s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-            s_res = http_session.get(s_url, timeout=3)
+            s_res = requests.get(s_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=3)
             if s_res.status_code == 200:
-                sq = s_res.json().get("quotes", [])
-                if sq:
-                    sector_str = sq[0].get("sector")
-                    industry_str = sq[0].get("industry")
-                    quote_type = sq[0].get("quoteType", quote_type)
+                quotes = s_res.json().get("quotes", [])
+                if quotes:
+                    sector_str = quotes[0].get("sector")
+                    industry_str = quotes[0].get("industry")
+                    market_cap = market_cap or quotes[0].get("marketCap")
+                    quote_type = quotes[0].get("quoteType", quote_type)
         except Exception:
             pass
 
-        # Extract Valuation Multiples
-        market_cap = quote_dict.get("marketCap") or (quote_dict.get("sharesOutstanding", 0) * current_price)
-        trailing_pe = quote_dict.get("trailingPE")
-        forward_pe = quote_dict.get("forwardPE")
-        eps_trail = quote_dict.get("epsTrailingTwelveMonths")
-        eps_fwd = quote_dict.get("epsForward")
-
-        # Format Profile Block
+        # Construct Profile Block
         if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
             cap_fmt = format_large_number(market_cap) if market_cap else "N/A"
@@ -386,17 +403,14 @@ def get_on_demand_data(ticker_symbol):
                     tier = "Small-Cap 🌱"
                 line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
             else:
-                line_cap = f"• **Market Cap:** `{format_large_number(meta.get('marketCap'))}`"
+                line_cap = f"• **Market Cap:** `N/A`"
 
-            # Line 3: Valuation (Trailing PE, Forward PE, Forward EPS)
+            # Line 3: Valuation (Trailing PE, Forward PE)
             val_items = []
             if trailing_pe:
                 val_items.append(f"Trailing P/E: `{trailing_pe:.1f}`")
             if forward_pe:
                 val_items.append(f"Forward P/E: `{forward_pe:.1f}`")
-            if eps_trail and eps_fwd and eps_trail > 0:
-                eps_growth = ((eps_fwd - eps_trail) / eps_trail) * 100
-                val_items.append(f"Exp. Growth: `+{eps_growth:.1f}%` 🚀")
 
             if val_items:
                 line_val = f"• **Valuation:** {' | '.join(val_items)}"
