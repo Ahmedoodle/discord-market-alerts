@@ -197,8 +197,54 @@ def get_rsi_tag(rsi):
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
+def fetch_analyst_targets(ticker_symbol, http_session):
+    """Pulls Wall Street Low, Mean, High targets from NASDAQ & Yahoo Insights."""
+    low_t = None
+    mean_t = None
+    high_t = None
+
+    # Source 1: Official NASDAQ Analyst API
+    try:
+        nasdaq_url = f"https://api.nasdaq.com/api/analyst/{ticker_symbol}/targetprice"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*"
+        }
+        res = http_session.get(nasdaq_url, headers=headers, timeout=3)
+        if res.status_code == 200:
+            data = res.json().get("data", {})
+            if data:
+                raw_low = data.get("low")
+                raw_mean = data.get("target")
+                raw_high = data.get("high")
+                
+                if raw_low:
+                    low_t = float(re.sub(r'[^\d.]', '', str(raw_low)))
+                if raw_mean:
+                    mean_t = float(re.sub(r'[^\d.]', '', str(raw_mean)))
+                if raw_high:
+                    high_t = float(re.sub(r'[^\d.]', '', str(raw_high)))
+    except Exception:
+        pass
+
+    # Source 2: Yahoo Insights API Fallback
+    if not mean_t:
+        try:
+            ins_url = f"https://query2.finance.yahoo.com/v1/finance/insights?symbol={ticker_symbol}"
+            res = http_session.get(ins_url, timeout=3)
+            if res.status_code == 200:
+                inst_info = res.json().get("finance", {}).get("result", {}).get("instrumentInfo", {})
+                rec = inst_info.get("recommendation", {})
+                tp = rec.get("targetPrice") or inst_info.get("targetPrice")
+                if tp:
+                    mean_t = float(tp)
+        except Exception:
+            pass
+
+    return low_t, mean_t, high_t
+
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Accurate Catalysts & Targets Engine."""
+    """Direct Chart API + Institutional Fundamental Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -373,6 +419,7 @@ def get_on_demand_data(ticker_symbol):
         else:
             profile_title = "🏢 Company Profile"
             
+            # Step A: Sector & Industry
             sector = None
             industry = None
             try:
@@ -386,6 +433,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
+            # Step B: Financial Statement & Catalysts Extraction
             market_cap = None
             shares = None
             trailing_pe = None
@@ -397,6 +445,7 @@ def get_on_demand_data(ticker_symbol):
             quality_str = "N/A"
             pfcf_str = ""
 
+            # Catalysts & Smart Money
             earnings_date_str = "N/A"
             prev_surprise_str = ""
             targets_line_str = "N/A"
@@ -415,11 +464,10 @@ def get_on_demand_data(ticker_symbol):
                 if not market_cap and shares and current_price:
                     market_cap = current_price * shares
 
-                # 1. Next Earnings Date Discovery (Scans calendar & future dates)
+                # 1. Earnings Timing
                 try:
                     ed_df = t_obj.earnings_dates
                     if ed_df is not None and not ed_df.empty:
-                        # Find future earnings dates
                         future_rows = ed_df[ed_df['Reported EPS'].isna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
                         if not future_rows.empty:
                             nxt_dt = future_rows.index[-1]
@@ -430,18 +478,15 @@ def get_on_demand_data(ticker_symbol):
                             else:
                                 earnings_date_str = f"`{nxt_d.strftime('%b %d')}`"
                         
-                        # Find previous earnings beat % (Auto-normalized!)
                         past_rows = ed_df[ed_df['Reported EPS'].notna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
                         if not past_rows.empty and "Surprise(%)" in past_rows.columns:
                             raw_surp = float(past_rows["Surprise(%)"].iloc[0])
-                            # Normalize: if raw_surp is 0.0554, multiply by 100; if already 5.54, keep as is
                             surp_val = raw_surp * 100 if abs(raw_surp) <= 1.0 else raw_surp
                             tag = "🎯" if surp_val >= 0 else "⚠️"
                             prev_surprise_str = f" | `Prev Beat: {surp_val:+.1f}% {tag}`"
                 except Exception:
                     pass
 
-                # Fallback to calendar if earnings_dates was empty
                 if earnings_date_str == "N/A":
                     try:
                         cal = t_obj.calendar
@@ -456,22 +501,14 @@ def get_on_demand_data(ticker_symbol):
                     except Exception:
                         pass
 
-                # 2. Wall Street Low, Mean & High Targets
-                try:
-                    apt = t_obj.analyst_price_targets
-                    if apt is not None:
-                        low_t = getattr(apt, "low", None) or (apt.get("low") if isinstance(apt, dict) else None)
-                        mean_t = getattr(apt, "mean", None) or (apt.get("mean") if isinstance(apt, dict) else None)
-                        high_t = getattr(apt, "high", None) or (apt.get("high") if isinstance(apt, dict) else None)
-
-                        if mean_t and current_price > 0:
-                            upside = ((mean_t - current_price) / current_price) * 100
-                            up_tag = " 🔥" if upside >= 15 else ""
-                            low_fmt = f"${low_t:.2f}" if low_t else "N/A"
-                            high_fmt = f"${high_t:.2f}" if high_t else "N/A"
-                            targets_line_str = f"Low: `{low_fmt}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `{high_fmt}`"
-                except Exception:
-                    pass
+                # 2. Wall Street Low, Mean & High Targets (NASDAQ + Yahoo Insights API)
+                low_t, mean_t, high_t = fetch_analyst_targets(ticker_symbol, http_session)
+                if mean_t and current_price > 0:
+                    upside = ((mean_t - current_price) / current_price) * 100
+                    up_tag = " 🔥" if upside >= 15 else ""
+                    low_fmt = f"${low_t:.2f}" if low_t else "N/A"
+                    high_fmt = f"${high_t:.2f}" if high_t else "N/A"
+                    targets_line_str = f"Low: `{low_fmt}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `{high_fmt}`"
 
                 # 3. Beta calculation vs SPY
                 beta_val = calculate_beta_vs_spy(closes, http_session)
@@ -716,4 +753,3 @@ if __name__ == "__main__":
         print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
     else:
         bot.run(BOT_TOKEN)
-        
