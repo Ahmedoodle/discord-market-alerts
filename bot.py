@@ -58,7 +58,7 @@ def format_large_number(num):
     return str(int(num))
 
 def calculate_rsi_from_closes(closes, period=14):
-    """Calculates Wilder's 14-period RSI directly from closing price list."""
+    """Calculates Wilder's RSI directly from closing price list."""
     if len(closes) < period + 1:
         return None
 
@@ -78,8 +78,36 @@ def calculate_rsi_from_closes(closes, period=14):
     rs = avg_gain / avg_loss
     return 100.0 - (100.0 / (1.0 + rs))
 
+def get_volume_tag(rvol):
+    if rvol is None:
+        return "N/A"
+    if rvol >= 2.0:
+        return f"**{rvol:.1f}x** (🔥 Unusual Surge)"
+    elif rvol >= 1.3:
+        return f"**{rvol:.1f}x** (⚡ Strong)"
+    elif rvol < 0.6:
+        return f"**{rvol:.1f}x** (💤 Low)"
+    else:
+        return f"**{rvol:.1f}x** (📊 Normal)"
+
+def get_rsi_tag(rsi):
+    if rsi is None:
+        return "N/A"
+    if rsi >= 75:
+        return f"**{rsi:.1f}** (⚠️ Extreme Overbought)"
+    elif rsi >= 70:
+        return f"**{rsi:.1f}** (⚠️ Overbought Zone)"
+    elif rsi <= 25:
+        return f"**{rsi:.1f}** (🟢 Extreme Oversold)"
+    elif rsi <= 30:
+        return f"**{rsi:.1f}** (🟢 Oversold Zone)"
+    elif rsi >= 50:
+        return f"**{rsi:.1f}** (🟢 Bullish Trend)"
+    else:
+        return f"**{rsi:.1f}** (🔴 Bearish Trend)"
+
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart Engine — Accurately pulls 1-Day change & Dollar 52W Range."""
+    """Direct Yahoo Chart Engine — Multi-Timeframe Volume & RSI."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -116,39 +144,31 @@ def get_on_demand_data(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # 2. 20-Day RVOL
-        vol_str = "N/A"
-        if len(volumes) >= 20:
-            avg_vol_20 = sum(volumes[-21:-1]) / len(volumes[-21:-1])
-            vol_today = volumes[-1]
-            if avg_vol_20 > 0:
-                rvol = vol_today / avg_vol_20
-                v_formatted = format_large_number(vol_today)
-                if rvol >= 2.0:
-                    vol_str = f"`{v_formatted}` ({rvol:.1f}x Avg 🔥 Unusual Surge)"
-                elif rvol >= 1.3:
-                    vol_str = f"`{v_formatted}` ({rvol:.1f}x Avg ⚡ Strong Volume)"
-                elif rvol < 0.6:
-                    vol_str = f"`{v_formatted}` ({rvol:.1f}x Avg 💤 Low Volume)"
-                else:
-                    vol_str = f"`{v_formatted}` ({rvol:.1f}x Avg 📊 Normal)"
+        # 2. Multi-Timeframe Relative Volume (20D, 50D, 90D)
+        vol_today = volumes[-1] if volumes else 0
+        v_today_fmt = format_large_number(vol_today)
 
-        # 3. 14-Day RSI
-        rsi_str = "N/A"
-        rsi = calculate_rsi_from_closes(closes, 14)
-        if rsi is not None:
-            if rsi >= 75:
-                rsi_str = f"`{rsi:.1f}` (⚠️ Extreme Overbought)"
-            elif rsi >= 70:
-                rsi_str = f"`{rsi:.1f}` (⚠️ Overbought Zone)"
-            elif rsi <= 25:
-                rsi_str = f"`{rsi:.1f}` (🟢 Extreme Oversold)"
-            elif rsi <= 30:
-                rsi_str = f"`{rsi:.1f}` (🟢 Oversold Zone)"
-            elif rsi >= 50:
-                rsi_str = f"`{rsi:.1f}` (Neutral / Bullish 📈)"
-            else:
-                rsi_str = f"`{rsi:.1f}` (Neutral / Bearish 📉)"
+        rvol_20 = (vol_today / (sum(volumes[-21:-1]) / len(volumes[-21:-1]))) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
+        rvol_50 = (vol_today / (sum(volumes[-51:-1]) / len(volumes[-51:-1]))) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
+        rvol_90 = (vol_today / (sum(volumes[-91:-1]) / len(volumes[-91:-1]))) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
+
+        volume_block = (
+            f"• **Today's Vol:** `{v_today_fmt}`\n"
+            f"• **20D (1-Month):** {get_volume_tag(rvol_20)}\n"
+            f"• **50D (Quarterly):** {get_volume_tag(rvol_50)}\n"
+            f"• **90D (Long-Term):** {get_volume_tag(rvol_90)}"
+        )
+
+        # 3. Multi-Timeframe RSI (7D, 14D, 30D)
+        rsi_7 = calculate_rsi_from_closes(closes, 7)
+        rsi_14 = calculate_rsi_from_closes(closes, 14)
+        rsi_30 = calculate_rsi_from_closes(closes, 30)
+
+        rsi_block = (
+            f"• **7D (Fast / Scalp):** {get_rsi_tag(rsi_7)}\n"
+            f"• **14D (Standard):** {get_rsi_tag(rsi_14)}\n"
+            f"• **30D (Macro Trend):** {get_rsi_tag(rsi_30)}"
+        )
 
         # 4. 52-Week Range in Dollars & High Proximity
         range_str = "N/A"
@@ -181,8 +201,8 @@ def get_on_demand_data(ticker_symbol):
             "ticker": ticker_symbol,
             "price": current_price,
             "change_pct": change_pct,
-            "volume_str": vol_str,
-            "rsi_str": rsi_str,
+            "volume_block": volume_block,
+            "rsi_block": rsi_block,
             "range_str": range_str,
             "trend_str": trend_str
         }, None
@@ -198,9 +218,9 @@ def create_market_embed(data):
     )
     embed.add_field(name="Current Price", value=f"${data['price']:.2f}", inline=True)
     embed.add_field(name="1D Total Change", value=f"{data['change_pct']:+.2f}%", inline=True)
-    embed.add_field(name="📊 Volume (20D)", value=data['volume_str'], inline=False)
-    embed.add_field(name="📈 RSI (14D)", value=data['rsi_str'], inline=True)
-    embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=True)
+    embed.add_field(name="📊 Volume Multipliers", value=data['volume_block'], inline=False)
+    embed.add_field(name="📈 Multi-Timeframe RSI", value=data['rsi_block'], inline=False)
+    embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=False)
     embed.add_field(name="📈 Trend Health", value=data['trend_str'], inline=False)
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
@@ -219,17 +239,14 @@ async def on_message(message):
 
     content = message.content.strip()
 
-    # If message starts with `!` or `$`
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
 
-        # If they used standard command `!price NVDA` or `!p TSLA`
         if first_word in ["price", "p", "four", "check"]:
             await bot.process_commands(message)
             return
 
-        # If they just typed direct ticker `!NVDA`, `!TSLA`, `$BTC-USD`, `$SPY`
         potential_ticker = raw_cmd.split()[0].upper()
         if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
             async with message.channel.typing():
