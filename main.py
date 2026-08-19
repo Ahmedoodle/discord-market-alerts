@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 import requests
 import yfinance as yf
 import pandas as pd
+from curl_cffi import requests as cureq
 
 # Environment Variables (Securely pulled from GitHub Secrets)
 DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
@@ -42,6 +43,7 @@ STOCK_ETF_WATCHLIST = [
 ]
 
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
+KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
 
 # ====================================================================
 # 1. BULLETPROOF NYSE & TSX MARKET HOLIDAY & EARLY CLOSE ENGINE
@@ -182,6 +184,7 @@ def _get_year_holidays(year):
     return us_hols, ca_hols
 
 def check_market_holiday(target_date):
+    """Checks full-day closures across a multi-year window."""
     all_us = {}
     all_ca = {}
     for y in [target_date.year - 1, target_date.year, target_date.year + 1]:
@@ -191,6 +194,7 @@ def check_market_holiday(target_date):
     return all_us.get(target_date), all_ca.get(target_date)
 
 def check_early_close(target_date):
+    """Detects 1:00 PM EST Early Market Close Days."""
     year = target_date.year
     if target_date.month == 7 and target_date.day == 3 and target_date.weekday() < 5:
         july_4 = date(year, 7, 4)
@@ -286,7 +290,7 @@ def save_alert_state(state):
         print(f"Error saving state file: {e}")
 
 # ====================================================================
-# 4. INSTITUTIONAL TECHNICAL INDICATOR & STATEMENT ENGINE
+# 4. INSTITUTIONAL TECHNICAL & STATEMENT-BASED METRICS ENGINE
 # ====================================================================
 def format_large_number(num):
     if num is None:
@@ -378,17 +382,43 @@ def calculate_atr(highs, lows, closes, period=14):
         trs.append(tr)
     return sum(trs[-period:]) / period
 
-def get_volume_tag(rvol):
-    if rvol is None:
+def calculate_beta_vs_spy(closes, http_session):
+    try:
+        if len(closes) < 50:
+            return None
+        url_spy = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y"
+        res_spy = http_session.get(url_spy, timeout=4)
+        if res_spy.status_code == 200:
+            spy_closes = [c for c in res_spy.json()["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
+            min_len = min(len(closes), len(spy_closes))
+            if min_len >= 50:
+                s_ret = [closes[i] / closes[i-1] - 1 for i in range(len(closes) - min_len + 1, len(closes))]
+                m_ret = [spy_closes[i] / spy_closes[i-1] - 1 for i in range(len(spy_closes) - min_len + 1, len(spy_closes))]
+                
+                mean_s = sum(s_ret) / len(s_ret)
+                mean_m = sum(m_ret) / len(m_ret)
+                
+                cov = sum((s_ret[i] - mean_s) * (m_ret[i] - mean_m) for i in range(len(s_ret)))
+                var_m = sum((m_ret[i] - mean_m) ** 2 for i in range(len(m_ret)))
+                
+                if var_m > 0:
+                    return cov / var_m
+    except Exception:
+        pass
+    return None
+
+def get_volume_tag(rvol, avg_vol):
+    if rvol is None or avg_vol is None:
         return "N/A"
+    avg_fmt = format_large_number(avg_vol).replace("$", "") + " shares" if avg_vol >= 1000 else str(int(avg_vol)) + " shares"
     if rvol >= 2.0:
-        return f"**{rvol:.1f}x** (🔥 Unusual Surge)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
     elif rvol >= 1.3:
-        return f"**{rvol:.1f}x** (⚡ Strong)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • ⚡ Strong)"
     elif rvol < 0.6:
-        return f"**{rvol:.1f}x** (💤 Low)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 💤 Low)"
     else:
-        return f"**{rvol:.1f}x** (📊 Normal)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 📊 Normal)"
 
 def get_rsi_tag(rsi):
     if rsi is None:
@@ -405,6 +435,58 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🟢 Bullish Trend)"
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
+
+def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
+    low_t = None
+    mean_t = None
+    high_t = None
+    rating = None
+
+    # Source 1: Finviz via Chrome TLS
+    try:
+        fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
+        fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
+        if fz_res.status_code == 200:
+            text = fz_res.text
+            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', text, re.IGNORECASE)
+            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', text, re.IGNORECASE)
+            if tp_match:
+                mean_t = float(tp_match.group(1).replace(',', ''))
+            if rec_match:
+                score = float(rec_match.group(1))
+                rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
+    except Exception:
+        pass
+
+    # Source 2: TipRanks via Chrome TLS
+    if not mean_t:
+        try:
+            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
+            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
+            if tr_res.status_code == 200:
+                tr_data = tr_res.json()
+                pt = tr_data.get("ptConsensus", {})
+                if pt:
+                    low_t = pt.get("low")
+                    mean_t = pt.get("priceTarget")
+                    high_t = pt.get("high")
+                c_rating = tr_data.get("consensuses", {}).get("consensusRating")
+                if c_rating:
+                    rating = c_rating.title() + " 🟢"
+        except Exception:
+            pass
+
+    # Format Output String
+    if mean_t and current_price > 0:
+        upside = ((mean_t - current_price) / current_price) * 100
+        up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
+        rating_part = f" | Rating: `{rating}`" if rating else ""
+        if low_t and high_t:
+            return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`{rating_part}"
+        else:
+            return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
+
+    return "N/A"
 
 def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_session):
     """Calculates all 8 institutional indicators & statement-based fundamentals directly."""
@@ -432,18 +514,23 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         if len(closes) < 2:
             return metrics
 
-        # 1. Volume Multipliers (20D, 50D, 90D)
+        # 1. Volume Multipliers with Exact Historical Average Numbers
         vol_today = volumes[-1] if volumes else 0
-        v_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
-        rvol_20 = (vol_today / (sum(volumes[-21:-1]) / len(volumes[-21:-1]))) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
-        rvol_50 = (vol_today / (sum(volumes[-51:-1]) / len(volumes[-51:-1]))) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
-        rvol_90 = (vol_today / (sum(volumes[-91:-1]) / len(volumes[-91:-1]))) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
+        v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
+
+        avg_vol_20 = (sum(volumes[-21:-1]) / len(volumes[-21:-1])) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
+        avg_vol_50 = (sum(volumes[-51:-1]) / len(volumes[-51:-1])) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
+        avg_vol_90 = (sum(volumes[-91:-1]) / len(volumes[-91:-1])) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
+
+        rvol_20 = (vol_today / avg_vol_20) if avg_vol_20 else None
+        rvol_50 = (vol_today / avg_vol_50) if avg_vol_50 else None
+        rvol_90 = (vol_today / avg_vol_90) if avg_vol_90 else None
 
         metrics["volume_block"] = (
-            f"• **Today's Vol:** `{v_fmt}`\n"
-            f"• **20D (1-Month):** {get_volume_tag(rvol_20)}\n"
-            f"• **50D (Quarterly):** {get_volume_tag(rvol_50)}\n"
-            f"• **90D (Long-Term):** {get_volume_tag(rvol_90)}"
+            f"• **Today's Vol:** `{v_today_fmt}`\n"
+            f"• **20D (1-Month):** {get_volume_tag(rvol_20, avg_vol_20)}\n"
+            f"• **50D (Quarterly):** {get_volume_tag(rvol_50, avg_vol_50)}\n"
+            f"• **90D (Long-Term):** {get_volume_tag(rvol_90, avg_vol_90)}"
         )
 
         # 2. Multi-Timeframe RSI (7D, 14D, 30D)
@@ -465,8 +552,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
             if dist_high <= 2.0:
                 metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
             elif dist_high <= 5.0:
-                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
-                metrics["range_str"] = range_str
+                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
             else:
                 metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
@@ -501,7 +587,9 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
         # 6. Pivot Levels (S1 & R1)
         if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
-            h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
+            h_prev = highs[-2]
+            l_prev = lows[-2]
+            c_prev = closes[-2]
             p = (h_prev + l_prev + c_prev) / 3.0
             r1 = (2.0 * p) - l_prev
             s1 = (2.0 * p) - h_prev
@@ -509,54 +597,43 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
         # 7. 14D ATR
         atr = calculate_atr(highs, lows, closes, 14)
-        if atr and current_price > 0:
-            metrics["atr_str"] = f"`±${atr:.2f}` (±{(atr/current_price)*100:.1f}% typical daily swing)"
 
         # =================================================================
-        # 8. DIRECT FINANCIAL STATEMENT & FUNDAMENTAL ENGINE
+        # 8. ASSET CLASSIFICATION & STATEMENT-BASED FUNDAMENTALS
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
-        if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
-            metrics["fund_title"] = "🏢 Asset Class & Profile"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
-            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
+        # 1. CRYPTO
+        if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
+            metrics["profile_title"] = "🏢 Asset Class & Profile"
             metrics["profile_block"] = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
-                f"• **Valuation:** `Digital Asset / Network Utility`"
+                f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
+                f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
-        elif quote_type == "ETF":
-            metrics["fund_title"] = "🏢 Fund Profile & Structure"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
+
+        # 2. ETFs
+        elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
+            metrics["profile_title"] = "🏢 Fund Profile & Structure"
             metrics["profile_block"] = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                f"• **Structure:** `Diversified Market Basket Holding`\n"
+                f"• **Type:** `Open-End Fund Vehicle`"
             )
+
+        # 3. FUTURES
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
-            metrics["fund_title"] = "🏢 Asset Class & Profile"
+            metrics["profile_title"] = "🏢 Asset Class & Profile"
             metrics["profile_block"] = (
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
-        else:
-            # Equities / Stocks — Computed directly from Balance Sheet Statements
-            metrics["fund_title"] = "🏢 Valuation, Earnings & Growth"
-            t_obj = yf.Ticker(ticker_symbol)
-            fi = t_obj.fast_info
-            
-            # Market Cap
-            market_cap = getattr(fi, "market_cap", None)
-            shares = getattr(fi, "shares", None)
-            if not market_cap and shares and current_price:
-                market_cap = current_price * shares
 
-            # Sector & Industry
+        # 4. EQUITIES / STOCKS (Full Institutional Audit with 12-Month Alignment)
+        else:
+            metrics["profile_title"] = "🏢 Company Profile"
+            
+            # Step A: Sector & Industry
             sector = None
             industry = None
             try:
@@ -570,49 +647,197 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
             except Exception:
                 pass
 
-            # Statement Calculations
+            # Step B: Financial Statement & Catalysts Extraction
+            market_cap = None
+            shares = None
             trailing_pe = None
+            roe_str = "N/A"
+            margin_str = "N/A"
+            de_str = "N/A"
+            curr_ratio_str = "N/A"
+            fcf_str = "N/A"
+            quality_str = "N/A"
+            pfcf_str = ""
             rev_growth_pct = None
             net_inc_growth_pct = None
-            profit_margin_pct = None
+
+            earnings_date_str = "N/A"
+            prev_surprise_str = ""
+            beta_str = "N/A"
 
             try:
+                t_obj = yf.Ticker(ticker_symbol)
+                
+                # Fast info for shares & cap
+                try:
+                    shares = t_obj.fast_info.shares
+                    market_cap = t_obj.fast_info.market_cap
+                except Exception:
+                    pass
+
+                if not market_cap and shares and current_price:
+                    market_cap = current_price * shares
+
+                # 1. Earnings Timing & Surprise
+                try:
+                    ed_df = t_obj.earnings_dates
+                    if ed_df is not None and not ed_df.empty:
+                        future_rows = ed_df[ed_df['Reported EPS'].isna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
+                        if not future_rows.empty:
+                            nxt_dt = future_rows.index[-1]
+                            nxt_d = nxt_dt.date() if isinstance(nxt_dt, (datetime, pd.Timestamp)) else nxt_dt
+                            days_left = (nxt_d - datetime.now().date()).days
+                            if days_left >= 0:
+                                earnings_date_str = f"`In {days_left} Days ({nxt_d.strftime('%b %d')})`"
+                            else:
+                                earnings_date_str = f"`{nxt_d.strftime('%b %d')}`"
+                        
+                        past_rows = ed_df[ed_df['Reported EPS'].notna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
+                        if not past_rows.empty and "Surprise(%)" in past_rows.columns:
+                            raw_surp = float(past_rows["Surprise(%)"].iloc[0])
+                            surp_val = raw_surp * 100 if abs(raw_surp) <= 1.0 else raw_surp
+                            tag = "🎯" if surp_val >= 0 else "⚠️"
+                            prev_surprise_str = f" | `Prev Beat: {surp_val:+.1f}% {tag}`"
+                except Exception:
+                    pass
+
+                # 2. Beta calculation vs SPY
+                beta_val = calculate_beta_vs_spy(closes, http_session)
+                if beta_val:
+                    tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
+                    beta_str = f"`{beta_val:.2f}x`{tag}"
+
+                # 3. Financial Statements Calculations (12-Month Aligned YoY Indexing)
                 q_inc = t_obj.quarterly_income_stmt
+                ttm_net_inc = None
+                ttm_rev = None
                 if q_inc is not None and not q_inc.empty:
-                    if "Total Revenue" in q_inc.index:
-                        rev_s = q_inc.loc["Total Revenue"].dropna()
-                        if len(rev_s) >= 4:
-                            r0 = rev_s.iloc[0]
-                            r4 = rev_s.iloc[3] if len(rev_s) >= 4 else rev_s.iloc[-1]
+                    # Revenue Row (Q0 vs Q4 = Exact 12-Month YoY Match!)
+                    rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
+                    if rev_row:
+                        rev_s = q_inc.loc[rev_row].dropna()
+                        if len(rev_s) >= 5:
+                            r0 = float(rev_s.iloc[0])
+                            r4 = float(rev_s.iloc[4])
                             if r4 > 0:
                                 rev_growth_pct = ((r0 - r4) / r4) * 100
-                            ttm_rev = rev_s.iloc[:4].sum()
-                        else:
-                            ttm_rev = rev_s.sum()
-                    else:
-                        ttm_rev = None
+                        elif len(rev_s) >= 2:
+                            r0 = float(rev_s.iloc[0])
+                            r4 = float(rev_s.iloc[-1])
+                            if r4 > 0:
+                                rev_growth_pct = ((r0 - r4) / r4) * 100
+                        ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
 
-                    if "Net Income" in q_inc.index:
-                        inc_s = q_inc.loc["Net Income"].dropna()
-                        if len(inc_s) >= 4:
-                            i0 = inc_s.iloc[0]
-                            i4 = inc_s.iloc[3] if len(inc_s) >= 4 else inc_s.iloc[-1]
+                    # Net Income Row (Q0 vs Q4 = Exact 12-Month YoY Match!)
+                    inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
+                    if inc_row:
+                        inc_s = q_inc.loc[inc_row].dropna()
+                        if len(inc_s) >= 5:
+                            i0 = float(inc_s.iloc[0])
+                            i4 = float(inc_s.iloc[4])
                             if i4 != 0:
                                 net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
-                            ttm_net_inc = inc_s.iloc[:4].sum()
-                        else:
-                            ttm_net_inc = inc_s.sum()
+                        elif len(inc_s) >= 2:
+                            i0 = float(inc_s.iloc[0])
+                            i4 = float(inc_s.iloc[-1])
+                            if i4 != 0:
+                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
+                        ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
 
-                        if ttm_net_inc > 0 and shares and shares > 0:
-                            trailing_eps = ttm_net_inc / shares
-                            if trailing_eps > 0:
-                                trailing_pe = current_price / trailing_eps
+                # Balance Sheet
+                q_bs = t_obj.quarterly_balance_sheet
+                stockholders_equity = None
+                total_debt = None
+                current_assets = None
+                current_liab = None
+                if q_bs is not None and not q_bs.empty:
+                    eq_row = next((r for r in ["Stockholders Equity", "Total Stockholder Equity", "Common Stock Equity"] if r in q_bs.index), None)
+                    if eq_row:
+                        stockholders_equity = float(q_bs.loc[eq_row].dropna().iloc[0])
 
-                        if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
-                            profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
+                    debt_row = next((r for r in ["Total Debt", "Long Term Debt And Capital Lease Obligation", "Total Non Current Liabilities Net Minority Interest"] if r in q_bs.index), None)
+                    if debt_row:
+                        total_debt = float(q_bs.loc[debt_row].dropna().iloc[0])
+
+                    ca_row = next((r for r in ["Current Assets", "Total Current Assets"] if r in q_bs.index), None)
+                    cl_row = next((r for r in ["Current Liabilities", "Total Current Liabilities"] if r in q_bs.index), None)
+                    if ca_row and cl_row:
+                        current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
+                        current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
+
+                # Cash Flow (FCF)
+                q_cf = t_obj.quarterly_cash_flow
+                ttm_fcf = None
+                if q_cf is not None and not q_cf.empty:
+                    ocf_row = next((r for r in ["Operating Cash Flow", "Cash Flow From Continuing Operating Activities"] if r in q_cf.index), None)
+                    capex_row = next((r for r in ["Capital Expenditure", "Capital Expenditures"] if r in q_cf.index), None)
+                    if ocf_row:
+                        ocf_s = q_cf.loc[ocf_row].dropna()
+                        ttm_ocf = float(ocf_s.iloc[:4].sum()) if len(ocf_s) >= 1 else 0
+                        ttm_capex = 0
+                        if capex_row:
+                            capex_s = q_cf.loc[capex_row].dropna()
+                            ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
+                        ttm_fcf = ttm_ocf - ttm_capex
+
+                # 4. Compute Health Metrics
+                if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
+                    roe_pct = (ttm_net_inc / stockholders_equity) * 100
+                    roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
+                    roe_str = f"`{roe_pct:.1f}%`{roe_tag}"
+
+                if ttm_net_inc and ttm_rev and ttm_rev > 0:
+                    margin_pct = (ttm_net_inc / ttm_rev) * 100
+                    margin_tag = " 💎" if margin_pct >= 25.0 else (" 🟢" if margin_pct >= 10.0 else "")
+                    margin_str = f"`{margin_pct:.1f}%`{margin_tag}"
+
+                if total_debt is not None and stockholders_equity and stockholders_equity > 0:
+                    de_ratio = total_debt / stockholders_equity
+                    de_tag = " (Low Debt 🟢)" if de_ratio <= 0.6 else (" (Moderate 🟡)" if de_ratio <= 1.5 else " (High Debt ⚠️)")
+                    de_str = f"`{de_ratio:.2f}x`{de_tag}"
+
+                if current_assets and current_liab and current_liab > 0:
+                    cr = current_assets / current_liab
+                    cr_tag = " 🟢" if cr >= 1.5 else (" 🟡" if cr >= 1.0 else " ⚠️")
+                    curr_ratio_str = f"`{cr:.2f}x`{cr_tag}"
+
+                if ttm_fcf is not None:
+                    fcf_fmt = format_large_number(ttm_fcf)
+                    if market_cap and market_cap > 0:
+                        fcf_yield = (ttm_fcf / market_cap) * 100
+                        fcf_str = f"`{fcf_fmt}` (Yield: `{fcf_yield:.1f}%`)"
+                    else:
+                        fcf_str = f"`{fcf_fmt}`"
+
+                if ttm_fcf is not None and ttm_net_inc and ttm_net_inc > 0:
+                    quality_ratio = ttm_fcf / ttm_net_inc
+                    if quality_ratio >= 1.0:
+                        quality_str = f"`{quality_ratio:.2f}x` 🟢 (Real Cash Backing)"
+                    elif quality_ratio >= 0.6:
+                        quality_str = f"`{quality_ratio:.2f}x` 🟡 (Moderate Cash Conversion)"
+                    else:
+                        quality_str = f"`{quality_ratio:.2f}x` ⚠️ (Accrual / Paper Earnings)"
+
+                if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
+                    trailing_eps = ttm_net_inc / shares
+                    if trailing_eps > 0:
+                        trailing_pe = current_price / trailing_eps
+                        pe_str = f"`{trailing_pe:.1f}x`"
+                    else:
+                        pe_str = "`N/A (Pre-Profit)`"
+                else:
+                    pe_str = "`N/A (Pre-Profit)`"
+
+                if ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0:
+                    pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`"
+
             except Exception:
-                pass
+                pe_str = "`N/A`"
 
+            # 5. Multi-Source Wall Street Price Targets
+            targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
+
+            # Construct Blocks
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -627,32 +852,40 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            if trailing_pe and trailing_pe > 0:
-                line_val = f"• **Valuation:** Trailing P/E: `{trailing_pe:.1f}x`"
-            else:
-                line_val = f"• **Valuation:** `High-Growth / Reinvestment Phase`"
+            metrics["profile_block"] = f"{line_sector}\n{line_cap}"
 
+            metrics["catalysts_block"] = (
+                f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n"
+                f"• **Wall St. Targets:** {targets_line_str}"
+            )
+
+            atr_fmt = f"±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)" if atr and current_price > 0 else "N/A"
+            metrics["smart_money_block"] = (
+                f"• **Beta (Market Volatility):** {beta_str}\n"
+                f"• **Expected Daily Move (ATR):** `{atr_fmt}`"
+            )
+
+            # Growth Line
             growth_parts = []
             if rev_growth_pct is not None:
                 growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
             if net_inc_growth_pct is not None:
                 growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
-
             line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
 
-            if profit_margin_pct is not None:
-                tag = " (High Margin 💎)" if profit_margin_pct >= 20.0 else (" (Healthy 🟢)" if profit_margin_pct >= 10.0 else "")
-                line_margin = f"• **Profit Margin:** `{profit_margin_pct:.1f}%`{tag}"
-            else:
-                line_margin = ""
-
-            elements = [line_sector, line_cap, line_val]
+            health_elements = [
+                f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}"
+            ]
             if line_growth:
-                elements.append(line_growth)
-            if line_margin:
-                elements.append(line_margin)
-            
-            metrics["profile_block"] = "\n".join(elements)
+                health_elements.append(line_growth)
+            health_elements.extend([
+                f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}",
+                f"• **Free Cash Flow:** {fcf_str}",
+                f"• **Earnings Quality (FCF / Net Income):** {quality_str}",
+                f"• **Valuation Multiples:** Trailing P/E: {pe_str}{pfcf_str}"
+            ])
+
+            metrics["health_block"] = "\n".join(health_elements)
 
     except Exception:
         pass
@@ -701,10 +934,14 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
             fields.append({"name": "📊 MACD (12,26,9)", "value": metrics["macd_str"], "inline": False})
         if metrics.get("pivot_str"):
             fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
-        if metrics.get("atr_str"):
-            fields.append({"name": "⚡ Expected Daily Move", "value": metrics["atr_str"], "inline": False})
+        if metrics.get("catalysts_block"):
+            fields.append({"name": "🗓️ Catalysts & Wall Street Targets", "value": metrics["catalysts_block"], "inline": False})
+        if metrics.get("smart_money_block"):
+            fields.append({"name": "🐋 Smart Money & Risk Metrics", "value": metrics["smart_money_block"], "inline": False})
         if metrics.get("profile_block"):
-            fields.append({"name": metrics.get("fund_title", "🏢 Valuation, Earnings & Growth"), "value": metrics["profile_block"], "inline": False})
+            fields.append({"name": metrics.get("profile_title", "🏢 Company Profile"), "value": metrics["profile_block"], "inline": False})
+        if metrics.get("health_block"):
+            fields.append({"name": "📊 Balance Sheet & Cash Flow Health", "value": metrics["health_block"], "inline": False})
 
     payload = {
         "username": BOT_NAME,
