@@ -3,6 +3,7 @@ import threading
 import asyncio
 import math
 import re
+import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta
 import requests
@@ -13,16 +14,18 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
-# 1. KEEP-ALIVE SERVER (For Render Free Tier)
+# 1. 24/7 KEEP-ALIVE SERVER WITH SELF-PINGER
 # -------------------------------------------------------------
 class PingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
+        self.send_header("Content-type", "text/plain")
         self.end_headers()
         self.wfile.write(b"Looney On-Demand Discord Bot is Live 24/7!")
 
     def do_HEAD(self):
         self.send_response(200)
+        self.send_header("Content-type", "text/plain")
         self.end_headers()
 
 def run_dummy_server():
@@ -31,6 +34,19 @@ def run_dummy_server():
     server.serve_forever()
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
+
+# Background Self-Pinger (Pings every 10 minutes)
+def auto_self_ping():
+    time.sleep(30)  # Wait for server to boot
+    while True:
+        try:
+            render_url = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com")
+            requests.get(render_url, timeout=10)
+        except Exception:
+            pass
+        time.sleep(600)  # Every 10 minutes
+
+threading.Thread(target=auto_self_ping, daemon=True).start()
 
 # -------------------------------------------------------------
 # 2. BROWSER SESSION
@@ -545,7 +561,7 @@ def get_on_demand_data(ticker_symbol):
                         rev_s = q_inc.loc[rev_row].dropna()
                         if len(rev_s) >= 5:
                             r0 = float(rev_s.iloc[0])
-                            r4 = float(rev_s.iloc[4]) # Exactly 4 quarters / 1 year back
+                            r4 = float(rev_s.iloc[4])
                             if r4 > 0:
                                 rev_growth_pct = ((r0 - r4) / r4) * 100
                         elif len(rev_s) >= 2:
@@ -561,7 +577,7 @@ def get_on_demand_data(ticker_symbol):
                         inc_s = q_inc.loc[inc_row].dropna()
                         if len(inc_s) >= 5:
                             i0 = float(inc_s.iloc[0])
-                            i4 = float(inc_s.iloc[4]) # Exactly 4 quarters / 1 year back
+                            i4 = float(inc_s.iloc[4])
                             if i4 != 0:
                                 net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
                         elif len(inc_s) >= 2:
