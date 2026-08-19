@@ -3,10 +3,9 @@ import threading
 import math
 import re
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import requests
 import discord
 from discord.ext import commands
-import yfinance as yf
-from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -29,7 +28,17 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. DISCORD BOT CLIENT
+# 2. BROWSER SESSION
+# -------------------------------------------------------------
+http_session = requests.Session()
+http_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9"
+})
+
+# -------------------------------------------------------------
+# 3. DISCORD BOT CLIENT
 # -------------------------------------------------------------
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
@@ -156,13 +165,37 @@ def get_rsi_tag(rsi):
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
+def fetch_finviz_fundamentals(ticker_symbol):
+    """Pulls full P/E, PEG, YoY growth, and Margins directly from Finviz without blocks."""
+    metrics = {}
+    try:
+        url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
+        res = http_session.get(url, timeout=4)
+        if res.status_code == 200:
+            text = res.text
+            
+            # Extract Sector & Industry
+            bread_match = re.search(r'<a class="tab-link"[^>]*>([A-Za-z0-9\s&-]+)</a>\s*\|\s*<a class="tab-link"[^>]*>([A-Za-z0-9\s&-]+)</a>', text)
+            if bread_match:
+                metrics["sector"] = bread_match.group(1).strip()
+                metrics["industry"] = bread_match.group(2).strip()
+
+            # Extract Table Pairs
+            matches = re.findall(r'<td[^>]*class="snapshot-td2-cp"[^>]*>([^<]+)</td>\s*<td[^>]*class="snapshot-td2"[^>]*><b>(.*?)</b></td>', text)
+            for k, v in matches:
+                clean_val = re.sub(r'<.*?>', '', v).strip()
+                metrics[k.strip()] = clean_val
+    except Exception:
+        pass
+    return metrics
+
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart + Chrome TLS Impersonation Engine."""
+    """Direct Chart API + Finviz Institutional Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
-        # 1. Pull Chart Data (Price, History Arrays, Range) via Chrome TLS
+        # 1. Pull Chart Data (Price, History Arrays, Range)
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
-        res = cureq.get(url, impersonate="chrome124", timeout=6)
+        res = http_session.get(url, timeout=6)
         
         if res.status_code != 200:
             return None, f"Could not fetch data for `{ticker_symbol}` (Status: {res.status_code})."
@@ -289,72 +322,23 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 3. TLS CHROME IMPERSONATION FOR FUNDAMENTALS, PE, PEG & GROWTH
+        # 2. FINVIZ + DIRECT FUNDAMENTAL ENGINE
         # =================================================================
-        sector = None
-        industry = None
-        market_cap = None
-        trailing_pe = None
-        forward_pe = None
-        peg_ratio = None
-        rev_growth = None
-        eps_growth = None
-        profit_margin = None
         quote_type = meta.get("instrumentType", "EQUITY")
-
-        # Query QuoteSummary with Chrome TLS Fingerprint
-        try:
-            q_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics,financialData,assetProfile,quoteType"
-            q_res = cureq.get(q_url, impersonate="chrome124", timeout=5)
-            if q_res.status_code == 200:
-                q_json = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                
-                sum_det = q_json.get("summaryDetail", {})
-                key_stats = q_json.get("defaultKeyStatistics", {})
-                fin_data = q_json.get("financialData", {})
-                asset_prof = q_json.get("assetProfile", {})
-                q_type_dict = q_json.get("quoteType", {})
-
-                quote_type = q_type_dict.get("quoteType", quote_type)
-                sector = asset_prof.get("sector")
-                industry = asset_prof.get("industry")
-                
-                market_cap = sum_det.get("marketCap", {}).get("raw") or (key_stats.get("sharesOutstanding", {}).get("raw", 0) * current_price)
-                trailing_pe = sum_det.get("trailingPE", {}).get("raw")
-                forward_pe = sum_det.get("forwardPE", {}).get("raw")
-                peg_ratio = key_stats.get("pegRatio", {}).get("raw")
-
-                rev_growth = fin_data.get("revenueGrowth", {}).get("raw")
-                eps_growth = fin_data.get("earningsGrowth", {}).get("raw") or key_stats.get("earningsQuarterlyGrowth", {}).get("raw")
-                profit_margin = fin_data.get("profitMargins", {}).get("raw")
-        except Exception:
-            pass
-
-        # Fallback to fast_info for market_cap if needed
-        if not market_cap:
-            try:
-                t_obj = yf.Ticker(ticker_symbol)
-                market_cap = float(t_obj.fast_info.market_cap)
-            except Exception:
-                pass
-
-        # Construct Profile Block
+        
         if quote_type == "CRYPTOCURRENCY" or "USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
-            cap_fmt = format_large_number(market_cap) if market_cap else "N/A"
-            tier = "Mega-Cap 👑" if market_cap and market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap and market_cap >= 1e10 else "Mid/Small-Cap 📈")
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
-                f"• **Valuation:** `Digital Asset / Network Utility`"
+                f"• **Category:** `Digital Asset / Network Utility`\n"
+                f"• **Trading:** `24/7/365 Global Liquidity`"
             )
         elif quote_type == "ETF":
             fund_title = "🏢 Fund Profile & Structure"
-            cap_fmt = format_large_number(market_cap) if market_cap else "N/A"
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Holdings Basket`"
+                f"• **Strategy:** `Diversified Index / Holdings Basket`\n"
+                f"• **Structure:** `Open-End Investment Vehicle`"
             )
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
@@ -363,10 +347,13 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
         else:
-            # Equities / Stocks
+            # Equities / Stocks — Pull directly from Finviz!
             fund_title = "🏢 Valuation, Earnings & Growth"
+            fz = fetch_finviz_fundamentals(ticker_symbol)
             
             # Line 1: Sector & Industry
+            sector = fz.get("sector")
+            industry = fz.get("industry")
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -375,38 +362,41 @@ def get_on_demand_data(ticker_symbol):
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
             # Line 2: Market Cap & Tier
-            if market_cap and market_cap > 0:
-                cap_fmt = format_large_number(market_cap)
-                tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
-                line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
+            m_cap_str = fz.get("Market Cap", "N/A")
+            if m_cap_str != "N/A":
+                tier = "Mega-Cap 👑" if "T" in m_cap_str or ("B" in m_cap_str and float(re.findall(r'[\d.]+', m_cap_str)[0]) >= 200) else ("Large-Cap 🏢" if "B" in m_cap_str and float(re.findall(r'[\d.]+', m_cap_str)[0]) >= 10 else "Mid/Small-Cap 📈")
+                line_cap = f"• **Market Cap:** `${m_cap_str}` ({tier})"
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            # Line 3: Valuation (Trailing PE, Forward PE, PEG)
-            val_parts = []
-            if trailing_pe:
-                val_parts.append(f"Trailing P/E: `{trailing_pe:.1f}`")
-            if forward_pe:
-                val_parts.append(f"Forward P/E: `{forward_pe:.1f}`")
-            if peg_ratio:
-                val_parts.append(f"PEG: `{peg_ratio:.2f}`" + (" 🔥" if peg_ratio < 1.0 else ""))
-            
-            line_val = f"• **Valuation:** {' | '.join(val_parts)}" if val_parts else "• **Valuation:** `Pre-Profit / High-Growth`"
+            # Line 3: Valuation (P/E, Forward P/E, PEG)
+            val_items = []
+            if fz.get("P/E") and fz.get("P/E") != "-":
+                val_items.append(f"Trailing P/E: `{fz['P/E']}`")
+            if fz.get("Forward P/E") and fz.get("Forward P/E") != "-":
+                val_items.append(f"Forward P/E: `{fz['Forward P/E']}`")
+            if fz.get("PEG") and fz.get("PEG") != "-":
+                peg_val = float(fz["PEG"]) if re.match(r'[\d.]+', fz["PEG"]) else 99
+                peg_tag = " 🔥" if peg_val < 1.0 else ""
+                val_items.append(f"PEG: `{fz['PEG']}`{peg_tag}")
 
-            # Line 4: YoY Growth (Revenue & EPS)
-            growth_parts = []
-            if rev_growth is not None:
-                growth_parts.append(f"Revenue: `{rev_growth * 100:+.1f}%`")
-            if eps_growth is not None:
-                growth_parts.append(f"EPS: `{eps_growth * 100:+.1f}% 🚀`")
-            
-            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
+            line_val = f"• **Valuation:** {' | '.join(val_items)}" if val_items else "• **Valuation:** `Pre-Profit / High-Growth Phase`"
+
+            # Line 4: YoY Growth (Sales Q/Q & EPS Q/Q)
+            growth_items = []
+            if fz.get("Sales Q/Q") and fz.get("Sales Q/Q") != "-":
+                growth_items.append(f"Revenue: `{fz['Sales Q/Q']}`")
+            if fz.get("EPS Q/Q") and fz.get("EPS Q/Q") != "-":
+                growth_items.append(f"EPS: `{fz['EPS Q/Q']} 🚀`")
+
+            line_growth = f"• **Growth (YoY):** {' | '.join(growth_items)}" if growth_items else ""
 
             # Line 5: Profit Margin
-            if profit_margin is not None:
-                p_pct = profit_margin * 100
-                tag = " (High Margin 💎)" if p_pct >= 25.0 else (" (Healthy 🟢)" if p_pct >= 10.0 else "")
-                line_margin = f"• **Profit Margin:** `{p_pct:.1f}%`{tag}"
+            margin_str = fz.get("Profit Margin", "-")
+            if margin_str != "-":
+                m_val = float(re.findall(r'[\d.]+', margin_str)[0]) if re.findall(r'[\d.]+', margin_str) else 0
+                tag = " (High Margin 💎)" if m_val >= 25.0 else (" (Healthy 🟢)" if m_val >= 10.0 else "")
+                line_margin = f"• **Profit Margin:** `{margin_str}`{tag}"
             else:
                 line_margin = ""
 
