@@ -1,6 +1,5 @@
 import os
 import threading
-import math
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
@@ -14,6 +13,10 @@ class PingHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Looney On-Demand Discord Bot is Live 24/7!")
+
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
@@ -74,7 +77,7 @@ def calculate_rsi_from_closes(closes, period=14):
     return 100.0 - (100.0 / (1.0 + rs))
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart Engine — Bypasses 429 rate limits 100%."""
+    """Direct Yahoo Chart Engine — Accurately pulls 1-Day change & Dollar 52W Range."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -106,9 +109,9 @@ def get_on_demand_data(ticker_symbol):
         if len(closes) < 2:
             return None, f"Insufficient price history for `{ticker_symbol}`."
 
-        # 1. Live Price & Previous Close
+        # 1. True 1-Day Price & Previous Day Close
         current_price = meta.get("regularMarketPrice") or closes[-1]
-        prev_close = meta.get("chartPreviousClose") or (closes[-2] if len(closes) >= 2 else current_price)
+        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
         # 2. 20-Day RVOL
@@ -145,19 +148,18 @@ def get_on_demand_data(ticker_symbol):
             else:
                 rsi_str = f"`{rsi:.1f}` (Neutral / Bearish 📉)"
 
-        # 4. 52-Week Range & High Proximity
+        # 4. 52-Week Range in Dollars & High Proximity
         range_str = "N/A"
         high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
         low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
         if high_52w and low_52w and high_52w > low_52w:
-            pos_pct = ((current_price - low_52w) / (high_52w - low_52w)) * 100
             dist_high = ((high_52w - current_price) / high_52w) * 100
             if dist_high <= 2.0:
-                range_str = f"`{pos_pct:.1f}%` (🔥 {dist_high:.1f}% from 52W High!)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
             elif dist_high <= 5.0:
-                range_str = f"`{pos_pct:.1f}%` (⚡ {dist_high:.1f}% from 52W High)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
             else:
-                range_str = f"`{pos_pct:.1f}%` ({dist_high:.1f}% below 52W High)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
         # 5. 50D & 200D SMA Trend Health
         trend_str = "N/A"
