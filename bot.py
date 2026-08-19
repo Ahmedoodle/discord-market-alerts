@@ -7,6 +7,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
 from discord.ext import commands
+import yfinance as yf
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -169,7 +170,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Pure High-Speed JSON Engine (0.05s response time for Stocks, Crypto, ETFs, Futures)."""
+    """Direct Chart API + Selective Fundamental Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -301,14 +302,14 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. INSTANT SEARCH DISCOVERY & ASSET PROFILE ENGINE
+        # 2. SELECTIVE ASSET CLASSIFIER & RAW VALUATION PIPELINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         long_name = meta.get("shortName") or ticker_symbol
         sector = None
         industry = None
 
-        # Query Open Search Discovery
+        # Step A: Query Open Search Discovery for Sector/Industry
         try:
             s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
             s_res = http_session.get(s_url, timeout=3)
@@ -323,7 +324,7 @@ def get_on_demand_data(ticker_symbol):
         except Exception:
             pass
 
-        # 1. CRYPTO PROFILE
+        # 1. CRYPTO
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
             profile_block = (
@@ -332,7 +333,7 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
 
-        # 2. ETF PROFILE
+        # 2. ETFs
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             fund_title = "🏢 Fund Profile & Structure"
             profile_block = (
@@ -350,10 +351,43 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Settlement:** `Standardized Delivery Futures`"
             )
 
-        # 4. EQUITIES / STOCKS
+        # 4. EQUITIES / STOCKS (Pulls Raw Quote for P/E & Market Cap)
         else:
-            fund_title = "🏢 Valuation, Earnings & Profile"
+            fund_title = "🏢 Valuation, Earnings & Growth"
             
+            market_cap = None
+            trailing_pe = None
+            forward_pe = None
+            eps_ttm = None
+            eps_fwd = None
+
+            # Pull Raw Quote Data via Options Endpoint
+            try:
+                opt_url = f"https://query1.finance.yahoo.com/v7/finance/options/{ticker_symbol}"
+                opt_res = http_session.get(opt_url, timeout=4)
+                if opt_res.status_code == 200:
+                    opt_data = opt_res.json()
+                    res_list = opt_data.get("optionChain", {}).get("result", [])
+                    if res_list and "quote" in res_list[0]:
+                        q_dict = res_list[0]["quote"]
+                        market_cap = q_dict.get("marketCap")
+                        trailing_pe = q_dict.get("trailingPE")
+                        forward_pe = q_dict.get("forwardPE")
+                        eps_ttm = q_dict.get("epsTrailingTwelveMonths")
+                        eps_fwd = q_dict.get("epsForward")
+            except Exception:
+                pass
+
+            # Fallback for Market Cap if missing
+            if not market_cap:
+                try:
+                    t_fast = yf.Ticker(ticker_symbol)
+                    market_cap = float(t_fast.fast_info.market_cap)
+                except Exception:
+                    pass
+
+            # Construct Output Lines
+            # Line 1: Sector & Industry
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -361,8 +395,35 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
-            line_company = f"• **Company:** `{long_name}`"
-            profile_block = f"{line_sector}\n{line_company}"
+            # Line 2: Market Cap & Tier
+            if market_cap and market_cap > 0:
+                cap_fmt = format_large_number(market_cap)
+                tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
+                line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
+            else:
+                line_cap = "• **Market Cap:** `N/A`"
+
+            # Line 3: Valuation (Trailing PE, Forward PE)
+            val_items = []
+            if trailing_pe:
+                val_items.append(f"Trailing P/E: `{trailing_pe:.1f}`")
+            if forward_pe:
+                val_items.append(f"Forward P/E: `{forward_pe:.1f}`")
+            
+            line_val = f"• **Valuation:** {' | '.join(val_items)}" if val_items else "• **Valuation:** `High-Growth / Reinvestment Phase`"
+
+            # Line 4: Expected EPS Growth
+            if eps_ttm and eps_fwd and eps_ttm > 0:
+                eps_growth = ((eps_fwd - eps_ttm) / eps_ttm) * 100
+                line_growth = f"• **Growth Outlook:** Exp. EPS Growth: `+{eps_growth:.1f}% 🚀`"
+            else:
+                line_growth = ""
+
+            elements = [line_sector, line_cap, line_val]
+            if line_growth:
+                elements.append(line_growth)
+
+            profile_block = "\n".join(elements)
 
         return {
             "ticker": ticker_symbol,
@@ -398,7 +459,7 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
     if data.get("profile_block"):
-        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Profile"), value=data['profile_block'], inline=False)
+        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Growth"), value=data['profile_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
@@ -408,7 +469,7 @@ async def on_ready():
     print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
 
 # -------------------------------------------------------------
-# 4. INSTANT AUTO-TRIGGER (e.g. `!BTC-USD`, `!QQQ`, `!NVDA`)
+# 4. INSTANT AUTO-TRIGGER (Non-Blocking Async Execution)
 # -------------------------------------------------------------
 @bot.event
 async def on_message(message):
