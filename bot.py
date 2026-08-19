@@ -10,6 +10,7 @@ import discord
 from discord.ext import commands
 import yfinance as yf
 import pandas as pd
+from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -32,35 +33,14 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. DUAL BROWSER & YAHOO CRUMB SESSION ENGINE
+# 2. BROWSER SESSION
 # -------------------------------------------------------------
-class YahooCrumbManager:
-    def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.9"
-        })
-        self.crumb = None
-        self._init_crumb()
-
-    def _init_crumb(self):
-        try:
-            self.session.get("https://fc.yahoo.com", timeout=4)
-            res = self.session.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=4)
-            if res.status_code == 200 and res.text:
-                self.crumb = res.text.strip()
-        except Exception:
-            pass
-
-    def get_crumb(self):
-        if not self.crumb:
-            self._init_crumb()
-        return self.crumb
-
-data_mgr = YahooCrumbManager()
-http_session = data_mgr.session
+http_session = requests.Session()
+http_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9"
+})
 
 # -------------------------------------------------------------
 # 3. DISCORD BOT CLIENT
@@ -218,85 +198,71 @@ def get_rsi_tag(rsi):
     else:
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
-def fetch_wallstreet_targets(ticker_symbol, current_price, t_obj):
-    """5-Tier Failover Engine for Wall Street Targets & Consensus."""
+def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
+    """Pulls Wall Street Targets using TLS Chrome Impersonation (Bypasses all cloud blocks)."""
     low_t = None
     mean_t = None
     high_t = None
     rating = None
 
-    # Tier 1: Yahoo Crumb-Powered financialData Module
+    # Source 1: Finviz via Chrome TLS
     try:
-        crumb = data_mgr.get_crumb()
-        crumb_str = f"&crumb={crumb}" if crumb else ""
-        y_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=financialData{crumb_str}"
-        y_res = http_session.get(y_url, timeout=3)
-        if y_res.status_code == 200:
-            fin_d = y_res.json().get("quoteSummary", {}).get("result", [{}])[0].get("financialData", {})
-            low_t = fin_d.get("targetLowPrice", {}).get("raw")
-            mean_t = fin_d.get("targetMeanPrice", {}).get("raw")
-            high_t = fin_d.get("targetHighPrice", {}).get("raw")
-            rec_key = fin_d.get("recommendationKey")
-            if rec_key:
-                rating = rec_key.replace("_", " ").title()
+        fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
+        fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
+        if fz_res.status_code == 200:
+            text = fz_res.text
+            tp_match = re.search(r'Target Price</td>\s*<td[^>]*><b>([\d.]+)</b>', text, re.IGNORECASE)
+            rec_match = re.search(r'Recom</td>\s*<td[^>]*><b>([\d.]+)</b>', text, re.IGNORECASE)
+            
+            if tp_match:
+                mean_t = float(tp_match.group(1))
+            if rec_match:
+                score = float(rec_match.group(1))
+                rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
     except Exception:
         pass
 
-    # Tier 2: MarketWatch Realtime HTML Parser
+    # Source 2: TipRanks via Chrome TLS
     if not mean_t:
         try:
-            mw_url = f"https://www.marketwatch.com/investing/stock/{ticker_symbol.lower()}/analystestimates"
-            mw_res = http_session.get(mw_url, timeout=3)
-            if mw_res.status_code == 200:
-                text = mw_res.text
-                mean_m = re.search(r'Average Target[^\$]+[\$]([\d,.]+)', text, re.IGNORECASE)
-                high_m = re.search(r'High Target[^\$]+[\$]([\d,.]+)', text, re.IGNORECASE)
-                low_m = re.search(r'Low Target[^\$]+[\$]([\d,.]+)', text, re.IGNORECASE)
-                rec_m = re.search(r'Recommendation:[^<]+<span[^>]*>([^<]+)</span>', text, re.IGNORECASE)
-                
-                if mean_m:
-                    mean_t = float(mean_m.group(1).replace(',', ''))
-                if high_m:
-                    high_t = float(high_m.group(1).replace(',', ''))
-                if low_m:
-                    low_t = float(low_m.group(1).replace(',', ''))
-                if rec_m:
-                    rating = rec_m.group(1).strip()
+            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
+            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
+            if tr_res.status_code == 200:
+                tr_data = tr_res.json()
+                pt = tr_data.get("ptConsensus", {})
+                if pt:
+                    low_t = pt.get("low")
+                    mean_t = pt.get("priceTarget")
+                    high_t = pt.get("high")
+                c_rating = tr_data.get("consensuses", {}).get("consensusRating")
+                if c_rating:
+                    rating = c_rating.title() + " 🟢"
         except Exception:
             pass
 
-    # Tier 3: Yahoo Insights API
+    # Source 3: CNN Forecast via Chrome TLS
     if not mean_t:
         try:
-            ins_url = f"https://query2.finance.yahoo.com/v1/finance/insights?symbol={ticker_symbol}"
-            ins_res = http_session.get(ins_url, timeout=3)
-            if ins_res.status_code == 200:
-                inst_info = ins_res.json().get("finance", {}).get("result", {}).get("instrumentInfo", {})
-                rec = inst_info.get("recommendation", {})
-                tp = rec.get("targetPrice") or inst_info.get("targetPrice")
-                if tp:
-                    mean_t = float(tp)
-                if rec.get("rating"):
-                    rating = rec.get("rating").title()
+            cnn_url = f"https://money.cnn.com/quote/forecast/forecast.html?symb={ticker_symbol}"
+            cnn_res = cureq.get(cnn_url, impersonate="chrome124", timeout=4)
+            if cnn_res.status_code == 200:
+                m = re.search(r'median target of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
+                h = re.search(r'high estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
+                l = re.search(r'low estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
+                if m:
+                    mean_t = float(m.group(1).replace(',', ''))
+                if h:
+                    high_t = float(h.group(1).replace(',', ''))
+                if l:
+                    low_t = float(l.group(1).replace(',', ''))
         except Exception:
             pass
 
-    # Tier 4: yfinance analyst_price_targets
-    if not mean_t:
-        try:
-            apt = t_obj.analyst_price_targets
-            if apt is not None:
-                low_t = getattr(apt, "low", None) or (apt.get("low") if isinstance(apt, dict) else None)
-                mean_t = getattr(apt, "mean", None) or (apt.get("mean") if isinstance(apt, dict) else None)
-                high_t = getattr(apt, "high", None) or (apt.get("high") if isinstance(apt, dict) else None)
-        except Exception:
-            pass
-
-    # Format Output
+    # Format Output String
     if mean_t and current_price > 0:
         upside = ((mean_t - current_price) / current_price) * 100
         up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
-        rating_part = f" | Rating: `{rating} 🟢`" if rating else ""
+        rating_part = f" | Rating: `{rating}`" if rating else ""
         if low_t and high_t:
             return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`{rating_part}"
         else:
@@ -305,7 +271,7 @@ def fetch_wallstreet_targets(ticker_symbol, current_price, t_obj):
     return "N/A"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Multi-Tier Institutional Engine."""
+    """Direct Chart API + Chrome TLS Fundamental Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -508,7 +474,6 @@ def get_on_demand_data(ticker_symbol):
 
             earnings_date_str = "N/A"
             prev_surprise_str = ""
-            targets_line_str = "N/A"
             beta_str = "N/A"
 
             try:
@@ -561,16 +526,13 @@ def get_on_demand_data(ticker_symbol):
                     except Exception:
                         pass
 
-                # 2. Multi-Engine Wall Street Targets (Yahoo FinancialData + MarketWatch + Insights)
-                targets_line_str = fetch_wallstreet_targets(ticker_symbol, current_price, t_obj)
-
-                # 3. Beta calculation vs SPY
+                # 2. Beta calculation vs SPY
                 beta_val = calculate_beta_vs_spy(closes, http_session)
                 if beta_val:
                     tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
                     beta_str = f"`{beta_val:.2f}x`{tag}"
 
-                # 4. Financial Statements Calculations
+                # 3. Financial Statements Calculations
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
@@ -619,7 +581,7 @@ def get_on_demand_data(ticker_symbol):
                             ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
                         ttm_fcf = ttm_ocf - ttm_capex
 
-                # 5. Compute Health Metrics
+                # 4. Compute Health Metrics
                 if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
                     roe_pct = (ttm_net_inc / stockholders_equity) * 100
                     roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
@@ -672,6 +634,9 @@ def get_on_demand_data(ticker_symbol):
 
             except Exception:
                 pe_str = "`N/A`"
+
+            # 4. Multi-Source Wall Street Price Targets (Finviz / TipRanks / CNN via Chrome TLS)
+            targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
             # Construct Blocks
             if sector and industry:
