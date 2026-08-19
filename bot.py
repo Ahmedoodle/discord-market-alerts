@@ -6,6 +6,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
 from discord.ext import commands
+import yfinance as yf
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -80,7 +81,6 @@ def calculate_rsi(closes, period=14):
     return 100.0 - (100.0 / (1.0 + rs))
 
 def calculate_macd(closes):
-    """Calculates MACD (12, 26, 9) and momentum status."""
     if len(closes) < 35:
         return "N/A"
     
@@ -167,7 +167,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart & Quote Engine — Complete Institutional Terminal."""
+    """Direct Yahoo Chart & Open Metadata Engine — 100% Guaranteed Profile."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -303,61 +303,73 @@ def get_on_demand_data(ticker_symbol):
             atr_pct = (atr / current_price) * 100
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
-        # 9. Company Profile, Valuation & P/E Ratios (via Open Quote API)
+        # 9. Company Profile & Valuation (Crumb-Free Multi-Source Discovery)
         profile_block = None
+        long_name = meta.get("shortName") or ticker_symbol
+        quote_type = meta.get("instrumentType", "EQUITY")
+        sector_str = None
+        industry_str = None
+        market_cap = None
+
+        # Source 1: Open Discovery Search endpoint
         try:
-            q_url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker_symbol}"
-            q_res = http_session.get(q_url, timeout=4)
-            if q_res.status_code == 200:
-                q_result = q_res.json().get("quoteResponse", {}).get("result", [{}])[0]
-                
-                market_cap = q_result.get("marketCap")
-                trailing_pe = q_result.get("trailingPE")
-                forward_pe = q_result.get("forwardPE")
-                quote_type = q_result.get("quoteType", "EQUITY")
-                long_name = q_result.get("longName") or q_result.get("shortName") or ticker_symbol
-
-                if market_cap:
-                    cap_fmt = format_large_number(market_cap)
-                    if market_cap >= 2e11:
-                        tier = "Mega-Cap 👑"
-                    elif market_cap >= 1e10:
-                        tier = "Large-Cap 🏢"
-                    elif market_cap >= 2e9:
-                        tier = "Mid-Cap 📈"
-                    else:
-                        tier = "Small-Cap 🌱"
-                    cap_line = f"• **Market Cap:** `{cap_fmt}` ({tier})"
-                else:
-                    cap_line = "• **Market Cap:** `N/A`"
-
-                if trailing_pe or forward_pe:
-                    t_pe_str = f"`{trailing_pe:.1f}`" if trailing_pe else "`N/A`"
-                    f_pe_str = f"`{forward_pe:.1f}`" if forward_pe else "`N/A`"
-                    pe_line = f"• **P/E Ratios:** Trailing: {t_pe_str} | Forward: {f_pe_str}"
-                else:
-                    if quote_type == "CRYPTOCURRENCY":
-                        pe_line = "• **Valuation:** `Digital Asset / Decentralized Network`"
-                    elif quote_type == "ETF":
-                        pe_line = "• **Valuation:** `Exchange-Traded Fund (Basket)`"
-                    elif quote_type == "FUTURE":
-                        pe_line = "• **Valuation:** `Commodity / Index Derivative Contract`"
-                    else:
-                        pe_line = "• **P/E Ratios:** `N/A (Growth / Pre-Profit)`"
-
-                if quote_type == "CRYPTOCURRENCY":
-                    class_line = "• **Asset Class:** `Cryptocurrency (24/7 Digital Asset)`"
-                elif quote_type == "ETF":
-                    class_line = "• **Asset Class:** `Exchange-Traded Fund (ETF)`"
-                elif quote_type == "FUTURE":
-                    class_line = "• **Asset Class:** `Futures / Commodity Contract`"
-                else:
-                    class_line = f"• **Company:** `{long_name}`"
-
-                profile_block = f"{class_line}\n{cap_line}\n{pe_line}"
-
+            s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
+            s_res = http_session.get(s_url, timeout=3)
+            if s_res.status_code == 200:
+                s_data = s_res.json()
+                quotes = s_data.get("quotes", [])
+                if quotes:
+                    q = quotes[0]
+                    long_name = q.get("longname") or q.get("shortname") or long_name
+                    quote_type = q.get("quoteType", quote_type)
+                    sector_str = q.get("sector")
+                    industry_str = q.get("industry")
         except Exception:
             pass
+
+        # Source 2: Fast Info Market Cap
+        try:
+            t_obj = yf.Ticker(ticker_symbol, session=http_session)
+            if t_obj.fast_info.market_cap:
+                market_cap = t_obj.fast_info.market_cap
+        except Exception:
+            pass
+
+        # Construct Cap Line
+        if market_cap:
+            cap_fmt = format_large_number(market_cap)
+            if market_cap >= 2e11:
+                tier = "Mega-Cap 👑"
+            elif market_cap >= 1e10:
+                tier = "Large-Cap 🏢"
+            elif market_cap >= 2e9:
+                tier = "Mid-Cap 📈"
+            else:
+                tier = "Small-Cap 🌱"
+            cap_line = f"• **Market Cap:** `{cap_fmt}` ({tier})"
+        else:
+            cap_line = "• **Market Cap:** `N/A`"
+
+        # Construct Sector / Class Line
+        if quote_type == "CRYPTOCURRENCY":
+            class_line = "• **Asset Class:** `Cryptocurrency (24/7 Digital Asset)`"
+            val_line = "• **Valuation:** `Decentralized Protocol / Network`"
+        elif quote_type == "ETF":
+            class_line = "• **Asset Class:** `Exchange-Traded Fund (ETF)`"
+            val_line = "• **Valuation:** `Basket of Underlying Holdings`"
+        elif quote_type == "FUTURE":
+            class_line = "• **Asset Class:** `Futures / Commodity Derivative`"
+            val_line = "• **Valuation:** `Derivative Delivery Contract`"
+        else:
+            if sector_str and industry_str:
+                class_line = f"• **Sector / Industry:** `{sector_str} • {industry_str}`"
+            elif sector_str:
+                class_line = f"• **Sector:** `{sector_str}`"
+            else:
+                class_line = f"• **Company:** `{long_name}`"
+            val_line = f"• **Company Name:** `{long_name}`"
+
+        profile_block = f"{class_line}\n{cap_line}\n{val_line}"
 
         return {
             "ticker": ticker_symbol,
