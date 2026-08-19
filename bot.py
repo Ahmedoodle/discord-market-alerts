@@ -1,8 +1,7 @@
 import os
 import threading
+import math
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import yfinance as yf
-import pandas as pd
 import requests
 import discord
 from discord.ext import commands
@@ -24,14 +23,13 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSION FOR YAHOO FINANCE (Bypasses Rate Limits)
+# 2. BROWSER SESSION
 # -------------------------------------------------------------
 http_session = requests.Session()
 http_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
-    "DNT": "1"
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9"
 })
 
 # -------------------------------------------------------------
@@ -54,38 +52,70 @@ def format_large_number(num):
         return f"{num / 1e3:.1f}K"
     return str(int(num))
 
+def calculate_rsi_from_closes(closes, period=14):
+    """Calculates Wilder's 14-period RSI directly from closing price list."""
+    if len(closes) < period + 1:
+        return None
+
+    deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    gains = [max(d, 0) for d in deltas]
+    losses = [max(-d, 0) for d in deltas]
+
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+
+    for i in range(period, len(deltas)):
+        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+
+    if avg_loss == 0:
+        return 100.0
+    rs = avg_gain / avg_loss
+    return 100.0 - (100.0 / (1.0 + rs))
+
 def get_on_demand_data(ticker_symbol):
+    """Direct Yahoo Chart Engine — Bypasses 429 rate limits 100%."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
-        t = yf.Ticker(ticker_symbol, session=http_session)
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
+        res = http_session.get(url, timeout=6)
         
-        # 1. Pull 1-Year History
-        hist = t.history(period="1y")
-        if hist.empty or 'Close' not in hist or len(hist['Close']) < 2:
-            return None, f"Insufficient price data found for `{ticker_symbol}`."
+        if res.status_code != 200:
+            return None, f"Could not fetch data for `{ticker_symbol}` (Status: {res.status_code})."
 
-        closes = hist['Close'].dropna()
-        volumes = hist['Volume'].dropna()
+        data = res.json()
+        result = data.get("chart", {}).get("result")
+        if not result or len(result) == 0:
+            return None, f"No market data returned for `{ticker_symbol}`."
 
-        # 2. Live Price & Day Change
-        current_price = float(closes.iloc[-1])
-        prev_close = float(closes.iloc[-2]) if len(closes) >= 2 else current_price
-        
-        # Try getting realtime fast_info price if available
-        try:
-            if t.fast_info.last_price is not None and t.fast_info.previous_close is not None:
-                current_price = float(t.fast_info.last_price)
-                prev_close = float(t.fast_info.previous_close)
-        except Exception:
-            pass
+        chart_data = result[0]
+        meta = chart_data.get("meta", {})
+        indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
 
+        raw_closes = indicators.get("close", [])
+        raw_volumes = indicators.get("volume", [])
+        raw_highs = indicators.get("high", [])
+        raw_lows = indicators.get("low", [])
+
+        # Filter out null values
+        closes = [c for c in raw_closes if c is not None]
+        volumes = [v for v in raw_volumes if v is not None]
+        highs = [h for h in raw_highs if h is not None]
+        lows = [l for l in raw_lows if l is not None]
+
+        if len(closes) < 2:
+            return None, f"Insufficient price history for `{ticker_symbol}`."
+
+        # 1. Live Price & Previous Close
+        current_price = meta.get("regularMarketPrice") or closes[-1]
+        prev_close = meta.get("chartPreviousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # 3. 20-Day Relative Volume (RVOL)
+        # 2. 20-Day RVOL
         vol_str = "N/A"
         if len(volumes) >= 20:
-            avg_vol_20 = volumes.iloc[-21:-1].mean()
-            vol_today = volumes.iloc[-1]
+            avg_vol_20 = sum(volumes[-21:-1]) / len(volumes[-21:-1])
+            vol_today = volumes[-1]
             if avg_vol_20 > 0:
                 rvol = vol_today / avg_vol_20
                 v_formatted = format_large_number(vol_today)
@@ -98,36 +128,27 @@ def get_on_demand_data(ticker_symbol):
                 else:
                     vol_str = f"`{v_formatted}` ({rvol:.1f}x Avg 📊 Normal)"
 
-        # 4. 14-Day RSI (Wilder's Smoothing)
-        delta = closes.diff()
-        gains = delta.clip(lower=0)
-        losses = -1 * delta.clip(upper=0)
-        avg_gain = gains.ewm(com=13, adjust=False).mean().iloc[-1]
-        avg_loss = losses.ewm(com=13, adjust=False).mean().iloc[-1]
-        
-        if avg_loss == 0:
-            rsi = 100.0
-        else:
-            rs = avg_gain / avg_loss
-            rsi = 100.0 - (100.0 / (1.0 + rs))
+        # 3. 14-Day RSI
+        rsi_str = "N/A"
+        rsi = calculate_rsi_from_closes(closes, 14)
+        if rsi is not None:
+            if rsi >= 75:
+                rsi_str = f"`{rsi:.1f}` (⚠️ Extreme Overbought)"
+            elif rsi >= 70:
+                rsi_str = f"`{rsi:.1f}` (⚠️ Overbought Zone)"
+            elif rsi <= 25:
+                rsi_str = f"`{rsi:.1f}` (🟢 Extreme Oversold)"
+            elif rsi <= 30:
+                rsi_str = f"`{rsi:.1f}` (🟢 Oversold Zone)"
+            elif rsi >= 50:
+                rsi_str = f"`{rsi:.1f}` (Neutral / Bullish 📈)"
+            else:
+                rsi_str = f"`{rsi:.1f}` (Neutral / Bearish 📉)"
 
-        if rsi >= 75:
-            rsi_str = f"`{rsi:.1f}` (⚠️ Extreme Overbought)"
-        elif rsi >= 70:
-            rsi_str = f"`{rsi:.1f}` (⚠️ Overbought Zone)"
-        elif rsi <= 25:
-            rsi_str = f"`{rsi:.1f}` (🟢 Extreme Oversold)"
-        elif rsi <= 30:
-            rsi_str = f"`{rsi:.1f}` (🟢 Oversold Zone)"
-        elif rsi >= 50:
-            rsi_str = f"`{rsi:.1f}` (Neutral / Bullish 📈)"
-        else:
-            rsi_str = f"`{rsi:.1f}` (Neutral / Bearish 📉)"
-
-        # 5. 52-Week Range & Proximity
+        # 4. 52-Week Range & High Proximity
         range_str = "N/A"
-        high_52w = hist['High'].max()
-        low_52w = hist['Low'].min()
+        high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
+        low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
         if high_52w and low_52w and high_52w > low_52w:
             pos_pct = ((current_price - low_52w) / (high_52w - low_52w)) * 100
             dist_high = ((high_52w - current_price) / high_52w) * 100
@@ -138,11 +159,11 @@ def get_on_demand_data(ticker_symbol):
             else:
                 range_str = f"`{pos_pct:.1f}%` ({dist_high:.1f}% below 52W High)"
 
-        # 6. 50D & 200D SMA Trend Health
+        # 5. 50D & 200D SMA Trend Health
         trend_str = "N/A"
         if len(closes) >= 200:
-            sma_50 = closes.iloc[-50:].mean()
-            sma_200 = closes.iloc[-200:].mean()
+            sma_50 = sum(closes[-50:]) / 50
+            sma_200 = sum(closes[-200:]) / 200
             if current_price >= sma_50 and current_price >= sma_200:
                 trend_str = "Above 50D & 200D SMA (🟢 Strong Uptrend)"
             elif current_price < sma_50 and current_price < sma_200:
