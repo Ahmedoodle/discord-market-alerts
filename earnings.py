@@ -21,13 +21,20 @@ BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/153
 
 NY_TZ = ZoneInfo("America/New_York")
 LOOKAHEAD_DAYS = 45
-US_MIDCAP_CHUNK_SIZE = 15  # 15 entries per embed (100% safe within Discord character limits)
+US_MIDCAP_CHUNK_SIZE = 15
 
 # Your Curated Watchlist
 WATCHLIST = [
     "NVDA", "AMD", "MU", "INTC", "AVGO", "ASML", "IBM", "TSLA", 
     "RKLB", "PLTR", "META", "ORCL", "RBLX", "MSTR", "IREN", "SHOP.TO"
 ]
+
+# Recognizes major Canadian cross-listed symbols on US exchanges
+KNOWN_CANADIAN_CROSS_LISTED = {
+    "BB", "SHOP", "RY", "TD", "BNS", "BMO", "CM", "NA", "ENB", "CNQ", "SU", "TRP",
+    "CVE", "IMO", "TRI", "CSU", "BCE", "T", "RCI", "CNR", "CP", "WCN", "ABX",
+    "AEM", "FNV", "WPM", "NTR", "TECK", "FM", "LSPD", "HUT", "BITF", "TLRY", "QSR"
+}
 
 nasdaq_session = requests.Session()
 nasdaq_session.headers.update({
@@ -67,7 +74,7 @@ def parse_market_cap_str(cap_str):
 # 1. DYNAMIC CANADIAN (TSX) SCREENER
 # ====================================================================
 def fetch_dynamic_tsx_universe():
-    logging.info("Dynamically screening TSX for Canadian Mid & Mega-Caps (≥ $2B)...")
+    logging.info("Dynamically screening TSX for Canadian Mid & Mega-Caps...")
     tickers = set()
     try:
         url = "https://query1.finance.yahoo.com/v1/finance/screener?formatted=false&lang=en-US&region=CA"
@@ -82,7 +89,7 @@ def fetch_dynamic_tsx_universe():
                 "operator": "AND",
                 "operands": [
                     {"operator": "EQ", "operands": ["region", "ca"]},
-                    {"operator": "GTE", "operands": ["intradaymarketcap", 2000000000]}
+                    {"operator": "GTE", "operands": ["intradaymarketcap", 1000000000]}  # Filter >= $1.0B USD to capture all CAD Mid-Caps
                 ]
             }
         }
@@ -96,13 +103,13 @@ def fetch_dynamic_tsx_universe():
     except Exception as e:
         logging.warning(f"Yahoo dynamic TSX screener note: {e}")
 
-    if len(tickers) < 20:
-        tickers.update([
-            "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO",
-            "ENB.TO", "CNQ.TO", "SU.TO", "TRP.TO", "CVE.TO", "IMO.TO", "TOU.TO", "ARX.TO", "PPL.TO", "KEY.TO",
-            "SHOP.TO", "CSU.TO", "TRI.TO", "OTEX.TO", "GIB-A.TO", "BCE.TO", "T.TO", "RCI-B.TO",
-            "CNR.TO", "CP.TO", "WCN.TO", "TFII.TO", "ABX.TO", "AEM.TO", "FNV.TO", "WPM.TO", "NTR.TO", "ATD.TO"
-        ])
+    # Ensure Core Mid/Mega TSX coverage
+    tickers.update([
+        "BB.TO", "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO",
+        "ENB.TO", "CNQ.TO", "SU.TO", "TRP.TO", "CVE.TO", "IMO.TO", "TOU.TO", "ARX.TO", "PPL.TO", "KEY.TO",
+        "SHOP.TO", "CSU.TO", "TRI.TO", "OTEX.TO", "GIB-A.TO", "BCE.TO", "T.TO", "RCI-B.TO", "LSPD.TO", "HUT.TO",
+        "CNR.TO", "CP.TO", "WCN.TO", "TFII.TO", "ABX.TO", "AEM.TO", "FNV.TO", "WPM.TO", "NTR.TO", "ATD.TO"
+    ])
     return list(tickers)
 
 # ====================================================================
@@ -122,17 +129,20 @@ def fetch_nasdaq_calendar_day(target_date):
                     continue
                 
                 mcap = parse_market_cap_str(r.get("marketCap", "0"))
-                if mcap < 2e9:
+                if mcap < 1.5e9:
                     continue
 
                 time_code = r.get("time", "time-not-supplied").lower()
                 time_badge = "Before Open 🌅" if "pre" in time_code or "bmo" in time_code else "After Close 🌙"
                 eps_forecast = clean_currency(r.get("epsForecast"))
 
+                # Check if it's a Canadian dual-listed stock
+                is_canadian = sym.upper() in KNOWN_CANADIAN_CROSS_LISTED
+
                 items.append({
-                    "ticker": sym,
+                    "ticker": f"{sym}.TO" if is_canadian else sym,
                     "name": r.get("name", sym),
-                    "badge": "🇺🇸",
+                    "badge": "🍁" if is_canadian else "🇺🇸",
                     "date": target_date,
                     "days_away": (target_date - datetime.now(NY_TZ).date()).days,
                     "date_str": target_date.strftime("%b %d, %Y"),
@@ -140,7 +150,8 @@ def fetch_nasdaq_calendar_day(target_date):
                     "status": "Official / Confirmed 🟢",
                     "market_cap": mcap,
                     "consensus_est": f"EPS: `{eps_forecast}`",
-                    "actual_reported": "Pending ⏳"
+                    "actual_reported": "Pending ⏳",
+                    "is_canadian": is_canadian
                 })
     except Exception:
         pass
@@ -161,7 +172,7 @@ def fetch_us_yesterday_actuals(target_date):
                     continue
                 
                 mcap = parse_market_cap_str(r.get("marketCap", "0"))
-                if mcap < 2e9:
+                if mcap < 1.5e9:
                     continue
 
                 eps_forecast_raw = r.get("epsForecast")
@@ -178,10 +189,12 @@ def fetch_us_yesterday_actuals(target_date):
                 except Exception:
                     pass
 
+                is_canadian = sym.upper() in KNOWN_CANADIAN_CROSS_LISTED
+
                 scorecard.append({
-                    "ticker": sym,
+                    "ticker": f"{sym}.TO" if is_canadian else sym,
                     "name": r.get("name", sym),
-                    "badge": "🇺🇸",
+                    "badge": "🍁" if is_canadian else "🇺🇸",
                     "reported_date": target_date.strftime("%b %d, %Y"),
                     "market_cap": mcap,
                     "eps_line": f"Actual: `{act_str}` | Estimate: `{est_str}`{surp_str}"
@@ -201,9 +214,6 @@ def scan_single_tsx_ticker(sym, check_dates):
         today = datetime.now(NY_TZ).date()
         m_cap = getattr(t_obj.fast_info, "market_cap", 0) or 0
         
-        if m_cap < 2e9:
-            return None, None
-
         name = getattr(t_obj.fast_info, "name", None) or sym
 
         # Upcoming Calendar
@@ -237,7 +247,8 @@ def scan_single_tsx_ticker(sym, check_dates):
                     "status": "Official / Confirmed 🟢",
                     "market_cap": m_cap,
                     "consensus_est": f"EPS: `{eps_est}`",
-                    "actual_reported": "Pending ⏳"
+                    "actual_reported": "Pending ⏳",
+                    "is_canadian": True
                 }
 
         # Scorecard
@@ -276,9 +287,35 @@ def scan_single_tsx_ticker(sym, check_dates):
     return upcoming_item, scorecard_item
 
 def deduplicate_dual_listings(us_items, ca_items):
-    ca_base_symbols = {item["ticker"].replace(".TO", "").replace(".V", "").upper(): item for item in ca_items}
-    filtered_us_items = [us_item for us_item in us_items if us_item["ticker"].upper() not in ca_base_symbols]
-    return filtered_us_items, ca_items
+    """
+    Reroutes Canadian companies found on US exchanges into the Canadian section
+    and eliminates duplicate tickers.
+    """
+    seen_ca_bases = set()
+    unique_ca_items = []
+    
+    # 1. Add direct TSX items
+    for item in ca_items:
+        base = item["ticker"].replace(".TO", "").replace(".V", "").upper()
+        if base not in seen_ca_bases:
+            seen_ca_bases.add(base)
+            unique_ca_items.append(item)
+
+    # 2. Process US items and re-route any Canadian cross-listed items
+    final_us_items = []
+    for item in us_items:
+        base = item["ticker"].replace(".TO", "").replace(".V", "").upper()
+        if item.get("is_canadian") or base in KNOWN_CANADIAN_CROSS_LISTED:
+            if base not in seen_ca_bases:
+                seen_ca_bases.add(base)
+                item["badge"] = "🍁"
+                if not item["ticker"].endswith(".TO"):
+                    item["ticker"] = f"{base}.TO"
+                unique_ca_items.append(item)
+        else:
+            final_us_items.append(item)
+
+    return final_us_items, unique_ca_items
 
 def format_earnings_entry(idx, item):
     return (
@@ -307,7 +344,7 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
     try:
         res = requests.post(DISCORD_EARNINGS_WEBHOOK_URL, json=payload, timeout=10)
         res.raise_for_status()
-        time.sleep(0.6)  # Safe spacing to respect Discord rate limits
+        time.sleep(0.6)
     except Exception as e:
         logging.error(f"Error sending embed: {e}")
 
@@ -350,14 +387,14 @@ def run_earnings_daily():
             if sc:
                 scorecard_items.append(sc)
 
-    # 4. DUAL-LISTING RESOLUTION & SORTING
+    # 4. SMART DUAL-LISTING RESOLUTION (BB, SHOP, RY, TD, etc.)
     filtered_us_upcoming, upcoming_ca_items = deduplicate_dual_listings(upcoming_us_items, upcoming_ca_items)
     scorecard_items.sort(key=lambda x: x["market_cap"], reverse=True)
 
     # 5. WATCHLIST PROCESSING
     all_upcoming = filtered_us_upcoming + upcoming_ca_items
     watchlist_set = set(WATCHLIST)
-    watchlist_results = [item for item in all_upcoming if item["ticker"] in watchlist_set and item["days_away"] <= LOOKAHEAD_DAYS]
+    watchlist_results = [item for item in all_upcoming if (item["ticker"] in watchlist_set or item["ticker"].replace(".TO", "") in watchlist_set) and item["days_away"] <= LOOKAHEAD_DAYS]
     watchlist_results.sort(key=lambda x: x["date"])
 
     # 6. SEGMENT MEGA AND MID CAPS
@@ -372,8 +409,8 @@ def run_earnings_daily():
         # Mega-Cap: >= $200B (Next 45 Days)
         if m_cap >= 2e11 and days <= LOOKAHEAD_DAYS:
             (mega_ca if is_ca else mega_us).append(item)
-        # Mid-Cap: $2B to $200B (Next 45 Days)
-        elif 2e9 <= m_cap < 2e11 and days <= LOOKAHEAD_DAYS:
+        # Mid-Cap: $1.5B to $200B (Next 45 Days)
+        elif 1.5e9 <= m_cap < 2e11 and days <= LOOKAHEAD_DAYS:
             (mid_ca if is_ca else mid_us).append(item)
 
     # Sort each tier chronologically
@@ -426,21 +463,20 @@ def run_earnings_daily():
             color=10181046  # Purple
         )
 
-    # CARD 4A: Canadian Mid-Caps (Next 45 Days — $2B to $200B)
+    # CARD 4A: Canadian Mid-Caps (Next 45 Days — $1.5B to $200B)
     if mid_ca:
         mid_ca_txt = "\n".join([format_earnings_entry(i, item) for i, item in enumerate(mid_ca, 1)])
         dispatch_discord_earnings_embed(
-            title=f"🍁 Canadian Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $2B to $200B]",
+            title=f"🍁 Canadian Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
             description=f"*All {len(mid_ca)} Canadian institutional & momentum leaders reporting in the next 45 days.*",
             entries_text=mid_ca_txt,
             color=15158332,  # Crimson/Maple Red
             footer_text=f"Looney • TSX Mid-Cap Calendar ({len(mid_ca)} Total)"
         )
 
-    # CARD 4B: US Mid-Caps (Paginated Sequentially to deliver 100% of reports)
+    # CARD 4B: US Mid-Caps (Paginated Sequentially in batches of 15)
     if mid_us:
         total_us = len(mid_us)
-        # Split into chunks of US_MIDCAP_CHUNK_SIZE
         chunks = [mid_us[i:i + US_MIDCAP_CHUNK_SIZE] for i in range(0, total_us, US_MIDCAP_CHUNK_SIZE)]
         total_chunks = len(chunks)
 
@@ -449,7 +485,7 @@ def run_earnings_daily():
             chunk_txt = "\n".join([format_earnings_entry(start_num + j, item) for j, item in enumerate(chunk)])
             
             part_title = f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — Part {chunk_idx}/{total_chunks}]" if total_chunks > 1 else f"📈 US Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]"
-            part_desc = f"*Showing entries {start_num} to {start_num + len(chunk) - 1} of {total_us} total upcoming US Mid-Caps ($2B–$200B).*"
+            part_desc = f"*Showing entries {start_num} to {start_num + len(chunk) - 1} of {total_us} total upcoming US Mid-Caps ($1.5B–$200B).*"
             
             dispatch_discord_earnings_embed(
                 title=part_title,
