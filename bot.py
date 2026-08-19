@@ -144,7 +144,6 @@ def calculate_atr(highs, lows, closes, period=14):
     return sum(trs[-period:]) / period
 
 def calculate_beta_vs_spy(closes, http_session):
-    """Calculates 1-Year Beta directly vs SPY."""
     try:
         if len(closes) < 50:
             return None
@@ -199,7 +198,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Institutional Fundamental Engine."""
+    """Direct Chart API + Accurate Catalysts & Targets Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -374,7 +373,6 @@ def get_on_demand_data(ticker_symbol):
         else:
             profile_title = "🏢 Company Profile"
             
-            # Step A: Sector & Industry
             sector = None
             industry = None
             try:
@@ -388,7 +386,6 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Step B: Financial Statement & Catalysts Extraction
             market_cap = None
             shares = None
             trailing_pe = None
@@ -400,13 +397,10 @@ def get_on_demand_data(ticker_symbol):
             quality_str = "N/A"
             pfcf_str = ""
 
-            # Catalysts & Smart Money
             earnings_date_str = "N/A"
             prev_surprise_str = ""
-            target_str = "N/A"
-            rating_str = ""
+            targets_line_str = "N/A"
             beta_str = "N/A"
-            short_str = "N/A"
 
             try:
                 t_obj = yf.Ticker(ticker_symbol)
@@ -421,60 +415,71 @@ def get_on_demand_data(ticker_symbol):
                 if not market_cap and shares and current_price:
                     market_cap = current_price * shares
 
-                # 1. Earnings Timing
+                # 1. Next Earnings Date Discovery (Scans calendar & future dates)
                 try:
-                    cal = t_obj.calendar
-                    if cal is not None:
-                        ed = None
-                        if isinstance(cal, dict) and "Earnings Date" in cal:
-                            ed = cal["Earnings Date"]
-                        elif hasattr(cal, "loc") and "Earnings Date" in cal.index:
-                            ed = cal.loc["Earnings Date"].values
+                    ed_df = t_obj.earnings_dates
+                    if ed_df is not None and not ed_df.empty:
+                        # Find future earnings dates
+                        future_rows = ed_df[ed_df['Reported EPS'].isna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
+                        if not future_rows.empty:
+                            nxt_dt = future_rows.index[-1]
+                            nxt_d = nxt_dt.date() if isinstance(nxt_dt, (datetime, pd.Timestamp)) else nxt_dt
+                            days_left = (nxt_d - datetime.now().date()).days
+                            if days_left >= 0:
+                                earnings_date_str = f"`In {days_left} Days ({nxt_d.strftime('%b %d')})`"
+                            else:
+                                earnings_date_str = f"`{nxt_d.strftime('%b %d')}`"
+                        
+                        # Find previous earnings beat % (Auto-normalized!)
+                        past_rows = ed_df[ed_df['Reported EPS'].notna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
+                        if not past_rows.empty and "Surprise(%)" in past_rows.columns:
+                            raw_surp = float(past_rows["Surprise(%)"].iloc[0])
+                            # Normalize: if raw_surp is 0.0554, multiply by 100; if already 5.54, keep as is
+                            surp_val = raw_surp * 100 if abs(raw_surp) <= 1.0 else raw_surp
+                            tag = "🎯" if surp_val >= 0 else "⚠️"
+                            prev_surprise_str = f" | `Prev Beat: {surp_val:+.1f}% {tag}`"
+                except Exception:
+                    pass
 
-                        if ed is not None and len(ed) > 0:
-                            target_ed = ed[0]
-                            if isinstance(target_ed, (datetime, date)):
-                                ed_d = target_ed.date() if isinstance(target_ed, datetime) else target_ed
+                # Fallback to calendar if earnings_dates was empty
+                if earnings_date_str == "N/A":
+                    try:
+                        cal = t_obj.calendar
+                        if cal is not None:
+                            ed_val = cal.get("Earnings Date") if isinstance(cal, dict) else (cal.loc["Earnings Date"].values if hasattr(cal, "loc") and "Earnings Date" in cal.index else None)
+                            if ed_val is not None and len(ed_val) > 0:
+                                target_ed = ed_val[0]
+                                ed_d = target_ed.date() if isinstance(target_ed, (datetime, pd.Timestamp)) else target_ed
                                 days_left = (ed_d - datetime.now().date()).days
                                 if days_left >= 0:
                                     earnings_date_str = f"`In {days_left} Days ({ed_d.strftime('%b %d')})`"
-                                else:
-                                    earnings_date_str = f"`{ed_d.strftime('%b %d')}`"
-                except Exception:
-                    pass
+                    except Exception:
+                        pass
 
-                # 2. Previous Earnings Beat %
-                try:
-                    ed_df = t_obj.earnings_dates
-                    if ed_df is not None and not ed_df.empty and "Surprise(%)" in ed_df.columns:
-                        surp_s = ed_df["Surprise(%)"].dropna()
-                        if not surp_s.empty:
-                            last_s = float(surp_s.iloc[0]) * 100
-                            tag = "🎯" if last_s >= 0 else "⚠️"
-                            prev_surprise_str = f" | `Prev Beat: {last_s:+.1f}% {tag}`"
-                except Exception:
-                    pass
-
-                # 3. Wall Street Target & Rating
+                # 2. Wall Street Low, Mean & High Targets
                 try:
                     apt = t_obj.analyst_price_targets
                     if apt is not None:
+                        low_t = getattr(apt, "low", None) or (apt.get("low") if isinstance(apt, dict) else None)
                         mean_t = getattr(apt, "mean", None) or (apt.get("mean") if isinstance(apt, dict) else None)
+                        high_t = getattr(apt, "high", None) or (apt.get("high") if isinstance(apt, dict) else None)
+
                         if mean_t and current_price > 0:
                             upside = ((mean_t - current_price) / current_price) * 100
-                            tag = " 🔥" if upside >= 15 else ""
-                            target_str = f"`${mean_t:.2f}` (**{upside:+.1f}% Upside{tag}**)"
+                            up_tag = " 🔥" if upside >= 15 else ""
+                            low_fmt = f"${low_t:.2f}" if low_t else "N/A"
+                            high_fmt = f"${high_t:.2f}" if high_t else "N/A"
+                            targets_line_str = f"Low: `{low_fmt}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `{high_fmt}`"
                 except Exception:
                     pass
 
-                # 4. Beta calculation vs SPY
+                # 3. Beta calculation vs SPY
                 beta_val = calculate_beta_vs_spy(closes, http_session)
                 if beta_val:
                     tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
                     beta_str = f"`{beta_val:.2f}x`{tag}"
 
-                # 5. Financial Statements Calculations
-                # Income Statement
+                # 4. Financial Statements Calculations
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
@@ -489,7 +494,6 @@ def get_on_demand_data(ticker_symbol):
                         rev_s = q_inc.loc[rev_row].dropna()
                         ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
 
-                # Balance Sheet
                 q_bs = t_obj.quarterly_balance_sheet
                 stockholders_equity = None
                 total_debt = None
@@ -510,7 +514,6 @@ def get_on_demand_data(ticker_symbol):
                         current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
                         current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
 
-                # Cash Flow (FCF)
                 q_cf = t_obj.quarterly_cash_flow
                 ttm_fcf = None
                 if q_cf is not None and not q_cf.empty:
@@ -525,7 +528,7 @@ def get_on_demand_data(ticker_symbol):
                             ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
                         ttm_fcf = ttm_ocf - ttm_capex
 
-                # 6. Compute Health Metrics
+                # 5. Compute Health Metrics
                 if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
                     roe_pct = (ttm_net_inc / stockholders_equity) * 100
                     roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
@@ -598,7 +601,7 @@ def get_on_demand_data(ticker_symbol):
 
             catalysts_block = (
                 f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n"
-                f"• **Wall St. Target:** {target_str}"
+                f"• **Wall St. Targets:** {targets_line_str}"
             )
 
             atr_fmt = f"±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)" if atr and current_price > 0 else "N/A"
@@ -651,7 +654,7 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     
     if data.get("catalysts_block"):
-        embed.add_field(name="🗓️ Catalysts & Wall Street Consensus", value=data['catalysts_block'], inline=False)
+        embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
     if data.get("smart_money_block"):
         embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
     if data.get("profile_block"):
@@ -713,3 +716,4 @@ if __name__ == "__main__":
         print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
     else:
         bot.run(BOT_TOKEN)
+        
