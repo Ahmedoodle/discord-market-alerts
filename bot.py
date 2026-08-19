@@ -86,7 +86,6 @@ def calculate_macd(closes):
     
     alpha_12 = 2.0 / (12 + 1)
     alpha_26 = 2.0 / (26 + 1)
-
     curr_12 = sum(closes[:12]) / 12
     curr_26 = sum(closes[:26]) / 26
     ema_12_full = []
@@ -168,7 +167,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart Engine — Full Institutional Terminal."""
+    """Direct Yahoo Chart & Quote Engine — Complete Institutional Terminal."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -191,7 +190,6 @@ def get_on_demand_data(ticker_symbol):
         raw_highs = indicators.get("high", [])
         raw_lows = indicators.get("low", [])
 
-        # Filter out null values
         closes = [c for c in raw_closes if c is not None]
         volumes = [v for v in raw_volumes if v is not None]
         highs = [h for h in raw_highs if h is not None]
@@ -305,23 +303,59 @@ def get_on_demand_data(ticker_symbol):
             atr_pct = (atr / current_price) * 100
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
-        # 9. Company Valuation & Market Cap Tier
-        val_str = "N/A"
+        # 9. Company Profile, Valuation & P/E Ratios (via Open Quote API)
+        profile_block = None
         try:
-            q_url = f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics"
-            q_res = http_session.get(q_url, timeout=3)
+            q_url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker_symbol}"
+            q_res = http_session.get(q_url, timeout=4)
             if q_res.status_code == 200:
-                q_data = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                sum_det = q_data.get("summaryDetail", {})
+                q_result = q_res.json().get("quoteResponse", {}).get("result", [{}])[0]
                 
-                market_cap = sum_det.get("marketCap", {}).get("raw")
-                pe_val = sum_det.get("trailingPE", {}).get("raw") or sum_det.get("forwardPE", {}).get("raw")
-                
+                market_cap = q_result.get("marketCap")
+                trailing_pe = q_result.get("trailingPE")
+                forward_pe = q_result.get("forwardPE")
+                quote_type = q_result.get("quoteType", "EQUITY")
+                long_name = q_result.get("longName") or q_result.get("shortName") or ticker_symbol
+
                 if market_cap:
                     cap_fmt = format_large_number(market_cap)
-                    tier = "Mega-Cap" if market_cap >= 2e11 else ("Large-Cap" if market_cap >= 1e10 else ("Mid-Cap" if market_cap >= 2e9 else "Small-Cap"))
-                    pe_str = f" • Trailing P/E: `{pe_val:.1f}`" if pe_val else ""
-                    val_str = f"`{cap_fmt} ({tier})`{pe_str}"
+                    if market_cap >= 2e11:
+                        tier = "Mega-Cap 👑"
+                    elif market_cap >= 1e10:
+                        tier = "Large-Cap 🏢"
+                    elif market_cap >= 2e9:
+                        tier = "Mid-Cap 📈"
+                    else:
+                        tier = "Small-Cap 🌱"
+                    cap_line = f"• **Market Cap:** `{cap_fmt}` ({tier})"
+                else:
+                    cap_line = "• **Market Cap:** `N/A`"
+
+                if trailing_pe or forward_pe:
+                    t_pe_str = f"`{trailing_pe:.1f}`" if trailing_pe else "`N/A`"
+                    f_pe_str = f"`{forward_pe:.1f}`" if forward_pe else "`N/A`"
+                    pe_line = f"• **P/E Ratios:** Trailing: {t_pe_str} | Forward: {f_pe_str}"
+                else:
+                    if quote_type == "CRYPTOCURRENCY":
+                        pe_line = "• **Valuation:** `Digital Asset / Decentralized Network`"
+                    elif quote_type == "ETF":
+                        pe_line = "• **Valuation:** `Exchange-Traded Fund (Basket)`"
+                    elif quote_type == "FUTURE":
+                        pe_line = "• **Valuation:** `Commodity / Index Derivative Contract`"
+                    else:
+                        pe_line = "• **P/E Ratios:** `N/A (Growth / Pre-Profit)`"
+
+                if quote_type == "CRYPTOCURRENCY":
+                    class_line = "• **Asset Class:** `Cryptocurrency (24/7 Digital Asset)`"
+                elif quote_type == "ETF":
+                    class_line = "• **Asset Class:** `Exchange-Traded Fund (ETF)`"
+                elif quote_type == "FUTURE":
+                    class_line = "• **Asset Class:** `Futures / Commodity Contract`"
+                else:
+                    class_line = f"• **Company:** `{long_name}`"
+
+                profile_block = f"{class_line}\n{cap_line}\n{pe_line}"
+
         except Exception:
             pass
 
@@ -336,7 +370,7 @@ def get_on_demand_data(ticker_symbol):
             "macd_str": macd_str,
             "pivot_str": pivot_str,
             "atr_str": atr_str,
-            "val_str": val_str
+            "profile_block": profile_block
         }, None
 
     except Exception as e:
@@ -356,9 +390,9 @@ def create_market_embed(data):
     embed.add_field(name="📈 Moving Averages & Trend", value=data['trend_block'], inline=False)
     embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
-    embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=True)
-    if data.get("val_str") and data["val_str"] != "N/A":
-        embed.add_field(name="🏢 Valuation & Cap", value=data['val_str'], inline=True)
+    embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
+    if data.get("profile_block"):
+        embed.add_field(name="🏢 Company Profile & Valuation", value=data['profile_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
