@@ -142,17 +142,20 @@ def calculate_atr(highs, lows, closes, period=14):
         trs.append(tr)
     return sum(trs[-period:]) / period
 
-def get_volume_tag(rvol):
-    if rvol is None:
+def get_volume_tag(rvol, avg_vol):
+    if rvol is None or avg_vol is None:
         return "N/A"
+    
+    avg_fmt = format_large_number(avg_vol).replace("$", "") + " shares" if avg_vol >= 1000 else str(int(avg_vol)) + " shares"
+    
     if rvol >= 2.0:
-        return f"**{rvol:.1f}x** (🔥 Unusual Surge)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
     elif rvol >= 1.3:
-        return f"**{rvol:.1f}x** (⚡ Strong)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • ⚡ Strong)"
     elif rvol < 0.6:
-        return f"**{rvol:.1f}x** (💤 Low)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 💤 Low)"
     else:
-        return f"**{rvol:.1f}x** (📊 Normal)"
+        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 📊 Normal)"
 
 def get_rsi_tag(rsi):
     if rsi is None:
@@ -171,7 +174,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Robust Statement Engine."""
+    """Direct Chart API + Pure Statement Engine with Exact Average Volumes."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -208,19 +211,23 @@ def get_on_demand_data(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # Volume Multipliers (20D, 50D, 90D)
+        # Volume Multipliers with Exact Historical Average Numbers
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
-        rvol_20 = (vol_today / (sum(volumes[-21:-1]) / len(volumes[-21:-1]))) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
-        rvol_50 = (vol_today / (sum(volumes[-51:-1]) / len(volumes[-51:-1]))) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
-        rvol_90 = (vol_today / (sum(volumes[-91:-1]) / len(volumes[-91:-1]))) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
+        avg_vol_20 = (sum(volumes[-21:-1]) / len(volumes[-21:-1])) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
+        avg_vol_50 = (sum(volumes[-51:-1]) / len(volumes[-51:-1])) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
+        avg_vol_90 = (sum(volumes[-91:-1]) / len(volumes[-91:-1])) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
+
+        rvol_20 = (vol_today / avg_vol_20) if avg_vol_20 else None
+        rvol_50 = (vol_today / avg_vol_50) if avg_vol_50 else None
+        rvol_90 = (vol_today / avg_vol_90) if avg_vol_90 else None
 
         volume_block = (
             f"• **Today's Vol:** `{v_today_fmt}`\n"
-            f"• **20D (1-Month):** {get_volume_tag(rvol_20)}\n"
-            f"• **50D (Quarterly):** {get_volume_tag(rvol_50)}\n"
-            f"• **90D (Long-Term):** {get_volume_tag(rvol_90)}"
+            f"• **20D (1-Month):** {get_volume_tag(rvol_20, avg_vol_20)}\n"
+            f"• **50D (Quarterly):** {get_volume_tag(rvol_50, avg_vol_50)}\n"
+            f"• **90D (Long-Term):** {get_volume_tag(rvol_90, avg_vol_90)}"
         )
 
         # Multi-Timeframe RSI (7D, 14D, 30D)
@@ -303,26 +310,33 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. ISOLATED ASSET PROFILER & FUNDAMENTAL ENGINE
+        # 2. PURE STATEMENT-BASED FUNDAMENTALS & BALANCE SHEET ENGINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
         # 1. CRYPTO
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
+            t_obj = yf.Ticker(ticker_symbol)
+            m_cap = getattr(t_obj.fast_info, "market_cap", None)
+            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
+            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
-                f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
+                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
+                f"• **Valuation:** `Digital Asset / Network Utility`"
             )
 
         # 2. ETFs
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             fund_title = "🏢 Fund Profile & Structure"
+            t_obj = yf.Ticker(ticker_symbol)
+            m_cap = getattr(t_obj.fast_info, "market_cap", None)
+            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Structure:** `Diversified Market Basket Holding`\n"
-                f"• **Type:** `Open-End Fund Vehicle`"
+                f"• **Total Net Assets:** `{cap_fmt}`\n"
+                f"• **Strategy:** `Diversified Index / Holdings Basket`"
             )
 
         # 3. FUTURES
@@ -333,11 +347,19 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
 
-        # 4. EQUITIES / STOCKS (Computed safely from filed financial statements)
+        # 4. EQUITIES / STOCKS (Computed directly from filed balance sheet & statements)
         else:
             fund_title = "🏢 Valuation, Earnings & Growth"
+            t_obj = yf.Ticker(ticker_symbol)
+            fi = t_obj.fast_info
             
-            # Safe Sector/Industry Lookup
+            # Market Cap & Shares
+            market_cap = getattr(fi, "market_cap", None)
+            shares = getattr(fi, "shares", None)
+            if not market_cap and shares and current_price:
+                market_cap = current_price * shares
+
+            # Sector / Industry from Search API
             sector = None
             industry = None
             try:
@@ -351,31 +373,16 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Safe Statement Calculations
-            market_cap = None
+            # Direct Calculations from Filed Financial Statements
             trailing_pe = None
             rev_growth_pct = None
             net_inc_growth_pct = None
             profit_margin_pct = None
 
             try:
-                t_obj = yf.Ticker(ticker_symbol)
-                
-                # Shares & Market Cap
-                shares = None
-                try:
-                    shares = t_obj.fast_info.shares
-                    market_cap = t_obj.fast_info.market_cap
-                except Exception:
-                    pass
-
-                if not market_cap and shares and current_price:
-                    market_cap = current_price * shares
-
-                # Financial Statement Rows
                 q_inc = t_obj.quarterly_income_stmt
                 if q_inc is not None and not q_inc.empty:
-                    # Revenue Row
+                    # Find Revenue Row
                     rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
                     if rev_row:
                         rev_s = q_inc.loc[rev_row].dropna()
@@ -390,7 +397,7 @@ def get_on_demand_data(ticker_symbol):
                     else:
                         ttm_rev = None
 
-                    # Net Income Row
+                    # Find Net Income Row
                     inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
                     if inc_row:
                         inc_s = q_inc.loc[inc_row].dropna()
@@ -403,7 +410,7 @@ def get_on_demand_data(ticker_symbol):
                         else:
                             ttm_net_inc = float(inc_s.sum())
 
-                        # Compute Trailing P/E
+                        # Compute Real Trailing P/E from Balance Sheet Net Income!
                         if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
                             trailing_eps = ttm_net_inc / shares
                             if trailing_eps > 0:
@@ -412,7 +419,6 @@ def get_on_demand_data(ticker_symbol):
                         # Compute Profit Margin
                         if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
                             profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
-
             except Exception:
                 pass
 
