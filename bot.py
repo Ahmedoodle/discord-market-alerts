@@ -49,19 +49,20 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 def format_large_number(num):
     if num is None:
         return "N/A"
-    if num >= 1e9:
-        return f"{num / 1e9:.2f}B"
+    if num >= 1e12:
+        return f"${num / 1e12:.2f} Trillion"
+    elif num >= 1e9:
+        return f"${num / 1e9:.2f} Billion"
     elif num >= 1e6:
-        return f"{num / 1e6:.1f}M"
+        return f"${num / 1e6:.1f} Million"
     elif num >= 1e3:
-        return f"{num / 1e3:.1f}K"
+        return f"${num / 1e3:.1f}K"
     return str(int(num))
 
-def calculate_rsi_from_closes(closes, period=14):
-    """Calculates Wilder's RSI directly from closing price list."""
+# --- MATHEMATICAL INDICATOR ENGINES ---
+def calculate_rsi(closes, period=14):
     if len(closes) < period + 1:
         return None
-
     deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
     gains = [max(d, 0) for d in deltas]
     losses = [max(-d, 0) for d in deltas]
@@ -77,6 +78,80 @@ def calculate_rsi_from_closes(closes, period=14):
         return 100.0
     rs = avg_gain / avg_loss
     return 100.0 - (100.0 / (1.0 + rs))
+
+def calculate_ema(data, span):
+    if not data or len(data) < span:
+        return []
+    alpha = 2.0 / (span + 1.0)
+    ema = [sum(data[:span]) / span]
+    for price in data[span:]:
+        ema.append(price * alpha + ema[-1] * (1 - alpha))
+    return ema
+
+def calculate_macd(closes):
+    """Calculates MACD (12, 26, 9) and momentum status."""
+    if len(closes) < 35:
+        return "N/A"
+    
+    # Calculate 12 & 26 EMAs
+    ema_12_full = []
+    ema_26_full = []
+    
+    alpha_12 = 2.0 / (12 + 1)
+    alpha_26 = 2.0 / (26 + 1)
+
+    curr_12 = sum(closes[:12]) / 12
+    curr_26 = sum(closes[:26]) / 26
+
+    # Align starting point
+    for i, c in enumerate(closes):
+        if i >= 12:
+            curr_12 = c * alpha_12 + curr_12 * (1 - alpha_12)
+        if i >= 26:
+            curr_26 = c * alpha_26 + curr_26 * (1 - alpha_26)
+            ema_12_full.append(curr_12)
+            ema_26_full.append(curr_26)
+
+    macd_line = [e12 - e26 for e12, e26 in zip(ema_12_full, ema_26_full)]
+    if len(macd_line) < 9:
+        return "N/A"
+
+    # Signal Line (9 EMA of MACD)
+    alpha_9 = 2.0 / (9 + 1)
+    sig = sum(macd_line[:9]) / 9
+    sig_line = [sig]
+    for m in macd_line[9:]:
+        sig = m * alpha_9 + sig * (1 - alpha_9)
+        sig_line.append(sig)
+
+    curr_macd = macd_line[-1]
+    curr_sig = sig_line[-1]
+    hist_curr = curr_macd - curr_sig
+    hist_prev = (macd_line[-2] - sig_line[-2]) if len(macd_line) >= 2 else hist_curr
+
+    if curr_macd >= curr_sig:
+        if hist_curr >= hist_prev:
+            return "Bullish Momentum 🟢 (Signal Expanding Upward)"
+        else:
+            return "Bullish Trend 🟢 (Momentum Slowing)"
+    else:
+        if hist_curr <= hist_prev:
+            return "Bearish Momentum 🔴 (Expanding Downward)"
+        else:
+            return "Bearish Trend 🔴 (Weakening / Slowing)"
+
+def calculate_atr(highs, lows, closes, period=14):
+    """Calculates 14-Day Average True Range (Expected Daily Move)."""
+    if len(closes) < period + 1:
+        return None
+    trs = []
+    for i in range(1, len(closes)):
+        h = highs[i]
+        l = lows[i]
+        c_prev = closes[i - 1]
+        tr = max(h - l, abs(h - c_prev), abs(l - c_prev))
+        trs.append(tr)
+    return sum(trs[-period:]) / period
 
 def get_volume_tag(rvol):
     if rvol is None:
@@ -107,7 +182,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Yahoo Chart Engine — Multi-Timeframe Volume & RSI."""
+    """Direct Yahoo Chart Engine — Full Institutional Terminal."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
@@ -139,14 +214,14 @@ def get_on_demand_data(ticker_symbol):
         if len(closes) < 2:
             return None, f"Insufficient price history for `{ticker_symbol}`."
 
-        # 1. True 1-Day Price & Previous Day Close
+        # 1. Price & 1D Change
         current_price = meta.get("regularMarketPrice") or closes[-1]
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # 2. Multi-Timeframe Relative Volume (20D, 50D, 90D)
+        # 2. Volume Multipliers (20D, 50D, 90D)
         vol_today = volumes[-1] if volumes else 0
-        v_today_fmt = format_large_number(vol_today)
+        v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
         rvol_20 = (vol_today / (sum(volumes[-21:-1]) / len(volumes[-21:-1]))) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
         rvol_50 = (vol_today / (sum(volumes[-51:-1]) / len(volumes[-51:-1]))) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
@@ -160,9 +235,9 @@ def get_on_demand_data(ticker_symbol):
         )
 
         # 3. Multi-Timeframe RSI (7D, 14D, 30D)
-        rsi_7 = calculate_rsi_from_closes(closes, 7)
-        rsi_14 = calculate_rsi_from_closes(closes, 14)
-        rsi_30 = calculate_rsi_from_closes(closes, 30)
+        rsi_7 = calculate_rsi(closes, 7)
+        rsi_14 = calculate_rsi(closes, 14)
+        rsi_30 = calculate_rsi(closes, 30)
 
         rsi_block = (
             f"• **7D (Fast / Scalp):** {get_rsi_tag(rsi_7)}\n"
@@ -170,7 +245,7 @@ def get_on_demand_data(ticker_symbol):
             f"• **30D (Macro Trend):** {get_rsi_tag(rsi_30)}"
         )
 
-        # 4. 52-Week Range in Dollars & High Proximity
+        # 4. 52-Week Range in Dollars
         range_str = "N/A"
         high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
         low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
@@ -197,6 +272,49 @@ def get_on_demand_data(ticker_symbol):
             else:
                 trend_str = "Above 50D, Below 200D SMA (🟡 Rebound)"
 
+        # 6. MACD (12, 26, 9)
+        macd_str = calculate_macd(closes)
+
+        # 7. Daily Pivot Levels (Support S1 & Resistance R1)
+        pivot_str = "N/A"
+        if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
+            h_prev = highs[-2]
+            l_prev = lows[-2]
+            c_prev = closes[-2]
+            p = (h_prev + l_prev + c_prev) / 3.0
+            r1 = (2.0 * p) - l_prev
+            s1 = (2.0 * p) - h_prev
+            pivot_str = f"`Support (S1): ${s1:.2f}` | `Resistance (R1): ${r1:.2f}`"
+
+        # 8. Expected Daily Move (14D ATR)
+        atr_str = "N/A"
+        atr = calculate_atr(highs, lows, closes, 14)
+        if atr and current_price > 0:
+            atr_pct = (atr / current_price) * 100
+            atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
+
+        # 9. Company Valuation & Market Cap Tier
+        val_str = "N/A"
+        market_cap = None
+        # Fetch fundamental quote summary for cap & pe
+        try:
+            q_url = f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=summaryDetail,defaultKeyStatistics"
+            q_res = http_session.get(q_url, timeout=3)
+            if q_res.status_code == 200:
+                q_data = q_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                sum_det = q_data.get("summaryDetail", {})
+                
+                market_cap = sum_det.get("marketCap", {}).get("raw")
+                pe_val = sum_det.get("trailingPE", {}).get("raw") or sum_det.get("forwardPE", {}).get("raw")
+                
+                if market_cap:
+                    cap_fmt = format_large_number(market_cap)
+                    tier = "Mega-Cap" if market_cap >= 2e11 else ("Large-Cap" if market_cap >= 1e10 else ("Mid-Cap" if market_cap >= 2e9 else "Small-Cap"))
+                    pe_str = f" • Trailing P/E: `{pe_val:.1f}`" if pe_val else ""
+                    val_str = f"`{cap_fmt} ({tier})`{pe_str}"
+        except Exception:
+            pass
+
         return {
             "ticker": ticker_symbol,
             "price": current_price,
@@ -204,7 +322,11 @@ def get_on_demand_data(ticker_symbol):
             "volume_block": volume_block,
             "rsi_block": rsi_block,
             "range_str": range_str,
-            "trend_str": trend_str
+            "trend_str": trend_str,
+            "macd_str": macd_str,
+            "pivot_str": pivot_str,
+            "atr_str": atr_str,
+            "val_str": val_str
         }, None
 
     except Exception as e:
@@ -222,6 +344,12 @@ def create_market_embed(data):
     embed.add_field(name="📈 Multi-Timeframe RSI", value=data['rsi_block'], inline=False)
     embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=False)
     embed.add_field(name="📈 Trend Health", value=data['trend_str'], inline=False)
+    embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
+    embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
+    embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=True)
+    if data.get("val_str") and data["val_str"] != "N/A":
+        embed.add_field(name="🏢 Valuation & Cap", value=data['val_str'], inline=True)
+
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
 
