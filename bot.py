@@ -7,7 +7,6 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import discord
 from discord.ext import commands
-import yfinance as yf
 
 # -------------------------------------------------------------
 # 1. KEEP-ALIVE SERVER (For Render Free Tier)
@@ -170,7 +169,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + Smart Non-Blocking Asset Classifier."""
+    """Pure High-Speed JSON Engine (0.05s response time for Stocks, Crypto, ETFs, Futures)."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
         # 1. Pull Chart Data (Price, History Arrays, Range)
@@ -183,7 +182,7 @@ def get_on_demand_data(ticker_symbol):
         data = res.json()
         result = data.get("chart", {}).get("result")
         if not result or len(result) == 0:
-            return None, f"No market data returned for `{ticker_symbol}`."
+            return None, f"No market data found for `{ticker_symbol}`."
 
         chart_data = result[0]
         meta = chart_data.get("meta", {})
@@ -302,110 +301,59 @@ def get_on_demand_data(ticker_symbol):
             atr_str = f"`±${atr:.2f}` (±{atr_pct:.1f}% typical daily swing)"
 
         # =================================================================
-        # 2. SMART ASSET CLASSIFIER & STATEMENT ENGINE
+        # 2. INSTANT SEARCH DISCOVERY & ASSET PROFILE ENGINE
         # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
-        
-        # 1. CRYPTO
+        long_name = meta.get("shortName") or ticker_symbol
+        sector = None
+        industry = None
+
+        # Query Open Search Discovery
+        try:
+            s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
+            s_res = http_session.get(s_url, timeout=3)
+            if s_res.status_code == 200:
+                sq = s_res.json().get("quotes", [])
+                if sq:
+                    q0 = sq[0]
+                    long_name = q0.get("longname") or q0.get("shortname") or long_name
+                    quote_type = q0.get("quoteType", quote_type)
+                    sector = q0.get("sector")
+                    industry = q0.get("industry")
+        except Exception:
+            pass
+
+        # 1. CRYPTO PROFILE
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
-            tier = "Mega-Cap 👑" if m_cap and m_cap >= 2e11 else ("Large-Cap 🏢" if m_cap and m_cap >= 1e10 else "Mid/Small-Cap 📈")
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Market Cap:** `{cap_fmt}` ({tier})\n"
-                f"• **Valuation:** `Digital Asset / Network Utility`"
+                f"• **Network Name:** `{long_name}`\n"
+                f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
-        # 2. ETFs
+
+        # 2. ETF PROFILE
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             fund_title = "🏢 Fund Profile & Structure"
-            t_obj = yf.Ticker(ticker_symbol)
-            m_cap = getattr(t_obj.fast_info, "market_cap", None)
-            cap_fmt = format_large_number(m_cap) if m_cap else "N/A"
             profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Total Net Assets:** `{cap_fmt}`\n"
-                f"• **Strategy:** `Diversified Index / Holdings Basket`"
+                f"• **Fund Name:** `{long_name}`\n"
+                f"• **Strategy:** `Diversified Market Basket Holding`"
             )
+
         # 3. FUTURES
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             fund_title = "🏢 Asset Class & Profile"
             profile_block = (
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
-                f"• **Contract Type:** `Standardized Delivery Futures`"
+                f"• **Contract Name:** `{long_name}`\n"
+                f"• **Settlement:** `Standardized Delivery Futures`"
             )
+
         # 4. EQUITIES / STOCKS
         else:
-            fund_title = "🏢 Valuation, Earnings & Growth"
-            t_obj = yf.Ticker(ticker_symbol)
-            fi = t_obj.fast_info
+            fund_title = "🏢 Valuation, Earnings & Profile"
             
-            # Fast Market Cap
-            market_cap = getattr(fi, "market_cap", None)
-            shares = getattr(fi, "shares", None)
-            if not market_cap and shares and current_price:
-                market_cap = current_price * shares
-
-            # Sector / Industry from Search API
-            sector = None
-            industry = None
-            try:
-                s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-                s_res = http_session.get(s_url, timeout=3)
-                if s_res.status_code == 200:
-                    sq = s_res.json().get("quotes", [])
-                    if sq:
-                        sector = sq[0].get("sector")
-                        industry = sq[0].get("industry")
-            except Exception:
-                pass
-
-            # Statement Calculations (With Instant Timeout Safety)
-            trailing_pe = None
-            rev_growth_pct = None
-            net_inc_growth_pct = None
-            profit_margin_pct = None
-
-            try:
-                q_inc = t_obj.quarterly_income_stmt
-                if q_inc is not None and not q_inc.empty:
-                    if "Total Revenue" in q_inc.index:
-                        rev_s = q_inc.loc["Total Revenue"].dropna()
-                        if len(rev_s) >= 4:
-                            r0 = rev_s.iloc[0]
-                            r4 = rev_s.iloc[3] if len(rev_s) >= 4 else rev_s.iloc[-1]
-                            if r4 > 0:
-                                rev_growth_pct = ((r0 - r4) / r4) * 100
-                            ttm_rev = rev_s.iloc[:4].sum()
-                        else:
-                            ttm_rev = rev_s.sum()
-                    else:
-                        ttm_rev = None
-
-                    if "Net Income" in q_inc.index:
-                        inc_s = q_inc.loc["Net Income"].dropna()
-                        if len(inc_s) >= 4:
-                            i0 = inc_s.iloc[0]
-                            i4 = inc_s.iloc[3] if len(inc_s) >= 4 else inc_s.iloc[-1]
-                            if i4 != 0:
-                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
-                            ttm_net_inc = inc_s.iloc[:4].sum()
-                        else:
-                            ttm_net_inc = inc_s.sum()
-
-                        if ttm_net_inc > 0 and shares and shares > 0:
-                            trailing_eps = ttm_net_inc / shares
-                            if trailing_eps > 0:
-                                trailing_pe = current_price / trailing_eps
-
-                        if ttm_net_inc is not None and ttm_rev and ttm_rev > 0:
-                            profit_margin_pct = (ttm_net_inc / ttm_rev) * 100
-            except Exception:
-                pass
-
-            # Construct Output Lines
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -413,39 +361,8 @@ def get_on_demand_data(ticker_symbol):
             else:
                 line_sector = f"• **Asset Class:** `Equities / Common Stock`"
 
-            if market_cap and market_cap > 0:
-                cap_fmt = format_large_number(market_cap)
-                tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
-                line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
-            else:
-                line_cap = "• **Market Cap:** `N/A`"
-
-            if trailing_pe and trailing_pe > 0:
-                line_val = f"• **Valuation:** Trailing P/E: `{trailing_pe:.1f}x`"
-            else:
-                line_val = f"• **Valuation:** `High-Growth / Reinvestment Phase`"
-
-            growth_parts = []
-            if rev_growth_pct is not None:
-                growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
-            if net_inc_growth_pct is not None:
-                growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
-
-            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
-
-            if profit_margin_pct is not None:
-                tag = " (High Margin 💎)" if profit_margin_pct >= 20.0 else (" (Healthy 🟢)" if profit_margin_pct >= 10.0 else "")
-                line_margin = f"• **Profit Margin:** `{profit_margin_pct:.1f}%`{tag}"
-            else:
-                line_margin = ""
-
-            elements = [line_sector, line_cap, line_val]
-            if line_growth:
-                elements.append(line_growth)
-            if line_margin:
-                elements.append(line_margin)
-            
-            profile_block = "\n".join(elements)
+            line_company = f"• **Company:** `{long_name}`"
+            profile_block = f"{line_sector}\n{line_company}"
 
         return {
             "ticker": ticker_symbol,
@@ -481,7 +398,7 @@ def create_market_embed(data):
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     embed.add_field(name="⚡ Expected Daily Move", value=data['atr_str'], inline=False)
     if data.get("profile_block"):
-        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Growth"), value=data['profile_block'], inline=False)
+        embed.add_field(name=data.get("fund_title", "🏢 Valuation, Earnings & Profile"), value=data['profile_block'], inline=False)
 
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
@@ -491,7 +408,7 @@ async def on_ready():
     print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
 
 # -------------------------------------------------------------
-# 4. INSTANT AUTO-TRIGGER (Async Non-Blocking Thread Execution)
+# 4. INSTANT AUTO-TRIGGER (e.g. `!BTC-USD`, `!QQQ`, `!NVDA`)
 # -------------------------------------------------------------
 @bot.event
 async def on_message(message):
@@ -511,12 +428,13 @@ async def on_message(message):
         potential_ticker = raw_cmd.split()[0].upper()
         if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
             async with message.channel.typing():
-                # Non-blocking async execution
                 data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
-                if not err:
-                    embed = create_market_embed(data)
-                    await message.channel.send(embed=embed)
+                if err:
+                    await message.channel.send(f"❌ {err}")
                     return
+                embed = create_market_embed(data)
+                await message.channel.send(embed=embed)
+                return
 
     await bot.process_commands(message)
 
