@@ -346,8 +346,8 @@ def calculate_macd(closes):
     if len(closes) < 35:
         return "N/A"
     
-    alpha_12 = 2.0 / (12 + 1)
-    alpha_26 = 2.0 / (26 + 1)
+    alpha_12 = 2.0 / 13
+    alpha_26 = 2.0 / 27
     curr_12 = sum(closes[:12]) / 12
     curr_26 = sum(closes[:26]) / 26
     ema_12_full = []
@@ -365,7 +365,7 @@ def calculate_macd(closes):
     if len(macd_line) < 9:
         return "N/A"
 
-    alpha_9 = 2.0 / (9 + 1)
+    alpha_9 = 2.0 / 10
     sig = sum(macd_line[:9]) / 9
     sig_line = [sig]
     for m in macd_line[9:]:
@@ -391,13 +391,7 @@ def calculate_macd(closes):
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 1.0
-    trs = []
-    for i in range(1, len(closes)):
-        h = highs[i]
-        l = lows[i]
-        c_prev = closes[i - 1]
-        tr = max(h - l, abs(h - c_prev), abs(l - c_prev))
-        trs.append(tr)
+    trs = [max(highs[i] - lows[i], abs(highs[i] - closes[i - 1]), abs(lows[i] - closes[i - 1])) for i in range(1, len(closes))]
     return sum(trs[-period:]) / period
 
 def calculate_historical_volatility(closes, window=30):
@@ -464,18 +458,13 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
-    low_t = None
-    mean_t = None
-    high_t = None
-    rating = None
-
+    low_t, mean_t, high_t, rating = None, None, None, None
     try:
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
         if fz_res.status_code == 200:
-            text = fz_res.text
-            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', text, re.IGNORECASE)
-            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', text, re.IGNORECASE)
+            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
+            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
             if tp_match:
                 mean_t = float(tp_match.group(1).replace(',', ''))
             if rec_match:
@@ -570,11 +559,11 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         if high_52w and low_52w and high_52w > low_52w:
             dist_high = ((high_52w - current_price) / high_52w) * 100
             if dist_high <= 2.0:
-                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
             elif dist_high <= 5.0:
-                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
             else:
-                metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
+                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
         sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else None
         sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else None
@@ -673,10 +662,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
                             nxt_dt = future_rows.index[-1]
                             nxt_d = nxt_dt.date() if isinstance(nxt_dt, (datetime, pd.Timestamp)) else nxt_dt
                             days_left = (nxt_d - datetime.now().date()).days
-                            if days_left >= 0:
-                                earnings_date_str = f"`In {days_left} Days ({nxt_d.strftime('%b %d')})`"
-                            else:
-                                earnings_date_str = f"`{nxt_d.strftime('%b %d')}`"
+                            earnings_date_str = f"`In {days_left} Days ({nxt_d.strftime('%b %d')})`" if days_left >= 0 else f"`{nxt_d.strftime('%b %d')}`"
                         
                         past_rows = ed_df[ed_df['Reported EPS'].notna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
                         if not past_rows.empty and "Surprise(%)" in past_rows.columns:
@@ -746,10 +732,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
                     if ocf_row:
                         ocf_s = q_cf.loc[ocf_row].dropna()
                         ttm_ocf = float(ocf_s.iloc[:4].sum()) if len(ocf_s) >= 1 else 0
-                        ttm_capex = 0
-                        if capex_row:
-                            capex_s = q_cf.loc[capex_row].dropna()
-                            ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
+                        ttm_capex = abs(float(q_cf.loc[capex_row].dropna().iloc[:4].sum())) if capex_row else 0
                         ttm_fcf = ttm_ocf - ttm_capex
 
                 if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
@@ -774,20 +757,11 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
                 if ttm_fcf is not None:
                     fcf_fmt = format_large_number(ttm_fcf)
-                    if market_cap and market_cap > 0:
-                        fcf_yield = (ttm_fcf / market_cap) * 100
-                        fcf_str = f"`{fcf_fmt}` (Yield: `{fcf_yield:.1f}%`)"
-                    else:
-                        fcf_str = f"`{fcf_fmt}`"
+                    fcf_str = f"`{fcf_fmt}` (Yield: `{(ttm_fcf / market_cap) * 100:.1f}%`)" if (market_cap and market_cap > 0) else f"`{fcf_fmt}`"
 
                 if ttm_fcf is not None and ttm_net_inc and ttm_net_inc > 0:
                     quality_ratio = ttm_fcf / ttm_net_inc
-                    if quality_ratio >= 1.0:
-                        quality_str = f"`{quality_ratio:.2f}x` 🟢 (Real Cash Backing)"
-                    elif quality_ratio >= 0.6:
-                        quality_str = f"`{quality_ratio:.2f}x` 🟡 (Moderate Cash Conversion)"
-                    else:
-                        quality_str = f"`{quality_ratio:.2f}x` ⚠️ (Accrual / Paper Earnings)"
+                    quality_str = f"`{quality_ratio:.2f}x` 🟢 (Real Cash Backing)" if quality_ratio >= 1.0 else (f"`{quality_ratio:.2f}x` 🟡 (Moderate Cash Conversion)" if quality_ratio >= 0.6 else f"`{quality_ratio:.2f}x` ⚠️ (Accrual / Paper Earnings)")
 
                 if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
                     trailing_eps = ttm_net_inc / shares
@@ -817,10 +791,10 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
             else:
                 line_cap = "• **Market Cap:** `N/A`"
 
-            metrics["profile_block"] = f"{line_sector}\n{line_cap}"
-            metrics["catalysts_block"] = f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n• **Wall St. Targets:** {targets_line_str}"
+            profile_block = f"{line_sector}\n{line_cap}"
+            catalysts_block = f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n• **Wall St. Targets:** {targets_line_str}"
             atr_fmt = f"±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)" if atr and current_price > 0 else "N/A"
-            metrics["smart_money_block"] = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `{atr_fmt}`"
+            smart_money_block = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `{atr_fmt}`"
 
             growth_parts = []
             if rev_growth_pct is not None:
@@ -841,12 +815,54 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
                 f"• **Valuation Multiples:** Trailing P/E: {pe_str}{pfcf_str}"
             ])
 
-            metrics["health_block"] = "\n".join(health_elements)
+            health_block = "\n".join(health_elements)
 
-    except Exception:
-        pass
+        return {
+            "ticker": ticker_symbol,
+            "price": current_price,
+            "change_pct": change_pct,
+            "volume_block": volume_block,
+            "rsi_block": rsi_block,
+            "range_str": range_str,
+            "trend_block": trend_block,
+            "macd_str": macd_str,
+            "pivot_str": pivot_str,
+            "catalysts_block": catalysts_block,
+            "smart_money_block": smart_money_block,
+            "profile_title": profile_title,
+            "profile_block": profile_block,
+            "health_block": health_block
+        }, None
 
-    return metrics
+    except Exception as e:
+        return None, f"Error fetching `{ticker_symbol}`: {e}"
+
+def create_market_embed(data):
+    embed = discord.Embed(
+        title=f"🚨 Market Snapshot: {data['ticker']} [LIVE ON-DEMAND]",
+        description=f"**{data['ticker']}** is currently **{data['change_pct']:+.2f}%** today.",
+        color=0x2ecc71 if data['change_pct'] >= 0 else 0xe74c3c
+    )
+    embed.add_field(name="Current Price", value=f"${data['price']:.2f}", inline=True)
+    embed.add_field(name="1D Total Change", value=f"{data['change_pct']:+.2f}%", inline=True)
+    embed.add_field(name="📊 Volume Multipliers", value=data['volume_block'], inline=False)
+    embed.add_field(name="📈 Multi-Timeframe RSI", value=data['rsi_block'], inline=False)
+    embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=False)
+    embed.add_field(name="📈 Moving Averages & Trend", value=data['trend_block'], inline=False)
+    embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
+    embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
+    
+    if data.get("catalysts_block"):
+        embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
+    if data.get("smart_money_block"):
+        embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
+    if data.get("profile_block"):
+        embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
+    if data.get("health_block"):
+        embed.add_field(name="📊 Balance Sheet & Cash Flow Health", value=data['health_block'], inline=False)
+
+    embed.set_footer(text="Looney • On-Demand Market Terminal")
+    return embed
 
 # ====================================================================
 # 5. DISCORD WEBHOOK DISPATCHERS
@@ -1312,7 +1328,7 @@ def check_market():
         send_discord_holiday_announcement(us_hol, ca_hol)
         state["holiday_announced_date"] = today_ny_str
 
-    # 2. 9:30 AM Opening bell pause
+    # 2. 9:30 AM OPENING BELL BUFFER (Waits until 9:32 AM for Opening Cross to settle)
     if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
         target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
         sleep_seconds = max(0, (target_time - now_ny).total_seconds())
@@ -1479,14 +1495,24 @@ def check_market():
 
     # ==========================================
     # 6. RUN TOP 10 OPTIONS RADAR (30-MIN SCAN)
+    # Strict Gate: Mon-Fri between 9:32 AM and 4:00 PM EST (Live Options Market Hours)
     # ==========================================
-    # Runs during market days (Mon-Fri) if market is open/pre-market
-    if not is_stock_holiday and session_type != "CLOSED":
+    reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
+    is_options_market_open = (
+        not is_stock_holiday and
+        now_ny.weekday() <= 4 and
+        dtime(9, 32) <= now_ny.time() <= reg_close_time
+    )
+
+    if is_options_market_open:
         dispatch_top10_options_radar(session_http)
     elif is_stock_holiday:
-        print("Skipping options radar: Market Holiday.")
+        print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
+    elif now_ny.weekday() > 4:
+        print("⏭️ Skipping options radar: Weekend (Market Closed).")
     else:
-        print("Skipping options radar: Market Session is Closed.")
+        close_str = "1:00 PM" if is_early_close else "4:00 PM"
+        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
 
     # ==========================================
     # 7. PERSIST STATE
