@@ -4,8 +4,10 @@ import asyncio
 import math
 import re
 import time
+import xml.etree.ElementTree as ET
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta
+from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 import requests
 import discord
@@ -405,7 +407,6 @@ def get_on_demand_data(ticker_symbol):
                 trailing_div_rate = None
                 trailing_div_yield = None
 
-                # Query QuoteSummary with TLS Impersonation
                 try:
                     region_param = "CA" if is_canadian else "US"
                     qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={region_param}&lang=en-{region_param}"
@@ -443,7 +444,6 @@ def get_on_demand_data(ticker_symbol):
                 except Exception:
                     pass
 
-                # Parse chart dividends
                 recent_div_amounts = []
                 one_year_ago_ts = int(time.time()) - (365 * 86400)
                 divs_in_last_year = []
@@ -743,16 +743,62 @@ def create_market_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 4. ROBUST MULTI-ENGINE ANALYST CONSENSUS (%TICKER)
+# 4. LIVE INSTITUTIONAL RESEARCH RADAR (%TICKER)
 # -------------------------------------------------------------
-def fetch_analyst_consensus(ticker_symbol):
+INSTITUTION_REGISTRY = {
+    # Wall Street Primary
+    "Goldman Sachs": ("Goldman Sachs", "🏦"),
+    "Morgan Stanley": ("Morgan Stanley", "🏦"),
+    "JPMorgan": ("JPMorgan Chase", "🏦"),
+    "J.P. Morgan": ("JPMorgan Chase", "🏦"),
+    "Bank of America": ("Bank of America", "🏦"),
+    "BofA": ("Bank of America", "🏦"),
+    "Wells Fargo": ("Wells Fargo", "🏦"),
+    "Citigroup": ("Citigroup", "🏦"),
+    "Citi": ("Citigroup", "🏦"),
+    "Barclays": ("Barclays", "🏦"),
+    "UBS": ("UBS Investment Bank", "🏦"),
+    "Deutsche Bank": ("Deutsche Bank", "🏦"),
+    "Jefferies": ("Jefferies", "🏦"),
+    "Piper Sandler": ("Piper Sandler", "🏦"),
+    "Wedbush": ("Wedbush Securities", "🏦"),
+    "Oppenheimer": ("Oppenheimer", "🏦"),
+    "Bernstein": ("Bernstein", "🏦"),
+    "Mizuho": ("Mizuho Securities", "🏦"),
+    "Truist": ("Truist Securities", "🏦"),
+    "KeyBanc": ("KeyBanc Capital", "🏦"),
+    "Evercore": ("Evercore ISI", "🏦"),
+    "Baird": ("Baird", "🏦"),
+    "Stifel": ("Stifel", "🏦"),
+    "Rosenblatt": ("Rosenblatt Securities", "🏦"),
+    "Needham": ("Needham & Co", "🏦"),
+    "Wolfe Research": ("Wolfe Research", "🏦"),
+    "Raymond James": ("Raymond James", "🏦"),
+    "TD Cowen": ("TD Cowen", "🍁"),
+    "Canaccord": ("Canaccord Genuity", "🍁"),
+    
+    # Bay Street Primary (Canada)
+    "RBC Capital": ("RBC Capital Markets", "🍁"),
+    "RBC": ("RBC Capital Markets", "🍁"),
+    "TD Securities": ("TD Securities", "🍁"),
+    "BMO Capital": ("BMO Capital Markets", "🍁"),
+    "BMO": ("BMO Capital Markets", "🍁"),
+    "Scotiabank": ("Scotiabank Global", "🍁"),
+    "Scotia": ("Scotiabank Global", "🍁"),
+    "CIBC World Markets": ("CIBC World Markets", "🍁"),
+    "CIBC": ("CIBC World Markets", "🍁"),
+    "National Bank Financial": ("National Bank Financial", "🍁"),
+    "Desjardins": ("Desjardins Capital", "🍁")
+}
+
+def fetch_institutional_research_radar(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     is_canadian = sym.endswith(".TO") or sym.endswith(".V")
     currency = "CAD" if is_canadian else "USD"
     base_sym = sym.replace(".TO", "").replace(".V", "").upper()
 
     try:
-        # Step 1: Realtime Live Price from Chart API
+        # Step 1: Live current price
         current_price = 0.0
         try:
             chart_url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d"
@@ -763,214 +809,186 @@ def fetch_analyst_consensus(ticker_symbol):
         except Exception:
             pass
 
-        high_target = None
-        mean_target = None
-        low_target = None
-        total_analysts = 0
-        strong_buy, buy, hold, sell, strong_sell = 0, 0, 0, 0, 0
-        consensus_score = 0.0
-        consensus_verdict = None
+        # Step 2: Fetch articles from Search API and Google News RSS in parallel
+        raw_reports = []
 
-        # Step 2: Dynamic Yahoo Crumb + Cookie Handshake (100% Reliable for US & TSX)
-        try:
-            y_sess = requests.Session()
-            y_sess.headers.update({
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-            })
-            # Fetch cookie
-            y_sess.get("https://fc.yahoo.com", timeout=4)
-            # Fetch crumb
-            crumb_res = y_sess.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=4)
-            if crumb_res.status_code == 200 and crumb_res.text:
-                crumb = crumb_res.text.strip()
-                region_param = "CA" if is_canadian else "US"
-                qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=financialData,recommendationTrend,defaultKeyStatistics&region={region_param}&lang=en-{region_param}&crumb={crumb}"
-                qs_res = y_sess.get(qs_url, timeout=4)
-                if qs_res.status_code == 200:
-                    res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                    fin_data = res_data.get("financialData", {})
-                    rec_trend = res_data.get("recommendationTrend", {}).get("trend", [])
-
-                    h_val = fin_data.get("targetHighPrice", {}).get("raw")
-                    m_val = fin_data.get("targetMeanPrice", {}).get("raw")
-                    l_val = fin_data.get("targetLowPrice", {}).get("raw")
-                    r_score = fin_data.get("recommendationMean", {}).get("raw")
-
-                    if h_val and (current_price == 0 or float(h_val) < current_price * 10):
-                        high_target = float(h_val)
-                    if m_val and (current_price == 0 or float(m_val) < current_price * 10):
-                        mean_target = float(m_val)
-                    if l_val and (current_price == 0 or float(l_val) < current_price * 10):
-                        low_target = float(l_val)
-                    if r_score:
-                        consensus_score = float(r_score)
-
-                    if rec_trend:
-                        r0 = rec_trend[0]
-                        strong_buy = int(r0.get("strongBuy", 0) or 0)
-                        buy = int(r0.get("buy", 0) or 0)
-                        hold = int(r0.get("hold", 0) or 0)
-                        sell = int(r0.get("sell", 0) or 0)
-                        strong_sell = int(r0.get("strongSell", 0) or 0)
-                        total_analysts = strong_buy + buy + hold + sell + strong_sell
-
-                    if total_analysts == 0:
-                        ops = fin_data.get("numberOfAnalystOpinions", {}).get("raw")
-                        if ops:
-                            total_analysts = int(ops)
-        except Exception:
-            pass
-
-        # Step 3: StockAnalysis / TipRanks TLS Fallback
-        if not mean_target or total_analysts == 0:
+        def search_yahoo():
+            items = []
             try:
-                sa_url = f"https://stockanalysis.com/stocks/{base_sym.lower()}/forecast/" if not is_canadian else f"https://stockanalysis.com/quote/tsx/{base_sym.lower()}/forecast/"
-                sa_res = cureq.get(sa_url, impersonate="chrome124", timeout=4)
-                if sa_res.status_code == 200:
-                    text = sa_res.text
-                    m_avg = re.search(r'average price target.*?\$([\d,.]+)', text, re.IGNORECASE)
-                    m_low = re.search(r'lowest price target.*?\$([\d,.]+)', text, re.IGNORECASE)
-                    m_hi = re.search(r'highest price target.*?\$([\d,.]+)', text, re.IGNORECASE)
-                    m_cnt = re.search(r'based on (\d+) stock analysts', text, re.IGNORECASE)
-
-                    if m_avg and not mean_target:
-                        mean_target = float(m_avg.group(1).replace(',', ''))
-                    if m_low and not low_target:
-                        low_target = float(m_low.group(1).replace(',', ''))
-                    if m_hi and not high_target:
-                        high_target = float(m_hi.group(1).replace(',', ''))
-                    if m_cnt and total_analysts == 0:
-                        total_analysts = int(m_cnt.group(1))
+                ts_ms = int(time.time() * 1000)
+                url = f"https://query2.finance.yahoo.com/v1/finance/search?q={sym}+price+target+analyst+rating&newsCount=15&_={ts_ms}"
+                res = http_session.get(url, timeout=4)
+                if res.status_code == 200:
+                    for n in res.json().get("news", []):
+                        title = n.get("title", "")
+                        link = n.get("link") or n.get("canonicalUrl", {}).get("url")
+                        provider = n.get("publisher") or "Financial Wire"
+                        if title and link:
+                            items.append({"title": title, "link": link, "provider": provider})
             except Exception:
                 pass
+            return items
 
-        # Step 4: Finviz Regex Fallback (US Stocks)
-        if not mean_target and not is_canadian:
+        def search_google_rss():
+            items = []
             try:
-                fz_res = cureq.get(f"https://finviz.com/quote.ashx?t={base_sym}&p=d", impersonate="chrome124", timeout=4)
-                if fz_res.status_code == 200:
-                    m_tp = re.search(r'Target\s*Price[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
-                    m_rc = re.search(r'Recom[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
-                    if m_tp:
-                        mean_target = float(m_tp.group(1))
-                    if m_rc and consensus_score == 0.0:
-                        consensus_score = float(m_rc.group(1))
+                g_url = f"https://news.google.com/rss/search?q={sym}+analyst+price+target+OR+rating+OR+upgrade&hl=en-US&gl=US&ceid=US:en"
+                res = http_session.get(g_url, timeout=4)
+                if res.status_code == 200:
+                    root = ET.fromstring(res.content)
+                    for item in root.findall(".//item")[:15]:
+                        title = item.findtext("title")
+                        link = item.findtext("link")
+                        if title and link:
+                            items.append({"title": title, "link": link, "provider": "News Wire"})
             except Exception:
                 pass
+            return items
 
-        if not mean_target and total_analysts == 0:
-            return None, f"No active institutional analyst coverage found for `{sym}`."
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            f_y = executor.submit(search_yahoo)
+            f_g = executor.submit(search_google_rss)
+            raw_reports.extend(f_y.result())
+            raw_reports.extend(f_g.result())
 
-        # Consensus score calculation
-        if total_analysts > 0 and consensus_score == 0.0:
-            consensus_score = ((strong_buy * 1.0) + (buy * 2.0) + (hold * 3.0) + (sell * 4.0) + (strong_sell * 5.0)) / total_analysts
-        elif consensus_score == 0.0:
-            consensus_score = 2.0
+        # Step 3: Parse and Match Reports against Tier-1 Institutions & Price Targets
+        matched_reports = []
+        seen_headlines = set()
 
-        if not consensus_verdict:
-            if consensus_score <= 1.8:
-                consensus_verdict = "Strong Buy 🟢"
-            elif consensus_score <= 2.5:
-                consensus_verdict = "Moderate Buy 🟢"
-            elif consensus_score <= 3.5:
-                consensus_verdict = "Hold / Neutral 🟡"
-            elif consensus_score <= 4.2:
-                consensus_verdict = "Underperform / Sell 🔴"
+        for rep in raw_reports:
+            t_text = rep["title"]
+            norm_t = re.sub(r'[^a-zA-Z0-9]', '', t_text).lower()
+            if norm_t in seen_headlines:
+                continue
+            seen_headlines.add(norm_t)
+
+            matched_inst = None
+            inst_badge = "🏦"
+            for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
+                if re.search(rf'\b{re.escape(key_name)}\b', t_text, re.IGNORECASE):
+                    matched_inst = full_name
+                    inst_badge = badge
+                    break
+
+            if not matched_inst:
+                # Check for generic major bank/analyst coverage
+                if any(w in t_text.lower() for w in ["analyst", "price target", "rating", "outperform", "upgrade", "downgrade"]):
+                    matched_inst = rep["provider"] if rep["provider"] != "Financial Wire" else "Wall Street Consensus"
+
+            # Parse Price Target ($)
+            pt_val = None
+            pt_match = re.search(r'(?:target|pt|to)\s*(?:of|is|at|to)?\s*\$?([\d,]+(?:\.\d{2})?)', t_text, re.IGNORECASE)
+            if pt_match:
+                try:
+                    cand_pt = float(pt_match.group(1).replace(',', ''))
+                    if 1.0 <= cand_pt <= 50000.0 and cand_pt not in [2024, 2025, 2026, 2027]:
+                        pt_val = cand_pt
+                except Exception:
+                    pass
+
+            # Classify Rating Sentiment & Action
+            low_t = t_text.lower()
+            if any(b in low_t for b in ["strong buy", "conviction buy"]):
+                rating_str = "Strong Buy 🟢"
+                sentiment_tier = "BULLISH"
+            elif any(b in low_t for b in ["upgrade", "upgrades", "upgraded", "outperform", "overweight", "top pick", "raises target", "boosts target", "lifted"]):
+                rating_str = "Outperform / Buy 🟢"
+                sentiment_tier = "BULLISH"
+            elif any(b in low_t for b in ["downgrade", "downgrades", "downgraded", "underperform", "underweight", "cuts target", "lowers target", "slashes"]):
+                rating_str = "Underperform / Cautious 🔴"
+                sentiment_tier = "CAUTIOUS"
+            elif any(b in low_t for b in ["neutral", "hold", "equal-weight", "sector perform", "market perform", "maintains"]):
+                rating_str = "Hold / Neutral 🟡"
+                sentiment_tier = "NEUTRAL"
             else:
-                consensus_verdict = "Strong Sell 🔴"
+                rating_str = "Coverage Action 📊"
+                sentiment_tier = "NEUTRAL"
 
-        embed_color = 0x2ecc71 if "Buy" in consensus_verdict else (0xf1c40f if "Hold" in consensus_verdict else 0xe74c3c)
+            matched_reports.append({
+                "institution": matched_inst,
+                "badge": inst_badge,
+                "rating": rating_str,
+                "sentiment": sentiment_tier,
+                "target": pt_val,
+                "headline": t_text,
+                "link": rep["link"]
+            })
+
+        if not matched_reports:
+            return None, f"No recent institutional research reports found for `{sym}`."
+
+        # Separate into 3 Tiers
+        bullish = [r for r in matched_reports if r["sentiment"] == "BULLISH"]
+        neutral = [r for r in matched_reports if r["sentiment"] == "NEUTRAL"]
+        cautious = [r for r in matched_reports if r["sentiment"] == "CAUTIOUS"]
+
+        # Sort within tiers by target price if available
+        bullish.sort(key=lambda x: x["target"] or 0, reverse=True)
+        neutral.sort(key=lambda x: x["target"] or 0, reverse=True)
+        cautious.sort(key=lambda x: x["target"] or 999999)
 
         return {
             "ticker": sym,
             "current_price": current_price,
             "currency": currency,
-            "high_target": high_target,
-            "mean_target": mean_target,
-            "low_target": low_target,
-            "total_analysts": total_analysts,
-            "strong_buy": strong_buy,
-            "buy": buy,
-            "hold": hold,
-            "sell": sell,
-            "strong_sell": strong_sell,
-            "consensus_score": consensus_score,
-            "verdict": consensus_verdict,
-            "color": embed_color
+            "bullish": bullish,
+            "neutral": neutral,
+            "cautious": cautious,
+            "total_found": len(matched_reports)
         }, None
 
     except Exception as e:
         return None, str(e)
 
-def create_analyst_embed(data):
-    p = data["current_price"]
+def create_institutional_radar_embed(data):
+    sym = data["ticker"]
     curr = data["currency"]
-    
-    high_str = f"${data['high_target']:.2f} {curr}" if data["high_target"] else "N/A"
-    if data["high_target"] and p > 0:
-        up_high = ((data["high_target"] - p) / p) * 100
-        tag = "🔺" if up_high >= 0 else "🔻"
-        high_str += f" `({tag} {up_high:+.1f}%)`"
-
-    mean_str = f"${data['mean_target']:.2f} {curr}" if data["mean_target"] else "N/A"
-    if data["mean_target"] and p > 0:
-        up_mean = ((data["mean_target"] - p) / p) * 100
-        tag = "🔺" if up_mean >= 0 else "🔻"
-        mean_str += f" `({tag} {up_mean:+.1f}%)`"
-
-    low_str = f"${data['low_target']:.2f} {curr}" if data["low_target"] else "N/A"
-    if data["low_target"] and p > 0:
-        up_low = ((data["low_target"] - p) / p) * 100
-        tag = "🔺" if up_low >= 0 else "🔻"
-        low_str += f" `({tag} {up_low:+.1f}%)`"
-
-    targets_text = (
-        f"• 🟢 **Street High:** {high_str}\n"
-        f"• 🎯 **Consensus Mean:** {mean_str}\n"
-        f"• 🔴 **Street Low:** {low_str}"
-    )
-
-    tot = max(1, data["total_analysts"])
-    sb_pct = (data["strong_buy"] / tot) * 100
-    b_pct = (data["buy"] / tot) * 100
-    h_pct = (data["hold"] / tot) * 100
-    s_pct = (data["sell"] / tot) * 100
-    ss_pct = (data["strong_sell"] / tot) * 100
-
-    if data["total_analysts"] > 0 and (data["strong_buy"] + data["buy"] + data["hold"] + data["sell"] + data["strong_sell"]) > 0:
-        breakdown_text = (
-            f"• 🟢 **Strong Buy:** `{data['strong_buy']}` firms ({sb_pct:.1f}%)\n"
-            f"• 🟢 **Moderate Buy:** `{data['buy']}` firms ({b_pct:.1f}%)\n"
-            f"• 🟡 **Hold / Neutral:** `{data['hold']}` firms ({h_pct:.1f}%)\n"
-            f"• 🔴 **Moderate Sell:** `{data['sell']}` firms ({s_pct:.1f}%)\n"
-            f"• 🔴 **Strong Sell:** `{data['strong_sell']}` firms ({ss_pct:.1f}%)"
-        )
-        field_title = f"🗳️ Analyst Rating Breakdown ({data['total_analysts']} Total Votes)"
-    else:
-        breakdown_text = f"• **Consensus Sentiment:** `{data['verdict']}` (Institutional Survey)"
-        field_title = "🗳️ Analyst Rating Breakdown"
-
+    p = data["current_price"]
     price_header = f"${p:.2f} {curr}" if p > 0 else "Live"
+
     embed = discord.Embed(
-        title=f"🏛️ Institutional Analyst Consensus: {data['ticker']}",
-        description=(
-            f"**Current Price:** `{price_header}` | **Total Coverage:** `{data['total_analysts']} Wall/Bay Street Firms`\n"
-            f"**Overall Consensus:** **{data['verdict']}** `(Score: {data['consensus_score']:.2f} / 5.0)`"
-        ),
-        color=data["color"]
+        title=f"🏛️ INSTITUTIONAL RESEARCH RADAR: {sym}",
+        description=f"**Current Price:** `{price_header}` | **Live Institutional Research & Rating Actions**",
+        color=0x2ecc71 if len(data["bullish"]) >= len(data["cautious"]) else 0xe74c3c
     )
 
-    embed.add_field(name="🎯 12-Month Price Targets", value=targets_text, inline=False)
-    embed.add_field(name=field_title, value=breakdown_text, inline=False)
+    # 1. Bullish / High Target Reports
+    if data["bullish"]:
+        b_txt = ""
+        for i, r in enumerate(data["bullish"][:4], 1):
+            target_part = f" • Target: `${r['target']:.2f} {curr}`" if r["target"] else ""
+            b_txt += f"**{i}. {r['badge']} {r['institution']}** — Rating: `{r['rating']}`{target_part}\n• [{r['headline'][:85]}...]({r['link']})\n\n"
+        embed.add_field(name="🟢 BULLISH / HIGH TARGET REPORTS", value=b_txt.strip()[:1024], inline=False)
 
-    if data["total_analysts"] > 0:
-        bull_pct = ((data["strong_buy"] + data["buy"]) / tot) * 100
-        summary_line = f"💡 **Institutional Takeaway:** `{bull_pct:.1f}%` of covering analysts are Bullish on **{data['ticker']}** with an average price target of `${data['mean_target']:.2f} {curr}`." if data["mean_target"] else f"💡 **Institutional Takeaway:** `{bull_pct:.1f}%` of covering analysts maintain a Buy rating."
-    else:
-        summary_line = f"💡 **Institutional Takeaway:** Consensus price target sits at `${data['mean_target']:.2f} {curr}`." if data["mean_target"] else f"💡 **Institutional Takeaway:** Institutional sentiment is {data['verdict']}."
+    # 2. Neutral / Medium Target Reports
+    if data["neutral"]:
+        n_txt = ""
+        for i, r in enumerate(data["neutral"][:3], 1):
+            target_part = f" • Target: `${r['target']:.2f} {curr}`" if r["target"] else ""
+            n_txt += f"**{i}. {r['badge']} {r['institution']}** — Rating: `{r['rating']}`{target_part}\n• [{r['headline'][:85]}...]({r['link']})\n\n"
+        embed.add_field(name="🟡 NEUTRAL / REITERATION REPORTS", value=n_txt.strip()[:1024], inline=False)
+
+    # 3. Cautious / Low Target Reports
+    if data["cautious"]:
+        c_txt = ""
+        for i, r in enumerate(data["cautious"][:3], 1):
+            target_part = f" • Target: `${r['target']:.2f} {curr}`" if r["target"] else ""
+            c_txt += f"**{i}. {r['badge']} {r['institution']}** — Rating: `{r['rating']}`{target_part}\n• [{r['headline'][:85]}...]({r['link']})\n\n"
+        embed.add_field(name="🔴 CAUTIOUS / DOWNGRADE REPORTS", value=c_txt.strip()[:1024], inline=False)
+
+    # Summary
+    bull_cnt = len(data["bullish"])
+    neut_cnt = len(data["neutral"])
+    caut_cnt = len(data["cautious"])
+    summary_tone = "Strong Bullish Sentiment 🟢" if bull_cnt > (neut_cnt + caut_cnt) else ("Moderate Accumulation / Neutral 🟡" if bull_cnt >= caut_cnt else "Cautious / Bearish Pressure 🔴")
     
-    embed.add_field(name="📊 Summary Sentiment", value=summary_line, inline=False)
-    embed.set_footer(text="Looney • Institutional Analyst & Price Target Terminal")
+    embed.add_field(
+        name="📊 Institutional Summary",
+        value=f"• **Tone:** `{summary_tone}`\n• **Distribution:** `{bull_cnt} Bullish` • `{neut_cnt} Neutral` • `{caut_cnt} Cautious`",
+        inline=False
+    )
+
+    embed.set_footer(text="Looney • Live Wall Street & Bay Street Research Intelligence")
     return embed
 
 # -------------------------------------------------------------
@@ -1198,16 +1216,16 @@ async def on_message(message):
 
     content = message.content.strip()
 
-    # TRIGGER 1: Institutional Analyst Consensus on `%TICKER` (e.g. %NVDA, %TD.TO, %MU)
+    # TRIGGER 1: Institutional Research Radar on `%TICKER` (e.g. %NVDA, %TD.TO, %MU)
     if content.startswith("%") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
             async with message.channel.typing():
-                data, err = await asyncio.to_thread(fetch_analyst_consensus, raw_ticker)
+                data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
                 if err:
                     await message.channel.send(f"❌ {err}")
                     return
-                embed = create_analyst_embed(data)
+                embed = create_institutional_radar_embed(data)
                 await message.channel.send(embed=embed)
                 return
 
@@ -1229,7 +1247,7 @@ async def on_message(message):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
 
-        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "ratings"]:
+        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research"]:
             await bot.process_commands(message)
             return
 
@@ -1267,14 +1285,14 @@ async def options_command(ctx, ticker: str):
         embed = create_deep_dive_options_embed(data)
         await ctx.send(embed=embed)
 
-@bot.command(name="analyst", aliases=["ratings", "target"])
+@bot.command(name="analyst", aliases=["research", "targets"])
 async def analyst_command(ctx, ticker: str):
     async with ctx.typing():
-        data, err = await asyncio.to_thread(fetch_analyst_consensus, ticker)
+        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
         if err:
             await ctx.send(f"❌ {err}")
             return
-        embed = create_analyst_embed(data)
+        embed = create_institutional_radar_embed(data)
         await ctx.send(embed=embed)
 
 # -------------------------------------------------------------
