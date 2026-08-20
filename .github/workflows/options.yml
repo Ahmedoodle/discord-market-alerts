@@ -1,0 +1,21 @@
+name: Test Options Radar
+
+on:
+  workflow_dispatch:  # <--- Enables the manual "Run workflow" button in GitHub
+
+jobs:
+  run-options:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Dependencies
+        run: |
+          pip install requests yfinance pandas discord.py
+      - name: Run Options Radar
+        env:
+          DISCORD_OPTIONS_WEBHOOK_URL: ${{ secrets.DISCORD_OPTIONS_WEBHOOK_URL }}
+        run: |
+          python -c "from options_analyzer import run_top10_options_radar; run_top10_options_radar()"
