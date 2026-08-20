@@ -4,7 +4,6 @@ import asyncio
 import math
 import re
 import time
-import concurrent.futures
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
@@ -16,14 +15,14 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
-# 1. 24/7 KEEP-ALIVE SERVER WITH SELF-PINGER
+# 1. 24/7 KEEP-ALIVE SERVER WITH SELF-PINGER (FOR RENDER)
 # -------------------------------------------------------------
 class PingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(b"Looney On-Demand Discord Bot & Options Radar is Live 24/7!")
+        self.wfile.write(b"Looney On-Demand Discord Bot is Live 24/7!")
 
     def do_HEAD(self):
         self.send_response(200)
@@ -37,7 +36,6 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-# Background Self-Pinger (Pings every 10 minutes)
 def auto_self_ping():
     time.sleep(30)  # Wait for server to boot
     while True:
@@ -51,7 +49,7 @@ def auto_self_ping():
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSIONS & WEBHOOKS
+# 2. BROWSER SESSIONS
 # -------------------------------------------------------------
 http_session = requests.Session()
 http_session.headers.update({
@@ -61,33 +59,9 @@ http_session.headers.update({
 })
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-DISCORD_OPTIONS_WEBHOOK_URL = os.getenv(
-    "DISCORD_OPTIONS_WEBHOOK_URL",
-    "https://discord.com/api/webhooks/1540116236073959555/Cd3S1gwzHZjh2te36-2h8iI7lzL2mUkTiCPS5ueZ1YdsEByp0QjcX-3lwWa892bjOA1g"
-)
-BOT_NAME = "Looney Options Intelligence"
-BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
-
 NY_TZ = ZoneInfo("America/New_York")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
 
-# Full Nasdaq 100 Universe for 30-Minute Radar
-NASDAQ_100 = [
-    "NVDA", "AAPL", "MSFT", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "AVGO", "COST",
-    "ASML", "PEP", "NFLX", "AZN", "LIN", "AMD", "TMUS", "ADBE", "CSCO", "QCOM",
-    "TXN", "AMAT", "INTU", "ISRG", "CMCSA", "HON", "AMGN", "BKNG", "VRTX", "SBUX",
-    "PANW", "MDLZ", "GILD", "LRCX", "REGN", "ADP", "MU", "MELI", "KLAC", "SNPS",
-    "CDNS", "PYPL", "CRWD", "ABNB", "MAR", "CSX", "CTAS", "ORLY", "NXPI", "PCAR",
-    "WBD", "MRVL", "ROP", "MCHP", "FTNT", "DXCM", "KDP", "MNST", "LULU", "ADI",
-    "KHC", "PAYX", "ROST", "IDXX", "ODFL", "EXC", "CHTR", "AEP", "FAST", "BIIB",
-    "CPRT", "GEHC", "TEAM", "VRSK", "EA", "BKR", "CTSH", "DDOG", "ZS", "ANSS",
-    "CSGP", "ON", "MRNA", "ILMN", "DLTR", "WDAY", "CEG", "SMCI", "DASH", "MSTR",
-    "ARM", "TTD", "RBLX", "PLTR", "IREN", "RKLB", "SHOP.TO", "INTC", "IBM"
-]
-
-# -------------------------------------------------------------
-# 3. DISCORD BOT CLIENT
-# -------------------------------------------------------------
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -128,13 +102,11 @@ def calculate_rsi(closes, period=14):
 def calculate_macd(closes):
     if len(closes) < 35:
         return "N/A"
-    
-    alpha_12 = 2.0 / (12 + 1)
-    alpha_26 = 2.0 / (26 + 1)
+    alpha_12 = 2.0 / 13
+    alpha_26 = 2.0 / 27
     curr_12 = sum(closes[:12]) / 12
     curr_26 = sum(closes[:26]) / 26
-    ema_12_full = []
-    ema_26_full = []
+    ema_12_full, ema_26_full = [], []
 
     for i, c in enumerate(closes):
         if i >= 12:
@@ -148,7 +120,7 @@ def calculate_macd(closes):
     if len(macd_line) < 9:
         return "N/A"
 
-    alpha_9 = 2.0 / (9 + 1)
+    alpha_9 = 2.0 / 10
     sig = sum(macd_line[:9]) / 9
     sig_line = [sig]
     for m in macd_line[9:]:
@@ -174,13 +146,7 @@ def calculate_macd(closes):
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
         return 1.0
-    trs = []
-    for i in range(1, len(closes)):
-        h = highs[i]
-        l = lows[i]
-        c_prev = closes[i - 1]
-        tr = max(h - l, abs(h - c_prev), abs(l - c_prev))
-        trs.append(tr)
+    trs = [max(highs[i] - lows[i], abs(highs[i] - closes[i - 1]), abs(lows[i] - closes[i - 1])) for i in range(1, len(closes))]
     return sum(trs[-period:]) / period
 
 def calculate_historical_volatility(closes, window=30):
@@ -204,13 +170,10 @@ def calculate_beta_vs_spy(closes, session_http):
             if min_len >= 50:
                 s_ret = [closes[i] / closes[i-1] - 1 for i in range(len(closes) - min_len + 1, len(closes))]
                 m_ret = [spy_closes[i] / spy_closes[i-1] - 1 for i in range(len(spy_closes) - min_len + 1, len(spy_closes))]
-                
                 mean_s = sum(s_ret) / len(s_ret)
                 mean_m = sum(m_ret) / len(m_ret)
-                
                 cov = sum((s_ret[i] - mean_s) * (m_ret[i] - mean_m) for i in range(len(s_ret)))
                 var_m = sum((m_ret[i] - mean_m) ** 2 for i in range(len(m_ret)))
-                
                 if var_m > 0:
                     return cov / var_m
     except Exception:
@@ -247,11 +210,7 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
-    low_t = None
-    mean_t = None
-    high_t = None
-    rating = None
-
+    low_t, mean_t, high_t, rating = None, None, None, None
     try:
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
@@ -259,7 +218,6 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
             text = fz_res.text
             tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', text, re.IGNORECASE)
             rec_match = re.search(r'Recom[^\d]+([\d,.]+)', text, re.IGNORECASE)
-            
             if tp_match:
                 mean_t = float(tp_match.group(1).replace(',', ''))
             if rec_match:
@@ -297,7 +255,7 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     return "N/A"
 
 # -------------------------------------------------------------
-# 4. EXISTING TECHNICALS ON-DEMAND ENGINE
+# 3. ON-DEMAND TECHNICALS & FUNDAMENTALS ENGINE ($TICKER)
 # -------------------------------------------------------------
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
@@ -757,7 +715,7 @@ def create_market_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 5. OPTIONS STRATEGY ENGINE (DFOL Golden Rules)
+# 4. ON-DEMAND OPTIONS DEEP-DIVE ENGINE (#TICKER)
 # -------------------------------------------------------------
 def analyze_stock_options_setup(ticker_symbol):
     sym = ticker_symbol.upper().strip()
@@ -969,74 +927,7 @@ def create_deep_dive_options_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 6. 30-MINUTE AUTOMATIC TOP 10 SCANNER (WEBHOOK)
-# -------------------------------------------------------------
-def run_top10_options_radar():
-    now_ny = datetime.now(NY_TZ)
-    time_str = now_ny.strftime("%I:%M %p %Z")
-    print(f"\n[OPTIONS RADAR] Scanning 100 Nasdaq Securities at {time_str}...")
-
-    results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        futures = {executor.submit(analyze_stock_options_setup, sym): sym for sym in NASDAQ_100}
-        for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res:
-                results.append(res)
-
-    results.sort(key=lambda x: x["score"], reverse=True)
-    top_10 = results[:10]
-
-    if not top_10:
-        print("[OPTIONS RADAR] No valid results generated.")
-        return
-
-    embed_desc = ""
-    for i, item in enumerate(top_10, 1):
-        direction_tag = "🟢 (Bullish)" if item["is_bullish"] else "🔴 (Bearish)"
-        embed_desc += (
-            f"**{i}. {item['ticker']} — ${item['price']:.2f}** | **Score: {item['score']}%** {direction_tag}\n"
-            f"• **Strategy:** `{item['strategy_name']}` (IV Rank: `{item['iv_rank']}%`)\n"
-            f"• ⚡ **7–14 DTE:** {item['play_7_14']}\n"
-            f"• 🏛️ **30–45 DTE:** {item['play_30_45']}\n"
-            f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x` • MACD: `{item['macd_verdict']}`\n\n"
-        )
-
-    payload = {
-        "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
-        "embeds": [{
-            "title": f"🚨 NASDAQ 100 OPTIONS RADAR [TOP 10 QUANTITATIVE PICKS]",
-            "description": f"*Live Quantitative Ranking across 100 Nasdaq Securities as of {time_str}.*\n\n{embed_desc}",
-            "color": 3066993,
-            "footer": {"text": "Looney Options Intelligence • Type '#TICKER' for deep-dive Greeks & exit targets"}
-        }]
-    }
-
-    try:
-        res = requests.post(DISCORD_OPTIONS_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-        print(f"[OPTIONS RADAR] Successfully dispatched Top 10 to Discord at {time_str}!")
-    except Exception as e:
-        print(f"[OPTIONS RADAR ERROR] {e}")
-
-def background_30min_radar_loop():
-    time.sleep(15)
-    while True:
-        try:
-            now = datetime.now(NY_TZ)
-            if now.weekday() <= 4 and (9 <= now.hour <= 16):
-                run_top10_options_radar()
-            else:
-                print(f"[OPTIONS RADAR IDLE] Market closed ({now.strftime('%I:%M %p %Z')}).")
-        except Exception as e:
-            print(f"[LOOP ERROR] {e}")
-        time.sleep(1800)  # 30 Minutes
-
-threading.Thread(target=background_30min_radar_loop, daemon=True).start()
-
-# -------------------------------------------------------------
-# 7. UNIFIED DISCORD BOT EVENT HANDLERS
+# 5. DISCORD BOT EVENT HANDLERS
 # -------------------------------------------------------------
 @bot.event
 async def on_ready():
@@ -1084,7 +975,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-# Standard Fallback Commands
+# Fallback Commands
 @bot.command(name="price", aliases=["p", "four", "check"])
 async def price_command(ctx, ticker: str):
     async with ctx.typing():
@@ -1106,7 +997,7 @@ async def options_command(ctx, ticker: str):
         await ctx.send(embed=embed)
 
 # -------------------------------------------------------------
-# 8. ENTRYPOINT
+# 6. ENTRYPOINT
 # -------------------------------------------------------------
 if __name__ == "__main__":
     if not BOT_TOKEN:
