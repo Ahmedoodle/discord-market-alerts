@@ -215,9 +215,8 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
         if fz_res.status_code == 200:
-            text = fz_res.text
-            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', text, re.IGNORECASE)
-            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', text, re.IGNORECASE)
+            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
+            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
             if tp_match:
                 mean_t = float(tp_match.group(1).replace(',', ''))
             if rec_match:
@@ -255,7 +254,7 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     return "N/A"
 
 # -------------------------------------------------------------
-# 3. ON-DEMAND TECHNICALS & FUNDAMENTALS ENGINE ($TICKER)
+# 3. ON-DEMAND TECHNICALS, FUNDAMENTALS & DIVIDEND ENGINE
 # -------------------------------------------------------------
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
@@ -378,26 +377,16 @@ def get_on_demand_data(ticker_symbol):
             pivot_str = f"`Support (S1): ${s1:.2f}` | `Resistance (R1): ${r1:.2f}`"
 
         atr = calculate_atr(highs, lows, closes, 14)
-
         quote_type = meta.get("instrumentType", "EQUITY")
         
+        dividend_block = None
+
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
                 f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
                 f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
-            )
-            catalysts_block = None
-            smart_money_block = None
-            health_block = None
-
-        elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
-            profile_title = "🏢 Fund Profile & Structure"
-            profile_block = (
-                f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Structure:** `Diversified Market Basket Holding`\n"
-                f"• **Type:** `Open-End Fund Vehicle`"
             )
             catalysts_block = None
             smart_money_block = None
@@ -414,7 +403,10 @@ def get_on_demand_data(ticker_symbol):
             health_block = None
 
         else:
-            profile_title = "🏢 Company Profile"
+            # Equities & ETFs
+            is_etf = (quote_type == "ETF" or ticker_symbol in KNOWN_ETFS)
+            profile_title = "🏢 Fund Profile & Structure" if is_etf else "🏢 Company Profile"
+            
             sector, industry = None, None
             try:
                 s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
@@ -455,6 +447,7 @@ def get_on_demand_data(ticker_symbol):
                 if not market_cap and shares and current_price:
                     market_cap = current_price * shares
 
+                # 1. Earnings Timing
                 try:
                     ed_df = t_obj.earnings_dates
                     if ed_df is not None and not ed_df.empty:
@@ -491,11 +484,103 @@ def get_on_demand_data(ticker_symbol):
                     except Exception:
                         pass
 
+                # 2. Beta
                 beta_val = calculate_beta_vs_spy(closes, http_session)
                 if beta_val:
                     tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
                     beta_str = f"`{beta_val:.2f}x`{tag}"
 
+                # 3. DIVIDEND & SHAREHOLDER YIELD ENGINE
+                div_rate = None
+                div_yield = None
+                ex_div_date_str = "N/A"
+                pay_date_str = "N/A"
+                payout_ratio_str = ""
+                freq_str = "Quarterly (4x per year)"
+
+                try:
+                    t_info = t_obj.info or {}
+                    div_rate = t_info.get("dividendRate")
+                    div_yield = t_info.get("dividendYield")
+                    ex_ts = t_info.get("exDividendDate")
+                    payout_ratio = t_info.get("payoutRatio")
+
+                    if ex_ts:
+                        if isinstance(ex_ts, (int, float)):
+                            ex_div_date_str = datetime.fromtimestamp(ex_ts, tz=NY_TZ).strftime("%b %d, %Y")
+                        elif isinstance(ex_ts, (datetime, date)):
+                            ex_div_date_str = ex_ts.strftime("%b %d, %Y")
+
+                    # Check calendar for pay date & ex-date
+                    try:
+                        cal_d = t_obj.calendar
+                        if cal_d is not None:
+                            if isinstance(cal_d, dict):
+                                p_date = cal_d.get("Dividend Date")
+                                if p_date:
+                                    p_dt = p_date[0] if isinstance(p_date, list) else p_date
+                                    if isinstance(p_dt, (datetime, date)):
+                                        pay_date_str = p_dt.strftime("%b %d, %Y")
+                                ex_cal = cal_d.get("Ex-Dividend Date")
+                                if ex_cal and ex_div_date_str == "N/A":
+                                    ex_dt = ex_cal[0] if isinstance(ex_cal, list) else ex_cal
+                                    if isinstance(ex_dt, (datetime, date)):
+                                        ex_div_date_str = ex_dt.strftime("%b %d, %Y")
+                            elif isinstance(cal_d, pd.DataFrame):
+                                if "Dividend Date" in cal_d.index:
+                                    d_val = cal_d.loc["Dividend Date"].iloc[0]
+                                    if isinstance(d_val, (datetime, date)):
+                                        pay_date_str = d_val.strftime("%b %d, %Y")
+                                if "Ex-Dividend Date" in cal_d.index and ex_div_date_str == "N/A":
+                                    ex_val = cal_d.loc["Ex-Dividend Date"].iloc[0]
+                                    if isinstance(ex_val, (datetime, date)):
+                                        ex_div_date_str = ex_val.strftime("%b %d, %Y")
+                    except Exception:
+                        pass
+
+                    # Detect dividend frequency from recent payments
+                    try:
+                        div_s = t_obj.dividends
+                        if div_s is not None and not div_s.empty:
+                            last_1y = div_s[div_s.index >= (pd.Timestamp.now(tz=div_s.index.tz) - pd.Timedelta(days=365))]
+                            cnt = len(last_1y)
+                            if cnt >= 10:
+                                freq_str = "Monthly (12x per year)"
+                            elif cnt in [3, 4, 5]:
+                                freq_str = "Quarterly (4x per year)"
+                            elif cnt == 2:
+                                freq_str = "Semi-Annual (2x per year)"
+                            elif cnt == 1:
+                                freq_str = "Annual (1x per year)"
+
+                            if not div_rate and len(div_s) > 0:
+                                last_div = float(div_s.iloc[-1])
+                                div_rate = last_div * (12 if "Monthly" in freq_str else (2 if "Semi" in freq_str else (1 if "Annual" in freq_str else 4)))
+                    except Exception:
+                        pass
+
+                    # Payout ratio sustainability tag
+                    if payout_ratio is not None and payout_ratio > 0:
+                        pr_pct = payout_ratio * 100 if payout_ratio <= 1.0 else payout_ratio
+                        pr_tag = "🟢 (Highly Secure / Low Risk)" if pr_pct <= 50 else ("🟡 (Moderate Payout)" if pr_pct <= 75 else "⚠️ (High / Elevated Payout)")
+                        payout_ratio_str = f"\n• **Sustainability:** Payout Ratio: `{pr_pct:.1f}% {pr_tag}`"
+
+                    if (div_rate and div_rate > 0) or (div_yield and div_yield > 0):
+                        yield_pct = (div_yield * 100) if (div_yield and div_yield <= 1.0) else ((div_rate / current_price) * 100 if current_price > 0 and div_rate else 0.0)
+                        div_payout = (div_rate / (12 if "Monthly" in freq_str else (2 if "Semi" in freq_str else (1 if "Annual" in freq_str else 4)))) if div_rate else (current_price * (yield_pct / 100) / 4)
+                        
+                        dividend_block = (
+                            f"• **Yield & Payout:** `{yield_pct:.2f}%` • `${div_payout:.2f} / share` (`${div_rate:.2f} Annualized`)\n"
+                            f"• **Frequency:** `{freq_str}`\n"
+                            f"• **Key Dates:** Ex-Dividend: `{ex_div_date_str}` • Pay Date: `{pay_date_str}`"
+                            f"{payout_ratio_str}"
+                        )
+                    else:
+                        dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
+                except Exception:
+                    dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
+
+                # 4. Financial Statements (12-Month Aligned YoY Indexing)
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
@@ -603,11 +688,7 @@ def get_on_demand_data(ticker_symbol):
 
                 if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
                     trailing_eps = ttm_net_inc / shares
-                    if trailing_eps > 0:
-                        trailing_pe = current_price / trailing_eps
-                        pe_str = f"`{trailing_pe:.1f}x`"
-                    else:
-                        pe_str = "`N/A (Pre-Profit)`"
+                    pe_str = f"`{current_price / trailing_eps:.1f}x`" if trailing_eps > 0 else "`N/A (Pre-Profit)`"
                 else:
                     pe_str = "`N/A (Pre-Profit)`"
 
@@ -619,7 +700,9 @@ def get_on_demand_data(ticker_symbol):
 
             targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
-            if sector and industry:
+            if is_etf:
+                line_sector = f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n• **Structure:** `Diversified Market Basket Holding`"
+            elif sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
                 line_sector = f"• **Sector:** `{sector}`"
@@ -634,17 +717,9 @@ def get_on_demand_data(ticker_symbol):
                 line_cap = "• **Market Cap:** `N/A`"
 
             profile_block = f"{line_sector}\n{line_cap}"
-
-            catalysts_block = (
-                f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n"
-                f"• **Wall St. Targets:** {targets_line_str}"
-            )
-
+            catalysts_block = f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n• **Wall St. Targets:** {targets_line_str}"
             atr_fmt = f"±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)" if atr and current_price > 0 else "N/A"
-            smart_money_block = (
-                f"• **Beta (Market Volatility):** {beta_str}\n"
-                f"• **Expected Daily Move (ATR):** `{atr_fmt}`"
-            )
+            smart_money_block = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `{atr_fmt}`"
 
             growth_parts = []
             if rev_growth_pct is not None:
@@ -677,6 +752,7 @@ def get_on_demand_data(ticker_symbol):
             "trend_block": trend_block,
             "macd_str": macd_str,
             "pivot_str": pivot_str,
+            "dividend_block": dividend_block,
             "catalysts_block": catalysts_block,
             "smart_money_block": smart_money_block,
             "profile_title": profile_title,
@@ -702,6 +778,8 @@ def create_market_embed(data):
     embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
     
+    if data.get("dividend_block"):
+        embed.add_field(name="💰 Dividend & Shareholder Yield", value=data["dividend_block"], inline=False)
     if data.get("catalysts_block"):
         embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
     if data.get("smart_money_block"):
@@ -760,7 +838,6 @@ def analyze_stock_options_setup(ticker_symbol):
         hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
         iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
 
-        # Quant Scoring (0 to 100)
         bull_score, bear_score = 0, 0
 
         if current_price >= sma_50 and current_price >= sma_200:
@@ -953,7 +1030,7 @@ async def on_message(message):
                 await message.channel.send(embed=embed)
                 return
 
-    # TRIGGER 2: Technicals Snapshot on `$TICKER` or `!TICKER` (e.g. $NVDA)
+    # TRIGGER 2: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
