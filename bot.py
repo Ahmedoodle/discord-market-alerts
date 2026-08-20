@@ -58,6 +58,14 @@ http_session.headers.update({
     "Accept-Language": "en-US,en;q=0.9"
 })
 
+nasdaq_session = requests.Session()
+nasdaq_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://www.nasdaq.com",
+    "Referer": "https://www.nasdaq.com/"
+})
+
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NY_TZ = ZoneInfo("America/New_York")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
@@ -254,12 +262,14 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     return "N/A"
 
 # -------------------------------------------------------------
-# 3. ON-DEMAND TECHNICALS, FUNDAMENTALS & DIRECT DIVIDEND ENGINE
+# 3. ON-DEMAND TECHNICALS, FUNDAMENTALS & MULTI-MARKET DIVIDENDS
 # -------------------------------------------------------------
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
+    is_canadian = ticker_symbol.endswith(".TO") or ticker_symbol.endswith(".V")
+    base_sym = ticker_symbol.replace(".TO", "").replace(".V", "").upper()
+
     try:
-        # 1. Pull Chart Data with live Dividend Events
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y&events=div"
         res = http_session.get(url, timeout=5)
         
@@ -410,7 +420,7 @@ def get_on_demand_data(ticker_symbol):
                 pass
 
             # -------------------------------------------------------------
-            # DIRECT REAL-TIME DIVIDEND & CALENDAR ENGINE (MULTI-SOURCE)
+            # MULTI-MARKET DIVIDEND & OFFICIAL PAY-DATE ENGINE (US + TSX)
             # -------------------------------------------------------------
             try:
                 ex_date_str = "N/A"
@@ -419,47 +429,74 @@ def get_on_demand_data(ticker_symbol):
                 trailing_div_rate = None
                 trailing_div_yield = None
 
-                # Source A: Query quoteSummary calendarEvents & summaryDetail modules directly
+                # Source 1: Official Nasdaq Registry (Covers US + All Dual-Listed Canadian Stocks)
                 try:
-                    qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics"
-                    qs_res = http_session.get(qs_url, timeout=4)
-                    if qs_res.status_code == 200:
-                        res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                        cal_events = res_data.get("calendarEvents", {})
-                        sum_detail = res_data.get("summaryDetail", {})
-
-                        # Ex-Dividend Date
-                        ex_obj = cal_events.get("exDividendDate", {}) or sum_detail.get("exDividendDate", {})
-                        if isinstance(ex_obj, dict):
-                            if ex_obj.get("fmt"):
-                                ex_date_str = ex_obj.get("fmt")
-                            elif ex_obj.get("raw"):
-                                ex_date_str = datetime.fromtimestamp(ex_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
-
-                        # Dividend Pay Date
-                        pay_obj = cal_events.get("dividendDate", {}) or sum_detail.get("dividendDate", {})
-                        if isinstance(pay_obj, dict):
-                            if pay_obj.get("fmt"):
-                                pay_date_str = pay_obj.get("fmt")
-                            elif pay_obj.get("raw"):
-                                pay_date_str = datetime.fromtimestamp(pay_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
-
-                        # Payout Ratio & Yield
-                        pr_obj = sum_detail.get("payoutRatio", {}) or res_data.get("defaultKeyStatistics", {}).get("payoutRatio", {})
-                        if isinstance(pr_obj, dict) and pr_obj.get("raw") is not None:
-                            payout_ratio = float(pr_obj.get("raw"))
-
-                        rate_obj = sum_detail.get("dividendRate", {}) or sum_detail.get("trailingAnnualDividendRate", {})
-                        if isinstance(rate_obj, dict) and rate_obj.get("raw") is not None:
-                            trailing_div_rate = float(rate_obj.get("raw"))
-
-                        yield_obj = sum_detail.get("dividendYield", {}) or sum_detail.get("trailingAnnualDividendYield", {})
-                        if isinstance(yield_obj, dict) and yield_obj.get("raw") is not None:
-                            trailing_div_yield = float(yield_obj.get("raw"))
+                    nd_url = f"https://api.nasdaq.com/api/quote/{base_sym}/dividends?assetclass=stocks"
+                    nd_res = nasdaq_session.get(nd_url, timeout=3)
+                    if nd_res.status_code == 200:
+                        nd_data = nd_res.json().get("data", {}).get("dividends", {}).get("rows", []) or []
+                        if nd_data:
+                            latest_row = nd_data[0]
+                            nd_ex = latest_row.get("exOrEffDate")
+                            nd_pay = latest_row.get("paymentDate")
+                            if nd_ex and nd_ex != "N/A":
+                                try:
+                                    ex_date_str = datetime.strptime(nd_ex, "%m/%d/%Y").strftime("%b %d, %Y")
+                                except Exception:
+                                    ex_date_str = nd_ex
+                            if nd_pay and nd_pay != "N/A":
+                                try:
+                                    pay_date_str = datetime.strptime(nd_pay, "%m/%d/%Y").strftime("%b %d, %Y")
+                                except Exception:
+                                    pay_date_str = nd_pay
                 except Exception:
                     pass
 
-                # Source B: Parse historical dividend timestamps from Chart events
+                # Source 2: Localized Canadian / US Corporate Calendar Endpoint
+                if pay_date_str == "N/A" or ex_date_str == "N/A":
+                    try:
+                        region_param = "CA" if is_canadian else "US"
+                        qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={region_param}&lang=en-{region_param}"
+                        qs_res = http_session.get(qs_url, timeout=3)
+                        if qs_res.status_code == 200:
+                            res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                            cal_events = res_data.get("calendarEvents", {})
+                            sum_detail = res_data.get("summaryDetail", {})
+
+                            if ex_date_str == "N/A":
+                                ex_obj = cal_events.get("exDividendDate", {}) or sum_detail.get("exDividendDate", {})
+                                if isinstance(ex_obj, dict):
+                                    if ex_obj.get("fmt"):
+                                        ex_date_str = ex_obj.get("fmt")
+                                    elif ex_obj.get("raw"):
+                                        ex_date_str = datetime.fromtimestamp(ex_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
+
+                            if pay_date_str == "N/A":
+                                pay_obj = cal_events.get("dividendDate", {}) or sum_detail.get("dividendDate", {})
+                                if isinstance(pay_obj, dict):
+                                    if pay_obj.get("fmt"):
+                                        pay_date_str = pay_obj.get("fmt")
+                                    elif pay_obj.get("raw"):
+                                        pay_date_str = datetime.fromtimestamp(pay_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
+
+                            if not payout_ratio:
+                                pr_obj = sum_detail.get("payoutRatio", {}) or res_data.get("defaultKeyStatistics", {}).get("payoutRatio", {})
+                                if isinstance(pr_obj, dict) and pr_obj.get("raw") is not None:
+                                    payout_ratio = float(pr_obj.get("raw"))
+
+                            if not trailing_div_rate:
+                                rate_obj = sum_detail.get("dividendRate", {}) or sum_detail.get("trailingAnnualDividendRate", {})
+                                if isinstance(rate_obj, dict) and rate_obj.get("raw") is not None:
+                                    trailing_div_rate = float(rate_obj.get("raw"))
+
+                            if not trailing_div_yield:
+                                yield_obj = sum_detail.get("dividendYield", {}) or sum_detail.get("trailingAnnualDividendYield", {})
+                                if isinstance(yield_obj, dict) and yield_obj.get("raw") is not None:
+                                    trailing_div_yield = float(yield_obj.get("raw"))
+                    except Exception:
+                        pass
+
+                # Source 3: Historical Chart Events
                 recent_div_amounts = []
                 one_year_ago_ts = int(time.time()) - (365 * 86400)
                 divs_in_last_year = []
@@ -472,12 +509,11 @@ def get_on_demand_data(ticker_symbol):
                         if ts_val >= one_year_ago_ts:
                             divs_in_last_year.append(amt)
 
-                # If Ex-Date was still N/A, use the latest recorded dividend event timestamp
                 if ex_date_str == "N/A" and recent_div_amounts:
                     latest_ex_ts = recent_div_amounts[-1][0]
                     ex_date_str = datetime.fromtimestamp(latest_ex_ts, tz=NY_TZ).strftime("%b %d, %Y")
 
-                # Determine payout frequency
+                # Frequency detection
                 num_divs = len(divs_in_last_year)
                 if num_divs >= 10:
                     freq_str = "Monthly (12x per year)"
@@ -495,6 +531,15 @@ def get_on_demand_data(ticker_symbol):
                     freq_str = "Quarterly (4x per year)"
                     mult = 4
 
+                # Source 4: Smart Payment Cycle Resolution for Canadian/US stocks if still unpopulated
+                if pay_date_str == "N/A" and ex_date_str != "N/A":
+                    try:
+                        ex_parsed = datetime.strptime(ex_date_str, "%b %d, %Y")
+                        est_pay = ex_parsed + timedelta(days=14 if "Monthly" in freq_str else 21)
+                        pay_date_str = f"~{est_pay.strftime('%b %d, %Y')} (Est)"
+                    except Exception:
+                        pass
+
                 last_payout = recent_div_amounts[-1][1] if recent_div_amounts else None
                 annual_rate = trailing_div_rate or (last_payout * mult if last_payout else None)
 
@@ -503,7 +548,6 @@ def get_on_demand_data(ticker_symbol):
                     per_payout = last_payout if last_payout else (annual_rate / mult if annual_rate else (current_price * (calc_yield / 100) / mult))
                     annual_display = annual_rate if annual_rate else (per_payout * mult)
 
-                    # Payout ratio sustainability tag
                     payout_ratio_str = ""
                     if payout_ratio is not None and payout_ratio > 0:
                         pr_pct = payout_ratio * 100 if payout_ratio <= 1.0 else payout_ratio
