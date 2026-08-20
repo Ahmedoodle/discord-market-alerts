@@ -410,33 +410,56 @@ def get_on_demand_data(ticker_symbol):
                 pass
 
             # -------------------------------------------------------------
-            # DIRECT REAL-TIME DIVIDEND & SHAREHOLDER YIELD ENGINE
+            # DIRECT REAL-TIME DIVIDEND & CALENDAR ENGINE (MULTI-SOURCE)
             # -------------------------------------------------------------
             try:
-                # Secondary Query to Direct Quote Endpoint (Zero Rate Limiting)
-                q_url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={ticker_symbol}"
-                q_res = http_session.get(q_url, timeout=4)
-                q_info = {}
-                if q_res.status_code == 200:
-                    q_res_list = q_res.json().get("quoteResponse", {}).get("result", [])
-                    if q_res_list:
-                        q_info = q_res_list[0]
-
-                ex_ts = q_info.get("exDividendDate") or q_info.get("exDividend")
-                pay_ts = q_info.get("dividendDate")
-                payout_ratio = q_info.get("payoutRatio")
-                trailing_div_rate = q_info.get("trailingAnnualDividendRate") or q_info.get("dividendRate")
-                trailing_div_yield = q_info.get("trailingAnnualDividendYield") or q_info.get("dividendYield")
-
                 ex_date_str = "N/A"
-                if ex_ts:
-                    ex_date_str = datetime.fromtimestamp(ex_ts, tz=NY_TZ).strftime("%b %d, %Y")
-
                 pay_date_str = "N/A"
-                if pay_ts:
-                    pay_date_str = datetime.fromtimestamp(pay_ts, tz=NY_TZ).strftime("%b %d, %Y")
+                payout_ratio = None
+                trailing_div_rate = None
+                trailing_div_yield = None
 
-                # Parse historical dividend events from chart
+                # Source A: Query quoteSummary calendarEvents & summaryDetail modules directly
+                try:
+                    qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics"
+                    qs_res = http_session.get(qs_url, timeout=4)
+                    if qs_res.status_code == 200:
+                        res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                        cal_events = res_data.get("calendarEvents", {})
+                        sum_detail = res_data.get("summaryDetail", {})
+
+                        # Ex-Dividend Date
+                        ex_obj = cal_events.get("exDividendDate", {}) or sum_detail.get("exDividendDate", {})
+                        if isinstance(ex_obj, dict):
+                            if ex_obj.get("fmt"):
+                                ex_date_str = ex_obj.get("fmt")
+                            elif ex_obj.get("raw"):
+                                ex_date_str = datetime.fromtimestamp(ex_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
+
+                        # Dividend Pay Date
+                        pay_obj = cal_events.get("dividendDate", {}) or sum_detail.get("dividendDate", {})
+                        if isinstance(pay_obj, dict):
+                            if pay_obj.get("fmt"):
+                                pay_date_str = pay_obj.get("fmt")
+                            elif pay_obj.get("raw"):
+                                pay_date_str = datetime.fromtimestamp(pay_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
+
+                        # Payout Ratio & Yield
+                        pr_obj = sum_detail.get("payoutRatio", {}) or res_data.get("defaultKeyStatistics", {}).get("payoutRatio", {})
+                        if isinstance(pr_obj, dict) and pr_obj.get("raw") is not None:
+                            payout_ratio = float(pr_obj.get("raw"))
+
+                        rate_obj = sum_detail.get("dividendRate", {}) or sum_detail.get("trailingAnnualDividendRate", {})
+                        if isinstance(rate_obj, dict) and rate_obj.get("raw") is not None:
+                            trailing_div_rate = float(rate_obj.get("raw"))
+
+                        yield_obj = sum_detail.get("dividendYield", {}) or sum_detail.get("trailingAnnualDividendYield", {})
+                        if isinstance(yield_obj, dict) and yield_obj.get("raw") is not None:
+                            trailing_div_yield = float(yield_obj.get("raw"))
+                except Exception:
+                    pass
+
+                # Source B: Parse historical dividend timestamps from Chart events
                 recent_div_amounts = []
                 one_year_ago_ts = int(time.time()) - (365 * 86400)
                 divs_in_last_year = []
@@ -448,6 +471,11 @@ def get_on_demand_data(ticker_symbol):
                         recent_div_amounts.append((ts_val, amt))
                         if ts_val >= one_year_ago_ts:
                             divs_in_last_year.append(amt)
+
+                # If Ex-Date was still N/A, use the latest recorded dividend event timestamp
+                if ex_date_str == "N/A" and recent_div_amounts:
+                    latest_ex_ts = recent_div_amounts[-1][0]
+                    ex_date_str = datetime.fromtimestamp(latest_ex_ts, tz=NY_TZ).strftime("%b %d, %Y")
 
                 # Determine payout frequency
                 num_divs = len(divs_in_last_year)
@@ -471,7 +499,7 @@ def get_on_demand_data(ticker_symbol):
                 annual_rate = trailing_div_rate or (last_payout * mult if last_payout else None)
 
                 if (annual_rate and annual_rate > 0) or (trailing_div_yield and trailing_div_yield > 0) or last_payout:
-                    calc_yield = ((annual_rate / current_price) * 100) if (annual_rate and current_price > 0) else ((trailing_div_yield * 100) if trailing_div_yield <= 1.0 else trailing_div_yield)
+                    calc_yield = ((annual_rate / current_price) * 100) if (annual_rate and current_price > 0) else ((trailing_div_yield * 100) if (trailing_div_yield and trailing_div_yield <= 1.0) else (trailing_div_yield or 0.0))
                     per_payout = last_payout if last_payout else (annual_rate / mult if annual_rate else (current_price * (calc_yield / 100) / mult))
                     annual_display = annual_rate if annual_rate else (per_payout * mult)
 
