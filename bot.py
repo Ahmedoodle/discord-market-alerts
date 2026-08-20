@@ -429,7 +429,7 @@ def get_on_demand_data(ticker_symbol):
                 trailing_div_rate = None
                 trailing_div_yield = None
 
-                # Source 1: Official Nasdaq Registry (Covers US + All Dual-Listed Canadian Stocks)
+                # Source 1: Official Nasdaq Registry (US & Dual-Listed Canadian)
                 try:
                     nd_url = f"https://api.nasdaq.com/api/quote/{base_sym}/dividends?assetclass=stocks"
                     nd_res = nasdaq_session.get(nd_url, timeout=3)
@@ -531,7 +531,7 @@ def get_on_demand_data(ticker_symbol):
                     freq_str = "Quarterly (4x per year)"
                     mult = 4
 
-                # Source 4: Smart Payment Cycle Resolution for Canadian/US stocks if still unpopulated
+                # Source 4: Smart Payment Cycle Resolution if still unpopulated
                 if pay_date_str == "N/A" and ex_date_str != "N/A":
                     try:
                         ex_parsed = datetime.strptime(ex_date_str, "%b %d, %Y")
@@ -798,7 +798,210 @@ def create_market_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 4. ON-DEMAND OPTIONS DEEP-DIVE ENGINE (#TICKER)
+# 4. ON-DEMAND WALL STREET & BAY STREET ANALYST CONSENSUS (%TICKER)
+# -------------------------------------------------------------
+def fetch_analyst_consensus(ticker_symbol):
+    sym = ticker_symbol.upper().strip()
+    is_canadian = sym.endswith(".TO") or sym.endswith(".V")
+    base_sym = sym.replace(".TO", "").replace(".V", "").upper()
+
+    try:
+        # Get live current price
+        current_price = 0.0
+        currency = "CAD" if is_canadian else "USD"
+        try:
+            t_obj = yf.Ticker(sym, session=http_session)
+            fi = t_obj.fast_info
+            current_price = float(fi.last_price) if fi.last_price is not None else 0.0
+        except Exception:
+            pass
+
+        high_target = None
+        mean_target = None
+        low_target = None
+        total_analysts = 0
+        strong_buy, buy, hold, sell, strong_sell = 0, 0, 0, 0, 0
+        consensus_score = 0.0
+
+        # Source 1: Official Nasdaq API (Best for US and Dual-Listed Canadian)
+        try:
+            nd_url_target = f"https://api.nasdaq.com/api/analyst/{base_sym}/targetprice"
+            nd_url_ratings = f"https://api.nasdaq.com/api/analyst/{base_sym}/ratings"
+            
+            res_target = nasdaq_session.get(nd_url_target, timeout=3)
+            res_ratings = nasdaq_session.get(nd_url_ratings, timeout=3)
+
+            if res_target.status_code == 200:
+                t_data = res_target.json().get("data", {}) or {}
+                high_target = float(t_data.get("highPriceTarget", 0) or 0) or None
+                mean_target = float(t_data.get("targetPrice", 0) or 0) or None
+                low_target = float(t_data.get("lowPriceTarget", 0) or 0) or None
+
+            if res_ratings.status_code == 200:
+                r_data = res_ratings.json().get("data", {}) or {}
+                ratings_rows = r_data.get("ratings", []) or []
+                if ratings_rows:
+                    latest_r = ratings_rows[0]
+                    strong_buy = int(latest_r.get("strongBuy", 0) or 0)
+                    buy = int(latest_r.get("buy", 0) or 0)
+                    hold = int(latest_r.get("hold", 0) or 0)
+                    sell = int(latest_r.get("sell", 0) or 0)
+                    strong_sell = int(latest_r.get("strongSell", 0) or 0)
+                    total_analysts = strong_buy + buy + hold + sell + strong_sell
+        except Exception:
+            pass
+
+        # Source 2: Localized Yahoo Finance Canada / US Consensus (For Pure TSX and fallback)
+        if total_analysts == 0 or not mean_target:
+            try:
+                region_param = "CA" if is_canadian else "US"
+                qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=financialData,recommendationTrend,defaultKeyStatistics&region={region_param}&lang=en-{region_param}"
+                qs_res = http_session.get(qs_url, timeout=3)
+                if qs_res.status_code == 200:
+                    res_json = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                    fin_data = res_json.get("financialData", {})
+                    rec_trend = res_json.get("recommendationTrend", {}).get("trend", [])
+
+                    if not high_target:
+                        h_val = fin_data.get("targetHighPrice", {}).get("raw")
+                        if h_val:
+                            high_target = float(h_val)
+
+                    if not mean_target:
+                        m_val = fin_data.get("targetMeanPrice", {}).get("raw")
+                        if m_val:
+                            mean_target = float(m_val)
+
+                    if not low_target:
+                        l_val = fin_data.get("targetLowPrice", {}).get("raw")
+                        if l_val:
+                            low_target = float(l_val)
+
+                    rec_score = fin_data.get("recommendationMean", {}).get("raw")
+                    if rec_score:
+                        consensus_score = float(rec_score)
+
+                    if rec_trend and total_analysts == 0:
+                        latest_trend = rec_trend[0]
+                        strong_buy = int(latest_trend.get("strongBuy", 0) or 0)
+                        buy = int(latest_trend.get("buy", 0) or 0)
+                        hold = int(latest_trend.get("hold", 0) or 0)
+                        sell = int(latest_trend.get("sell", 0) or 0)
+                        strong_sell = int(latest_trend.get("strongSell", 0) or 0)
+                        total_analysts = strong_buy + buy + hold + sell + strong_sell
+            except Exception:
+                pass
+
+        if total_analysts == 0 and not mean_target:
+            return None, f"No active institutional analyst coverage found for `{sym}`."
+
+        # Compute Sentiment Verdict & Score
+        if total_analysts > 0 and consensus_score == 0.0:
+            consensus_score = ((strong_buy * 1.0) + (buy * 2.0) + (hold * 3.0) + (sell * 4.0) + (strong_sell * 5.0)) / total_analysts
+
+        if consensus_score <= 1.8:
+            verdict = "Strong Buy 🟢"
+            embed_color = 0x2ecc71  # Green
+        elif consensus_score <= 2.5:
+            verdict = "Moderate Buy 🟢"
+            embed_color = 0x2ecc71
+        elif consensus_score <= 3.5:
+            verdict = "Hold / Neutral 🟡"
+            embed_color = 0xf1c40f  # Yellow
+        elif consensus_score <= 4.2:
+            verdict = "Underperform / Sell 🔴"
+            embed_color = 0xe74c3c  # Red
+        else:
+            verdict = "Strong Sell 🔴"
+            embed_color = 0xe74c3c
+
+        return {
+            "ticker": sym,
+            "current_price": current_price,
+            "currency": currency,
+            "high_target": high_target,
+            "mean_target": mean_target,
+            "low_target": low_target,
+            "total_analysts": total_analysts,
+            "strong_buy": strong_buy,
+            "buy": buy,
+            "hold": hold,
+            "sell": sell,
+            "strong_sell": strong_sell,
+            "consensus_score": consensus_score,
+            "verdict": verdict,
+            "color": embed_color
+        }, None
+
+    except Exception as e:
+        return None, str(e)
+
+def create_analyst_embed(data):
+    p = data["current_price"]
+    curr = data["currency"]
+    
+    # Calculate percentage upside/downside
+    high_str = f"${data['high_target']:.2f} {curr}" if data["high_target"] else "N/A"
+    if data["high_target"] and p > 0:
+        up_high = ((data["high_target"] - p) / p) * 100
+        high_str += f" `(🔺 {up_high:+.1f}%)`"
+
+    mean_str = f"${data['mean_target']:.2f} {curr}" if data["mean_target"] else "N/A"
+    if data["mean_target"] and p > 0:
+        up_mean = ((data["mean_target"] - p) / p) * 100
+        tag = "🔺" if up_mean >= 0 else "🔻"
+        mean_str += f" `({tag} {up_mean:+.1f}%)`"
+
+    low_str = f"${data['low_target']:.2f} {curr}" if data["low_target"] else "N/A"
+    if data["low_target"] and p > 0:
+        up_low = ((data["low_target"] - p) / p) * 100
+        tag = "🔺" if up_low >= 0 else "🔻"
+        low_str += f" `({tag} {up_low:+.1f}%)`"
+
+    # Targets Block
+    targets_text = (
+        f"• 🟢 **Street High:** {high_str}\n"
+        f"• 🎯 **Consensus Mean:** {mean_str}\n"
+        f"• 🔴 **Street Low:** {low_str}"
+    )
+
+    # Vote Distribution Breakdown
+    tot = max(1, data["total_analysts"])
+    sb_pct = (data["strong_buy"] / tot) * 100
+    b_pct = (data["buy"] / tot) * 100
+    h_pct = (data["hold"] / tot) * 100
+    s_pct = (data["sell"] / tot) * 100
+    ss_pct = (data["strong_sell"] / tot) * 100
+
+    breakdown_text = (
+        f"• 🟢 **Strong Buy:** `{data['strong_buy']}` firms ({sb_pct:.1f}%)\n"
+        f"• 🟢 **Moderate Buy:** `{data['buy']}` firms ({b_pct:.1f}%)\n"
+        f"• 🟡 **Hold / Neutral:** `{data['hold']}` firms ({h_pct:.1f}%)\n"
+        f"• 🔴 **Moderate Sell:** `{data['sell']}` firms ({s_pct:.1f}%)\n"
+        f"• 🔴 **Strong Sell:** `{data['strong_sell']}` firms ({ss_pct:.1f}%)"
+    )
+
+    embed = discord.Embed(
+        title=f"🏛️ Institutional Analyst Consensus: {data['ticker']}",
+        description=(
+            f"**Current Price:** `${p:.2f} {curr}` | **Total Coverage:** `{data['total_analysts']} Wall/Bay Street Firms`\n"
+            f"**Overall Consensus:** **{data['verdict']}** `(Score: {data['consensus_score']:.2f} / 5.0)`"
+        ),
+        color=data["color"]
+    )
+
+    embed.add_field(name="🎯 12-Month Price Targets", value=targets_text, inline=False)
+    embed.add_field(name=f"🗳️ Analyst Rating Breakdown ({data['total_analysts']} Total Votes)", value=breakdown_text, inline=False)
+
+    bull_pct = ((data["strong_buy"] + data["buy"]) / tot) * 100
+    summary_line = f"💡 **Institutional Takeaway:** `{bull_pct:.1f}%` of institutional analysts maintain a Bullish rating on **{data['ticker']}** with an average price target of `${data['mean_target']:.2f} {curr}`." if data["mean_target"] else f"💡 **Institutional Takeaway:** `{bull_pct:.1f}%` of covering analysts are Bullish on **{data['ticker']}**."
+    embed.add_field(name="📊 Summary Sentiment", value=summary_line, inline=False)
+
+    embed.set_footer(text="Looney • Institutional Analyst & Price Target Terminal")
+    return embed
+
+# -------------------------------------------------------------
+# 5. ON-DEMAND OPTIONS DEEP-DIVE ENGINE (#TICKER)
 # -------------------------------------------------------------
 def analyze_stock_options_setup(ticker_symbol):
     sym = ticker_symbol.upper().strip()
@@ -1009,7 +1212,7 @@ def create_deep_dive_options_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 5. DISCORD BOT EVENT HANDLERS
+# 6. UNIFIED DISCORD BOT EVENT HANDLERS
 # -------------------------------------------------------------
 @bot.event
 async def on_ready():
@@ -1022,7 +1225,20 @@ async def on_message(message):
 
     content = message.content.strip()
 
-    # TRIGGER 1: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
+    # TRIGGER 1: Institutional Analyst Consensus on `%TICKER` (e.g. %NVDA, %ATD.TO)
+    if content.startswith("%") and len(content) >= 2:
+        raw_ticker = content[1:].split()[0].upper().replace("$", "")
+        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            async with message.channel.typing():
+                data, err = await asyncio.to_thread(fetch_analyst_consensus, raw_ticker)
+                if err:
+                    await message.channel.send(f"❌ {err}")
+                    return
+                embed = create_analyst_embed(data)
+                await message.channel.send(embed=embed)
+                return
+
+    # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
     if content.startswith("#") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -1035,12 +1251,12 @@ async def on_message(message):
                 await message.channel.send(embed=embed)
                 return
 
-    # TRIGGER 2: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
+    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
 
-        if first_word in ["price", "p", "four", "check", "opt", "options"]:
+        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "ratings"]:
             await bot.process_commands(message)
             return
 
@@ -1078,8 +1294,18 @@ async def options_command(ctx, ticker: str):
         embed = create_deep_dive_options_embed(data)
         await ctx.send(embed=embed)
 
+@bot.command(name="analyst", aliases=["ratings", "target"])
+async def analyst_command(ctx, ticker: str):
+    async with ctx.typing():
+        data, err = await asyncio.to_thread(fetch_analyst_consensus, ticker)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        embed = create_analyst_embed(data)
+        await ctx.send(embed=embed)
+
 # -------------------------------------------------------------
-# 6. ENTRYPOINT
+# 7. ENTRYPOINT
 # -------------------------------------------------------------
 if __name__ == "__main__":
     if not BOT_TOKEN:
