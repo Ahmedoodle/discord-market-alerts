@@ -215,12 +215,12 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
         if fz_res.status_code == 200:
-            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
-            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
-            if tp_match:
-                mean_t = float(tp_match.group(1).replace(',', ''))
-            if rec_match:
-                score = float(rec_match.group(1))
+            m_tp = re.search(r'Target\s*Price</td>\s*<td[^>]*>(?:<b>)?([\d\.]+)', fz_res.text, re.IGNORECASE)
+            m_rc = re.search(r'Recom</td>\s*<td[^>]*>(?:<b>)?([\d\.]+)', fz_res.text, re.IGNORECASE)
+            if m_tp:
+                mean_t = float(m_tp.group(1))
+            if m_rc:
+                score = float(m_rc.group(1))
                 rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
     except Exception:
         pass
@@ -389,7 +389,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Multi-Source Dividend Schedule via Chrome TLS
+            # Multi-Source Dividend Schedule
             try:
                 ex_date_str = "N/A"
                 pay_date_str = "N/A"
@@ -397,7 +397,7 @@ def get_on_demand_data(ticker_symbol):
                 trailing_div_rate = None
                 trailing_div_yield = None
 
-                # Query QuoteSummary with TLS Impersonation (Bypasses Blocks)
+                # Query QuoteSummary with TLS Impersonation
                 try:
                     region_param = "CA" if is_canadian else "US"
                     qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={region_param}&lang=en-{region_param}"
@@ -435,7 +435,7 @@ def get_on_demand_data(ticker_symbol):
                 except Exception:
                     pass
 
-                # Parse chart dividends
+                # Parse chart events
                 recent_div_amounts = []
                 one_year_ago_ts = int(time.time()) - (365 * 86400)
                 divs_in_last_year = []
@@ -632,7 +632,7 @@ def get_on_demand_data(ticker_symbol):
                     trailing_eps = ttm_net_inc / shares
                     pe_str = f"`{current_price / trailing_eps:.1f}x`" if trailing_eps > 0 else "`N/A (Pre-Profit)`"
                 else:
-                    pe_str = "`N/A (Pre-Profit)`"
+                    pe_str = "`N/A`"
 
                 if ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0:
                     pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`"
@@ -743,21 +743,21 @@ def fetch_analyst_consensus(ticker_symbol):
     currency = "CAD" if is_canadian else "USD"
 
     try:
-        # Step 1: Get Live Accurate Price from Realtime Chart API
+        t_obj = yf.Ticker(sym, session=http_session)
+
+        # Step 1: Real-time price
         current_price = 0.0
         try:
-            chart_url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d"
-            c_res = http_session.get(chart_url, timeout=4)
-            if c_res.status_code == 200:
-                c_meta = c_res.json().get("chart", {}).get("result", [{}])[0].get("meta", {})
-                current_price = float(c_meta.get("regularMarketPrice", 0) or 0)
+            fi = t_obj.fast_info
+            current_price = float(fi.last_price or 0)
         except Exception:
             pass
 
         if current_price == 0.0:
             try:
-                t_obj = yf.Ticker(sym)
-                current_price = float(t_obj.fast_info.last_price or 0)
+                hist = t_obj.history(period="2d")
+                if not hist.empty and 'Close' in hist.columns:
+                    current_price = float(hist['Close'].iloc[-1])
             except Exception:
                 pass
 
@@ -768,75 +768,72 @@ def fetch_analyst_consensus(ticker_symbol):
         strong_buy, buy, hold, sell, strong_sell = 0, 0, 0, 0, 0
         consensus_score = 0.0
 
-        # Step 2: Query Yahoo quoteSummary via Chrome 124 TLS (Zero 401 Block)
+        # Step 2: Extract from yfinance analyst_price_targets (Crumb-managed)
         try:
-            region_param = "CA" if is_canadian else "US"
-            qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=financialData,recommendationTrend&region={region_param}&lang=en-{region_param}"
-            qs_res = cureq.get(qs_url, impersonate="chrome124", timeout=5)
-            
-            if qs_res.status_code == 200:
-                res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                fin_data = res_data.get("financialData", {})
-                rec_trend = res_data.get("recommendationTrend", {}).get("trend", [])
-
-                # Extract Price Targets
-                h_val = fin_data.get("targetHighPrice", {}).get("raw")
-                m_val = fin_data.get("targetMeanPrice", {}).get("raw")
-                l_val = fin_data.get("targetLowPrice", {}).get("raw")
-                r_score = fin_data.get("recommendationMean", {}).get("raw")
-
-                # Sanity filter: targets must be within sensible range (reject timestamps)
-                if h_val and (current_price == 0 or float(h_val) < (current_price * 10)):
-                    high_target = float(h_val)
-                if m_val and (current_price == 0 or float(m_val) < (current_price * 10)):
-                    mean_target = float(m_val)
-                if l_val and (current_price == 0 or float(l_val) < (current_price * 10)):
-                    low_target = float(l_val)
-                if r_score:
-                    consensus_score = float(r_score)
-
-                # Extract Vote Breakdown
-                if rec_trend:
-                    latest_trend = rec_trend[0]
-                    strong_buy = int(latest_trend.get("strongBuy", 0) or 0)
-                    buy = int(latest_trend.get("buy", 0) or 0)
-                    hold = int(latest_trend.get("hold", 0) or 0)
-                    sell = int(latest_trend.get("sell", 0) or 0)
-                    strong_sell = int(latest_trend.get("strongSell", 0) or 0)
-                    total_analysts = strong_buy + buy + hold + sell + strong_sell
-
-                if total_analysts == 0:
-                    opinions = fin_data.get("numberOfAnalystOpinions", {}).get("raw")
-                    if opinions:
-                        total_analysts = int(opinions)
+            apt = t_obj.analyst_price_targets
+            if apt and isinstance(apt, dict):
+                h = apt.get("high")
+                m = apt.get("mean") or apt.get("current")
+                l = apt.get("low")
+                if h and float(h) > 0 and (current_price == 0 or float(h) < current_price * 10):
+                    high_target = float(h)
+                if m and float(m) > 0 and (current_price == 0 or float(m) < current_price * 10):
+                    mean_target = float(m)
+                if l and float(l) > 0 and (current_price == 0 or float(l) < current_price * 10):
+                    low_target = float(l)
         except Exception:
             pass
 
-        # Step 3: TipRanks TLS Fallback for US / Dual-Listed Stocks if targets missing
+        # Step 3: Extract from yfinance recommendations
+        try:
+            rec_df = t_obj.recommendations
+            if rec_df is not None and not rec_df.empty:
+                row = rec_df.iloc[0]
+                strong_buy = int(row.get("strongBuy", 0) or 0)
+                buy = int(row.get("buy", 0) or 0)
+                hold = int(row.get("hold", 0) or 0)
+                sell = int(row.get("sell", 0) or 0)
+                strong_sell = int(row.get("strongSell", 0) or 0)
+                total_analysts = strong_buy + buy + hold + sell + strong_sell
+        except Exception:
+            pass
+
+        # Step 4: Fallback to t_obj.info if targets or counts missing
         if not mean_target or total_analysts == 0:
             try:
-                base_sym = sym.replace(".TO", "").replace(".V", "").upper()
-                tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={base_sym}"
-                tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
-                if tr_res.status_code == 200:
-                    tr_data = tr_res.json()
-                    pt = tr_data.get("ptConsensus", {})
-                    if pt:
-                        if not high_target and pt.get("high"):
-                            high_target = float(pt.get("high"))
-                        if not mean_target and pt.get("priceTarget"):
-                            mean_target = float(pt.get("priceTarget"))
-                        if not low_target and pt.get("low"):
-                            low_target = float(pt.get("low"))
+                inf = t_obj.info or {}
+                if not high_target and inf.get("targetHighPrice"):
+                    h = float(inf["targetHighPrice"])
+                    if current_price == 0 or h < current_price * 10:
+                        high_target = h
+                if not mean_target and inf.get("targetMeanPrice"):
+                    m = float(inf["targetMeanPrice"])
+                    if current_price == 0 or m < current_price * 10:
+                        mean_target = m
+                if not low_target and inf.get("targetLowPrice"):
+                    l = float(inf["targetLowPrice"])
+                    if current_price == 0 or l < current_price * 10:
+                        low_target = l
+                if total_analysts == 0 and inf.get("numberOfAnalystOpinions"):
+                    total_analysts = int(inf["numberOfAnalystOpinions"])
+                if consensus_score == 0.0 and inf.get("recommendationMean"):
+                    consensus_score = float(inf["recommendationMean"])
+            except Exception:
+                pass
 
-                    cons = tr_data.get("consensuses", {})
-                    if cons and total_analysts == 0:
-                        raw_b = int(cons.get("buy") or 0)
-                        hold = int(cons.get("hold") or 0)
-                        sell = int(cons.get("sell") or 0)
-                        strong_buy = int(raw_b * 0.7)
-                        buy = raw_b - strong_buy
-                        total_analysts = strong_buy + buy + hold + sell
+        # Step 5: Finviz TLS regex fallback for US stocks
+        if not mean_target and not is_canadian:
+            try:
+                fz_res = cureq.get(f"https://finviz.com/quote.ashx?t={sym}&p=d", impersonate="chrome124", timeout=4)
+                if fz_res.status_code == 200:
+                    m_tp = re.search(r'Target\s*Price</td>\s*<td[^>]*>(?:<b>)?([\d\.]+)', fz_res.text, re.IGNORECASE)
+                    m_rc = re.search(r'Recom</td>\s*<td[^>]*>(?:<b>)?([\d\.]+)', fz_res.text, re.IGNORECASE)
+                    if m_tp:
+                        val = float(m_tp.group(1))
+                        if current_price == 0 or val < current_price * 10:
+                            mean_target = val
+                    if m_rc and consensus_score == 0.0:
+                        consensus_score = float(m_rc.group(1))
             except Exception:
                 pass
 
