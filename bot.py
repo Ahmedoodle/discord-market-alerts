@@ -58,14 +58,6 @@ http_session.headers.update({
     "Accept-Language": "en-US,en;q=0.9"
 })
 
-nasdaq_session = requests.Session()
-nasdaq_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/plain, */*",
-    "Origin": "https://www.nasdaq.com",
-    "Referer": "https://www.nasdaq.com/"
-})
-
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NY_TZ = ZoneInfo("America/New_York")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
@@ -233,31 +225,11 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     except Exception:
         pass
 
-    if not mean_t:
-        try:
-            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
-            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
-            if tr_res.status_code == 200:
-                tr_data = tr_res.json()
-                pt = tr_data.get("ptConsensus", {})
-                if pt:
-                    low_t = pt.get("low")
-                    mean_t = pt.get("priceTarget")
-                    high_t = pt.get("high")
-                c_rating = tr_data.get("consensuses", {}).get("consensusRating")
-                if c_rating:
-                    rating = c_rating.title() + " 🟢"
-        except Exception:
-            pass
-
-    if mean_t and current_price > 0:
+    if mean_t and current_price > 0 and mean_t < (current_price * 10):
         upside = ((mean_t - current_price) / current_price) * 100
         up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
         rating_part = f" | Rating: `{rating}`" if rating else ""
-        if low_t and high_t:
-            return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`{rating_part}"
-        else:
-            return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
+        return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
 
     return "N/A"
 
@@ -267,7 +239,6 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
     is_canadian = ticker_symbol.endswith(".TO") or ticker_symbol.endswith(".V")
-    base_sym = ticker_symbol.replace(".TO", "").replace(".V", "").upper()
 
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y&events=div"
@@ -383,7 +354,6 @@ def get_on_demand_data(ticker_symbol):
 
         atr = calculate_atr(highs, lows, closes, 14)
         quote_type = meta.get("instrumentType", "EQUITY")
-        
         dividend_block = None
 
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
@@ -419,9 +389,7 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # -------------------------------------------------------------
-            # MULTI-MARKET DIVIDEND & OFFICIAL PAY-DATE ENGINE (US + TSX)
-            # -------------------------------------------------------------
+            # Multi-Source Dividend Schedule via Chrome TLS
             try:
                 ex_date_str = "N/A"
                 pay_date_str = "N/A"
@@ -429,74 +397,45 @@ def get_on_demand_data(ticker_symbol):
                 trailing_div_rate = None
                 trailing_div_yield = None
 
-                # Source 1: Official Nasdaq Registry (US & Dual-Listed Canadian)
+                # Query QuoteSummary with TLS Impersonation (Bypasses Blocks)
                 try:
-                    nd_url = f"https://api.nasdaq.com/api/quote/{base_sym}/dividends?assetclass=stocks"
-                    nd_res = nasdaq_session.get(nd_url, timeout=3)
-                    if nd_res.status_code == 200:
-                        nd_data = nd_res.json().get("data", {}).get("dividends", {}).get("rows", []) or []
-                        if nd_data:
-                            latest_row = nd_data[0]
-                            nd_ex = latest_row.get("exOrEffDate")
-                            nd_pay = latest_row.get("paymentDate")
-                            if nd_ex and nd_ex != "N/A":
-                                try:
-                                    ex_date_str = datetime.strptime(nd_ex, "%m/%d/%Y").strftime("%b %d, %Y")
-                                except Exception:
-                                    ex_date_str = nd_ex
-                            if nd_pay and nd_pay != "N/A":
-                                try:
-                                    pay_date_str = datetime.strptime(nd_pay, "%m/%d/%Y").strftime("%b %d, %Y")
-                                except Exception:
-                                    pay_date_str = nd_pay
+                    region_param = "CA" if is_canadian else "US"
+                    qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={region_param}&lang=en-{region_param}"
+                    qs_res = cureq.get(qs_url, impersonate="chrome124", timeout=4)
+                    if qs_res.status_code == 200:
+                        res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                        cal_events = res_data.get("calendarEvents", {})
+                        sum_detail = res_data.get("summaryDetail", {})
+
+                        ex_obj = cal_events.get("exDividendDate", {}) or sum_detail.get("exDividendDate", {})
+                        if isinstance(ex_obj, dict):
+                            if ex_obj.get("fmt"):
+                                ex_date_str = ex_obj.get("fmt")
+                            elif ex_obj.get("raw"):
+                                ex_date_str = datetime.fromtimestamp(ex_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
+
+                        pay_obj = cal_events.get("dividendDate", {}) or sum_detail.get("dividendDate", {})
+                        if isinstance(pay_obj, dict):
+                            if pay_obj.get("fmt"):
+                                pay_date_str = pay_obj.get("fmt")
+                            elif pay_obj.get("raw"):
+                                pay_date_str = datetime.fromtimestamp(pay_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
+
+                        pr_obj = sum_detail.get("payoutRatio", {}) or res_data.get("defaultKeyStatistics", {}).get("payoutRatio", {})
+                        if isinstance(pr_obj, dict) and pr_obj.get("raw") is not None:
+                            payout_ratio = float(pr_obj.get("raw"))
+
+                        rate_obj = sum_detail.get("dividendRate", {}) or sum_detail.get("trailingAnnualDividendRate", {})
+                        if isinstance(rate_obj, dict) and rate_obj.get("raw") is not None:
+                            trailing_div_rate = float(rate_obj.get("raw"))
+
+                        yield_obj = sum_detail.get("dividendYield", {}) or sum_detail.get("trailingAnnualDividendYield", {})
+                        if isinstance(yield_obj, dict) and yield_obj.get("raw") is not None:
+                            trailing_div_yield = float(yield_obj.get("raw"))
                 except Exception:
                     pass
 
-                # Source 2: Direct QuoteSummary via Chrome TLS
-                if pay_date_str == "N/A" or ex_date_str == "N/A":
-                    try:
-                        region_param = "CA" if is_canadian else "US"
-                        qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={region_param}&lang=en-{region_param}"
-                        qs_res = cureq.get(qs_url, impersonate="chrome124", timeout=4)
-                        if qs_res.status_code == 200:
-                            res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                            cal_events = res_data.get("calendarEvents", {})
-                            sum_detail = res_data.get("summaryDetail", {})
-
-                            if ex_date_str == "N/A":
-                                ex_obj = cal_events.get("exDividendDate", {}) or sum_detail.get("exDividendDate", {})
-                                if isinstance(ex_obj, dict):
-                                    if ex_obj.get("fmt"):
-                                        ex_date_str = ex_obj.get("fmt")
-                                    elif ex_obj.get("raw"):
-                                        ex_date_str = datetime.fromtimestamp(ex_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
-
-                            if pay_date_str == "N/A":
-                                pay_obj = cal_events.get("dividendDate", {}) or sum_detail.get("dividendDate", {})
-                                if isinstance(pay_obj, dict):
-                                    if pay_obj.get("fmt"):
-                                        pay_date_str = pay_obj.get("fmt")
-                                    elif pay_obj.get("raw"):
-                                        pay_date_str = datetime.fromtimestamp(pay_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y")
-
-                            if not payout_ratio:
-                                pr_obj = sum_detail.get("payoutRatio", {}) or res_data.get("defaultKeyStatistics", {}).get("payoutRatio", {})
-                                if isinstance(pr_obj, dict) and pr_obj.get("raw") is not None:
-                                    payout_ratio = float(pr_obj.get("raw"))
-
-                            if not trailing_div_rate:
-                                rate_obj = sum_detail.get("dividendRate", {}) or sum_detail.get("trailingAnnualDividendRate", {})
-                                if isinstance(rate_obj, dict) and rate_obj.get("raw") is not None:
-                                    trailing_div_rate = float(rate_obj.get("raw"))
-
-                            if not trailing_div_yield:
-                                yield_obj = sum_detail.get("dividendYield", {}) or sum_detail.get("trailingAnnualDividendYield", {})
-                                if isinstance(yield_obj, dict) and yield_obj.get("raw") is not None:
-                                    trailing_div_yield = float(yield_obj.get("raw"))
-                    except Exception:
-                        pass
-
-                # Source 3: Historical Chart Events
+                # Parse chart dividends
                 recent_div_amounts = []
                 one_year_ago_ts = int(time.time()) - (365 * 86400)
                 divs_in_last_year = []
@@ -796,101 +735,119 @@ def create_market_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 4. RESILIENT MULTI-SOURCE ANALYST CONSENSUS (%TICKER)
+# 4. ROBUST INSTITUTIONAL ANALYST CONSENSUS (%TICKER)
 # -------------------------------------------------------------
 def fetch_analyst_consensus(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     is_canadian = sym.endswith(".TO") or sym.endswith(".V")
-    base_sym = sym.replace(".TO", "").replace(".V", "").upper()
+    currency = "CAD" if is_canadian else "USD"
 
     try:
+        # Step 1: Get Live Accurate Price from Realtime Chart API
         current_price = 0.0
-        currency = "CAD" if is_canadian else "USD"
         try:
-            t_obj = yf.Ticker(sym)
-            fi = t_obj.fast_info
-            current_price = float(fi.last_price) if fi.last_price is not None else 0.0
+            chart_url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d"
+            c_res = http_session.get(chart_url, timeout=4)
+            if c_res.status_code == 200:
+                c_meta = c_res.json().get("chart", {}).get("result", [{}])[0].get("meta", {})
+                current_price = float(c_meta.get("regularMarketPrice", 0) or 0)
         except Exception:
             pass
 
-        high_target, mean_target, low_target = None, None, None
+        if current_price == 0.0:
+            try:
+                t_obj = yf.Ticker(sym)
+                current_price = float(t_obj.fast_info.last_price or 0)
+            except Exception:
+                pass
+
+        high_target = None
+        mean_target = None
+        low_target = None
         total_analysts = 0
         strong_buy, buy, hold, sell, strong_sell = 0, 0, 0, 0, 0
         consensus_score = 0.0
 
-        # Layer 1: TipRanks via Chrome TLS (Bypasses all datacenter firewall blocks)
+        # Step 2: Query Yahoo quoteSummary via Chrome 124 TLS (Zero 401 Block)
         try:
-            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={base_sym}"
-            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=5)
-            if tr_res.status_code == 200:
-                tr_data = tr_res.json()
-                pt = tr_data.get("ptConsensus", {})
-                if pt:
-                    high_target = float(pt.get("high") or 0) or None
-                    mean_target = float(pt.get("priceTarget") or 0) or None
-                    low_target = float(pt.get("low") or 0) or None
-                
-                cons = tr_data.get("consensuses", {})
-                if cons and (cons.get("buy") or cons.get("hold") or cons.get("sell")):
-                    raw_b = int(cons.get("buy") or 0)
-                    hold = int(cons.get("hold") or 0)
-                    sell = int(cons.get("sell") or 0)
-                    strong_buy = int(raw_b * 0.75)
-                    buy = raw_b - strong_buy
-                    total_analysts = strong_buy + buy + hold + sell
+            region_param = "CA" if is_canadian else "US"
+            qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=financialData,recommendationTrend&region={region_param}&lang=en-{region_param}"
+            qs_res = cureq.get(qs_url, impersonate="chrome124", timeout=5)
+            
+            if qs_res.status_code == 200:
+                res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                fin_data = res_data.get("financialData", {})
+                rec_trend = res_data.get("recommendationTrend", {}).get("trend", [])
+
+                # Extract Price Targets
+                h_val = fin_data.get("targetHighPrice", {}).get("raw")
+                m_val = fin_data.get("targetMeanPrice", {}).get("raw")
+                l_val = fin_data.get("targetLowPrice", {}).get("raw")
+                r_score = fin_data.get("recommendationMean", {}).get("raw")
+
+                # Sanity filter: targets must be within sensible range (reject timestamps)
+                if h_val and (current_price == 0 or float(h_val) < (current_price * 10)):
+                    high_target = float(h_val)
+                if m_val and (current_price == 0 or float(m_val) < (current_price * 10)):
+                    mean_target = float(m_val)
+                if l_val and (current_price == 0 or float(l_val) < (current_price * 10)):
+                    low_target = float(l_val)
+                if r_score:
+                    consensus_score = float(r_score)
+
+                # Extract Vote Breakdown
+                if rec_trend:
+                    latest_trend = rec_trend[0]
+                    strong_buy = int(latest_trend.get("strongBuy", 0) or 0)
+                    buy = int(latest_trend.get("buy", 0) or 0)
+                    hold = int(latest_trend.get("hold", 0) or 0)
+                    sell = int(latest_trend.get("sell", 0) or 0)
+                    strong_sell = int(latest_trend.get("strongSell", 0) or 0)
+                    total_analysts = strong_buy + buy + hold + sell + strong_sell
+
+                if total_analysts == 0:
+                    opinions = fin_data.get("numberOfAnalystOpinions", {}).get("raw")
+                    if opinions:
+                        total_analysts = int(opinions)
         except Exception:
             pass
 
-        # Layer 2: yfinance Institutional Targets & Recommendations (Works for Canadian .TO too!)
+        # Step 3: TipRanks TLS Fallback for US / Dual-Listed Stocks if targets missing
         if not mean_target or total_analysts == 0:
             try:
-                t_obj = yf.Ticker(sym)
-                try:
-                    apt = t_obj.analyst_price_targets
-                    if apt and isinstance(apt, dict):
-                        high_target = float(apt.get("high") or 0) or high_target
-                        mean_target = float(apt.get("mean") or apt.get("current") or 0) or mean_target
-                        low_target = float(apt.get("low") or 0) or low_target
-                except Exception:
-                    pass
+                base_sym = sym.replace(".TO", "").replace(".V", "").upper()
+                tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={base_sym}"
+                tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
+                if tr_res.status_code == 200:
+                    tr_data = tr_res.json()
+                    pt = tr_data.get("ptConsensus", {})
+                    if pt:
+                        if not high_target and pt.get("high"):
+                            high_target = float(pt.get("high"))
+                        if not mean_target and pt.get("priceTarget"):
+                            mean_target = float(pt.get("priceTarget"))
+                        if not low_target and pt.get("low"):
+                            low_target = float(pt.get("low"))
 
-                try:
-                    rec_df = t_obj.recommendations
-                    if rec_df is not None and not rec_df.empty and total_analysts == 0:
-                        latest_rec = rec_df.iloc[0]
-                        strong_buy = int(latest_rec.get("strongBuy", 0))
-                        buy = int(latest_rec.get("buy", 0))
-                        hold = int(latest_rec.get("hold", 0))
-                        sell = int(latest_rec.get("sell", 0))
-                        strong_sell = int(latest_rec.get("strongSell", 0))
-                        total_analysts = strong_buy + buy + hold + sell + strong_sell
-                except Exception:
-                    pass
-            except Exception:
-                pass
-
-        # Layer 3: Finviz / CNN TLS Fallback
-        if not mean_target:
-            try:
-                fz_url = f"https://finviz.com/quote.ashx?t={base_sym}&p=d"
-                fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
-                if fz_res.status_code == 200:
-                    tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
-                    rec_match = re.search(r'Recom[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
-                    if tp_match:
-                        mean_target = float(tp_match.group(1).replace(',', ''))
-                    if rec_match and consensus_score == 0.0:
-                        consensus_score = float(rec_match.group(1))
+                    cons = tr_data.get("consensuses", {})
+                    if cons and total_analysts == 0:
+                        raw_b = int(cons.get("buy") or 0)
+                        hold = int(cons.get("hold") or 0)
+                        sell = int(cons.get("sell") or 0)
+                        strong_buy = int(raw_b * 0.7)
+                        buy = raw_b - strong_buy
+                        total_analysts = strong_buy + buy + hold + sell
             except Exception:
                 pass
 
         if not mean_target and total_analysts == 0:
             return None, f"No active institutional analyst coverage found for `{sym}`."
 
+        # Compute Consensus Score & Verdict
         if total_analysts > 0 and consensus_score == 0.0:
             consensus_score = ((strong_buy * 1.0) + (buy * 2.0) + (hold * 3.0) + (sell * 4.0) + (strong_sell * 5.0)) / total_analysts
         elif consensus_score == 0.0:
-            consensus_score = 2.0  # Moderate default
+            consensus_score = 2.0
 
         if consensus_score <= 1.8:
             verdict = "Strong Buy 🟢"
@@ -936,7 +893,8 @@ def create_analyst_embed(data):
     high_str = f"${data['high_target']:.2f} {curr}" if data["high_target"] else "N/A"
     if data["high_target"] and p > 0:
         up_high = ((data["high_target"] - p) / p) * 100
-        high_str += f" `(🔺 {up_high:+.1f}%)`"
+        tag = "🔺" if up_high >= 0 else "🔻"
+        high_str += f" `({tag} {up_high:+.1f}%)`"
 
     mean_str = f"${data['mean_target']:.2f} {curr}" if data["mean_target"] else "N/A"
     if data["mean_target"] and p > 0:
@@ -963,7 +921,7 @@ def create_analyst_embed(data):
     s_pct = (data["sell"] / tot) * 100
     ss_pct = (data["strong_sell"] / tot) * 100
 
-    if data["total_analysts"] > 0:
+    if data["total_analysts"] > 0 and (data["strong_buy"] + data["buy"] + data["hold"] + data["sell"] + data["strong_sell"]) > 0:
         breakdown_text = (
             f"• 🟢 **Strong Buy:** `{data['strong_buy']}` firms ({sb_pct:.1f}%)\n"
             f"• 🟢 **Moderate Buy:** `{data['buy']}` firms ({b_pct:.1f}%)\n"
@@ -973,13 +931,14 @@ def create_analyst_embed(data):
         )
         field_title = f"🗳️ Analyst Rating Breakdown ({data['total_analysts']} Total Votes)"
     else:
-        breakdown_text = f"• **Consensus Sentiment:** `{data['verdict']}` (Tracked across Institutional Targets)"
+        breakdown_text = f"• **Consensus Sentiment:** `{data['verdict']}` (Institutional Survey)"
         field_title = "🗳️ Analyst Rating Breakdown"
 
+    price_header = f"${p:.2f} {curr}" if p > 0 else "Live"
     embed = discord.Embed(
         title=f"🏛️ Institutional Analyst Consensus: {data['ticker']}",
         description=(
-            f"**Current Price:** `${p:.2f} {curr}` | **Total Coverage:** `{data['total_analysts']} Wall/Bay Street Firms`\n"
+            f"**Current Price:** `{price_header}` | **Total Coverage:** `{data['total_analysts']} Wall/Bay Street Firms`\n"
             f"**Overall Consensus:** **{data['verdict']}** `(Score: {data['consensus_score']:.2f} / 5.0)`"
         ),
         color=data["color"]
@@ -992,7 +951,7 @@ def create_analyst_embed(data):
         bull_pct = ((data["strong_buy"] + data["buy"]) / tot) * 100
         summary_line = f"💡 **Institutional Takeaway:** `{bull_pct:.1f}%` of covering analysts are Bullish on **{data['ticker']}** with an average price target of `${data['mean_target']:.2f} {curr}`." if data["mean_target"] else f"💡 **Institutional Takeaway:** `{bull_pct:.1f}%` of covering analysts maintain a Buy rating."
     else:
-        summary_line = f"💡 **Institutional Takeaway:** Consensus price target sits at `${data['mean_target']:.2f} {curr}`."
+        summary_line = f"💡 **Institutional Takeaway:** Consensus price target sits at `${data['mean_target']:.2f} {curr}`." if data["mean_target"] else f"💡 **Institutional Takeaway:** Institutional sentiment is {data['verdict']}."
     
     embed.add_field(name="📊 Summary Sentiment", value=summary_line, inline=False)
     embed.set_footer(text="Looney • Institutional Analyst & Price Target Terminal")
