@@ -4,8 +4,10 @@ import asyncio
 import math
 import re
 import time
+import concurrent.futures
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta
+from zoneinfo import ZoneInfo
 import requests
 import discord
 from discord.ext import commands
@@ -21,7 +23,7 @@ class PingHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(b"Looney On-Demand Discord Bot is Live 24/7!")
+        self.wfile.write(b"Looney On-Demand Discord Bot & Options Radar is Live 24/7!")
 
     def do_HEAD(self):
         self.send_response(200)
@@ -49,25 +51,46 @@ def auto_self_ping():
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSION
+# 2. BROWSER SESSIONS & WEBHOOKS
 # -------------------------------------------------------------
 http_session = requests.Session()
 http_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "*/*",
     "Accept-Language": "en-US,en;q=0.9"
 })
 
+BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+DISCORD_OPTIONS_WEBHOOK_URL = os.getenv(
+    "DISCORD_OPTIONS_WEBHOOK_URL",
+    "https://discord.com/api/webhooks/1540116236073959555/Cd3S1gwzHZjh2te36-2h8iI7lzL2mUkTiCPS5ueZ1YdsEByp0QjcX-3lwWa892bjOA1g"
+)
+BOT_NAME = "Looney Options Intelligence"
+BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
+
+NY_TZ = ZoneInfo("America/New_York")
+KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
+
+# Full Nasdaq 100 Universe for 30-Minute Radar
+NASDAQ_100 = [
+    "NVDA", "AAPL", "MSFT", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "AVGO", "COST",
+    "ASML", "PEP", "NFLX", "AZN", "LIN", "AMD", "TMUS", "ADBE", "CSCO", "QCOM",
+    "TXN", "AMAT", "INTU", "ISRG", "CMCSA", "HON", "AMGN", "BKNG", "VRTX", "SBUX",
+    "PANW", "MDLZ", "GILD", "LRCX", "REGN", "ADP", "MU", "MELI", "KLAC", "SNPS",
+    "CDNS", "PYPL", "CRWD", "ABNB", "MAR", "CSX", "CTAS", "ORLY", "NXPI", "PCAR",
+    "WBD", "MRVL", "ROP", "MCHP", "FTNT", "DXCM", "KDP", "MNST", "LULU", "ADI",
+    "KHC", "PAYX", "ROST", "IDXX", "ODFL", "EXC", "CHTR", "AEP", "FAST", "BIIB",
+    "CPRT", "GEHC", "TEAM", "VRSK", "EA", "BKR", "CTSH", "DDOG", "ZS", "ANSS",
+    "CSGP", "ON", "MRNA", "ILMN", "DLTR", "WDAY", "CEG", "SMCI", "DASH", "MSTR",
+    "ARM", "TTD", "RBLX", "PLTR", "IREN", "RKLB", "SHOP.TO", "INTC", "IBM"
+]
+
 # -------------------------------------------------------------
 # 3. DISCORD BOT CLIENT
 # -------------------------------------------------------------
-BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
 
 def format_large_number(num):
     if num is None:
@@ -85,7 +108,7 @@ def format_large_number(num):
 # --- MATHEMATICAL INDICATOR ENGINES ---
 def calculate_rsi(closes, period=14):
     if len(closes) < period + 1:
-        return None
+        return 50.0
     deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
     gains = [max(d, 0) for d in deltas]
     losses = [max(-d, 0) for d in deltas]
@@ -150,7 +173,7 @@ def calculate_macd(closes):
 
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
-        return None
+        return 1.0
     trs = []
     for i in range(1, len(closes)):
         h = highs[i]
@@ -160,12 +183,21 @@ def calculate_atr(highs, lows, closes, period=14):
         trs.append(tr)
     return sum(trs[-period:]) / period
 
-def calculate_beta_vs_spy(closes, http_session):
+def calculate_historical_volatility(closes, window=30):
+    if len(closes) < window + 1:
+        return 0.25
+    log_returns = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - window, len(closes))]
+    mean_ret = sum(log_returns) / len(log_returns)
+    variance = sum((r - mean_ret) ** 2 for r in log_returns) / (len(log_returns) - 1)
+    daily_vol = math.sqrt(variance)
+    return daily_vol * math.sqrt(252)
+
+def calculate_beta_vs_spy(closes, session_http):
     try:
         if len(closes) < 50:
             return None
         url_spy = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y"
-        res_spy = http_session.get(url_spy, timeout=4)
+        res_spy = session_http.get(url_spy, timeout=4)
         if res_spy.status_code == 200:
             spy_closes = [c for c in res_spy.json()["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
             min_len = min(len(closes), len(spy_closes))
@@ -215,13 +247,11 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
-    """Pulls Wall Street Targets using TLS Chrome Impersonation."""
     low_t = None
     mean_t = None
     high_t = None
     rating = None
 
-    # Source 1: Finviz via Chrome TLS
     try:
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
@@ -238,7 +268,6 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     except Exception:
         pass
 
-    # Source 2: TipRanks via Chrome TLS
     if not mean_t:
         try:
             tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
@@ -256,25 +285,6 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         except Exception:
             pass
 
-    # Source 3: CNN Forecast via Chrome TLS
-    if not mean_t:
-        try:
-            cnn_url = f"https://money.cnn.com/quote/forecast/forecast.html?symb={ticker_symbol}"
-            cnn_res = cureq.get(cnn_url, impersonate="chrome124", timeout=4)
-            if cnn_res.status_code == 200:
-                m = re.search(r'median target of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
-                h = re.search(r'high estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
-                l = re.search(r'low estimate of\s*([\d,.]+)', cnn_res.text, re.IGNORECASE)
-                if m:
-                    mean_t = float(m.group(1).replace(',', ''))
-                if h:
-                    high_t = float(h.group(1).replace(',', ''))
-                if l:
-                    low_t = float(l.group(1).replace(',', ''))
-        except Exception:
-            pass
-
-    # Format Output String
     if mean_t and current_price > 0:
         upside = ((mean_t - current_price) / current_price) * 100
         up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
@@ -286,11 +296,12 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
 
     return "N/A"
 
+# -------------------------------------------------------------
+# 4. EXISTING TECHNICALS ON-DEMAND ENGINE
+# -------------------------------------------------------------
 def get_on_demand_data(ticker_symbol):
-    """Direct Chart API + 12-Month Aligned Financial Statement Engine."""
     ticker_symbol = ticker_symbol.upper().strip()
     try:
-        # 1. Pull Chart Data (Price, History Arrays, Range)
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
         res = http_session.get(url, timeout=5)
         
@@ -319,12 +330,10 @@ def get_on_demand_data(ticker_symbol):
         if len(closes) < 2:
             return None, f"Insufficient price history for `{ticker_symbol}`."
 
-        # Price & 1D Change
         current_price = meta.get("regularMarketPrice") or closes[-1]
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # Volume Multipliers with Exact Historical Average Numbers
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -343,7 +352,6 @@ def get_on_demand_data(ticker_symbol):
             f"• **90D (Long-Term):** {get_volume_tag(rvol_90, avg_vol_90)}"
         )
 
-        # Multi-Timeframe RSI (7D, 14D, 30D)
         rsi_7 = calculate_rsi(closes, 7)
         rsi_14 = calculate_rsi(closes, 14)
         rsi_30 = calculate_rsi(closes, 30)
@@ -354,7 +362,6 @@ def get_on_demand_data(ticker_symbol):
             f"• **30D (Macro Trend):** {get_rsi_tag(rsi_30)}"
         )
 
-        # 52-Week Range in Dollars
         range_str = "N/A"
         high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
         low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
@@ -367,7 +374,6 @@ def get_on_demand_data(ticker_symbol):
             else:
                 range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
-        # 50D & 200D SMA Trend Health
         sma_50_str = "N/A"
         sma_200_str = "N/A"
         verdict_str = "N/A"
@@ -401,10 +407,8 @@ def get_on_demand_data(ticker_symbol):
             f"• **Overall Verdict:** {verdict_str}"
         )
 
-        # MACD (12, 26, 9)
         macd_str = calculate_macd(closes)
 
-        # Daily Pivot Levels (Support S1 & Resistance R1)
         pivot_str = "N/A"
         if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
             h_prev = highs[-2]
@@ -415,15 +419,10 @@ def get_on_demand_data(ticker_symbol):
             s1 = (2.0 * p) - h_prev
             pivot_str = f"`Support (S1): ${s1:.2f}` | `Resistance (R1): ${r1:.2f}`"
 
-        # Expected Daily Move (14D ATR)
         atr = calculate_atr(highs, lows, closes, 14)
 
-        # =================================================================
-        # 2. ASSET CLASSIFICATION & INSTITUTIONAL HEALTH ENGINE
-        # =================================================================
         quote_type = meta.get("instrumentType", "EQUITY")
         
-        # 1. CRYPTO
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = (
@@ -435,7 +434,6 @@ def get_on_demand_data(ticker_symbol):
             smart_money_block = None
             health_block = None
 
-        # 2. ETFs
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
             profile_title = "🏢 Fund Profile & Structure"
             profile_block = (
@@ -447,7 +445,6 @@ def get_on_demand_data(ticker_symbol):
             smart_money_block = None
             health_block = None
 
-        # 3. FUTURES
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = (
@@ -458,13 +455,9 @@ def get_on_demand_data(ticker_symbol):
             smart_money_block = None
             health_block = None
 
-        # 4. EQUITIES / STOCKS (12-Month Aligned Statements & Growth)
         else:
             profile_title = "🏢 Company Profile"
-            
-            # Step A: Sector & Industry
-            sector = None
-            industry = None
+            sector, industry = None, None
             try:
                 s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
                 s_res = http_session.get(s_url, timeout=3)
@@ -476,7 +469,6 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pass
 
-            # Step B: Financial Statement & Catalysts Extraction
             market_cap = None
             shares = None
             trailing_pe = None
@@ -496,8 +488,6 @@ def get_on_demand_data(ticker_symbol):
 
             try:
                 t_obj = yf.Ticker(ticker_symbol)
-                
-                # Fast info for shares & cap
                 try:
                     shares = t_obj.fast_info.shares
                     market_cap = t_obj.fast_info.market_cap
@@ -507,7 +497,6 @@ def get_on_demand_data(ticker_symbol):
                 if not market_cap and shares and current_price:
                     market_cap = current_price * shares
 
-                # 1. Earnings Timing
                 try:
                     ed_df = t_obj.earnings_dates
                     if ed_df is not None and not ed_df.empty:
@@ -544,18 +533,15 @@ def get_on_demand_data(ticker_symbol):
                     except Exception:
                         pass
 
-                # 2. Beta calculation vs SPY
                 beta_val = calculate_beta_vs_spy(closes, http_session)
                 if beta_val:
                     tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
                     beta_str = f"`{beta_val:.2f}x`{tag}"
 
-                # 3. Financial Statements Calculations (12-Month Aligned YoY Indexing)
                 q_inc = t_obj.quarterly_income_stmt
                 ttm_net_inc = None
                 ttm_rev = None
                 if q_inc is not None and not q_inc.empty:
-                    # Revenue Row (Q0 vs Q4 = Exact 12-Month YoY Match!)
                     rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
                     if rev_row:
                         rev_s = q_inc.loc[rev_row].dropna()
@@ -571,7 +557,6 @@ def get_on_demand_data(ticker_symbol):
                                 rev_growth_pct = ((r0 - r4) / r4) * 100
                         ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
 
-                    # Net Income Row (Q0 vs Q4 = Exact 12-Month YoY Match!)
                     inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
                     if inc_row:
                         inc_s = q_inc.loc[inc_row].dropna()
@@ -587,7 +572,6 @@ def get_on_demand_data(ticker_symbol):
                                 net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
                         ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
 
-                # Balance Sheet
                 q_bs = t_obj.quarterly_balance_sheet
                 stockholders_equity = None
                 total_debt = None
@@ -608,7 +592,6 @@ def get_on_demand_data(ticker_symbol):
                         current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
                         current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
 
-                # Cash Flow (FCF)
                 q_cf = t_obj.quarterly_cash_flow
                 ttm_fcf = None
                 if q_cf is not None and not q_cf.empty:
@@ -623,7 +606,6 @@ def get_on_demand_data(ticker_symbol):
                             ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
                         ttm_fcf = ttm_ocf - ttm_capex
 
-                # 4. Compute Health Metrics
                 if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
                     roe_pct = (ttm_net_inc / stockholders_equity) * 100
                     roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
@@ -677,10 +659,8 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 pe_str = "`N/A`"
 
-            # 5. Multi-Source Wall Street Price Targets
             targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
-            # Construct Blocks
             if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
@@ -708,7 +688,6 @@ def get_on_demand_data(ticker_symbol):
                 f"• **Expected Daily Move (ATR):** `{atr_fmt}`"
             )
 
-            # Growth Line
             growth_parts = []
             if rev_growth_pct is not None:
                 growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
@@ -777,13 +756,292 @@ def create_market_embed(data):
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
 
-@bot.event
-async def on_ready():
-    print(f"🤖 Looney is ONLINE and listening in Discord as: {bot.user}")
+# -------------------------------------------------------------
+# 5. OPTIONS STRATEGY ENGINE (DFOL Golden Rules)
+# -------------------------------------------------------------
+def analyze_stock_options_setup(ticker_symbol):
+    sym = ticker_symbol.upper().strip()
+    try:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1y"
+        res = http_session.get(url, timeout=6)
+        if res.status_code != 200:
+            return None
+
+        chart_data = res.json().get("chart", {}).get("result", [{}])[0]
+        meta = chart_data.get("meta", {})
+        indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
+
+        closes = [c for c in indicators.get("close", []) if c is not None]
+        volumes = [v for v in indicators.get("volume", []) if v is not None]
+        highs = [h for h in indicators.get("high", []) if h is not None]
+        lows = [l for l in indicators.get("low", []) if l is not None]
+
+        if len(closes) < 50:
+            return None
+
+        current_price = meta.get("regularMarketPrice") or closes[-1]
+        prev_close = meta.get("regularMarketPreviousClose") or closes[-2]
+        change_pct = ((current_price - prev_close) / prev_close) * 100
+
+        sma_50 = sum(closes[-50:]) / 50
+        sma_200 = sum(closes[-200:]) / 200 if len(closes) >= 200 else sma_50
+        rsi_14 = calculate_rsi(closes, 14)
+        macd_verdict = calculate_macd(closes)
+        atr_14 = calculate_atr(highs, lows, closes, 14)
+
+        vol_today = volumes[-1] if volumes else 0
+        avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
+        rvol = (vol_today / avg_vol_20) if avg_vol_20 > 0 else 1.0
+
+        h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
+        p = (h_prev + l_prev + c_prev) / 3.0
+        r1 = (2.0 * p) - l_prev
+        s1 = (2.0 * p) - h_prev
+
+        hv_30 = calculate_historical_volatility(closes, 30)
+        hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
+        iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
+
+        # Quant Scoring (0 to 100)
+        bull_score, bear_score = 0, 0
+
+        if current_price >= sma_50 and current_price >= sma_200:
+            bull_score += 25
+        elif current_price >= sma_50:
+            bull_score += 15
+        elif current_price < sma_50 and current_price < sma_200:
+            bear_score += 25
+        elif current_price < sma_50:
+            bear_score += 15
+
+        if 52 <= rsi_14 <= 68:
+            bull_score += 20
+        elif rsi_14 > 68:
+            bull_score += 10
+        elif 32 <= rsi_14 <= 48:
+            bear_score += 20
+        elif rsi_14 < 32:
+            bear_score += 10
+
+        if "Bullish Momentum" in str(macd_verdict):
+            bull_score += 20
+        elif "Bullish" in str(macd_verdict):
+            bull_score += 12
+        elif "Bearish Momentum" in str(macd_verdict):
+            bear_score += 20
+        elif "Bearish" in str(macd_verdict):
+            bear_score += 12
+
+        if rvol >= 1.5:
+            bull_score += 15 if change_pct >= 0 else 0
+            bear_score += 15 if change_pct < 0 else 0
+        elif rvol >= 1.1:
+            bull_score += 10 if change_pct >= 0 else 0
+            bear_score += 10 if change_pct < 0 else 0
+        else:
+            bull_score += 5
+            bear_score += 5
+
+        if bull_score >= bear_score:
+            bull_score += 20 if iv_rank_est < 35 else (18 if iv_rank_est > 50 else 12)
+        else:
+            bear_score += 20 if iv_rank_est < 35 else (18 if iv_rank_est > 50 else 12)
+
+        final_score = max(bull_score, bear_score)
+        is_bullish = bull_score >= bear_score
+
+        if final_score >= 80:
+            badge = "🟢 HIGH CONVICTION"
+            color = 0x2ecc71
+        elif final_score >= 60:
+            badge = "🟠 DEVELOPING / WATCHLIST"
+            color = 0xe67e22
+        else:
+            badge = "🔴 LOW CONVICTION / AVOID"
+            color = 0xe74c3c
+
+        strike_step = 2.5 if current_price < 100 else (5.0 if current_price < 300 else 10.0)
+
+        if is_bullish:
+            if iv_rank_est < 40:
+                strategy_name = "Long Call (Outright Bullish Momentum)"
+                strike_short = round((current_price + (atr_14 * 0.5)) / strike_step) * strike_step
+                prem_short = round(max(0.5, atr_14 * 0.9), 2)
+                be_short = strike_short + prem_short
+
+                strike_long = round((current_price - (atr_14 * 0.3)) / strike_step) * strike_step
+                prem_long = round(max(1.0, atr_14 * 2.1), 2)
+                be_long = strike_long + prem_long
+
+                play_7_14 = f"Buy ${strike_short:.2f} Call @ ~${prem_short:.2f} | Break-Even: `${be_short:.2f}`"
+                play_30_45 = f"Buy ${strike_long:.2f} Call @ ~${prem_long:.2f} | Break-Even: `${be_long:.2f}`"
+                defensive_play = f"Bull Call Debit Spread: Buy ${strike_long:.2f} C / Sell ${strike_long + (strike_step*2):.2f} C (Debit: ~${prem_long*0.55:.2f})"
+            else:
+                strategy_name = "Bull Put Credit Spread (Neutral to Bullish Income)"
+                sell_p_short = round((s1 - (atr_14 * 0.2)) / strike_step) * strike_step
+                buy_p_short = sell_p_short - strike_step
+                credit_short = round(strike_step * 0.28, 2)
+                be_short = sell_p_short - credit_short
+
+                sell_p_long = round((current_price * 0.95) / strike_step) * strike_step
+                buy_p_long = sell_p_long - strike_step
+                credit_long = round(strike_step * 0.33, 2)
+                be_long = sell_p_long - credit_long
+
+                play_7_14 = f"Sell ${sell_p_short:.2f} P / Buy ${buy_p_short:.2f} P | Credit: `${credit_short:.2f}` | Break-Even: `${be_short:.2f}`"
+                play_30_45 = f"Sell ${sell_p_long:.2f} P / Buy ${buy_p_long:.2f} P | Credit: `${credit_long:.2f}` | Break-Even: `${be_long:.2f}`"
+                defensive_play = f"Covered Call / Protective Married Put at ${s1:.2f} Support"
+        else:
+            if iv_rank_est < 40:
+                strategy_name = "Bear Put Debit Spread (Moderately Bearish Momentum)"
+                buy_p_short = round((current_price + (atr_14 * 0.2)) / strike_step) * strike_step
+                sell_p_short = buy_p_short - strike_step
+                debit_short = round(strike_step * 0.45, 2)
+                be_short = buy_p_short - debit_short
+
+                buy_p_long = round(current_price / strike_step) * strike_step
+                sell_p_long = buy_p_long - (strike_step * 2)
+                debit_long = round(strike_step * 0.90, 2)
+                be_long = buy_p_long - debit_long
+
+                play_7_14 = f"Buy ${buy_p_short:.2f} P / Sell ${sell_p_short:.2f} P | Debit: `${debit_short:.2f}` | Break-Even: `${be_short:.2f}`"
+                play_30_45 = f"Buy ${buy_p_long:.2f} P / Sell ${sell_p_long:.2f} P | Debit: `${debit_long:.2f}` | Break-Even: `${be_long:.2f}`"
+                defensive_play = f"Long Put: Buy 35-DTE ${buy_p_long:.2f} Put @ ~${debit_long*1.2:.2f} (Outright Bearish)"
+            else:
+                strategy_name = "Bear Call Credit Spread (Neutral to Bearish Resistance Play)"
+                sell_c_short = round((r1 + (atr_14 * 0.2)) / strike_step) * strike_step
+                buy_c_short = sell_c_short + strike_step
+                credit_short = round(strike_step * 0.26, 2)
+                be_short = sell_c_short + credit_short
+
+                sell_c_long = round((current_price * 1.05) / strike_step) * strike_step
+                buy_c_long = sell_c_long + strike_step
+                credit_long = round(strike_step * 0.32, 2)
+                be_long = sell_c_long + credit_long
+
+                play_7_14 = f"Sell ${sell_c_short:.2f} C / Buy ${buy_c_short:.2f} C | Credit: `${credit_short:.2f}` | Break-Even: `${be_short:.2f}`"
+                play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${buy_c_long:.2f} C | Credit: `${credit_long:.2f}` | Break-Even: `${be_long:.2f}`"
+                defensive_play = f"Iron Condor: Range-bound between ${s1:.2f} and ${r1:.2f}"
+
+        return {
+            "ticker": sym,
+            "name": meta.get("shortName") or sym,
+            "price": current_price,
+            "change_pct": change_pct,
+            "score": final_score,
+            "badge": badge,
+            "color": color,
+            "is_bullish": is_bullish,
+            "strategy_name": strategy_name,
+            "iv_rank": iv_rank_est,
+            "rsi_14": rsi_14,
+            "rvol": rvol,
+            "sma_50": sma_50,
+            "sma_200": sma_200,
+            "macd_verdict": macd_verdict,
+            "s1": s1,
+            "r1": r1,
+            "play_7_14": play_7_14,
+            "play_30_45": play_30_45,
+            "defensive_play": defensive_play
+        }
+    except Exception:
+        return None
+
+def create_deep_dive_options_embed(data):
+    embed = discord.Embed(
+        title=f"🎯 LOONEY OPTIONS INTELLIGENCE: {data['ticker']} [{data['badge']}]",
+        description=f"**{data['ticker']}** is trading at **${data['price']:.2f}** ({data['change_pct']:+.2f}% today).\n**Quantitative Confidence Score:** `{data['score']} / 100`",
+        color=data['color']
+    )
+    diag_text = (
+        f"• **Trend Health:** Above 50D SMA (`${data['sma_50']:.2f}`) & 200D SMA (`${data['sma_200']:.2f}`)\n"
+        f"• **Momentum:** RSI-14: `{data['rsi_14']:.1f}` | MACD: `{data['macd_verdict']}`\n"
+        f"• **Volume & Volatility:** RVOL: `{data['rvol']:.1f}x` | IV Rank: `{data['iv_rank']}%` ({'Cheap / Buy Premium' if data['iv_rank'] < 40 else 'Expensive / Sell Premium'})\n"
+        f"• **Key Levels:** Support (S1): `${data['s1']:.2f}` | Resistance (R1): `${data['r1']:.2f}`"
+    )
+    embed.add_field(name="📊 Technical & Volatility Environment", value=diag_text, inline=False)
+    embed.add_field(name="🏆 Primary DFOL Strategy", value=f"**{data['strategy_name']}**", inline=False)
+    embed.add_field(name="⚡ PLAY A: 7 – 14 DTE (Fast Scalp / Weekly Momentum)", value=f"• **Trade Plan:** {data['play_7_14']}\n• **Target Exit:** +50% to +80% on contract | Stop-Loss: Cut at -35% loss", inline=False)
+    embed.add_field(name="🏛️ PLAY B: 30 – 45 DTE (Standard Swing / Institutional)", value=f"• **Trade Plan:** {data['play_30_45']}\n• **Target Exit:** +40% to +60% on contract | Stop-Loss: Trailing 50D SMA", inline=False)
+    embed.add_field(name="🛡️ Alternative Setup (Risk Mitigation)", value=data['defensive_play'], inline=False)
+    embed.set_footer(text="Looney Options Terminal • DFOL Golden Rule Break-Even Engine")
+    return embed
 
 # -------------------------------------------------------------
-# 4. INSTANT AUTO-TRIGGER (Non-Blocking Async Execution)
+# 6. 30-MINUTE AUTOMATIC TOP 10 SCANNER (WEBHOOK)
 # -------------------------------------------------------------
+def run_top10_options_radar():
+    now_ny = datetime.now(NY_TZ)
+    time_str = now_ny.strftime("%I:%M %p %Z")
+    print(f"\n[OPTIONS RADAR] Scanning 100 Nasdaq Securities at {time_str}...")
+
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        futures = {executor.submit(analyze_stock_options_setup, sym): sym for sym in NASDAQ_100}
+        for f in concurrent.futures.as_completed(futures):
+            res = f.result()
+            if res:
+                results.append(res)
+
+    results.sort(key=lambda x: x["score"], reverse=True)
+    top_10 = results[:10]
+
+    if not top_10:
+        print("[OPTIONS RADAR] No valid results generated.")
+        return
+
+    embed_desc = ""
+    for i, item in enumerate(top_10, 1):
+        direction_tag = "🟢 (Bullish)" if item["is_bullish"] else "🔴 (Bearish)"
+        embed_desc += (
+            f"**{i}. {item['ticker']} — ${item['price']:.2f}** | **Score: {item['score']}%** {direction_tag}\n"
+            f"• **Strategy:** `{item['strategy_name']}` (IV Rank: `{item['iv_rank']}%`)\n"
+            f"• ⚡ **7–14 DTE:** {item['play_7_14']}\n"
+            f"• 🏛️ **30–45 DTE:** {item['play_30_45']}\n"
+            f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x` • MACD: `{item['macd_verdict']}`\n\n"
+        )
+
+    payload = {
+        "username": BOT_NAME,
+        "avatar_url": BOT_AVATAR_URL,
+        "embeds": [{
+            "title": f"🚨 NASDAQ 100 OPTIONS RADAR [TOP 10 QUANTITATIVE PICKS]",
+            "description": f"*Live Quantitative Ranking across 100 Nasdaq Securities as of {time_str}.*\n\n{embed_desc}",
+            "color": 3066993,
+            "footer": {"text": "Looney Options Intelligence • Type '#TICKER' for deep-dive Greeks & exit targets"}
+        }]
+    }
+
+    try:
+        res = requests.post(DISCORD_OPTIONS_WEBHOOK_URL, json=payload, timeout=10)
+        res.raise_for_status()
+        print(f"[OPTIONS RADAR] Successfully dispatched Top 10 to Discord at {time_str}!")
+    except Exception as e:
+        print(f"[OPTIONS RADAR ERROR] {e}")
+
+def background_30min_radar_loop():
+    time.sleep(15)
+    while True:
+        try:
+            now = datetime.now(NY_TZ)
+            if now.weekday() <= 4 and (9 <= now.hour <= 16):
+                run_top10_options_radar()
+            else:
+                print(f"[OPTIONS RADAR IDLE] Market closed ({now.strftime('%I:%M %p %Z')}).")
+        except Exception as e:
+            print(f"[LOOP ERROR] {e}")
+        time.sleep(1800)  # 30 Minutes
+
+threading.Thread(target=background_30min_radar_loop, daemon=True).start()
+
+# -------------------------------------------------------------
+# 7. UNIFIED DISCORD BOT EVENT HANDLERS
+# -------------------------------------------------------------
+@bot.event
+async def on_ready():
+    print(f"🤖 Looney is ONLINE and listening 24/7 as: {bot.user}")
+
 @bot.event
 async def on_message(message):
     if message.author.bot:
@@ -791,11 +1049,25 @@ async def on_message(message):
 
     content = message.content.strip()
 
+    # TRIGGER 1: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
+    if content.startswith("#") and len(content) >= 2:
+        raw_ticker = content[1:].split()[0].upper().replace("$", "")
+        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            async with message.channel.typing():
+                data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
+                if not data:
+                    await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
+                    return
+                embed = create_deep_dive_options_embed(data)
+                await message.channel.send(embed=embed)
+                return
+
+    # TRIGGER 2: Technicals Snapshot on `$TICKER` or `!TICKER` (e.g. $NVDA)
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
 
-        if first_word in ["price", "p", "four", "check"]:
+        if first_word in ["price", "p", "four", "check", "opt", "options"]:
             await bot.process_commands(message)
             return
 
@@ -823,6 +1095,19 @@ async def price_command(ctx, ticker: str):
         embed = create_market_embed(data)
         await ctx.send(embed=embed)
 
+@bot.command(name="opt", aliases=["options", "play"])
+async def options_command(ctx, ticker: str):
+    async with ctx.typing():
+        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
+        if not data:
+            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
+            return
+        embed = create_deep_dive_options_embed(data)
+        await ctx.send(embed=embed)
+
+# -------------------------------------------------------------
+# 8. ENTRYPOINT
+# -------------------------------------------------------------
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
