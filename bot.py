@@ -4,6 +4,7 @@ import asyncio
 import math
 import re
 import time
+import concurrent.futures
 import xml.etree.ElementTree as ET
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta
@@ -58,14 +59,6 @@ http_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "*/*",
     "Accept-Language": "en-US,en;q=0.9"
-})
-
-nasdaq_session = requests.Session()
-nasdaq_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/plain, */*",
-    "Origin": "https://www.nasdaq.com",
-    "Referer": "https://www.nasdaq.com/"
 })
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -795,10 +788,8 @@ def fetch_institutional_research_radar(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     is_canadian = sym.endswith(".TO") or sym.endswith(".V")
     currency = "CAD" if is_canadian else "USD"
-    base_sym = sym.replace(".TO", "").replace(".V", "").upper()
 
     try:
-        # Step 1: Live current price
         current_price = 0.0
         try:
             chart_url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d"
@@ -809,7 +800,6 @@ def fetch_institutional_research_radar(ticker_symbol):
         except Exception:
             pass
 
-        # Step 2: Fetch articles from Search API and Google News RSS in parallel
         raw_reports = []
 
         def search_yahoo():
@@ -851,7 +841,6 @@ def fetch_institutional_research_radar(ticker_symbol):
             raw_reports.extend(f_y.result())
             raw_reports.extend(f_g.result())
 
-        # Step 3: Parse and Match Reports against Tier-1 Institutions & Price Targets
         matched_reports = []
         seen_headlines = set()
 
@@ -871,11 +860,9 @@ def fetch_institutional_research_radar(ticker_symbol):
                     break
 
             if not matched_inst:
-                # Check for generic major bank/analyst coverage
                 if any(w in t_text.lower() for w in ["analyst", "price target", "rating", "outperform", "upgrade", "downgrade"]):
                     matched_inst = rep["provider"] if rep["provider"] != "Financial Wire" else "Wall Street Consensus"
 
-            # Parse Price Target ($)
             pt_val = None
             pt_match = re.search(r'(?:target|pt|to)\s*(?:of|is|at|to)?\s*\$?([\d,]+(?:\.\d{2})?)', t_text, re.IGNORECASE)
             if pt_match:
@@ -886,7 +873,6 @@ def fetch_institutional_research_radar(ticker_symbol):
                 except Exception:
                     pass
 
-            # Classify Rating Sentiment & Action
             low_t = t_text.lower()
             if any(b in low_t for b in ["strong buy", "conviction buy"]):
                 rating_str = "Strong Buy 🟢"
@@ -917,12 +903,10 @@ def fetch_institutional_research_radar(ticker_symbol):
         if not matched_reports:
             return None, f"No recent institutional research reports found for `{sym}`."
 
-        # Separate into 3 Tiers
         bullish = [r for r in matched_reports if r["sentiment"] == "BULLISH"]
         neutral = [r for r in matched_reports if r["sentiment"] == "NEUTRAL"]
         cautious = [r for r in matched_reports if r["sentiment"] == "CAUTIOUS"]
 
-        # Sort within tiers by target price if available
         bullish.sort(key=lambda x: x["target"] or 0, reverse=True)
         neutral.sort(key=lambda x: x["target"] or 0, reverse=True)
         cautious.sort(key=lambda x: x["target"] or 999999)
@@ -952,7 +936,6 @@ def create_institutional_radar_embed(data):
         color=0x2ecc71 if len(data["bullish"]) >= len(data["cautious"]) else 0xe74c3c
     )
 
-    # 1. Bullish / High Target Reports
     if data["bullish"]:
         b_txt = ""
         for i, r in enumerate(data["bullish"][:4], 1):
@@ -960,7 +943,6 @@ def create_institutional_radar_embed(data):
             b_txt += f"**{i}. {r['badge']} {r['institution']}** — Rating: `{r['rating']}`{target_part}\n• [{r['headline'][:85]}...]({r['link']})\n\n"
         embed.add_field(name="🟢 BULLISH / HIGH TARGET REPORTS", value=b_txt.strip()[:1024], inline=False)
 
-    # 2. Neutral / Medium Target Reports
     if data["neutral"]:
         n_txt = ""
         for i, r in enumerate(data["neutral"][:3], 1):
@@ -968,7 +950,6 @@ def create_institutional_radar_embed(data):
             n_txt += f"**{i}. {r['badge']} {r['institution']}** — Rating: `{r['rating']}`{target_part}\n• [{r['headline'][:85]}...]({r['link']})\n\n"
         embed.add_field(name="🟡 NEUTRAL / REITERATION REPORTS", value=n_txt.strip()[:1024], inline=False)
 
-    # 3. Cautious / Low Target Reports
     if data["cautious"]:
         c_txt = ""
         for i, r in enumerate(data["cautious"][:3], 1):
@@ -976,7 +957,6 @@ def create_institutional_radar_embed(data):
             c_txt += f"**{i}. {r['badge']} {r['institution']}** — Rating: `{r['rating']}`{target_part}\n• [{r['headline'][:85]}...]({r['link']})\n\n"
         embed.add_field(name="🔴 CAUTIOUS / DOWNGRADE REPORTS", value=c_txt.strip()[:1024], inline=False)
 
-    # Summary
     bull_cnt = len(data["bullish"])
     neut_cnt = len(data["neutral"])
     caut_cnt = len(data["cautious"])
