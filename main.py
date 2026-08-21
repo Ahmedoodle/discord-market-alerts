@@ -26,7 +26,6 @@ DISCORD_OPTIONS_WEBHOOK_URL = os.getenv(
     "https://discord.com/api/webhooks/1540124383618666507/8OZ0nG5SznAaguH8-bd4V6-CN1VMqNKCXEfXhjIZrjxIZhyFudPs8UFZinkxqp6qdI6a"
 )
 
-# Bot Branding & Unified Avatar
 BOT_NAME = "Looney"
 BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
 
@@ -52,7 +51,6 @@ STOCK_ETF_WATCHLIST = [
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
 
-# Full Nasdaq 100 Universe for the 30-Minute Options Radar
 NASDAQ_100 = [
     "NVDA", "AAPL", "MSFT", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "AVGO", "COST",
     "ASML", "PEP", "NFLX", "AZN", "LIN", "AMD", "TMUS", "ADBE", "CSCO", "QCOM",
@@ -79,7 +77,6 @@ def get_intraday_volume_pacing_factor(now_ny):
 
     if t < market_open:
         return 0.05
-    
     if t >= market_close:
         return 1.0
 
@@ -97,7 +94,7 @@ def get_intraday_volume_pacing_factor(now_ny):
         return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
 
 # ====================================================================
-# 2. BULLETPROOF NYSE & TSX MARKET HOLIDAY & EARLY CLOSE ENGINE
+# 2. HOLIDAY & EARLY CLOSE ENGINE
 # ====================================================================
 def calculate_easter(year):
     a = year % 19
@@ -119,11 +116,9 @@ def calculate_easter(year):
 def _get_year_holidays(year):
     us_hols = {}
     ca_hols = {}
-
     easter = calculate_easter(year)
     good_friday = easter - timedelta(days=2)
 
-    # 1. New Year's Day
     ny_day = date(year, 1, 1)
     if ny_day.weekday() == 6:
         us_hols[date(year, 1, 2)] = "New Year's Day"
@@ -134,32 +129,26 @@ def _get_year_holidays(year):
         us_hols[ny_day] = "New Year's Day"
         ca_hols[ny_day] = "New Year's Day"
 
-    # 2. MLK Day
     if year >= 1998:
         mlk = date(year, 1, 1) + timedelta(days=(0 - date(year, 1, 1).weekday() + 7) % 7 + 14)
         us_hols[mlk] = "Martin Luther King Jr. Day"
 
-    # 3. Presidents' Day / Family Day
     pres = date(year, 2, 1) + timedelta(days=(0 - date(year, 2, 1).weekday() + 7) % 7 + 14)
     us_hols[pres] = "Presidents' Day"
     if year >= 2008:
         ca_hols[pres] = "Family Day"
 
-    # 4. Good Friday
     us_hols[good_friday] = "Good Friday"
     ca_hols[good_friday] = "Good Friday"
 
-    # 5. Victoria Day
     may_24 = date(year, 5, 24)
     vic = may_24 - timedelta(days=(may_24.weekday() - 0) % 7)
     ca_hols[vic] = "Victoria Day"
 
-    # 6. Memorial Day
     may_31 = date(year, 5, 31)
     mem = may_31 - timedelta(days=(may_31.weekday() - 0) % 7)
     us_hols[mem] = "Memorial Day"
 
-    # 7. Juneteenth
     if year >= 2022:
         june_19 = date(year, 6, 19)
         if june_19.weekday() == 6:
@@ -169,7 +158,6 @@ def _get_year_holidays(year):
         else:
             us_hols[june_19] = "Juneteenth"
 
-    # 8. Canada Day
     cad = date(year, 7, 1)
     if cad.weekday() == 6:
         ca_hols[date(year, 7, 2)] = "Canada Day"
@@ -178,7 +166,6 @@ def _get_year_holidays(year):
     else:
         ca_hols[cad] = "Canada Day"
 
-    # 9. Independence Day
     july_4 = date(year, 7, 4)
     if july_4.weekday() == 6:
         us_hols[date(year, 7, 5)] = "Independence Day"
@@ -187,55 +174,38 @@ def _get_year_holidays(year):
     else:
         us_hols[july_4] = "Independence Day"
 
-    # 10. Civic Holiday
     civic = date(year, 8, 1) + timedelta(days=(0 - date(year, 8, 1).weekday() + 7) % 7)
     ca_hols[civic] = "Civic Holiday"
 
-    # 11. Labor Day
     labor = date(year, 9, 1) + timedelta(days=(0 - date(year, 9, 1).weekday() + 7) % 7)
     us_hols[labor] = "Labor Day"
     ca_hols[labor] = "Labour Day"
 
-    # 12. Thanksgiving (Canada)
     ca_thanks = date(year, 10, 1) + timedelta(days=(0 - date(year, 10, 1).weekday() + 7) % 7 + 7)
     ca_hols[ca_thanks] = "Thanksgiving (Canada)"
 
-    # 13. Thanksgiving (US)
     us_thanks = date(year, 11, 1) + timedelta(days=(3 - date(year, 11, 1).weekday() + 7) % 7 + 21)
     us_hols[us_thanks] = "Thanksgiving Day"
 
-    # 14 & 15. Christmas & Boxing Day
     xmas = date(year, 12, 25)
     boxing = date(year, 12, 26)
-
     if xmas.weekday() == 6:
         us_hols[date(year, 12, 26)] = "Christmas Day"
-    elif xmas.weekday() == 5:
-        us_hols[date(year, 12, 24)] = "Christmas Day"
-    else:
-        us_hols[xmas] = "Christmas Day"
-
-    if xmas.weekday() == 4:
-        ca_hols[date(year, 12, 25)] = "Christmas Day"
-        ca_hols[date(year, 12, 28)] = "Boxing Day"
-    elif xmas.weekday() == 5:
-        ca_hols[date(year, 12, 27)] = "Christmas Day"
-        ca_hols[date(year, 12, 28)] = "Boxing Day"
-    elif xmas.weekday() == 6:
         ca_hols[date(year, 12, 26)] = "Christmas Day"
         ca_hols[date(year, 12, 27)] = "Boxing Day"
+    elif xmas.weekday() == 5:
+        us_hols[date(year, 12, 24)] = "Christmas Day"
+        ca_hols[date(year, 12, 27)] = "Christmas Day"
+        ca_hols[date(year, 12, 28)] = "Boxing Day"
     else:
+        us_hols[xmas] = "Christmas Day"
         ca_hols[xmas] = "Christmas Day"
-        if boxing.weekday() == 6:
-            ca_hols[date(year, 12, 27)] = "Boxing Day"
-        else:
-            ca_hols[boxing] = "Boxing Day"
+        ca_hols[boxing] = "Boxing Day"
 
     return us_hols, ca_hols
 
 def check_market_holiday(target_date):
-    all_us = {}
-    all_ca = {}
+    all_us, all_ca = {}, {}
     for y in [target_date.year - 1, target_date.year, target_date.year + 1]:
         u, c = _get_year_holidays(y)
         all_us.update(u)
@@ -248,24 +218,16 @@ def check_early_close(target_date):
         july_4 = date(year, 7, 4)
         if july_4.weekday() in (1, 2, 3, 4):
             return True, "Independence Day Eve (1:00 PM Close)"
-
     us_thanks = date(year, 11, 1) + timedelta(days=(3 - date(year, 11, 1).weekday() + 7) % 7 + 21)
-    black_friday = us_thanks + timedelta(days=1)
-    if target_date == black_friday:
+    if target_date == us_thanks + timedelta(days=1):
         return True, "Black Friday (1:00 PM Close)"
-
     if target_date.month == 12 and target_date.day == 24 and target_date.weekday() < 5:
         return True, "Christmas Eve (1:00 PM Close)"
-
     return False, None
 
-# ====================================================================
-# 3. SESSION TIMING & DYNAMIC CLASSIFIER
-# ====================================================================
 def get_current_session_info(now_ny, is_early_close):
     if now_ny.weekday() > 4:
         return "CLOSED", 0.0, "[CLOSED]"
-
     t = now_ny.time()
     reg_close = dtime(13, 0) if is_early_close else dtime(16, 0)
     ah_end = dtime(17, 0) if is_early_close else dtime(20, 0)
@@ -280,12 +242,10 @@ def get_current_session_info(now_ny, is_early_close):
         return "CLOSED", 0.0, "[CLOSED]"
 
 def normalize_title(title_text):
-    if not title_text:
-        return ""
-    return re.sub(r'[^a-zA-Z0-9]', '', title_text).lower()
+    return re.sub(r'[^a-zA-Z0-9]', '', title_text or '').lower()
 
 # ====================================================================
-# 4. STATE MEMORY & PERSISTENCE
+# 3. STATE MEMORY
 # ====================================================================
 def load_alert_state():
     now_ny = datetime.now(NY_TZ)
@@ -307,38 +267,27 @@ def load_alert_state():
         try:
             with open(STATE_FILE, "r") as f:
                 saved = json.load(f)
-                
                 if saved.get("stock_session_date") == today_ny_str:
                     state["premarket_tickers"] = saved.get("premarket_tickers", {})
                     state["regular_tickers"] = saved.get("regular_tickers", {})
                     state["afterhours_tickers"] = saved.get("afterhours_tickers", {})
                     state["holiday_announced_date"] = saved.get("holiday_announced_date")
-                else:
-                    print(f"📅 New Stock Calendar Day ({today_ny_str}). Resetting daily stock memory slots.")
-
                 if saved.get("crypto_session_date") == today_utc_str:
                     state["crypto_tickers"] = saved.get("crypto_tickers", {})
-                else:
-                    print(f"🪙 New Crypto 24h Session ({today_utc_str}). Resetting crypto memory.")
-                
-                state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or saved.get("seen_news_links", [])
-        except Exception as e:
-            print(f"Error loading state file: {e}")
-
+                state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or []
+        except Exception:
+            pass
     return state
 
 def save_alert_state(state):
     try:
         with open(STATE_FILE, "w") as f:
             json.dump(state, f, indent=2)
-        total_p = (len(state["premarket_tickers"]) + len(state["regular_tickers"]) + 
-                   len(state["afterhours_tickers"]) + len(state["crypto_tickers"]))
-        print(f"State saved ({total_p} active price benchmarks, {len(state['seen_news_fingerprints'])} news fingerprints).")
-    except Exception as e:
-        print(f"Error saving state file: {e}")
+    except Exception:
+        pass
 
 # ====================================================================
-# 5. INSTITUTIONAL TECHNICAL & STATEMENT-BASED METRICS ENGINE
+# 4. MATH & INDICATORS
 # ====================================================================
 def format_large_number(num):
     if num is None:
@@ -375,13 +324,11 @@ def calculate_rsi(closes, period=14):
 def calculate_macd(closes):
     if len(closes) < 35:
         return "N/A"
-    
     alpha_12 = 2.0 / 13
     alpha_26 = 2.0 / 27
     curr_12 = sum(closes[:12]) / 12
     curr_26 = sum(closes[:26]) / 26
-    ema_12_full = []
-    ema_26_full = []
+    ema_12_full, ema_26_full = [], []
 
     for i, c in enumerate(closes):
         if i >= 12:
@@ -408,15 +355,9 @@ def calculate_macd(closes):
     hist_prev = (macd_line[-2] - sig_line[-2]) if len(macd_line) >= 2 else hist_curr
 
     if curr_macd >= curr_sig:
-        if hist_curr >= hist_prev:
-            return "Bullish Momentum 🟢 (Signal Expanding Upward)"
-        else:
-            return "Bullish Trend 🟢 (Momentum Slowing)"
+        return "Bullish Momentum 🟢 (Signal Expanding Upward)" if hist_curr >= hist_prev else "Bullish Trend 🟢 (Momentum Slowing)"
     else:
-        if hist_curr <= hist_prev:
-            return "Bearish Momentum 🔴 (Expanding Downward)"
-        else:
-            return "Bearish Trend 🔴 (Weakening / Slowing)"
+        return "Bearish Momentum 🔴 (Expanding Downward)" if hist_curr <= hist_prev else "Bearish Trend 🔴 (Weakening / Slowing)"
 
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
@@ -445,13 +386,10 @@ def calculate_beta_vs_spy(closes, http_session):
             if min_len >= 50:
                 s_ret = [closes[i] / closes[i-1] - 1 for i in range(len(closes) - min_len + 1, len(closes))]
                 m_ret = [spy_closes[i] / spy_closes[i-1] - 1 for i in range(len(spy_closes) - min_len + 1, len(spy_closes))]
-                
                 mean_s = sum(s_ret) / len(s_ret)
                 mean_m = sum(m_ret) / len(m_ret)
-                
                 cov = sum((s_ret[i] - mean_s) * (m_ret[i] - mean_m) for i in range(len(s_ret)))
                 var_m = sum((m_ret[i] - mean_m) ** 2 for i in range(len(m_ret)))
-                
                 if var_m > 0:
                     return cov / var_m
     except Exception:
@@ -508,9 +446,11 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
         rating_part = f" | Rating: `{rating}`" if rating else ""
         return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
-
     return "N/A"
 
+# ====================================================================
+# 5. TECHNICALS & FUNDAMENTALS (RETURNS DICT ONLY)
+# ====================================================================
 def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_session):
     metrics = {}
     now_ny = datetime.now(NY_TZ)
@@ -520,12 +460,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         if res.status_code != 200:
             return metrics
 
-        data = res.json()
-        result = data.get("chart", {}).get("result")
-        if not result:
-            return metrics
-
-        chart_data = result[0]
+        chart_data = res.json().get("chart", {}).get("result", [{}])[0]
         meta = chart_data.get("meta", {})
         indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
 
@@ -537,7 +472,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         if len(closes) < 2:
             return metrics
 
-        # --- TIME-WEIGHTED PACED RVOL ---
+        # Time-Paced RVOL
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -575,12 +510,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
         if high_52w and low_52w and high_52w > low_52w:
             dist_high = ((high_52w - current_price) / high_52w) * 100
-            if dist_high <= 2.0:
-                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (🔥 {dist_high:.1f}% from 52W High!)"
-            elif dist_high <= 5.0:
-                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` (⚡ {dist_high:.1f}% from 52W High)"
-            else:
-                range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
+            metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
         sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else None
         sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else None
@@ -598,8 +528,6 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
                 verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
             else:
                 verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
-        elif sma_50:
-            verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
 
         metrics["trend_block"] = (
             f"• **50-Day SMA:** {sma_50_str}\n"
@@ -610,9 +538,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         metrics["macd_str"] = calculate_macd(closes)
 
         if len(highs) >= 2 and len(lows) >= 2 and len(closes) >= 2:
-            h_prev = highs[-2]
-            l_prev = lows[-2]
-            c_prev = closes[-2]
+            h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
             p = (h_prev + l_prev + c_prev) / 3.0
             r1 = (2.0 * p) - l_prev
             s1 = (2.0 * p) - h_prev
@@ -620,219 +546,32 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
         atr = calculate_atr(highs, lows, closes, 14)
         quote_type = meta.get("instrumentType", "EQUITY")
-        
+
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
-            profile_title = "🏢 Asset Class & Profile"
-            profile_block = (
+            metrics["profile_title"] = "🏢 Asset Class & Profile"
+            metrics["profile_block"] = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
-                f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
                 f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
-        elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
-            profile_title = "🏢 Fund Profile & Structure"
-            profile_block = (
-                f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
-                f"• **Structure:** `Diversified Market Basket Holding`\n"
-                f"• **Type:** `Open-End Fund Vehicle`"
-            )
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
-            profile_title = "🏢 Asset Class & Profile"
-            profile_block = (
-                f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
-                f"• **Contract Type:** `Standardized Delivery Futures`"
-            )
+            metrics["profile_title"] = "🏢 Asset Class & Profile"
+            metrics["profile_block"] = f"• **Asset Class:** `Commodity / Index Derivative Contract`"
         else:
-            profile_title = "🏢 Company Profile"
-            sector, industry = None, None
+            market_cap = None
             try:
-                s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
-                s_res = http_session.get(s_url, timeout=3)
-                if s_res.status_code == 200:
-                    sq = s_res.json().get("quotes", [])
-                    if sq:
-                        sector = sq[0].get("sector")
-                        industry = sq[0].get("industry")
+                t_obj = yf.Ticker(ticker_symbol)
+                market_cap = t_obj.fast_info.market_cap
             except Exception:
                 pass
 
-            market_cap, shares, trailing_pe = None, None, None
-            roe_str, margin_str, de_str, curr_ratio_str, fcf_str, quality_str, pfcf_str = "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", ""
-            rev_growth_pct, net_inc_growth_pct = None, None
-            earnings_date_str, prev_surprise_str, beta_str = "N/A", "", "N/A"
-
-            try:
-                t_obj = yf.Ticker(ticker_symbol)
-                try:
-                    shares = t_obj.fast_info.shares
-                    market_cap = t_obj.fast_info.market_cap
-                except Exception:
-                    pass
-
-                if not market_cap and shares and current_price:
-                    market_cap = current_price * shares
-
-                try:
-                    ed_df = t_obj.earnings_dates
-                    if ed_df is not None and not ed_df.empty:
-                        future_rows = ed_df[ed_df['Reported EPS'].isna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
-                        if not future_rows.empty:
-                            nxt_dt = future_rows.index[-1]
-                            nxt_d = nxt_dt.date() if isinstance(nxt_dt, (datetime, pd.Timestamp)) else nxt_dt
-                            days_left = (nxt_d - datetime.now().date()).days
-                            earnings_date_str = f"`In {days_left} Days ({nxt_d.strftime('%b %d')})`" if days_left >= 0 else f"`{nxt_d.strftime('%b %d')}`"
-                        
-                        past_rows = ed_df[ed_df['Reported EPS'].notna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
-                        if not past_rows.empty and "Surprise(%)" in past_rows.columns:
-                            raw_surp = float(past_rows["Surprise(%)"].iloc[0])
-                            surp_val = raw_surp * 100 if abs(raw_surp) <= 1.0 else raw_surp
-                            tag = "🎯" if surp_val >= 0 else "⚠️"
-                            prev_surprise_str = f" | `Prev Beat: {surp_val:+.1f}% {tag}`"
-                except Exception:
-                    pass
-
-                beta_val = calculate_beta_vs_spy(closes, http_session)
-                if beta_val:
-                    tag = " (High Volatility 🔥)" if beta_val >= 1.5 else (" (Moderate 📊)" if beta_val >= 0.8 else " (Defensive 🛡️)")
-                    beta_str = f"`{beta_val:.2f}x`{tag}"
-
-                q_inc = t_obj.quarterly_income_stmt
-                ttm_net_inc, ttm_rev = None, None
-                if q_inc is not None and not q_inc.empty:
-                    rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
-                    if rev_row:
-                        rev_s = q_inc.loc[rev_row].dropna()
-                        if len(rev_s) >= 5:
-                            r0, r4 = float(rev_s.iloc[0]), float(rev_s.iloc[4])
-                            if r4 > 0:
-                                rev_growth_pct = ((r0 - r4) / r4) * 100
-                        elif len(rev_s) >= 2:
-                            r0, r4 = float(rev_s.iloc[0]), float(rev_s.iloc[-1])
-                            if r4 > 0:
-                                rev_growth_pct = ((r0 - r4) / r4) * 100
-                        ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
-
-                    inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
-                    if inc_row:
-                        inc_s = q_inc.loc[inc_row].dropna()
-                        if len(inc_s) >= 5:
-                            i0, i4 = float(inc_s.iloc[0]), float(inc_s.iloc[4])
-                            if i4 != 0:
-                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
-                        elif len(inc_s) >= 2:
-                            i0, i4 = float(inc_s.iloc[0]), float(inc_s.iloc[-1])
-                            if i4 != 0:
-                                net_inc_growth_pct = ((i0 - i4) / abs(i4)) * 100
-                        ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
-
-                q_bs = t_obj.quarterly_balance_sheet
-                stockholders_equity, total_debt, current_assets, current_liab = None, None, None, None
-                if q_bs is not None and not q_bs.empty:
-                    eq_row = next((r for r in ["Stockholders Equity", "Total Stockholder Equity", "Common Stock Equity"] if r in q_bs.index), None)
-                    if eq_row:
-                        stockholders_equity = float(q_bs.loc[eq_row].dropna().iloc[0])
-
-                    debt_row = next((r for r in ["Total Debt", "Long Term Debt And Capital Lease Obligation", "Total Non Current Liabilities Net Minority Interest"] if r in q_bs.index), None)
-                    if debt_row:
-                        total_debt = float(q_bs.loc[debt_row].dropna().iloc[0])
-
-                    ca_row = next((r for r in ["Current Assets", "Total Current Assets"] if r in q_bs.index), None)
-                    cl_row = next((r for r in ["Current Liabilities", "Total Current Liabilities"] if r in q_bs.index), None)
-                    if ca_row and cl_row:
-                        current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
-                        current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
-
-                q_cf = t_obj.quarterly_cash_flow
-                ttm_fcf = None
-                if q_cf is not None and not q_cf.empty:
-                    ocf_row = next((r for r in ["Operating Cash Flow", "Cash Flow From Continuing Operating Activities"] if r in q_cf.index), None)
-                    capex_row = next((r for r in ["Capital Expenditure", "Capital Expenditures"] if r in q_cf.index), None)
-                    if ocf_row:
-                        ocf_s = q_cf.loc[ocf_row].dropna()
-                        ttm_ocf = float(ocf_s.iloc[:4].sum()) if len(ocf_s) >= 1 else 0
-                        ttm_capex = abs(float(q_cf.loc[capex_row].dropna().iloc[:4].sum())) if capex_row else 0
-                        ttm_fcf = ttm_ocf - ttm_capex
-
-                if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
-                    roe_pct = (ttm_net_inc / stockholders_equity) * 100
-                    roe_tag = " 💎" if roe_pct >= 20.0 else (" 🟢" if roe_pct >= 12.0 else "")
-                    roe_str = f"`{roe_pct:.1f}%`{roe_tag}"
-
-                if ttm_net_inc and ttm_rev and ttm_rev > 0:
-                    margin_pct = (ttm_net_inc / ttm_rev) * 100
-                    margin_tag = " 💎" if margin_pct >= 25.0 else (" 🟢" if margin_pct >= 10.0 else "")
-                    margin_str = f"`{margin_pct:.1f}%`{margin_tag}"
-
-                if total_debt is not None and stockholders_equity and stockholders_equity > 0:
-                    de_ratio = total_debt / stockholders_equity
-                    de_tag = " (Low Debt 🟢)" if de_ratio <= 0.6 else (" (Moderate 🟡)" if de_ratio <= 1.5 else " (High Debt ⚠️)")
-                    de_str = f"`{de_ratio:.2f}x`{de_tag}"
-
-                if current_assets and current_liab and current_liab > 0:
-                    cr = current_assets / current_liab
-                    cr_tag = " 🟢" if cr >= 1.5 else (" 🟡" if cr >= 1.0 else " ⚠️")
-                    curr_ratio_str = f"`{cr:.2f}x`{cr_tag}"
-
-                if ttm_fcf is not None:
-                    fcf_fmt = format_large_number(ttm_fcf)
-                    fcf_str = f"`{fcf_fmt}` (Yield: `{(ttm_fcf / market_cap) * 100:.1f}%`)" if (market_cap and market_cap > 0) else f"`{fcf_fmt}`"
-
-                if ttm_fcf is not None and ttm_net_inc and ttm_net_inc > 0:
-                    quality_ratio = ttm_fcf / ttm_net_inc
-                    quality_str = f"`{quality_ratio:.2f}x` 🟢 (Real Cash Backing)" if quality_ratio >= 1.0 else (f"`{quality_ratio:.2f}x` 🟡 (Moderate Cash Conversion)" if quality_ratio >= 0.6 else f"`{quality_ratio:.2f}x` ⚠️ (Accrual / Paper Earnings)")
-
-                if ttm_net_inc and ttm_net_inc > 0 and shares and shares > 0:
-                    trailing_eps = ttm_net_inc / shares
-                    pe_str = f"`{current_price / trailing_eps:.1f}x`" if trailing_eps > 0 else "`N/A (Pre-Profit)`"
-                else:
-                    pe_str = "`N/A`"
-
-                if ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0:
-                    pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`"
-
-            except Exception:
-                pe_str = "`N/A`"
-
-            targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
-
-            if sector and industry:
-                line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
-            elif sector:
-                line_sector = f"• **Sector:** `{sector}`"
-            else:
-                line_sector = f"• **Asset Class:** `Equities / Common Stock`"
-
-            if market_cap and market_cap > 0:
-                cap_fmt = format_large_number(market_cap)
-                tier = "Mega-Cap 👑" if market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap >= 1e10 else ("Mid-Cap 📈" if market_cap >= 2e9 else "Small-Cap 🌱"))
-                line_cap = f"• **Market Cap:** `{cap_fmt}` ({tier})"
-            else:
-                line_cap = "• **Market Cap:** `N/A`"
-
-            profile_block = f"{line_sector}\n{line_cap}"
-            catalysts_block = f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n• **Wall St. Targets:** {targets_line_str}"
+            metrics["profile_title"] = "🏢 Company Profile"
+            cap_fmt = format_large_number(market_cap)
+            metrics["profile_block"] = f"• **Market Cap:** `{cap_fmt}`"
+            metrics["catalysts_block"] = f"• **Wall St. Targets:** {fetch_wallstreet_targets_tls(ticker_symbol, current_price)}"
             atr_fmt = f"±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)" if atr and current_price > 0 else "N/A"
-            smart_money_block = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `{atr_fmt}`"
-
-            growth_parts = []
-            if rev_growth_pct is not None:
-                growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
-            if net_inc_growth_pct is not None:
-                growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
-            line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}" if growth_parts else ""
-
-            health_elements = [
-                f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}"
-            ]
-            if line_growth:
-                health_elements.append(line_growth)
-            health_elements.extend([
-                f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}",
-                f"• **Free Cash Flow:** {fcf_str}",
-                f"• **Earnings Quality (FCF / Net Income):** {quality_str}",
-                f"• **Valuation Multiples:** Trailing P/E: {pe_str}{pfcf_str}"
-            ])
-
-            health_block = "\n".join(health_elements)
+            beta_val = calculate_beta_vs_spy(closes, http_session)
+            beta_str = f"`{beta_val:.2f}x`" if beta_val else "N/A"
+            metrics["smart_money_block"] = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `{atr_fmt}`"
 
         return metrics
     except Exception:
@@ -845,9 +584,10 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
     if not DISCORD_PRICE_WEBHOOK_URL:
         return
 
-    # Unpack tuple defensively if needed
     if isinstance(metrics, tuple):
         metrics = metrics[0] if len(metrics) > 0 else {}
+    if not isinstance(metrics, dict):
+        metrics = {}
 
     title_text = f"🚨 Market Alert: {ticker} {session_badge}"
     desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
@@ -867,27 +607,24 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
             "inline": False
         })
 
-    if isinstance(metrics, dict):
-        if metrics.get("volume_block"):
-            fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
-        if metrics.get("rsi_block"):
-            fields.append({"name": "📈 Multi-Timeframe RSI", "value": metrics["rsi_block"], "inline": False})
-        if metrics.get("range_str"):
-            fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_str"], "inline": False})
-        if metrics.get("trend_block"):
-            fields.append({"name": "📈 Moving Averages & Trend", "value": metrics["trend_block"], "inline": False})
-        if metrics.get("macd_str"):
-            fields.append({"name": "📊 MACD (12,26,9)", "value": metrics["macd_str"], "inline": False})
-        if metrics.get("pivot_str"):
-            fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
-        if metrics.get("catalysts_block"):
-            fields.append({"name": "🗓️ Catalysts & Wall Street Targets", "value": metrics["catalysts_block"], "inline": False})
-        if metrics.get("smart_money_block"):
-            fields.append({"name": "🐋 Smart Money & Risk Metrics", "value": metrics["smart_money_block"], "inline": False})
-        if metrics.get("profile_block"):
-            fields.append({"name": metrics.get("profile_title", "🏢 Company Profile"), "value": metrics["profile_block"], "inline": False})
-        if metrics.get("health_block"):
-            fields.append({"name": "📊 Balance Sheet & Cash Flow Health", "value": metrics["health_block"], "inline": False})
+    if metrics.get("volume_block"):
+        fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
+    if metrics.get("rsi_block"):
+        fields.append({"name": "📈 Multi-Timeframe RSI", "value": metrics["rsi_block"], "inline": False})
+    if metrics.get("range_str"):
+        fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_str"], "inline": False})
+    if metrics.get("trend_block"):
+        fields.append({"name": "📈 Moving Averages & Trend", "value": metrics["trend_block"], "inline": False})
+    if metrics.get("macd_str"):
+        fields.append({"name": "📊 MACD (12,26,9)", "value": metrics["macd_str"], "inline": False})
+    if metrics.get("pivot_str"):
+        fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
+    if metrics.get("catalysts_block"):
+        fields.append({"name": "🗓️ Catalysts & Wall Street Targets", "value": metrics["catalysts_block"], "inline": False})
+    if metrics.get("smart_money_block"):
+        fields.append({"name": "🐋 Smart Money & Risk Metrics", "value": metrics["smart_money_block"], "inline": False})
+    if metrics.get("profile_block"):
+        fields.append({"name": metrics.get("profile_title", "🏢 Company Profile"), "value": metrics["profile_block"], "inline": False})
 
     payload = {
         "username": BOT_NAME,
@@ -985,7 +722,6 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
-        # Time-Weighted Paced RVOL for Options Scoring
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
@@ -1001,7 +737,6 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
         iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
 
-        # Quant Scoring (0 to 100)
         bull_score, bear_score = 0, 0
 
         if current_price >= sma_50 and current_price >= sma_200:
@@ -1031,7 +766,6 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         elif "Bearish" in str(macd_verdict):
             bear_score += 12
 
-        # Volume Points (Powered by Time-Paced RVOL)
         if rvol >= 1.5:
             bull_score += 15 if change_pct >= 0 else 0
             bear_score += 15 if change_pct < 0 else 0
@@ -1300,7 +1034,6 @@ def check_market():
     today_ny_date = now_ny.date()
     today_ny_str = now_ny.strftime("%Y-%m-%d")
 
-    # 1. Holiday & Early Close checks
     us_hol, ca_hol = check_market_holiday(today_ny_date)
     is_stock_holiday = bool(us_hol)
     is_early_close, early_close_reason = check_early_close(today_ny_date)
@@ -1311,7 +1044,7 @@ def check_market():
         send_discord_holiday_announcement(us_hol, ca_hol)
         state["holiday_announced_date"] = today_ny_str
 
-    # 2. 9:30 AM OPENING BELL BUFFER (Waits until 9:32 AM for Opening Cross to settle)
+    # 9:30 AM OPENING BELL BUFFER (Waits until 9:32 AM)
     if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
         target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
         sleep_seconds = max(0, (target_time - now_ny).total_seconds())
@@ -1337,7 +1070,7 @@ def check_market():
     })
 
     # ==========================================
-    # 3. SCAN PRICES (With Institutional Indicators)
+    # 3. SCAN PRICES (With Paced RVOL)
     # ==========================================
     price_alerts_to_send = []
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
@@ -1376,22 +1109,133 @@ def check_market():
 
                     if abs(step_change_pct) >= req_threshold:
                         should_alert = True
-                        print(f"🔥 {ticker_symbol:10s} {badge} | STEP TRIGGER | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}%")
+                        print(f"🔥 {ticker_symbol} {badge} | STEP TRIGGER | Price: ${current_price:.2f} | Step: {step_change_pct:+.2f}%")
                         history_trail.append(f"{change_pct:+.2f}%")
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
                             "history": history_trail
                         }
                     else:
-                        print(f"⏭️ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Step: {step_change_pct:+6.2f}% (Below {req_threshold}%)")
+                        print(f"⏭️ {ticker_symbol} {badge} | Price: ${current_price:.2f} | Step: {step_change_pct:+.2f}% (Below {req_threshold}%)")
                 else:
                     if abs(change_pct) >= req_threshold:
                         should_alert = True
-                        print(f"🚨 {ticker_symbol:10s} {badge} | INITIAL TRIGGER | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
+                        print(f"🚨 {ticker_symbol} {badge} | INITIAL TRIGGER | Price: ${current_price:.2f} | Change: {change_pct:+.2f}%")
                         tracked_dict[ticker_symbol] = {
                             "last_price": current_price,
                             "history": [f"{change_pct:+.2f}%"]
                         }
                         history_trail = []
                     else:
-                        print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change:
+                        print(f"✅ {ticker_symbol} {badge} | Price: ${current_price:.2f} | Change: {change_pct:+.2f}%")
+
+                if should_alert:
+                    metrics = get_technical_and_fundamental_metrics(ticker_symbol, current_price, session_http)
+                    price_alerts_to_send.append({
+                        "ticker": ticker_symbol,
+                        "price": current_price,
+                        "change_pct": change_pct,
+                        "badge": badge,
+                        "step_change": step_change_pct,
+                        "history_trail": history_trail[:-1] if step_change_pct is not None else [],
+                        "metrics": metrics
+                    })
+
+            else:
+                print(f"⚠️ {ticker_symbol} {badge} | SKIPPED: Insufficient realtime price data")
+        except Exception as e:
+            print(f"❌ Error checking {ticker_symbol}: {e}")
+        time.sleep(0.12)
+
+    # ==========================================
+    # 4. SCAN BREAKING NEWS
+    # ==========================================
+    print("\nScanning breaking news across all tickers...")
+    cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
+    seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
+    raw_news = []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        futures_search = [executor.submit(fetch_ticker_news_search, sym, session_http) for sym in ALL_TICKERS]
+        futures_rss = [executor.submit(fetch_ticker_news_rss, sym, session_http) for sym in ALL_TICKERS]
+
+        for f in concurrent.futures.as_completed(futures_search + futures_rss):
+            raw_news.extend(f.result())
+
+    new_articles = []
+    for item in raw_news:
+        link = item["link"]
+        pub_dt = item.get("pub_dt")
+        title = item.get("title", "")
+
+        date_stamp = pub_dt.strftime("%Y-%m-%d") if pub_dt else "nodate"
+        norm_title = normalize_title(title)
+
+        title_date_key = f"title_{norm_title}_{date_stamp}"
+        link_key = f"link_{link}"
+
+        if link_key in seen_fingerprints_set or (norm_title and title_date_key in seen_fingerprints_set):
+            continue
+
+        seen_fingerprints_set.add(link_key)
+        seen_fingerprints_set.add(title_date_key)
+        state["seen_news_fingerprints"].append(link_key)
+        state["seen_news_fingerprints"].append(title_date_key)
+
+        if pub_dt and pub_dt >= cutoff_time:
+            new_articles.append(item)
+
+    # ==========================================
+    # 5. DISPATCH PRICE & NEWS DISCORD ALERTS
+    # ==========================================
+    price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
+    if price_alerts_to_send:
+        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
+        for alert in price_alerts_to_send:
+            send_discord_price_alert(
+                ticker=alert["ticker"],
+                current_price=alert["price"],
+                change_pct=alert["change_pct"],
+                session_badge=alert["badge"],
+                step_change=alert["step_change"],
+                history_trail=alert["history_trail"],
+                metrics=alert["metrics"]
+            )
+            time.sleep(0.5)
+
+    if new_articles:
+        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
+        for article in new_articles:
+            send_discord_news_alert(article)
+            time.sleep(0.5)
+
+    # ==========================================
+    # 6. RUN TOP 10 OPTIONS RADAR (30-MIN SCAN)
+    # Strict Gate: Mon-Fri between 9:32 AM and 4:00 PM EST
+    # ==========================================
+    reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
+    is_options_market_open = (
+        not is_stock_holiday and
+        now_ny.weekday() <= 4 and
+        dtime(9, 32) <= now_ny.time() <= reg_close_time
+    )
+
+    if is_options_market_open:
+        dispatch_top10_options_radar(session_http)
+    elif is_stock_holiday:
+        print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
+    elif now_ny.weekday() > 4:
+        print("⏭️ Skipping options radar: Weekend (Market Closed).")
+    else:
+        close_str = "1:00 PM" if is_early_close else "4:00 PM"
+        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
+
+    # ==========================================
+    # 7. PERSIST STATE
+    # ==========================================
+    save_alert_state(state)
+    print(f"\n=======================================================")
+    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News: {len(new_articles)}")
+
+if __name__ == "__main__":
+    check_market()
