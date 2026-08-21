@@ -52,21 +52,12 @@ def auto_self_ping():
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. BROWSER SESSIONS & CONFIG
+# 2. SESSIONS & BRANDING
 # -------------------------------------------------------------
 http_session = requests.Session()
 http_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    "Accept": "*/*",
-    "Accept-Language": "en-US,en;q=0.9"
-})
-
-nasdaq_session = requests.Session()
-nasdaq_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/plain, */*",
-    "Origin": "https://www.nasdaq.com",
-    "Referer": "https://www.nasdaq.com/"
+    "Accept": "*/*"
 })
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -78,44 +69,30 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 def format_large_number(num):
-    if num is None:
-        return "N/A"
-    if num >= 1e12:
-        return f"${num / 1e12:.2f} Trillion"
-    elif num >= 1e9:
-        return f"${num / 1e9:.2f} Billion"
-    elif num >= 1e6:
-        return f"${num / 1e6:.1f} Million"
-    elif num >= 1e3:
-        return f"${num / 1e3:.1f}K"
+    if num is None: return "N/A"
+    if num >= 1e12: return f"${num / 1e12:.2f} Trillion"
+    elif num >= 1e9: return f"${num / 1e9:.2f} Billion"
+    elif num >= 1e6: return f"${num / 1e6:.1f} Million"
+    elif num >= 1e3: return f"${num / 1e3:.1f}K"
     return str(int(num))
 
-# --- INSTITUTIONAL U-CURVE VOLUME PACING ENGINE ---
+# --- INSTITUTIONAL U-CURVE VOLUME PACING ---
 def get_intraday_volume_pacing_factor(now_ny):
-    if now_ny.weekday() > 4:
-        return 1.0
+    if now_ny.weekday() > 4: return 1.0
     t = now_ny.time()
-    if t < dtime(9, 30):
-        return 0.05
-    if t >= dtime(16, 0):
-        return 1.0
+    if t < dtime(9, 30): return 0.05
+    if t >= dtime(16, 0): return 1.0
 
-    minutes_elapsed = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
-    if minutes_elapsed <= 30:
-        return 0.02 + (minutes_elapsed / 30.0) * 0.16
-    elif minutes_elapsed <= 60:
-        return 0.18 + ((minutes_elapsed - 30) / 30.0) * 0.14
-    elif minutes_elapsed <= 180:
-        return 0.32 + ((minutes_elapsed - 60) / 120.0) * 0.22
-    elif minutes_elapsed <= 300:
-        return 0.54 + ((minutes_elapsed - 180) / 120.0) * 0.18
-    else:
-        return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
+    mins = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
+    if mins <= 30: return 0.02 + (mins / 30.0) * 0.16
+    elif mins <= 60: return 0.18 + ((mins - 30) / 30.0) * 0.14
+    elif mins <= 180: return 0.32 + ((mins - 60) / 120.0) * 0.22
+    elif mins <= 300: return 0.54 + ((mins - 180) / 120.0) * 0.18
+    else: return 0.72 + ((mins - 300) / 90.0) * 0.28
 
 # --- MATHEMATICAL INDICATORS ---
 def calculate_rsi(closes, period=14):
-    if len(closes) < period + 1:
-        return 50.0
+    if len(closes) < period + 1: return 50.0
     deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
     gains = [max(d, 0) for d in deltas]
     losses = [max(-d, 0) for d in deltas]
@@ -124,29 +101,26 @@ def calculate_rsi(closes, period=14):
     for i in range(period, len(deltas)):
         avg_gain = (avg_gain * (period - 1) + gains[i]) / period
         avg_loss = (avg_loss * (period - 1) + losses[i]) / period
-    if avg_loss == 0:
-        return 100.0
+    if avg_loss == 0: return 100.0
     return 100.0 - (100.0 / (1.0 + (avg_gain / avg_loss)))
 
 def calculate_macd(closes):
-    if len(closes) < 35:
-        return "N/A"
+    if len(closes) < 35: return "N/A"
     alpha_12, alpha_26 = 2.0 / 13, 2.0 / 27
     curr_12, curr_26 = sum(closes[:12]) / 12, sum(closes[:26]) / 26
-    ema_12_full, ema_26_full = [], []
+    ema_12, ema_26 = [], []
     for i, c in enumerate(closes):
         if i >= 12: curr_12 = c * alpha_12 + curr_12 * (1 - alpha_12)
-        if i >= 26: curr_26 = c * alpha_26 + curr_26 * (1 - alpha_26); ema_12_full.append(curr_12); ema_26_full.append(curr_26)
-    macd_line = [e12 - e26 for e12, e26 in zip(ema_12_full, ema_26_full)]
+        if i >= 26: curr_26 = c * alpha_26 + curr_26 * (1 - alpha_26); ema_12.append(curr_12); ema_26.append(curr_26)
+    macd_line = [e1 - e2 for e1, e2 in zip(ema_12, ema_26)]
     if len(macd_line) < 9: return "N/A"
     alpha_9, sig = 2.0 / 10, sum(macd_line[:9]) / 9
     sig_line = [sig]
     for m in macd_line[9:]:
         sig = m * alpha_9 + sig * (1 - alpha_9); sig_line.append(sig)
-    curr_macd, curr_sig = macd_line[-1], sig_line[-1]
-    hist_curr = curr_macd - curr_sig
+    hist_curr = macd_line[-1] - sig_line[-1]
     hist_prev = (macd_line[-2] - sig_line[-2]) if len(macd_line) >= 2 else hist_curr
-    if curr_macd >= curr_sig:
+    if macd_line[-1] >= sig_line[-1]:
         return "Bullish Momentum 🟢 (Expanding Upward)" if hist_curr >= hist_prev else "Bullish Trend 🟢 (Momentum Slowing)"
     else:
         return "Bearish Momentum 🔴 (Expanding Downward)" if hist_curr <= hist_prev else "Bearish Trend 🔴 (Weakening / Slowing)"
@@ -166,8 +140,7 @@ def calculate_historical_volatility(closes, window=30):
 def calculate_beta_vs_spy(closes):
     try:
         if len(closes) < 50: return None
-        url_spy = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y"
-        res_spy = http_session.get(url_spy, timeout=4)
+        res_spy = http_session.get("https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y", timeout=4)
         if res_spy.status_code == 200:
             spy_closes = [c for c in res_spy.json()["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
             min_len = min(len(closes), len(spy_closes))
@@ -201,8 +174,7 @@ def get_rsi_tag(rsi):
 
 def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
     try:
-        fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
-        fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
+        fz_res = cureq.get(f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d", impersonate="chrome124", timeout=4)
         if fz_res.status_code == 200:
             m_tp = re.search(r'Target\s*Price[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
             m_rc = re.search(r'Recom[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
@@ -212,14 +184,13 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
             if mean_t and current_price > 0 and mean_t < (current_price * 10):
                 upside = ((mean_t - current_price) / current_price) * 100
                 up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
-                rating_part = f" | Rating: `{rating}`" if rating else ""
-                return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
+                return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**) | Rating: `{rating}`"
     except Exception:
         pass
     return "N/A"
 
 # -------------------------------------------------------------
-# 3. ON-DEMAND TECHNICALS, FUNDAMENTALS & MULTI-MARKET DIVIDENDS
+# 3. ON-DEMAND TECHNICALS & DIVIDEND SNAPSHOT ($/!)
 # -------------------------------------------------------------
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
@@ -229,8 +200,7 @@ def get_on_demand_data(ticker_symbol):
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y&events=div"
         res = http_session.get(url, timeout=5)
-        if res.status_code != 200:
-            return None, f"Could not fetch data for `{ticker_symbol}` (Status: {res.status_code})."
+        if res.status_code != 200: return None, f"Could not fetch data for `{ticker_symbol}`."
 
         chart_data = res.json().get("chart", {}).get("result", [{}])[0]
         meta = chart_data.get("meta", {})
@@ -241,12 +211,10 @@ def get_on_demand_data(ticker_symbol):
         volumes = [v for v in indicators.get("volume", []) if v is not None]
         highs = [h for h in indicators.get("high", []) if h is not None]
         lows = [l for l in indicators.get("low", []) if l is not None]
-
-        if len(closes) < 2:
-            return None, f"Insufficient price history for `{ticker_symbol}`."
+        if len(closes) < 2: return None, f"Insufficient price history for `{ticker_symbol}`."
 
         current_price = meta.get("regularMarketPrice") or closes[-1]
-        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
+        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
         # Time-Paced RVOL
@@ -265,25 +233,10 @@ def get_on_demand_data(ticker_symbol):
         rvol_50 = (vol_today / exp_vol_50) if exp_vol_50 and exp_vol_50 > 0 else None
         rvol_90 = (vol_today / exp_vol_90) if exp_vol_90 and exp_vol_90 > 0 else None
 
-        volume_block = (
-            f"• **Today's Vol:** `{v_today_fmt}`\n"
-            f"• **20D (1-Month):** {get_volume_tag(rvol_20, avg_vol_20)}\n"
-            f"• **50D (Quarterly):** {get_volume_tag(rvol_50, avg_vol_50)}\n"
-            f"• **90D (Long-Term):** {get_volume_tag(rvol_90, avg_vol_90)}"
-        )
+        volume_block = f"• **Today's Vol:** `{v_today_fmt}`\n• **20D (1-Month):** {get_volume_tag(rvol_20, avg_vol_20)}\n• **50D (Quarterly):** {get_volume_tag(rvol_50, avg_vol_50)}\n• **90D (Long-Term):** {get_volume_tag(rvol_90, avg_vol_90)}"
+        rsi_block = f"• **7D (Fast / Scalp):** {get_rsi_tag(calculate_rsi(closes, 7))}\n• **14D (Standard):** {get_rsi_tag(calculate_rsi(closes, 14))}\n• **30D (Macro Trend):** {get_rsi_tag(calculate_rsi(closes, 30))}"
 
-        rsi_7 = calculate_rsi(closes, 7)
-        rsi_14 = calculate_rsi(closes, 14)
-        rsi_30 = calculate_rsi(closes, 30)
-
-        rsi_block = (
-            f"• **7D (Fast / Scalp):** {get_rsi_tag(rsi_7)}\n"
-            f"• **14D (Standard):** {get_rsi_tag(rsi_14)}\n"
-            f"• **30D (Macro Trend):** {get_rsi_tag(rsi_30)}"
-        )
-
-        high_52w = meta.get("fiftyTwoWeekHigh") or (max(highs) if highs else None)
-        low_52w = meta.get("fiftyTwoWeekLow") or (min(lows) if lows else None)
+        high_52w, low_52w = meta.get("fiftyTwoWeekHigh") or max(highs), meta.get("fiftyTwoWeekLow") or min(lows)
         dist_high = (((high_52w - current_price) / high_52w) * 100) if high_52w and low_52w and high_52w > low_52w else 0
         range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)" if high_52w and low_52w else "N/A"
 
@@ -298,8 +251,7 @@ def get_on_demand_data(ticker_symbol):
             elif current_price < sma_50 and current_price < sma_200: verdict_str = "`🔴 Strong Bearish Downtrend` *(Institutional Selling)*"
             elif current_price >= sma_200 and current_price < sma_50: verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
             else: verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
-        elif sma_50:
-            verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
+        elif sma_50: verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
 
         trend_block = f"• **50-Day SMA:** {sma_50_str}\n• **200-Day SMA:** {sma_200_str}\n• **Overall Verdict:** {verdict_str}"
         macd_str = calculate_macd(closes)
@@ -325,11 +277,8 @@ def get_on_demand_data(ticker_symbol):
             is_etf = (quote_type == "ETF" or ticker_symbol in KNOWN_ETFS)
             profile_title = "🏢 Fund Profile & Structure" if is_etf else "🏢 Company Profile"
             market_cap = None
-            try:
-                t_obj = yf.Ticker(ticker_symbol)
-                market_cap = t_obj.fast_info.market_cap
-            except Exception:
-                pass
+            try: market_cap = yf.Ticker(ticker_symbol).fast_info.market_cap
+            except Exception: pass
 
             profile_block = f"• **Market Cap:** `{format_large_number(market_cap)}`"
             catalysts_block = f"• **Wall St. Targets:** {fetch_wallstreet_targets_tls(ticker_symbol, current_price)}"
@@ -337,66 +286,46 @@ def get_on_demand_data(ticker_symbol):
             beta_str = f"`{beta_val:.2f}x`" if beta_val else "N/A"
             smart_money_block = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)`"
 
-            # Multi-Source Dividend Schedule
+            # Dividend parsing
             try:
-                ex_date_str, pay_date_str = "N/A", "N/A"
-                payout_ratio, trailing_div_rate, trailing_div_yield = None, None, None
-                qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={'CA' if is_canadian else 'US'}&lang=en"
-                qs_res = cureq.get(qs_url, impersonate="chrome124", timeout=4)
+                ex_date_str, pay_date_str, payout_ratio, trailing_div_rate = "N/A", "N/A", None, None
+                qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={'CA' if is_canadian else 'US'}&lang=en", impersonate="chrome124", timeout=4)
                 if qs_res.status_code == 200:
                     res_data = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                    cal_events = res_data.get("calendarEvents", {})
-                    sum_detail = res_data.get("summaryDetail", {})
+                    cal_events, sum_detail = res_data.get("calendarEvents", {}), res_data.get("summaryDetail", {})
                     ex_obj = cal_events.get("exDividendDate", {}) or sum_detail.get("exDividendDate", {})
-                    if isinstance(ex_obj, dict):
-                        ex_date_str = ex_obj.get("fmt") or (datetime.fromtimestamp(ex_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y") if ex_obj.get("raw") else "N/A")
+                    if isinstance(ex_obj, dict): ex_date_str = ex_obj.get("fmt") or "N/A"
                     pay_obj = cal_events.get("dividendDate", {}) or sum_detail.get("dividendDate", {})
-                    if isinstance(pay_obj, dict):
-                        pay_date_str = pay_obj.get("fmt") or (datetime.fromtimestamp(pay_obj.get("raw"), tz=NY_TZ).strftime("%b %d, %Y") if pay_obj.get("raw") else "N/A")
+                    if isinstance(pay_obj, dict): pay_date_str = pay_obj.get("fmt") or "N/A"
                     pr_obj = sum_detail.get("payoutRatio", {}) or res_data.get("defaultKeyStatistics", {}).get("payoutRatio", {})
                     if isinstance(pr_obj, dict) and pr_obj.get("raw") is not None: payout_ratio = float(pr_obj.get("raw"))
                     rate_obj = sum_detail.get("dividendRate", {}) or sum_detail.get("trailingAnnualDividendRate", {})
                     if isinstance(rate_obj, dict) and rate_obj.get("raw") is not None: trailing_div_rate = float(rate_obj.get("raw"))
-                    yield_obj = sum_detail.get("dividendYield", {}) or sum_detail.get("trailingAnnualDividendYield", {})
-                    if isinstance(yield_obj, dict) and yield_obj.get("raw") is not None: trailing_div_yield = float(yield_obj.get("raw"))
 
-                # Chart event fallback
-                recent_divs = []
-                if dividends_dict:
-                    for ts_key, d_obj in sorted(dividends_dict.items(), key=lambda x: int(x[0])):
-                        recent_divs.append((int(ts_key), float(d_obj.get("amount", 0))))
+                recent_divs = [(int(k), float(v.get("amount", 0))) for k, v in dividends_dict.items()] if dividends_dict else []
                 if ex_date_str == "N/A" and recent_divs:
-                    ex_date_str = datetime.fromtimestamp(recent_divs[-1][0], tz=NY_TZ).strftime("%b %d, %Y")
+                    ex_date_str = datetime.fromtimestamp(sorted(recent_divs, key=lambda x: x[0])[-1][0], tz=NY_TZ).strftime("%b %d, %Y")
 
-                last_payout = recent_divs[-1][1] if recent_divs else None
+                last_payout = sorted(recent_divs, key=lambda x: x[0])[-1][1] if recent_divs else None
                 annual_rate = trailing_div_rate or (last_payout * 4 if last_payout else None)
-                if (annual_rate and annual_rate > 0) or (trailing_div_yield and trailing_div_yield > 0) or last_payout:
-                    calc_yield = ((annual_rate / current_price) * 100) if (annual_rate and current_price > 0) else ((trailing_div_yield * 100) if trailing_div_yield and trailing_div_yield <= 1.0 else (trailing_div_yield or 0.0))
-                    per_payout = last_payout if last_payout else (annual_rate / 4 if annual_rate else (current_price * (calc_yield / 100) / 4))
+                if annual_rate and annual_rate > 0:
+                    calc_yield = (annual_rate / current_price) * 100
+                    per_payout = last_payout or (annual_rate / 4)
                     pr_str = f"\n• **Sustainability:** Payout Ratio: `{payout_ratio*100:.1f}%`" if payout_ratio else ""
-                    dividend_block = f"• **Yield & Payout:** `{calc_yield:.2f}%` • `${per_payout:.2f} / share` (`${annual_rate or (per_payout*4):.2f} Annualized`)\n• **Key Dates:** Ex-Dividend: `{ex_date_str}` • Pay Date: `{pay_date_str}`{pr_str}"
+                    dividend_block = f"• **Yield & Payout:** `{calc_yield:.2f}%` • `${per_payout:.2f} / share` (`${annual_rate:.2f} Annualized`)\n• **Key Dates:** Ex-Dividend: `{ex_date_str}` • Pay Date: `{pay_date_str}`{pr_str}"
                 else:
                     dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
             except Exception:
                 dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
 
         return {
-            "ticker": ticker_symbol,
-            "price": current_price,
-            "change_pct": change_pct,
-            "volume_block": volume_block,
-            "rsi_block": rsi_block,
-            "range_str": range_str,
-            "trend_block": trend_block,
-            "macd_str": macd_str,
-            "pivot_str": pivot_str,
-            "dividend_block": dividend_block,
-            "profile_title": profile_title,
-            "profile_block": profile_block,
-            "catalysts_block": catalysts_block,
+            "ticker": ticker_symbol, "price": current_price, "change_pct": change_pct,
+            "volume_block": volume_block, "rsi_block": rsi_block, "range_str": range_str,
+            "trend_block": trend_block, "macd_str": macd_str, "pivot_str": pivot_str,
+            "dividend_block": dividend_block, "profile_title": profile_title,
+            "profile_block": profile_block, "catalysts_block": catalysts_block,
             "smart_money_block": smart_money_block
         }, None
-
     except Exception as e:
         return None, f"Error fetching `{ticker_symbol}`: {e}"
 
@@ -414,19 +343,15 @@ def create_market_embed(data):
     embed.add_field(name="📈 Moving Averages & Trend", value=data['trend_block'], inline=False)
     embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
     embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
-    if data.get("dividend_block"):
-        embed.add_field(name="💰 Dividend & Shareholder Yield", value=data["dividend_block"], inline=False)
-    if data.get("catalysts_block"):
-        embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
-    if data.get("smart_money_block"):
-        embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
-    if data.get("profile_block"):
-        embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
+    if data.get("dividend_block"): embed.add_field(name="💰 Dividend & Shareholder Yield", value=data["dividend_block"], inline=False)
+    if data.get("catalysts_block"): embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
+    if data.get("smart_money_block"): embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
+    if data.get("profile_block"): embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
 
 # -------------------------------------------------------------
-# 4. SMART DISAMBIGUATING INSTITUTIONAL RESEARCH RADAR (%TICKER)
+# 4. MULTI-PART PAGINATED RESEARCH RADAR (%TICKER)
 # -------------------------------------------------------------
 INSTITUTION_REGISTRY = {
     "Rosenblatt": ("Rosenblatt Securities", "🏦"), "Goldman Sachs": ("Goldman Sachs", "🏦"),
@@ -475,7 +400,7 @@ def fetch_institutional_research_radar(ticker_symbol):
         search_terms = list(dict.fromkeys([base_sym, sym, clean_company_short]))
         seen_banks = {}
 
-        # 1. Structured Upgrades/Downgrades Feed
+        # 1. Official Structured Feed
         try:
             ud_df = t_obj.upgrades_downgrades
             if ud_df is not None and not ud_df.empty:
@@ -484,30 +409,21 @@ def fetch_institutional_research_radar(ticker_symbol):
                     if row_dt:
                         if row_dt.tzinfo is None: row_dt = row_dt.replace(tzinfo=NY_TZ)
                         if row_dt < cutoff_time: continue
-                    firm_name = str(row.get("Firm", "") or "")
-                    to_grade = str(row.get("ToGrade", "") or "")
-                    action = str(row.get("Action", "") or "")
-
+                    firm_name, to_grade, action = str(row.get("Firm", "") or ""), str(row.get("ToGrade", "") or ""), str(row.get("Action", "") or "")
                     matched_inst, inst_badge = None, "🏦"
                     for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
                         if re.search(rf'\b{re.escape(key_name)}\b', firm_name, re.IGNORECASE):
                             matched_inst, inst_badge = full_name, badge; break
-
                     if not matched_inst: matched_inst = firm_name if len(firm_name) > 2 else "Wall Street Bank"
                     low_grade = (to_grade + " " + action).lower()
-                    if any(b in low_grade for b in ["buy", "outperform", "overweight", "up", "top pick", "positive"]):
-                        rating_str, tier = f"{to_grade or 'Outperform'} 🟢", "BULLISH"
-                    elif any(b in low_grade for b in ["sell", "underperform", "underweight", "down", "negative"]):
-                        rating_str, tier = f"{to_grade or 'Underperform'} 🔴", "CAUTIOUS"
-                    else:
-                        rating_str, tier = f"{to_grade or 'Hold'} 🟡", "NEUTRAL"
+                    if any(b in low_grade for b in ["buy", "outperform", "overweight", "up", "top pick"]): rating_str, tier = f"{to_grade or 'Outperform'} 🟢", "BULLISH"
+                    elif any(b in low_grade for b in ["sell", "underperform", "underweight", "down"]): rating_str, tier = f"{to_grade or 'Underperform'} 🔴", "CAUTIOUS"
+                    else: rating_str, tier = f"{to_grade or 'Hold'} 🟡", "NEUTRAL"
 
                     entry = {
-                        "institution": matched_inst, "badge": inst_badge, "rating": rating_str,
-                        "tier": tier, "target": None,
-                        "headline": f"{matched_inst} {action.capitalize() if action else 'rates'} {clean_company_short} to {to_grade}",
-                        "link": f"https://finance.yahoo.com/quote/{sym}",
-                        "date_str": row_dt.strftime("%b %d, %Y") if row_dt else "Recent Action",
+                        "institution": matched_inst, "badge": inst_badge, "rating": rating_str, "tier": tier,
+                        "target": None, "headline": f"{matched_inst} {action.capitalize() if action else 'rates'} {clean_company_short} to {to_grade}",
+                        "link": f"https://finance.yahoo.com/quote/{sym}", "date_str": row_dt.strftime("%b %d, %Y") if row_dt else "Recent Action",
                         "pub_dt": row_dt or now_ny
                     }
                     if matched_inst not in seen_banks: seen_banks[matched_inst] = entry
@@ -519,31 +435,24 @@ def fetch_institutional_research_radar(ticker_symbol):
         def search_yahoo():
             items = []
             try:
-                ts_ms = int(time.time() * 1000)
-                url = f"https://query2.finance.yahoo.com/v1/finance/search?q={clean_company_short}+price+target+analyst&newsCount=25&_={ts_ms}"
-                res = http_session.get(url, timeout=4)
+                res = http_session.get(f"https://query2.finance.yahoo.com/v1/finance/search?q={clean_company_short}+price+target+analyst&newsCount=25", timeout=4)
                 if res.status_code == 200:
                     for n in res.json().get("news", []):
-                        title = n.get("title", "")
-                        link = n.get("link") or n.get("canonicalUrl", {}).get("url")
-                        pub_time = n.get("providerPublishTime") or n.get("pubDate")
+                        title, link, pub_time = n.get("title", ""), n.get("link") or n.get("canonicalUrl", {}).get("url"), n.get("providerPublishTime") or n.get("pubDate")
                         pub_dt = datetime.fromtimestamp(pub_time if pub_time < 1e11 else pub_time/1000.0, tz=NY_TZ) if pub_time else None
                         if title and link: items.append({"title": title, "link": link, "pub_dt": pub_dt})
             except Exception:
                 pass
             return items
 
-        def search_google_rss():
+        def search_google():
             items = []
             try:
-                g_url = f"https://news.google.com/rss/search?q={clean_company_short}+price+target+OR+analyst+rating&hl=en-US&gl=US&ceid=US:en"
-                res = http_session.get(g_url, timeout=4)
+                res = http_session.get(f"https://news.google.com/rss/search?q={clean_company_short}+price+target+OR+analyst+rating&hl=en-US&gl=US&ceid=US:en", timeout=4)
                 if res.status_code == 200:
                     root = ET.fromstring(res.content)
                     for item in root.findall(".//item")[:25]:
-                        title = item.findtext("title")
-                        link = item.findtext("link")
-                        pub_date_str = item.findtext("pubDate")
+                        title, link, pub_date_str = item.findtext("title"), item.findtext("link"), item.findtext("pubDate")
                         pub_dt = parsedate_to_datetime(pub_date_str).astimezone(NY_TZ) if pub_date_str else None
                         if title and link: items.append({"title": title, "link": link, "pub_dt": pub_dt})
             except Exception:
@@ -551,7 +460,7 @@ def fetch_institutional_research_radar(ticker_symbol):
             return items
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            f_y, f_g = executor.submit(search_yahoo), executor.submit(search_google_rss)
+            f_y, f_g = executor.submit(search_yahoo), executor.submit(search_google)
             raw_reports.extend(f_y.result())
             raw_reports.extend(f_g.result())
 
@@ -559,6 +468,7 @@ def fetch_institutional_research_radar(ticker_symbol):
             t_text, pub_dt = rep["title"], rep.get("pub_dt")
             if pub_dt and pub_dt < cutoff_time: continue
 
+            # Subject Verification (Discard if TD is author rating another stock)
             is_subject = False
             for term in search_terms:
                 if len(term) >= 2 and re.search(rf'\b{re.escape(term)}\b', t_text, re.IGNORECASE):
@@ -620,13 +530,13 @@ def fetch_institutional_research_radar(ticker_symbol):
         return {
             "ticker": sym, "company_name": clean_company_short,
             "current_price": current_price, "currency": currency,
-            "reports": valid_reports[:10]
+            "reports": valid_reports[:12]
         }, None
-
     except Exception as e:
         return None, str(e)
 
-def create_institutional_radar_embed(data):
+# Creates Multi-Part Embeds (batches of 4 reports per embed)
+def create_institutional_radar_embeds(data):
     sym = data["ticker"]
     curr = data["currency"]
     p = data["current_price"]
@@ -635,44 +545,49 @@ def create_institutional_radar_embed(data):
     is_ca = sym.endswith(".TO") or sym.endswith(".V")
 
     price_header = f"${p:.2f} {curr}" if p > 0 else "Live"
-    radar_title = f"🏛️ BAY STREET RESEARCH RADAR: {sym} ({c_name}) 🍁" if is_ca else f"🏛️ WALL STREET RESEARCH RADAR: {sym} ({c_name})"
+    base_title = f"🏛️ BAY STREET RESEARCH RADAR: {sym} ({c_name}) 🍁" if is_ca else f"🏛️ WALL STREET RESEARCH RADAR: {sym} ({c_name})"
 
-    embed = discord.Embed(
-        title=radar_title,
-        description=f"**Current Price:** `{price_header}` | **Showing {len(reports)} Verified Bank Actions (Last 90 Days)**\n*Ranked from Highest Price Target to Lowest*",
-        color=0x2ecc71 if any(r["tier"] == "BULLISH" for r in reports) else 0x3498db
-    )
+    chunk_size = 4
+    chunks = [reports[i:i + chunk_size] for i in range(0, len(reports), chunk_size)]
+    total_parts = len(chunks)
+    embeds = []
 
-    entries_txt = ""
-    bull_cnt, neut_cnt, caut_cnt = 0, 0, 0
-    valid_pts = []
-
-    for i, r in enumerate(reports, 1):
-        pt = r["target"]
-        if pt and p > 0:
-            diff_pct = ((pt - p) / p) * 100
-            pt_line = f"• **Price Target:** `${pt:.2f} {curr}` ({'🔺' if diff_pct >= 0 else '🔻'} {diff_pct:+.1f}%)\n"
-            valid_pts.append(pt)
-        elif pt:
-            pt_line = f"• **Price Target:** `${pt:.2f} {curr}`\n"
-            valid_pts.append(pt)
-        else:
-            pt_line = "• **Price Target:** `In Research Note 📄`\n"
-
-        if r["tier"] == "BULLISH": tier_badge, bull_cnt = "🟢", bull_cnt + 1
-        elif r["tier"] == "NEUTRAL": tier_badge, neut_cnt = "🟡", neut_cnt + 1
-        else: tier_badge, caut_cnt = "🔴", caut_cnt + 1
-
-        clean_headline = re.sub(r'[\[\]]', '', r['headline'])
-        clean_link = r['link'] if r['link'].startswith("http") else f"https://finance.yahoo.com/quote/{sym}"
-
-        entries_txt += f"**{i}. {tier_badge} {r['badge']} {r['institution']}** — `{r['rating']}`\n{pt_line}• **Research:** [{clean_headline[:75]}...]({clean_link})\n• **Date:** `{r['date_str']}`\n\n"
-
-    embed.add_field(name="🎯 Institutional Targets & Rating Actions", value=entries_txt.strip()[:4000], inline=False)
+    valid_pts = [r["target"] for r in reports if r["target"]]
     spread_line = f"High: `${max(valid_pts):.2f}` | Low: `${min(valid_pts):.2f} {curr}`" if valid_pts else "Active Upgrades & Reiterations"
-    embed.add_field(name="📊 Institutional Consensus Overview", value=f"• **Distribution:** `{bull_cnt} Buy / Outperform` • `{neut_cnt} Hold` • `{caut_cnt} Cautious`\n• **Target Spread:** {spread_line}", inline=False)
-    embed.set_footer(text="Looney • Wall Street & Bay Street Research Intelligence (90-Day Freshness)")
-    return embed
+
+    for part_idx, chunk in enumerate(chunks, 1):
+        part_title = f"{base_title} [Part {part_idx}/{total_parts}]" if total_parts > 1 else base_title
+        embed = discord.Embed(
+            title=part_title,
+            description=f"**Current Price:** `{price_header}` | **Showing {len(reports)} Verified Bank Notes (Last 90 Days)**\n*Ranked from Highest Price Target to Lowest*\n\n",
+            color=0x2ecc71 if any(r["tier"] == "BULLISH" for r in reports) else 0x3498db
+        )
+
+        entries_txt = ""
+        start_num = (part_idx - 1) * chunk_size + 1
+        for j, r in enumerate(chunk):
+            pt = r["target"]
+            if pt and p > 0:
+                diff_pct = ((pt - p) / p) * 100
+                pt_line = f"• **Price Target:** `${pt:.2f} {curr}` ({'🔺' if diff_pct >= 0 else '🔻'} {diff_pct:+.1f}%)\n"
+            elif pt:
+                pt_line = f"• **Price Target:** `${pt:.2f} {curr}`\n"
+            else:
+                pt_line = "• **Price Target:** `In Research Note 📄`\n"
+
+            tier_badge = "🟢" if r["tier"] == "BULLISH" else ("🟡" if r["tier"] == "NEUTRAL" else "🔴")
+            clean_headline = re.sub(r'[\[\]]', '', r['headline'])
+            clean_link = r['link'] if r['link'].startswith("http") else f"https://finance.yahoo.com/quote/{sym}"
+
+            entries_txt += f"**{start_num + j}. {tier_badge} {r['badge']} {r['institution']}** — `{r['rating']}`\n{pt_line}• **Research:** [{clean_headline[:70]}...]({clean_link})\n• **Date:** `{r['date_str']}`\n\n"
+
+        embed.description += entries_txt.strip()
+        if part_idx == total_parts:
+            embed.add_field(name="📊 Institutional Target Spread", value=f"• **Target Spread:** {spread_line}", inline=False)
+        embed.set_footer(text=f"Looney • Institutional Research Intelligence (Part {part_idx} of {total_parts})")
+        embeds.append(embed)
+
+    return embeds
 
 # -------------------------------------------------------------
 # 5. ON-DEMAND OPTIONS DEEP-DIVE ENGINE (#TICKER)
@@ -693,11 +608,10 @@ def analyze_stock_options_setup(ticker_symbol):
         volumes = [v for v in indicators.get("volume", []) if v is not None]
         highs = [h for h in indicators.get("high", []) if h is not None]
         lows = [l for l in indicators.get("low", []) if l is not None]
-
         if len(closes) < 50: return None
 
         current_price = meta.get("regularMarketPrice") or closes[-1]
-        prev_close = meta.get("regularMarketPreviousClose") or closes[-2]
+        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
         sma_50 = sum(closes[-50:]) / 50
@@ -713,10 +627,8 @@ def analyze_stock_options_setup(ticker_symbol):
         expected_vol_so_far = avg_vol_20 * pacing_factor
         rvol = (vol_today / expected_vol_so_far) if expected_vol_so_far > 0 else 1.0
 
-        h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
-        p = (h_prev + l_prev + c_prev) / 3.0
-        r1, s1 = (2.0 * p) - l_prev, (2.0 * p) - h_prev
-
+        p = (highs[-2] + lows[-2] + closes[-2]) / 3.0
+        r1, s1 = (2.0 * p) - lows[-2], (2.0 * p) - highs[-2]
         hv_30 = calculate_historical_volatility(closes, 30)
         hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
         iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
@@ -822,7 +734,7 @@ def create_deep_dive_options_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 6. UNIFIED DISCORD BOT EVENT HANDLERS
+# 6. UNIFIED DISCORD EVENT HANDLERS
 # -------------------------------------------------------------
 @bot.event
 async def on_ready():
@@ -835,7 +747,7 @@ async def on_message(message):
 
     content = message.content.strip()
 
-    # TRIGGER 1: Institutional Research Radar on `%TICKER` (e.g. %NVDA, %TD.TO, %MU)
+    # TRIGGER 1: Institutional Research Radar on `%TICKER` (Multi-Part Embeds)
     if content.startswith("%") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -848,8 +760,10 @@ async def on_message(message):
                     if not data:
                         await message.channel.send(f"❌ No research data found for `{raw_ticker}`.")
                         return
-                    embed = create_institutional_radar_embed(data)
-                    await message.channel.send(embed=embed)
+                    embeds = create_institutional_radar_embeds(data)
+                    for embed in embeds:
+                        await message.channel.send(embed=embed)
+                        await asyncio.sleep(0.4)
                 except Exception as e:
                     await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
@@ -923,8 +837,10 @@ async def analyst_command(ctx, ticker: str):
         if err:
             await ctx.send(f"❌ {err}")
             return
-        embed = create_institutional_radar_embed(data)
-        await ctx.send(embed=embed)
+        embeds = create_institutional_radar_embeds(data)
+        for embed in embeds:
+            await ctx.send(embed=embed)
+            await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
 # 7. ENTRYPOINT
