@@ -92,10 +92,6 @@ def format_large_number(num):
 
 # --- INSTITUTIONAL U-CURVE VOLUME PACING ENGINE ---
 def get_intraday_volume_pacing_factor(now_ny):
-    """
-    Calculates expected cumulative volume fraction based on the 
-    historical U-shaped intraday volume distribution (9:30 AM - 4:00 PM EST).
-    """
     if now_ny.weekday() > 4:
         return 1.0
 
@@ -318,6 +314,7 @@ def get_on_demand_data(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
+        # --- TIME-WEIGHTED PACED RVOL ---
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -842,28 +839,92 @@ def fetch_institutional_research_radar(ticker_symbol):
     base_sym = sym.replace(".TO", "").replace(".V", "").upper()
 
     now_ny = datetime.now(NY_TZ)
-    cutoff_time = now_ny - timedelta(days=90)  # Max 90 Days Recency Filter
+    cutoff_time = now_ny - timedelta(days=90)
 
     try:
-        # Step 1: Real-time Live Price
         current_price = 0.0
-        company_name = sym
+        company_name = base_sym
+        t_obj = yf.Ticker(sym)
+
         try:
-            t_obj = yf.Ticker(sym, session=http_session)
             fi = t_obj.fast_info
             current_price = float(fi.last_price or 0.0)
-            company_name = str(fi.name or sym).split()[0]
+            company_name = str(fi.name or base_sym).split()[0]
         except Exception:
             pass
 
-        # Step 2: Query multi-feed search engines in parallel
+        seen_banks = {}
+
+        # -------------------------------------------------------------
+        # SOURCE 1: Official yfinance Upgrades & Downgrades Feed (Last 90 Days)
+        # -------------------------------------------------------------
+        try:
+            ud_df = t_obj.upgrades_downgrades
+            if ud_df is not None and not ud_df.empty:
+                # Filter last 90 days
+                for idx, row in ud_df.iterrows():
+                    row_dt = idx if isinstance(idx, (datetime, pd.Timestamp)) else None
+                    if row_dt:
+                        if row_dt.tzinfo is None:
+                            row_dt = row_dt.replace(tzinfo=NY_TZ)
+                        if row_dt < cutoff_time:
+                            continue
+                    
+                    firm_name = str(row.get("Firm", "") or "")
+                    to_grade = str(row.get("ToGrade", "") or "")
+                    action = str(row.get("Action", "") or "")
+
+                    matched_inst = None
+                    inst_badge = "🏦"
+                    for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
+                        if re.search(rf'\b{re.escape(key_name)}\b', firm_name, re.IGNORECASE):
+                            matched_inst = full_name
+                            inst_badge = badge
+                            break
+
+                    if not matched_inst:
+                        matched_inst = firm_name if len(firm_name) > 2 else "Wall Street Bank"
+
+                    low_grade = (to_grade + " " + action).lower()
+                    if any(b in low_grade for b in ["buy", "outperform", "overweight", "up", "top pick"]):
+                        rating_str = f"{to_grade or 'Outperform'} 🟢"
+                        tier = "BULLISH"
+                    elif any(b in low_grade for b in ["sell", "underperform", "underweight", "down"]):
+                        rating_str = f"{to_grade or 'Underperform'} 🔴"
+                        tier = "CAUTIOUS"
+                    else:
+                        rating_str = f"{to_grade or 'Hold'} 🟡"
+                        tier = "NEUTRAL"
+
+                    date_str = row_dt.strftime("%b %d, %Y") if row_dt else "Recent Action"
+
+                    entry = {
+                        "institution": matched_inst,
+                        "badge": inst_badge,
+                        "rating": rating_str,
+                        "tier": tier,
+                        "target": None,
+                        "headline": f"{matched_inst} {action.capitalize() if action else 'rates'} {base_sym} to {to_grade}",
+                        "link": f"https://finance.yahoo.com/quote/{sym}/community",
+                        "date_str": date_str,
+                        "pub_dt": row_dt or now_ny
+                    }
+
+                    if matched_inst not in seen_banks:
+                        seen_banks[matched_inst] = entry
+        except Exception:
+            pass
+
+        # -------------------------------------------------------------
+        # SOURCE 2: Multi-Feed Web Search with Dollar Price Targets
+        # -------------------------------------------------------------
         raw_reports = []
 
         def search_yahoo():
             items = []
             try:
                 ts_ms = int(time.time() * 1000)
-                url = f"https://query2.finance.yahoo.com/v1/finance/search?q={base_sym}+price+target+analyst&newsCount=20&_={ts_ms}"
+                url = f"https://query2.finance.yahoo.com/v1/finance/search?q={base_sym}+analyst+price+target&newsCount=20&_={ts_ms}"
                 res = http_session.get(url, timeout=4)
                 if res.status_code == 200:
                     for n in res.json().get("news", []):
@@ -887,7 +948,7 @@ def fetch_institutional_research_radar(ticker_symbol):
         def search_google_rss():
             items = []
             try:
-                g_url = f"https://news.google.com/rss/search?q={base_sym}+OR+{sym}+analyst+price+target&hl=en-US&gl=US&ceid=US:en"
+                g_url = f"https://news.google.com/rss/search?q={base_sym}+price+target+OR+analyst+rating&hl=en-US&gl=US&ceid=US:en"
                 res = http_session.get(g_url, timeout=4)
                 if res.status_code == 200:
                     root = ET.fromstring(res.content)
@@ -914,25 +975,19 @@ def fetch_institutional_research_radar(ticker_symbol):
             raw_reports.extend(f_y.result())
             raw_reports.extend(f_g.result())
 
-        # Step 3: Strict Relevance, Recency & Price Target Extraction
-        valid_bank_targets = []
-        seen_banks = {}
-
         for rep in raw_reports:
             t_text = rep["title"]
             pub_dt = rep.get("pub_dt")
 
-            # 90-Day Freshness Filter
             if pub_dt and pub_dt < cutoff_time:
                 continue
 
-            # Strict Ticker / Company Name Relevance Filter
+            # Must mention ticker or company name
             if not (re.search(rf'\b{re.escape(base_sym)}\b', t_text, re.IGNORECASE) or 
                     re.search(rf'\b{re.escape(sym)}\b', t_text, re.IGNORECASE) or 
                     (len(company_name) > 3 and re.search(rf'\b{re.escape(company_name)}\b', t_text, re.IGNORECASE))):
                 continue
 
-            # Strict Institution Matcher
             matched_inst = None
             inst_badge = "🏦"
             for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
@@ -942,51 +997,41 @@ def fetch_institutional_research_radar(ticker_symbol):
                     break
 
             if not matched_inst:
-                continue  # Must be a recognized Tier-1 Wall/Bay Street firm
+                if any(w in t_text.lower() for w in ["price target", "analyst", "upgrade", "downgrade", "outperform"]):
+                    matched_inst = rep["provider"] if rep["provider"] not in ["Financial Wire", "News Wire"] else "Wall Street Desk"
+                else:
+                    continue
 
-            # Strict Price Target Dollar Extraction
+            # Extract Price Target ($)
             pt_val = None
-            pt_match = re.search(r'(?:target|pt|to)\s*(?:of|is|at|to|from\s*\$[\d\.]+\s*to)?\s*\$?([\d,]+(?:\.\d{2})?)', t_text, re.IGNORECASE)
+            pt_match = re.search(r'(?:target|pt|to|price target)\s*(?:of|is|at|to|from\s*\$[\d\.]+\s*to)?\s*\$?([\d,]+(?:\.\d{2})?)', t_text, re.IGNORECASE)
             if pt_match:
                 try:
                     cand_pt = float(pt_match.group(1).replace(',', ''))
-                    # Sanity bounds: must be reasonable relative to price and not a calendar year
                     if cand_pt not in [2024, 2025, 2026, 2027]:
                         if current_price == 0 or (0.1 * current_price <= cand_pt <= 8.0 * current_price):
                             pt_val = cand_pt
                 except Exception:
                     pass
 
-            if not pt_val:
-                continue  # Mandatory Price Target rule
-
-            # Classify Rating Stance
             low_t = t_text.lower()
-            if any(b in low_t for b in ["strong buy", "conviction buy"]):
-                rating_str = "Strong Buy"
+            if any(b in low_t for b in ["strong buy", "conviction buy", "top pick", "outperform", "overweight", "raises target", "boosts target", "upgrade"]):
+                rating_str = "Outperform / Buy 🟢"
                 tier = "BULLISH"
-            elif any(b in low_t for b in ["upgrade", "upgrades", "upgraded", "outperform", "overweight", "top pick", "raises target", "boosts target", "lifted"]):
-                rating_str = "Outperform / Buy"
-                tier = "BULLISH"
-            elif any(b in low_t for b in ["downgrade", "downgrades", "downgraded", "underperform", "underweight", "cuts target", "lowers target", "slashes"]):
-                rating_str = "Underperform / Cautious"
+            elif any(b in low_t for b in ["downgrade", "underperform", "underweight", "cuts target", "lowers target", "sell"]):
+                rating_str = "Underperform / Cautious 🔴"
                 tier = "CAUTIOUS"
-            elif any(b in low_t for b in ["neutral", "hold", "equal-weight", "sector perform", "market perform", "maintains"]):
-                rating_str = "Hold / Neutral"
-                tier = "NEUTRAL"
             else:
-                # Color code based on target vs price
-                if current_price > 0 and pt_val > current_price * 1.05:
-                    rating_str = "Target Raised / Buy"
+                if current_price > 0 and pt_val and pt_val > current_price * 1.05:
+                    rating_str = "Target Raised 🟢"
                     tier = "BULLISH"
-                elif current_price > 0 and pt_val < current_price * 0.95:
-                    rating_str = "Target Lowered / Cautious"
+                elif current_price > 0 and pt_val and pt_val < current_price * 0.95:
+                    rating_str = "Target Lowered 🔴"
                     tier = "CAUTIOUS"
                 else:
-                    rating_str = "Maintains Target"
+                    rating_str = "Hold / Neutral 🟡"
                     tier = "NEUTRAL"
 
-            # Format Date
             date_str = pub_dt.strftime("%b %d, %Y") if pub_dt else "Recent Note"
 
             entry = {
@@ -998,29 +1043,31 @@ def fetch_institutional_research_radar(ticker_symbol):
                 "headline": t_text,
                 "link": rep["link"],
                 "date_str": date_str,
-                "pub_dt": pub_dt or datetime.now(NY_TZ)
+                "pub_dt": pub_dt or now_ny
             }
 
-            # Deduplicate by institution (keep the newest report per firm)
+            # Prioritize entries that have exact dollar price targets
             if matched_inst in seen_banks:
-                if pub_dt and pub_dt > seen_banks[matched_inst]["pub_dt"]:
+                if pt_val and not seen_banks[matched_inst]["target"]:
+                    seen_banks[matched_inst] = entry
+                elif pub_dt and pub_dt > seen_banks[matched_inst]["pub_dt"]:
                     seen_banks[matched_inst] = entry
             else:
                 seen_banks[matched_inst] = entry
 
-        valid_bank_targets = list(seen_banks.values())
+        valid_reports = list(seen_banks.values())
 
-        if not valid_bank_targets:
-            return None, f"No verified institutional price targets found for `{sym}` in the last 90 days."
+        if not valid_reports:
+            return None, f"No verified institutional research notes found for `{sym}` in the last 90 days."
 
-        # Step 4: Sort Unified List from Highest Price Target to Lowest
-        valid_bank_targets.sort(key=lambda x: x["target"], reverse=True)
+        # Sort: First by Price Target Descending (Highest targets at top), then by date
+        valid_reports.sort(key=lambda x: (x["target"] is not None, x["target"] or 0, x["pub_dt"]), reverse=True)
 
         return {
             "ticker": sym,
             "current_price": current_price,
             "currency": currency,
-            "reports": valid_bank_targets[:10]  # Up to top 10 verified reports
+            "reports": valid_reports[:10]
         }, None
 
     except Exception as e:
@@ -1039,28 +1086,29 @@ def create_institutional_radar_embed(data):
     embed = discord.Embed(
         title=radar_title,
         description=(
-            f"**Current Price:** `{price_header}` | **Showing {len(reports)} Verified Bank Targets (Last 90 Days)**\n"
-            f"*Ranked in order from Highest Price Target to Lowest*"
+            f"**Current Price:** `{price_header}` | **Showing {len(reports)} Verified Institutional Research Actions (Last 90 Days)**\n"
+            f"*Ranked from Highest Price Target to Lowest*"
         ),
-        color=0x2ecc71 if (reports and reports[0]["target"] and reports[0]["target"] > p) else 0x3498db
+        color=0x2ecc71 if any(r["tier"] == "BULLISH" for r in reports) else 0x3498db
     )
 
-    # Build clean ranked entries
     entries_txt = ""
     bull_cnt, neut_cnt, caut_cnt = 0, 0, 0
+    valid_pts = []
 
     for i, r in enumerate(reports, 1):
         pt = r["target"]
-        
-        # Calculate percentage upside/downside vs live price
-        if p > 0 and pt:
+        if pt and p > 0:
             diff_pct = ((pt - p) / p) * 100
             tag = "🔺" if diff_pct >= 0 else "🔻"
-            pt_formatted = f"`${pt:.2f} {curr}` ({tag} {diff_pct:+.1f}%)"
+            pt_line = f"• **Price Target:** `${pt:.2f} {curr}` ({tag} {diff_pct:+.1f}%)\n"
+            valid_pts.append(pt)
+        elif pt:
+            pt_line = f"• **Price Target:** `${pt:.2f} {curr}`\n"
+            valid_pts.append(pt)
         else:
-            pt_formatted = f"`${pt:.2f} {curr}`"
+            pt_line = "• **Price Target:** `In Research Note 📄`\n"
 
-        # Tier badge
         if r["tier"] == "BULLISH":
             tier_badge = "🟢"
             bull_cnt += 1
@@ -1073,19 +1121,18 @@ def create_institutional_radar_embed(data):
 
         entries_txt += (
             f"**{i}. {tier_badge} {r['badge']} {r['institution']}** — `{r['rating']}`\n"
-            f"• **Price Target:** {pt_formatted}\n"
-            f"• **Research:** [{r['headline'][:80]}...]({r['link']})\n"
+            f"{pt_line}"
+            f"• **Research Note:** [{r['headline'][:80]}...]({r['link']})\n"
             f"• **Date:** `{r['date_str']}`\n\n"
         )
 
-    embed.add_field(name="🎯 Verified Institutional Price Targets (High ➔ Low)", value=entries_txt.strip()[:4000], inline=False)
+    embed.add_field(name="🎯 Institutional Targets & Rating Actions", value=entries_txt.strip()[:4000], inline=False)
 
     # Summary Line
-    hi_pt = reports[0]["target"]
-    lo_pt = reports[-1]["target"]
+    spread_line = f"High: `${max(valid_pts):.2f}` | Low: `${min(valid_pts):.2f} {curr}`" if valid_pts else "Active Upgrades & Reiterations"
     summary_text = (
         f"• **Distribution:** `{bull_cnt} Buy / Outperform` • `{neut_cnt} Hold` • `{caut_cnt} Cautious`\n"
-        f"• **Target Spread:** High: `${hi_pt:.2f} {curr}` | Low: `${lo_pt:.2f} {curr}`"
+        f"• **Target Spread:** {spread_line}"
     )
     embed.add_field(name="📊 Institutional Consensus Overview", value=summary_text, inline=False)
 
@@ -1388,28 +1435,4 @@ async def price_command(ctx, ticker: str):
 @bot.command(name="opt", aliases=["options", "play"])
 async def options_command(ctx, ticker: str):
     async with ctx.typing():
-        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
-        if not data:
-            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
-            return
-        embed = create_deep_dive_options_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="analyst", aliases=["research", "targets"])
-async def analyst_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embed = create_institutional_radar_embed(data)
-        await ctx.send(embed=embed)
-
-# -------------------------------------------------------------
-# 7. ENTRYPOINT
-# -------------------------------------------------------------
-if __name__ == "__main__":
-    if not BOT_TOKEN:
-        print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
-    else:
-        bot.run(BOT_TOKEN)
+        data = await asyncio.to_thread(analy
