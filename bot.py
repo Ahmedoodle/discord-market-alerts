@@ -171,15 +171,9 @@ def calculate_macd(closes):
     hist_prev = (macd_line[-2] - sig_line[-2]) if len(macd_line) >= 2 else hist_curr
 
     if curr_macd >= curr_sig:
-        if hist_curr >= hist_prev:
-            return "Bullish Momentum 🟢 (Signal Expanding Upward)"
-        else:
-            return "Bullish Trend 🟢 (Momentum Slowing)"
+        return "Bullish Momentum 🟢 (Signal Expanding Upward)" if hist_curr >= hist_prev else "Bullish Trend 🟢 (Momentum Slowing)"
     else:
-        if hist_curr <= hist_prev:
-            return "Bearish Momentum 🔴 (Expanding Downward)"
-        else:
-            return "Bearish Trend 🔴 (Weakening / Slowing)"
+        return "Bearish Momentum 🔴 (Expanding Downward)" if hist_curr <= hist_prev else "Bearish Trend 🔴 (Weakening / Slowing)"
 
 def calculate_atr(highs, lows, closes, period=14):
     if len(closes) < period + 1:
@@ -314,7 +308,7 @@ def get_on_demand_data(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # --- TIME-WEIGHTED PACED RVOL ---
+        # Time-Paced RVOL
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -839,7 +833,7 @@ def fetch_institutional_research_radar(ticker_symbol):
     base_sym = sym.replace(".TO", "").replace(".V", "").upper()
 
     now_ny = datetime.now(NY_TZ)
-    cutoff_time = now_ny - timedelta(days=90)  # 90-Day Freshness Filter
+    cutoff_time = now_ny - timedelta(days=90)
 
     try:
         current_price = 0.0
@@ -853,16 +847,12 @@ def fetch_institutional_research_radar(ticker_symbol):
         except Exception:
             pass
 
-        # Clean search keywords
         clean_company_short = re.sub(r'[\(\),.]|Inc|Corp|Ltd|Corporation|Company|Bank', '', company_name).strip()
         search_terms = list(dict.fromkeys([base_sym, sym, clean_company_short]))
         
         seen_banks = {}
 
-        # -------------------------------------------------------------
-        # STEP 1: Official Structured Upgrades/Downgrades Feed
-        # (Zero author ambiguity — directly associated with the stock)
-        # -------------------------------------------------------------
+        # 1. Official Structured Upgrades/Downgrades Feed
         try:
             ud_df = t_obj.upgrades_downgrades
             if ud_df is not None and not ud_df.empty:
@@ -919,9 +909,7 @@ def fetch_institutional_research_radar(ticker_symbol):
         except Exception:
             pass
 
-        # -------------------------------------------------------------
-        # STEP 2: Deep Web Search with Subject-Disambiguation
-        # -------------------------------------------------------------
+        # 2. Deep Web Search with Subject-Disambiguation
         raw_reports = []
 
         def search_yahoo():
@@ -979,7 +967,6 @@ def fetch_institutional_research_radar(ticker_symbol):
             raw_reports.extend(f_y.result())
             raw_reports.extend(f_g.result())
 
-        # Subject vs. Broker Disambiguation Filter
         for rep in raw_reports:
             t_text = rep["title"]
             pub_dt = rep.get("pub_dt")
@@ -987,14 +974,11 @@ def fetch_institutional_research_radar(ticker_symbol):
             if pub_dt and pub_dt < cutoff_time:
                 continue
 
-            # Check if this company is the SUBJECT of the article
-            # (e.g. for TD, discard "TD Cowen cuts target on Tesla")
+            # Subject Verification Filter
             is_subject = False
             for term in search_terms:
                 if len(term) >= 2 and re.search(rf'\b{re.escape(term)}\b', t_text, re.IGNORECASE):
-                    # Negative lookahead: Discard if TD is immediately followed by Cowen/Securities while discussing another stock
                     if term.upper() == "TD" and re.search(r'\bTD\s*(?:Cowen|Securities|Bank\s*Analyst)\s*(?:raises|cuts|maintains|lowers|sets|rates)\b', t_text, re.IGNORECASE):
-                        # Only accept if it also explicitly mentions Toronto-Dominion or TD shares
                         if not re.search(r'\b(?:Toronto[- ]Dominion|TD\s*stock|TD\s*shares|TD\.TO)\b', t_text, re.IGNORECASE):
                             continue
                     is_subject = True
@@ -1003,11 +987,9 @@ def fetch_institutional_research_radar(ticker_symbol):
             if not is_subject:
                 continue
 
-            # Identify reporting institution
             matched_inst = None
             inst_badge = "🏦"
             for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
-                # Make sure the bank isn't the subject when searching for other stocks
                 if re.search(rf'\b{re.escape(key_name)}\b', t_text, re.IGNORECASE):
                     matched_inst = full_name
                     inst_badge = badge
@@ -1019,7 +1001,7 @@ def fetch_institutional_research_radar(ticker_symbol):
                 else:
                     continue
 
-            # Extract Price Target ($)
+            # Extract Target
             pt_val = None
             pt_match = re.search(r'(?:target|pt|to|price target)\s*(?:of|is|at|to|from\s*\$[\d\.]+\s*to)?\s*\$?([\d,]+(?:\.\d{2})?)', t_text, re.IGNORECASE)
             if pt_match:
@@ -1076,7 +1058,6 @@ def fetch_institutional_research_radar(ticker_symbol):
         if not valid_reports:
             return None, f"No verified institutional research notes found for `{sym}` in the last 90 days."
 
-        # Sort from Highest Price Target to Lowest
         valid_reports.sort(key=lambda x: (x["target"] is not None, x["target"] or 0, x["pub_dt"]), reverse=True)
 
         return {
@@ -1137,10 +1118,13 @@ def create_institutional_radar_embed(data):
             tier_badge = "🔴"
             caut_cnt += 1
 
+        clean_headline = re.sub(r'[\[\]]', '', r['headline'])
+        clean_link = r['link'] if r['link'].startswith("http") else f"https://finance.yahoo.com/quote/{sym}"
+
         entries_txt += (
             f"**{i}. {tier_badge} {r['badge']} {r['institution']}** — `{r['rating']}`\n"
             f"{pt_line}"
-            f"• **Research:** [{r['headline'][:78]}...]({r['link']})\n"
+            f"• **Research:** [{clean_headline[:75]}...]({clean_link})\n"
             f"• **Date:** `{r['date_str']}`\n\n"
         )
 
@@ -1190,6 +1174,7 @@ def analyze_stock_options_setup(ticker_symbol):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
+        # Time-Paced RVOL
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
@@ -1394,12 +1379,19 @@ async def on_message(message):
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
             async with message.channel.typing():
-                data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
-                if err:
-                    await message.channel.send(f"❌ {err}")
-                    return
-                embed = create_institutional_radar_embed(data)
-                await message.channel.send(embed=embed)
+                try:
+                    data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
+                    if err:
+                        await message.channel.send(f"❌ {err}")
+                        return
+                    if not data:
+                        await message.channel.send(f"❌ No research data found for `{raw_ticker}`.")
+                        return
+                    embed = create_institutional_radar_embed(data)
+                    await message.channel.send(embed=embed)
+                except Exception as e:
+                    print(f"[RADAR ERROR] {e}")
+                    await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
 
     # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
@@ -1407,72 +1399,10 @@ async def on_message(message):
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
             async with message.channel.typing():
-                data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
-                if not data:
-                    await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
-                    return
-                embed = create_deep_dive_options_embed(data)
-                await message.channel.send(embed=embed)
-                return
-
-    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
-    if content.startswith("!") or content.startswith("$"):
-        raw_cmd = content[1:].strip()
-        first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
-
-        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research"]:
-            await bot.process_commands(message)
-            return
-
-        potential_ticker = raw_cmd.split()[0].upper()
-        if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
-            async with message.channel.typing():
-                data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
-                if err:
-                    await message.channel.send(f"❌ {err}")
-                    return
-                embed = create_market_embed(data)
-                await message.channel.send(embed=embed)
-                return
-
-    await bot.process_commands(message)
-
-# Fallback Commands
-@bot.command(name="price", aliases=["p", "four", "check"])
-async def price_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(get_on_demand_data, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embed = create_market_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="opt", aliases=["options", "play"])
-async def options_command(ctx, ticker: str):
-    async with ctx.typing():
-        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
-        if not data:
-            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
-            return
-        embed = create_deep_dive_options_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="analyst", aliases=["research", "targets"])
-async def analyst_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embed = create_institutional_radar_embed(data)
-        await ctx.send(embed=embed)
-
-# -------------------------------------------------------------
-# 7. ENTRYPOINT
-# -------------------------------------------------------------
-if __name__ == "__main__":
-    if not BOT_TOKEN:
-        print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
-    else:
-        bot.run(BOT_TOKEN)
+                try:
+                    data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
+                    if not data:
+                        await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
+                        return
+                    embed = create_deep_dive_options_embed(data)
+                    await message.channel.
