@@ -867,4 +867,105 @@ async def on_message(message):
     content = message.content.strip()
 
     # TRIGGER 1: Institutional Research Radar on `%TICKER` (Multi-Part Embeds)
-    if content.startswith("%") and len(conte
+    if content.startswith("%") and len(content) >= 2:
+        raw_ticker = content[1:].split()[0].upper().replace("$", "")
+        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            async with message.channel.typing():
+                try:
+                    data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
+                    if err:
+                        await message.channel.send(f"❌ {err}")
+                        return
+                    if not data:
+                        await message.channel.send(f"❌ No research data found for `{raw_ticker}`.")
+                        return
+                    embeds = create_institutional_radar_embeds(data)
+                    for embed in embeds:
+                        await message.channel.send(embed=embed)
+                        await asyncio.sleep(0.4)
+                except Exception as e:
+                    await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
+                return
+
+    # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
+    if content.startswith("#") and len(content) >= 2:
+        raw_ticker = content[1:].split()[0].upper().replace("$", "")
+        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            async with message.channel.typing():
+                try:
+                    data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
+                    if not data:
+                        await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
+                        return
+                    embed = create_deep_dive_options_embed(data)
+                    await message.channel.send(embed=embed)
+                except Exception as e:
+                    await message.channel.send(f"❌ Options Error: {e}")
+                return
+
+    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
+    if content.startswith("!") or content.startswith("$"):
+        raw_cmd = content[1:].strip()
+        first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
+
+        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research"]:
+            await bot.process_commands(message)
+            return
+
+        potential_ticker = raw_cmd.split()[0].upper()
+        if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
+            async with message.channel.typing():
+                try:
+                    data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
+                    if err:
+                        await message.channel.send(f"❌ {err}")
+                        return
+                    embed = create_market_embed(data)
+                    await message.channel.send(embed=embed)
+                except Exception as e:
+                    await message.channel.send(f"❌ Snapshot Error: {e}")
+                return
+
+    await bot.process_commands(message)
+
+# Fallback Commands
+@bot.command(name="price", aliases=["p", "four", "check"])
+async def price_command(ctx, ticker: str):
+    async with ctx.typing():
+        data, err = await asyncio.to_thread(get_on_demand_data, ticker)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        embed = create_market_embed(data)
+        await ctx.send(embed=embed)
+
+@bot.command(name="opt", aliases=["options", "play"])
+async def options_command(ctx, ticker: str):
+    async with ctx.typing():
+        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
+        if not data:
+            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
+            return
+        embed = create_deep_dive_options_embed(data)
+        await ctx.send(embed=embed)
+
+@bot.command(name="analyst", aliases=["research", "targets"])
+async def analyst_command(ctx, ticker: str):
+    async with ctx.typing():
+        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        embeds = create_institutional_radar_embeds(data)
+        for embed in embeds:
+            await ctx.send(embed=embed)
+            await asyncio.sleep(0.4)
+
+# -------------------------------------------------------------
+# 7. ENTRYPOINT
+# -------------------------------------------------------------
+if __name__ == "__main__":
+    if not BOT_TOKEN:
+        print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
+    else:
+        bot.run(BOT_TOKEN)
