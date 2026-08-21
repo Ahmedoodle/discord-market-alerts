@@ -4,10 +4,9 @@ import asyncio
 import math
 import re
 import time
-import concurrent.futures
 import xml.etree.ElementTree as ET
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time as dtime
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 import requests
@@ -61,6 +60,14 @@ http_session.headers.update({
     "Accept-Language": "en-US,en;q=0.9"
 })
 
+nasdaq_session = requests.Session()
+nasdaq_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://www.nasdaq.com",
+    "Referer": "https://www.nasdaq.com/"
+})
+
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NY_TZ = ZoneInfo("America/New_York")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
@@ -81,6 +88,42 @@ def format_large_number(num):
     elif num >= 1e3:
         return f"${num / 1e3:.1f}K"
     return str(int(num))
+
+# --- INSTITUTIONAL U-CURVE VOLUME PACING ENGINE ---
+def get_intraday_volume_pacing_factor(now_ny):
+    """
+    Calculates expected cumulative volume fraction based on the 
+    historical U-shaped intraday volume distribution (9:30 AM - 4:00 PM EST).
+    """
+    if now_ny.weekday() > 4:
+        return 1.0  # Weekend: full day comparison
+
+    t = now_ny.time()
+    market_open = dtime(9, 30)
+    market_close = dtime(16, 0)
+
+    # Pre-market
+    if t < market_open:
+        return 0.05  # Pre-market volume baseline (~5% of normal day)
+    
+    # After-hours / Post-market
+    if t >= market_close:
+        return 1.0  # Full trading day elapsed
+
+    # Minutes elapsed since 9:30 AM (1 to 390)
+    minutes_elapsed = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
+
+    # Institutional U-Curve Cumulative Distribution
+    if minutes_elapsed <= 30:       # 9:30 AM - 10:00 AM (Opening Rush: 2% to 18%)
+        return 0.02 + (minutes_elapsed / 30.0) * 0.16
+    elif minutes_elapsed <= 60:     # 10:00 AM - 10:30 AM (18% to 32%)
+        return 0.18 + ((minutes_elapsed - 30) / 30.0) * 0.14
+    elif minutes_elapsed <= 180:    # 10:30 AM - 12:30 PM (Midday slowing: 32% to 54%)
+        return 0.32 + ((minutes_elapsed - 60) / 120.0) * 0.22
+    elif minutes_elapsed <= 300:    # 12:30 PM - 2:30 PM (Lunch lull: 54% to 72%)
+        return 0.54 + ((minutes_elapsed - 180) / 120.0) * 0.18
+    else:                           # 2:30 PM - 4:00 PM (Power Hour: 72% to 100%)
+        return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
 
 # --- MATHEMATICAL INDICATOR ENGINES ---
 def calculate_rsi(closes, period=14):
@@ -242,6 +285,7 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
     is_canadian = ticker_symbol.endswith(".TO") or ticker_symbol.endswith(".V")
+    now_ny = datetime.now(NY_TZ)
 
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y&events=div"
@@ -278,6 +322,7 @@ def get_on_demand_data(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
+        # --- TIME-WEIGHTED PACED RVOL (ACCURATE MORNING/AFTERNOON) ---
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -285,9 +330,16 @@ def get_on_demand_data(ticker_symbol):
         avg_vol_50 = (sum(volumes[-51:-1]) / len(volumes[-51:-1])) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
         avg_vol_90 = (sum(volumes[-91:-1]) / len(volumes[-91:-1])) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
 
-        rvol_20 = (vol_today / avg_vol_20) if avg_vol_20 else None
-        rvol_50 = (vol_today / avg_vol_50) if avg_vol_50 else None
-        rvol_90 = (vol_today / avg_vol_90) if avg_vol_90 else None
+        pacing_factor = get_intraday_volume_pacing_factor(now_ny)
+
+        # Expected volume by this exact minute
+        exp_vol_20 = (avg_vol_20 * pacing_factor) if avg_vol_20 else None
+        exp_vol_50 = (avg_vol_50 * pacing_factor) if avg_vol_50 else None
+        exp_vol_90 = (avg_vol_90 * pacing_factor) if avg_vol_90 else None
+
+        rvol_20 = (vol_today / exp_vol_20) if exp_vol_20 and exp_vol_20 > 0 else None
+        rvol_50 = (vol_today / exp_vol_50) if exp_vol_50 and exp_vol_50 > 0 else None
+        rvol_90 = (vol_today / exp_vol_90) if exp_vol_90 and exp_vol_90 > 0 else None
 
         volume_block = (
             f"• **Today's Vol:** `{v_today_fmt}`\n"
@@ -976,6 +1028,7 @@ def create_institutional_radar_embed(data):
 # -------------------------------------------------------------
 def analyze_stock_options_setup(ticker_symbol):
     sym = ticker_symbol.upper().strip()
+    now_ny = datetime.now(NY_TZ)
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1y"
         res = http_session.get(url, timeout=6)
@@ -1004,9 +1057,12 @@ def analyze_stock_options_setup(ticker_symbol):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
+        # --- TIME-WEIGHTED PACED RVOL FOR ACCURATE OPTIONS SCORING ---
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
-        rvol = (vol_today / avg_vol_20) if avg_vol_20 > 0 else 1.0
+        pacing_factor = get_intraday_volume_pacing_factor(now_ny)
+        expected_vol_so_far = avg_vol_20 * pacing_factor
+        rvol = (vol_today / expected_vol_so_far) if expected_vol_so_far > 0 else 1.0
 
         h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
         p = (h_prev + l_prev + c_prev) / 3.0
@@ -1019,6 +1075,7 @@ def analyze_stock_options_setup(ticker_symbol):
 
         bull_score, bear_score = 0, 0
 
+        # 1. Trend (25 pts)
         if current_price >= sma_50 and current_price >= sma_200:
             bull_score += 25
         elif current_price >= sma_50:
@@ -1028,6 +1085,7 @@ def analyze_stock_options_setup(ticker_symbol):
         elif current_price < sma_50:
             bear_score += 15
 
+        # 2. RSI (20 pts)
         if 52 <= rsi_14 <= 68:
             bull_score += 20
         elif rsi_14 > 68:
@@ -1037,6 +1095,7 @@ def analyze_stock_options_setup(ticker_symbol):
         elif rsi_14 < 32:
             bear_score += 10
 
+        # 3. MACD (20 pts)
         if "Bullish Momentum" in str(macd_verdict):
             bull_score += 20
         elif "Bullish" in str(macd_verdict):
@@ -1046,6 +1105,7 @@ def analyze_stock_options_setup(ticker_symbol):
         elif "Bearish" in str(macd_verdict):
             bear_score += 12
 
+        # 4. Volume (15 pts) - Powered by Time-Weighted RVOL
         if rvol >= 1.5:
             bull_score += 15 if change_pct >= 0 else 0
             bear_score += 15 if change_pct < 0 else 0
@@ -1056,6 +1116,7 @@ def analyze_stock_options_setup(ticker_symbol):
             bull_score += 5
             bear_score += 5
 
+        # 5. Volatility Match (20 pts)
         if bull_score >= bear_score:
             bull_score += 20 if iv_rank_est < 35 else (18 if iv_rank_est > 50 else 12)
         else:
@@ -1171,7 +1232,7 @@ def create_deep_dive_options_embed(data):
     diag_text = (
         f"• **Trend Health:** Above 50D SMA (`${data['sma_50']:.2f}`) & 200D SMA (`${data['sma_200']:.2f}`)\n"
         f"• **Momentum:** RSI-14: `{data['rsi_14']:.1f}` | MACD: `{data['macd_verdict']}`\n"
-        f"• **Volume & Volatility:** RVOL: `{data['rvol']:.1f}x` | IV Rank: `{data['iv_rank']}%` ({'Cheap / Buy Premium' if data['iv_rank'] < 40 else 'Expensive / Sell Premium'})\n"
+        f"• **Volume & Volatility:** RVOL: `{data['rvol']:.1f}x (Time-Paced)` | IV Rank: `{data['iv_rank']}%` ({'Cheap / Buy Premium' if data['iv_rank'] < 40 else 'Expensive / Sell Premium'})\n"
         f"• **Key Levels:** Support (S1): `${data['s1']:.2f}` | Resistance (R1): `${data['r1']:.2f}`"
     )
     embed.add_field(name="📊 Technical & Volatility Environment", value=diag_text, inline=False)
