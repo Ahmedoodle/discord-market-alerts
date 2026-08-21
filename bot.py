@@ -778,7 +778,7 @@ def create_market_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 4. STRICT 90-DAY INSTITUTIONAL RESEARCH RADAR (%TICKER)
+# 4. SMART DISAMBIGUATING INSTITUTIONAL RESEARCH RADAR (%TICKER)
 # -------------------------------------------------------------
 INSTITUTION_REGISTRY = {
     "Rosenblatt": ("Rosenblatt Securities", "🏦"),
@@ -839,7 +839,7 @@ def fetch_institutional_research_radar(ticker_symbol):
     base_sym = sym.replace(".TO", "").replace(".V", "").upper()
 
     now_ny = datetime.now(NY_TZ)
-    cutoff_time = now_ny - timedelta(days=90)
+    cutoff_time = now_ny - timedelta(days=90)  # 90-Day Freshness Filter
 
     try:
         current_price = 0.0
@@ -849,19 +849,23 @@ def fetch_institutional_research_radar(ticker_symbol):
         try:
             fi = t_obj.fast_info
             current_price = float(fi.last_price or 0.0)
-            company_name = str(fi.name or base_sym).split()[0]
+            company_name = str(fi.name or base_sym)
         except Exception:
             pass
 
+        # Clean search keywords
+        clean_company_short = re.sub(r'[\(\),.]|Inc|Corp|Ltd|Corporation|Company|Bank', '', company_name).strip()
+        search_terms = list(dict.fromkeys([base_sym, sym, clean_company_short]))
+        
         seen_banks = {}
 
         # -------------------------------------------------------------
-        # SOURCE 1: Official yfinance Upgrades & Downgrades Feed (Last 90 Days)
+        # STEP 1: Official Structured Upgrades/Downgrades Feed
+        # (Zero author ambiguity — directly associated with the stock)
         # -------------------------------------------------------------
         try:
             ud_df = t_obj.upgrades_downgrades
             if ud_df is not None and not ud_df.empty:
-                # Filter last 90 days
                 for idx, row in ud_df.iterrows():
                     row_dt = idx if isinstance(idx, (datetime, pd.Timestamp)) else None
                     if row_dt:
@@ -886,10 +890,10 @@ def fetch_institutional_research_radar(ticker_symbol):
                         matched_inst = firm_name if len(firm_name) > 2 else "Wall Street Bank"
 
                     low_grade = (to_grade + " " + action).lower()
-                    if any(b in low_grade for b in ["buy", "outperform", "overweight", "up", "top pick"]):
+                    if any(b in low_grade for b in ["buy", "outperform", "overweight", "up", "top pick", "positive"]):
                         rating_str = f"{to_grade or 'Outperform'} 🟢"
                         tier = "BULLISH"
-                    elif any(b in low_grade for b in ["sell", "underperform", "underweight", "down"]):
+                    elif any(b in low_grade for b in ["sell", "underperform", "underweight", "down", "negative"]):
                         rating_str = f"{to_grade or 'Underperform'} 🔴"
                         tier = "CAUTIOUS"
                     else:
@@ -904,8 +908,8 @@ def fetch_institutional_research_radar(ticker_symbol):
                         "rating": rating_str,
                         "tier": tier,
                         "target": None,
-                        "headline": f"{matched_inst} {action.capitalize() if action else 'rates'} {base_sym} to {to_grade}",
-                        "link": f"https://finance.yahoo.com/quote/{sym}/community",
+                        "headline": f"{matched_inst} {action.capitalize() if action else 'rates'} {clean_company_short} to {to_grade}",
+                        "link": f"https://finance.yahoo.com/quote/{sym}",
                         "date_str": date_str,
                         "pub_dt": row_dt or now_ny
                     }
@@ -916,7 +920,7 @@ def fetch_institutional_research_radar(ticker_symbol):
             pass
 
         # -------------------------------------------------------------
-        # SOURCE 2: Multi-Feed Web Search with Dollar Price Targets
+        # STEP 2: Deep Web Search with Subject-Disambiguation
         # -------------------------------------------------------------
         raw_reports = []
 
@@ -924,7 +928,7 @@ def fetch_institutional_research_radar(ticker_symbol):
             items = []
             try:
                 ts_ms = int(time.time() * 1000)
-                url = f"https://query2.finance.yahoo.com/v1/finance/search?q={base_sym}+analyst+price+target&newsCount=20&_={ts_ms}"
+                url = f"https://query2.finance.yahoo.com/v1/finance/search?q={clean_company_short}+price+target+analyst&newsCount=25&_={ts_ms}"
                 res = http_session.get(url, timeout=4)
                 if res.status_code == 200:
                     for n in res.json().get("news", []):
@@ -948,11 +952,11 @@ def fetch_institutional_research_radar(ticker_symbol):
         def search_google_rss():
             items = []
             try:
-                g_url = f"https://news.google.com/rss/search?q={base_sym}+price+target+OR+analyst+rating&hl=en-US&gl=US&ceid=US:en"
+                g_url = f"https://news.google.com/rss/search?q={clean_company_short}+price+target+OR+analyst+rating&hl=en-US&gl=US&ceid=US:en"
                 res = http_session.get(g_url, timeout=4)
                 if res.status_code == 200:
                     root = ET.fromstring(res.content)
-                    for item in root.findall(".//item")[:20]:
+                    for item in root.findall(".//item")[:25]:
                         title = item.findtext("title")
                         link = item.findtext("link")
                         pub_date_str = item.findtext("pubDate")
@@ -975,6 +979,7 @@ def fetch_institutional_research_radar(ticker_symbol):
             raw_reports.extend(f_y.result())
             raw_reports.extend(f_g.result())
 
+        # Subject vs. Broker Disambiguation Filter
         for rep in raw_reports:
             t_text = rep["title"]
             pub_dt = rep.get("pub_dt")
@@ -982,15 +987,27 @@ def fetch_institutional_research_radar(ticker_symbol):
             if pub_dt and pub_dt < cutoff_time:
                 continue
 
-            # Must mention ticker or company name
-            if not (re.search(rf'\b{re.escape(base_sym)}\b', t_text, re.IGNORECASE) or 
-                    re.search(rf'\b{re.escape(sym)}\b', t_text, re.IGNORECASE) or 
-                    (len(company_name) > 3 and re.search(rf'\b{re.escape(company_name)}\b', t_text, re.IGNORECASE))):
+            # Check if this company is the SUBJECT of the article
+            # (e.g. for TD, discard "TD Cowen cuts target on Tesla")
+            is_subject = False
+            for term in search_terms:
+                if len(term) >= 2 and re.search(rf'\b{re.escape(term)}\b', t_text, re.IGNORECASE):
+                    # Negative lookahead: Discard if TD is immediately followed by Cowen/Securities while discussing another stock
+                    if term.upper() == "TD" and re.search(r'\bTD\s*(?:Cowen|Securities|Bank\s*Analyst)\s*(?:raises|cuts|maintains|lowers|sets|rates)\b', t_text, re.IGNORECASE):
+                        # Only accept if it also explicitly mentions Toronto-Dominion or TD shares
+                        if not re.search(r'\b(?:Toronto[- ]Dominion|TD\s*stock|TD\s*shares|TD\.TO)\b', t_text, re.IGNORECASE):
+                            continue
+                    is_subject = True
+                    break
+
+            if not is_subject:
                 continue
 
+            # Identify reporting institution
             matched_inst = None
             inst_badge = "🏦"
             for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
+                # Make sure the bank isn't the subject when searching for other stocks
                 if re.search(rf'\b{re.escape(key_name)}\b', t_text, re.IGNORECASE):
                     matched_inst = full_name
                     inst_badge = badge
@@ -998,7 +1015,7 @@ def fetch_institutional_research_radar(ticker_symbol):
 
             if not matched_inst:
                 if any(w in t_text.lower() for w in ["price target", "analyst", "upgrade", "downgrade", "outperform"]):
-                    matched_inst = rep["provider"] if rep["provider"] not in ["Financial Wire", "News Wire"] else "Wall Street Desk"
+                    matched_inst = rep["provider"] if rep["provider"] not in ["Financial Wire", "News Wire", "Yahoo Finance"] else "Institutional Consensus"
                 else:
                     continue
 
@@ -1009,16 +1026,16 @@ def fetch_institutional_research_radar(ticker_symbol):
                 try:
                     cand_pt = float(pt_match.group(1).replace(',', ''))
                     if cand_pt not in [2024, 2025, 2026, 2027]:
-                        if current_price == 0 or (0.1 * current_price <= cand_pt <= 8.0 * current_price):
+                        if current_price == 0 or (0.1 * current_price <= cand_pt <= 6.0 * current_price):
                             pt_val = cand_pt
                 except Exception:
                     pass
 
             low_t = t_text.lower()
-            if any(b in low_t for b in ["strong buy", "conviction buy", "top pick", "outperform", "overweight", "raises target", "boosts target", "upgrade"]):
+            if any(b in low_t for b in ["strong buy", "conviction buy", "top pick", "outperform", "overweight", "raises target", "boosts target", "upgrade", "bullish"]):
                 rating_str = "Outperform / Buy 🟢"
                 tier = "BULLISH"
-            elif any(b in low_t for b in ["downgrade", "underperform", "underweight", "cuts target", "lowers target", "sell"]):
+            elif any(b in low_t for b in ["downgrade", "underperform", "underweight", "cuts target", "lowers target", "sell", "bearish"]):
                 rating_str = "Underperform / Cautious 🔴"
                 tier = "CAUTIOUS"
             else:
@@ -1046,7 +1063,6 @@ def fetch_institutional_research_radar(ticker_symbol):
                 "pub_dt": pub_dt or now_ny
             }
 
-            # Prioritize entries that have exact dollar price targets
             if matched_inst in seen_banks:
                 if pt_val and not seen_banks[matched_inst]["target"]:
                     seen_banks[matched_inst] = entry
@@ -1060,11 +1076,12 @@ def fetch_institutional_research_radar(ticker_symbol):
         if not valid_reports:
             return None, f"No verified institutional research notes found for `{sym}` in the last 90 days."
 
-        # Sort: First by Price Target Descending (Highest targets at top), then by date
+        # Sort from Highest Price Target to Lowest
         valid_reports.sort(key=lambda x: (x["target"] is not None, x["target"] or 0, x["pub_dt"]), reverse=True)
 
         return {
             "ticker": sym,
+            "company_name": clean_company_short,
             "current_price": current_price,
             "currency": currency,
             "reports": valid_reports[:10]
@@ -1078,10 +1095,11 @@ def create_institutional_radar_embed(data):
     curr = data["currency"]
     p = data["current_price"]
     reports = data["reports"]
+    c_name = data.get("company_name", sym)
     is_ca = sym.endswith(".TO") or sym.endswith(".V")
 
     price_header = f"${p:.2f} {curr}" if p > 0 else "Live"
-    radar_title = f"🏛️ BAY STREET RESEARCH RADAR: {sym} 🍁" if is_ca else f"🏛️ WALL STREET RESEARCH RADAR: {sym}"
+    radar_title = f"🏛️ BAY STREET RESEARCH RADAR: {sym} ({c_name}) 🍁" if is_ca else f"🏛️ WALL STREET RESEARCH RADAR: {sym} ({c_name})"
 
     embed = discord.Embed(
         title=radar_title,
@@ -1122,13 +1140,12 @@ def create_institutional_radar_embed(data):
         entries_txt += (
             f"**{i}. {tier_badge} {r['badge']} {r['institution']}** — `{r['rating']}`\n"
             f"{pt_line}"
-            f"• **Research Note:** [{r['headline'][:80]}...]({r['link']})\n"
+            f"• **Research:** [{r['headline'][:78]}...]({r['link']})\n"
             f"• **Date:** `{r['date_str']}`\n\n"
         )
 
     embed.add_field(name="🎯 Institutional Targets & Rating Actions", value=entries_txt.strip()[:4000], inline=False)
 
-    # Summary Line
     spread_line = f"High: `${max(valid_pts):.2f}` | Low: `${min(valid_pts):.2f} {curr}`" if valid_pts else "Active Upgrades & Reiterations"
     summary_text = (
         f"• **Distribution:** `{bull_cnt} Buy / Outperform` • `{neut_cnt} Hold` • `{caut_cnt} Cautious`\n"
@@ -1173,7 +1190,6 @@ def analyze_stock_options_setup(ticker_symbol):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
-        # Time-Weighted Paced RVOL for Options Scoring
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
@@ -1435,4 +1451,28 @@ async def price_command(ctx, ticker: str):
 @bot.command(name="opt", aliases=["options", "play"])
 async def options_command(ctx, ticker: str):
     async with ctx.typing():
-        data = await asyncio.to_thread(analy
+        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
+        if not data:
+            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
+            return
+        embed = create_deep_dive_options_embed(data)
+        await ctx.send(embed=embed)
+
+@bot.command(name="analyst", aliases=["research", "targets"])
+async def analyst_command(ctx, ticker: str):
+    async with ctx.typing():
+        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        embed = create_institutional_radar_embed(data)
+        await ctx.send(embed=embed)
+
+# -------------------------------------------------------------
+# 7. ENTRYPOINT
+# -------------------------------------------------------------
+if __name__ == "__main__":
+    if not BOT_TOKEN:
+        print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
+    else:
+        bot.run(BOT_TOKEN)
