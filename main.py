@@ -70,10 +70,6 @@ NASDAQ_100 = [
 # 1. INSTITUTIONAL U-CURVE VOLUME PACING ENGINE (9:30 AM - 4:00 PM EST)
 # ====================================================================
 def get_intraday_volume_pacing_factor(now_ny):
-    """
-    Calculates expected cumulative volume fraction based on the 
-    historical U-shaped intraday volume distribution (9:30 AM - 4:00 PM EST).
-    """
     if now_ny.weekday() > 4:
         return 1.0
 
@@ -81,27 +77,23 @@ def get_intraday_volume_pacing_factor(now_ny):
     market_open = dtime(9, 30)
     market_close = dtime(16, 0)
 
-    # Pre-market
     if t < market_open:
         return 0.05
     
-    # After-hours / Post-market
     if t >= market_close:
         return 1.0
 
-    # Minutes elapsed since 9:30 AM (1 to 390)
     minutes_elapsed = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
 
-    # Institutional U-Curve Cumulative Distribution
-    if minutes_elapsed <= 30:       # 9:30 AM - 10:00 AM (Opening Rush: 2% to 18%)
+    if minutes_elapsed <= 30:
         return 0.02 + (minutes_elapsed / 30.0) * 0.16
-    elif minutes_elapsed <= 60:     # 10:00 AM - 10:30 AM (18% to 32%)
+    elif minutes_elapsed <= 60:
         return 0.18 + ((minutes_elapsed - 30) / 30.0) * 0.14
-    elif minutes_elapsed <= 180:    # 10:30 AM - 12:30 PM (Midday slowing: 32% to 54%)
+    elif minutes_elapsed <= 180:
         return 0.32 + ((minutes_elapsed - 60) / 120.0) * 0.22
-    elif minutes_elapsed <= 300:    # 12:30 PM - 2:30 PM (Lunch lull: 54% to 72%)
+    elif minutes_elapsed <= 300:
         return 0.54 + ((minutes_elapsed - 180) / 120.0) * 0.18
-    else:                           # 2:30 PM - 4:00 PM (Power Hour: 72% to 100%)
+    else:
         return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
 
 # ====================================================================
@@ -388,8 +380,7 @@ def calculate_macd(closes):
     alpha_26 = 2.0 / 27
     curr_12 = sum(closes[:12]) / 12
     curr_26 = sum(closes[:26]) / 26
-    ema_12_full = []
-    ema_26_full = []
+    ema_12_full, ema_26_full = [], []
 
     for i, c in enumerate(closes):
         if i >= 12:
@@ -802,7 +793,9 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
             targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
-            if sector and industry:
+            if is_etf:
+                line_sector = f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n• **Structure:** `Diversified Market Basket Holding`"
+            elif sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
                 line_sector = f"• **Sector:** `{sector}`"
@@ -1417,64 +1410,4 @@ def check_market():
                         print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
 
                 if should_alert:
-                    metrics = get_technical_and_fundamental_metrics(ticker_symbol, current_price, session_http)
-                    price_alerts_to_send.append({
-                        "ticker": ticker_symbol,
-                        "price": current_price,
-                        "change_pct": change_pct,
-                        "badge": badge,
-                        "step_change": step_change_pct,
-                        "history_trail": history_trail[:-1] if step_change_pct is not None else [],
-                        "metrics": metrics
-                    })
-
-            else:
-                print(f"⚠️ {ticker_symbol:10s} {badge} | SKIPPED: Insufficient realtime price data")
-        except Exception as e:
-            print(f"❌ Error checking {ticker_symbol}: {e}")
-        time.sleep(0.12)
-
-    # ==========================================
-    # 4. SCAN BREAKING NEWS
-    # ==========================================
-    print("\nScanning breaking news across all tickers...")
-    cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
-    seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
-    raw_news = []
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures_search = [executor.submit(fetch_ticker_news_search, sym, session_http) for sym in ALL_TICKERS]
-        futures_rss = [executor.submit(fetch_ticker_news_rss, sym, session_http) for sym in ALL_TICKERS]
-
-        for f in concurrent.futures.as_completed(futures_search + futures_rss):
-            raw_news.extend(f.result())
-
-    new_articles = []
-    for item in raw_news:
-        link = item["link"]
-        pub_dt = item.get("pub_dt")
-        title = item.get("title", "")
-
-        date_stamp = pub_dt.strftime("%Y-%m-%d") if pub_dt else "nodate"
-        norm_title = normalize_title(title)
-
-        title_date_key = f"title_{norm_title}_{date_stamp}"
-        link_key = f"link_{link}"
-
-        if link_key in seen_fingerprints_set or (norm_title and title_date_key in seen_fingerprints_set):
-            continue
-
-        seen_fingerprints_set.add(link_key)
-        seen_fingerprints_set.add(title_date_key)
-        state["seen_news_fingerprints"].append(link_key)
-        state["seen_news_fingerprints"].append(title_date_key)
-
-        if pub_dt and pub_dt >= cutoff_time:
-            new_articles.append(item)
-
-    # ==========================================
-    # 5. DISPATCH PRICE & NEWS DISCORD ALERTS
-    # ==========================================
-    price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
-    if price_alerts_to_send:
-        print(f"\nSending {len(price_alerts_to_sen
+                    metrics = get_technical_and_fundamen
