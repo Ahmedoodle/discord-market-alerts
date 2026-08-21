@@ -87,10 +87,13 @@ def format_large_number(num):
 
 # --- INTRADAY VOLUME PACING (EQUITIES & CRYPTO) ---
 def get_intraday_volume_pacing_factor(now_ny):
-    if now_ny.weekday() > 4: return 1.0
+    # Outside regular market hours (Pre-market, After-hours, Weekends),
+    # volume reflects completed daily bar; compare 1:1 against full average.
+    if now_ny.weekday() > 4:
+        return 1.0
     t = now_ny.time()
-    if t < dtime(9, 30): return 0.05
-    if t >= dtime(16, 0): return 1.0
+    if t < dtime(9, 30) or t >= dtime(16, 0):
+        return 1.0
 
     mins = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
     if mins <= 30: return 0.02 + (mins / 30.0) * 0.16
@@ -100,9 +103,8 @@ def get_intraday_volume_pacing_factor(now_ny):
     else: return 0.72 + ((mins - 300) / 90.0) * 0.28
 
 def get_crypto_volume_pacing_factor(now_utc):
-    # Crypto 24h cycle resets at 00:00 UTC (8:00 PM EST)
+    # Crypto 24h continuous cycle resets at 00:00 UTC (8:00 PM EST)
     mins_elapsed = (now_utc.hour * 60) + now_utc.minute
-    # 15-minute smoothing floor prevents artificial 100x spikes right at 00:01 UTC
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
@@ -173,10 +175,10 @@ def calculate_beta_vs_spy(closes):
 def get_volume_tag(rvol, avg_vol):
     if rvol is None or avg_vol is None: return "N/A"
     avg_fmt = format_large_number(avg_vol).replace("$", "") + " shares" if avg_vol >= 1000 else str(int(avg_vol)) + " shares"
-    if rvol >= 2.0: return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
-    elif rvol >= 1.3: return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • ⚡ Strong)"
-    elif rvol < 0.6: return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 💤 Low)"
-    else: return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 📊 Normal)"
+    if rvol >= 2.0: return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
+    elif rvol >= 1.3: return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • ⚡ Strong)"
+    elif rvol < 0.6: return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • 💤 Low)"
+    else: return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • 📊 Normal)"
 
 def get_rsi_tag(rsi):
     if rsi is None: return "N/A"
@@ -757,7 +759,7 @@ def analyze_stock_options_setup(ticker_symbol):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
-        # Time-Weighted Paced RVOL
+        # Time-Weighted Paced RVOL (Stock Market Hours)
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
