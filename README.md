@@ -7,26 +7,27 @@
 
 ## ⚡ Quick Command Cheat Sheet
 
-In any Discord channel where Looney is active, simply type one of the following triggers followed by any ticker symbol (e.g., `NVDA`, `AAPL`, `TSLA`, `TD.TO`, `RY.TO`, `BTC-USD`):
+In any Discord channel where Looney is active, type one of the following triggers followed by any ticker symbol (e.g., `NVDA`, `AAPL`, `TSLA`, `TD.TO`, `RY.TO`, `BTC-USD`):
 
 | Trigger Prefix | Example | Command Name | What It Delivers |
 | :--- | :--- | :--- | :--- |
-| **`!`** or **`$`** | `!NVDA` or `$TD.TO` | **Market & Financial Health Snapshot** | Complete technical analysis (RSI, MACD, SMAs, Pivots), institutional volume (RVOL), balance sheet & cash flow audit, and dividend schedule (Ex-Date & Pay Date). |
-| **`#`** | `#NVDA` or `#TSLA` | **Options Strategy Deep-Dive** | Quant Confidence Score (0–100%), recommended DFOL options strategy, and dual **7–14 DTE (Weekly)** vs. **30–45 DTE (Monthly)** trade setups with exact strikes and break-even math. |
-| **`%`** | `%NVDA` or `%RY.TO` | **Institutional Research Radar** | Real-time research notes, price target revisions, and rating actions from Tier-1 Wall Street (Goldman, Morgan Stanley, JPM) and Bay Street (RBC, TD, BMO, Scotia, CIBC) banks with direct article links. |
+| **`!`** or **`$`** | `!NVDA` or `$TD.TO` | **Market & Financial Health Snapshot** | Real-time technical indicators (RSI, MACD, SMAs, Pivots), time-paced institutional volume (RVOL), balance sheet & cash flow audit, valuation multiples (P/E & P/FCF), and dividend schedules. |
+| **`#`** | `#NVDA` or `#TSLA` | **Options Strategy Deep-Dive** | Quant Confidence Score (0–100%), recommended DFOL options strategy, and dual **7–14 DTE (Weekly Momentum)** vs. **30–45 DTE (Institutional Swing)** trade setups with exact strikes and break-even math. |
+| **`%`** | `%NVDA` or `%RY.TO` | **Institutional Research Radar** | Real-time research notes, price target revisions, and rating actions from Tier-1 Wall Street (Goldman, Morgan Stanley, JPM) and Bay Street (RBC, TD, BMO, Scotia, CIBC) banks with direct source links. |
 
 ---
 
 ## 📖 Table of Contents
 1. [Core Features & Architecture](#-core-features--architecture)
-2. [Technical & Fundamental Indicator Guide](#-technical--fundamental-indicator-guide)
-3. [DFOL Options Strategy Engine Guide](#-dfol-options-strategy-engine-guide)
-4. [Institutional Research Radar (`%`)](#-institutional-research-radar-)
-5. [Automated Scheduled Radars](#-automated-scheduled-radars)
+2. [Dual-Engine Volume Pacing (Equities & Crypto)](#-dual-engine-volume-pacing-equities--crypto)
+3. [Technical & Fundamental Indicator Guide](#-technical--fundamental-indicator-guide)
+4. [DFOL Options Strategy Engine Guide](#-dfol-options-strategy-engine-guide)
+5. [Institutional Research Radar (`%`)](#-institutional-research-radar-)
+6. [Automated Scheduled Radars](#-automated-scheduled-radars)
    * [30-Minute Price & Breaking News Radar](#1-30-minute-price--breaking-news-radar)
    * [30-Minute Top 10 Nasdaq 100 Options Radar](#2-30-minute-top-10-nasdaq-100-options-radar)
    * [Daily 6:00 AM Multi-Market Earnings Radar](#3-daily-600-am-multi-market-earnings-radar)
-6. [Hosting & Deployment Architecture](#-hosting--deployment-architecture)
+7. [Hosting & Deployment Architecture](#-hosting--deployment-architecture)
 
 ---
 
@@ -48,124 +49,192 @@ In any Discord channel where Looney is active, simply type one of the following 
 │ • % Analyst Rprt │                           │ • Top 10 Options │                           │ • Mega & Mid-Cap │
 │ • 24/7 Web Server│                           │   (9:32am-4:00pm)│                           │   (US & TSX 🍁)  │
 └──────────────────┘                           └──────────────────┘                           └──────────────────┘
-📊 Technical & Fundamental Indicator Guide
-Every indicator in the !SYMBOL and $SYMBOL snapshot is calculated in real-time from raw market prints and SEC/SEDAR filings:
-1. Volume Multipliers (RVOL)
-What It Measures: Compares current trading volume against historical benchmarks to detect institutional accumulation or distribution.
-How It's Calculated: RVOL = Today's Volume / Average Volume over Period across 20-Day (1-Month), 50-Day (Quarterly), and 90-Day (Long-Term) windows.
-What to Watch For:
-🔥 >= 2.0x (Unusual Surge): Heavy institutional block trading / catalyst in play.
+📊 Dual-Engine Volume Pacing (Equities & Crypto)
+Raw cumulative volume creates false readings when compared directly against full-day averages. Looney uses two specialized pacing engines to evaluate Relative Volume (RVOL) accurately:
+
+1. Equities Institutional U-Curve Engine (Stocks & ETFs)
+Market Hours (9:30 AM – 4:00 PM EST): Pacing factors scale along Wall Street's U-shaped intraday volume distribution curve.
+
+Pre-Market, After-Hours & Weekends: Automatically defaults to 1.0x (100% full-day baseline), preventing previous-session finished bars from triggering false pre-market surge alerts.
+
+2. 24/7 Continuous Crypto Volume Surfing Engine
+00:00 UTC (8:00 PM EST) Daily Reset: Tracks elapsed minutes across the 1,440-minute crypto day.
+
+Early-Session Noise Buffer: Applies a 15-minute smoothing floor immediately after 00:00 UTC rollover to prevent false 100x alerts from initial trades while catching early-session institutional breakouts.
+
+📈 Technical & Fundamental Indicator Guide
+Every indicator in the !TICKER and $TICKER snapshot is calculated live:
+
+1. Multi-Timeframe Volume Multipliers (RVOL)
+What It Measures: Compares current time-paced volume against historical averages across 20-Day (1-Month), 50-Day (Quarterly), and 90-Day (Long-Term) benchmarks.
+
+Benchmarks:
+
+🔥 >= 2.0x (Unusual Surge): Heavy institutional accumulation/distribution.
+
 ⚡ >= 1.3x (Strong): Active institutional participation.
-💤 < 0.6x (Low): Retail-only drift; low breakout reliability.
+
+💤 < 0.6x (Low): Low-liquidity retail drift.
+
 2. Multi-Timeframe RSI (Relative Strength Index)
-What It Measures: Internal momentum and velocity of price changes across 3 separate horizons (7D Fast/Scalp, 14D Standard, 30D Macro).
-How It's Calculated: RSI = 100 - (100 / (1 + RS)) where RS = Average Gain / Average Loss.
-What to Watch For:
-🟢 50 to 68 (Bullish Acceleration Zone): Strong upward momentum with room to run before hitting exhaustion.
-🔴 32 to 48 (Bearish Breakdown Zone): Downward momentum expanding.
-⚠️ >= 70 (Overbought): High risk of near-term mean reversion/pullback.
-🟢 <= 30 (Oversold): High probability of bounce/relief rally.
-3. Moving Averages & Trend Verdict (50D & 200D SMA)
-What It Measures: The health of the intermediate trend (50-Day Simple Moving Average) and macro structural trend (200-Day Simple Moving Average).
-Trend Classifications:
-🟢 Strong Bullish Uptrend: Price above both 50D & 200D SMA (Institutional Buying).
+Horizons: 7D (Fast/Scalp Momentum), 14D (Standard), 30D (Macro Trend).
+
+Zones:
+
+🟢 50.0 – 68.0 (Bullish Trend): Momentum expanding with room to run.
+
+🔴 32.0 – 48.0 (Bearish Trend): Downward momentum dominant.
+
+⚠️ >= 70.0 (Overbought): Near-term pullback risk.
+
+🟢 <= 30.0 (Oversold): High probability relief bounce zone.
+
+3. Moving Averages & Structural Trend (50D & 200D SMA)
+🟢 Strong Bullish Uptrend: Price above both 50D & 200D SMA (Institutional Support).
+
 🔴 Strong Bearish Downtrend: Price below both 50D & 200D SMA (Institutional Selling).
-🟡 Pullback in Macro Uptrend: Price above 200D SMA but below 50D SMA (Support Test).
-🟡 Counter-Trend Rebound: Price below 200D SMA but above 50D SMA (Bear Market Bounce).
-4. MACD (12, 26, 9)
-What It Measures: Exponential moving average convergence/divergence and momentum histogram expansion.
-What to Watch For:
-Bullish Momentum Expanding 🟢: MACD line above Signal line with growing positive histogram bars (increasing buying velocity).
-Bullish Momentum Slowing 🟡: MACD line above Signal line but histogram bars shrinking (momentum peaking).
-Bearish Momentum Expanding 🔴: MACD line below Signal line with growing negative histogram bars (accelerating downside).
-5. Key Pivot Levels (S1 & R1)
-How It's Calculated: Classic Floor Trader Pivot Points from previous day's High (H), Low (L), and Close (C):
-Pivot Point (P) = (H + L + C) / 3
-Resistance 1 (R1) = (2 * P) - L
-Support 1 (S1) = (2 * P) - H
-What to Watch For: Key intraday bounce zones (S1) and profit-taking/rejection zones (R1).
-6. Smart Money & Risk Metrics (Beta & ATR)
-Beta vs. SPY: Measures volatility relative to the broader S&P 500 benchmark.
-Beta >= 1.5x: High volatility asset (large swings; high reward/risk).
-Beta < 0.8x: Defensive asset (lower volatility than index).
-14D ATR (Average True Range): Calculates the average expected daily dollar move (+/- $ and +/- %).
-7. Multi-Market Dividend Engine
-What It Delivers:
-Yield & Payout: Current annual dividend yield %, dollar amount per payout, and annualized payout.
-Frequency: Monthly (12x/yr), Quarterly (4x/yr), Semi-Annual (2x/yr), or Annual (1x/yr).
-Key Dates: Official Ex-Dividend Date (date you must own shares by) and Pay Date (distribution date).
-Sustainability Payout Ratio:
-🟢 <= 50%: Highly Secure (Strong cash flow backing).
-🟡 51% - 75%: Moderate payout.
-⚠️ > 75%: Elevated payout / high-yield risk.
-8. Balance Sheet & Cash Flow Audit (YoY Aligned)
-ROE (Return on Equity): (TTM Net Income / Stockholders' Equity) * 100. (💎 >= 20% denotes elite capital efficiency).
-Net Profit Margin: (TTM Net Income / TTM Total Revenue) * 100.
-Debt-to-Equity: Total Debt / Stockholders' Equity. (< 0.6x is low debt; > 1.5x is high leverage).
-Current Ratio: Current Assets / Current Liabilities. (> 1.5x indicates strong short-term liquidity).
-Free Cash Flow (FCF): Operating Cash Flow - Capital Expenditures (CapEx).
-Earnings Quality Ratio: TTM Free Cash Flow / TTM Net Income.
-🟢 >= 1.0x: High quality (real cash profits exceed accounting net income).
-⚠️ < 0.6x: Accrual/paper-heavy earnings.
+
+🟡 Pullback in Macro Uptrend: Price above 200D SMA but testing 50D SMA.
+
+🟡 Counter-Trend Rebound: Price below 200D SMA but bouncing over 50D SMA.
+
+4. MACD Momentum Verdict (12, 26, 9)
+Evaluates MACD line versus signal line and tracks histogram expansion/contraction to determine whether directional momentum is accelerating or exhausting.
+
+5. Floor Trader Pivot Points (S1 & R1)
+Calculates key support (
+S
+1
+=
+2
+P
+−
+H
+S1=2P−H
+) and resistance (
+R
+1
+=
+2
+P
+−
+L
+R1=2P−L
+) levels based on previous session range.
+
+6. Capital Efficiency, Cash Flow & Valuation Multiples
+ROE (Return on Equity): Capital efficiency metric (💎 >= 20% denotes elite return).
+
+Net Margin: Percentage of top-line revenue converted to net profit.
+
+Solvency & Liquidity: Debt-to-Equity and Current Ratio.
+
+Free Cash Flow (FCF) & Quality Ratio: Operating Cash Flow minus CapEx, verified by FCF / Net Income cash backing.
+
+Valuation Multiples: Dual display of Trailing P/E and P/FCF (Price to Free Cash Flow) with clean growth/pre-profit status tags.
+
 🎯 DFOL Options Strategy Engine Guide
-When typing #SYMBOL or reviewing the Top 10 Options Radar, the bot acts as a licensed Derivatives Specialist applying official DFOL (Derivatives Fundamentals & Options Licensing) principles:
-1. The Quant Confidence Scoring Matrix (0–100 Points)
+When typing #TICKER or reviewing the scheduled Top 10 Options Radar, Looney applies official DFOL (Derivatives Fundamentals & Options Licensing) principles:
+
+1. 100-Point Quantitative Conviction Matrix
 code
 Text
 [ 100-Point Scoring Algorithm ]
  ├── 25 pts: Trend Alignment (Price vs. 50D & 200D SMA)
  ├── 20 pts: RSI Momentum Sweet Spot (52–68 Bullish / 32–48 Bearish)
- ├── 20 pts: MACD Histogram Expansion in Trade Direction
- ├── 15 pts: Institutional Volume Multiplier (RVOL >= 1.3x)
+ ├── 20 pts: MACD Directional Momentum & Histogram Expansion
+ ├── 15 pts: Time-Paced RVOL (Volume Confirmation >= 1.3x)
  └── 20 pts: Implied Volatility Match (DFOL Strategy Selection)
-🟢 >= 80% (High Conviction): Pristine multi-indicator and volatility alignment.
-🟠 60% - 79% (Developing / Watchlist): Solid setup pending a key breakout or confirmation.
-🔴 < 60% (Low Conviction / Avoid): Choppy, conflicting indicators, or unfavorable risk/reward.
-2. Strategy Decision Matrix
-The bot checks Directional Bias and Implied Volatility (IV Rank) to select the mathematical optimal strategy:
-Market Bias	IV Environment	Selected DFOL Strategy	Target Setup
+🟢 >= 80% (High Conviction): High technical and volatility alignment.
+
+🟠 60% – 79% (Developing / Watchlist): Solid setup pending confirmation.
+
+🔴 < 60% (Low Conviction / Avoid): Conflicting signals or poor risk/reward.
+
+2. Strategy Selection Matrix
+Directional Bias	IV Environment	Selected DFOL Strategy	Execution Setup
 Outright Bullish	Low IV (< 40%)	Long Call	Buy 30–45 DTE Call (Delta ~ 0.65–0.70)
-Moderately Bullish	Moderate IV (30–50%)	Bull Call Debit Spread	Buy ATM Call (Delta ~ 0.60) / Sell OTM Call (Delta ~ 0.30)
-Neutral to Bullish	High IV (> 50%)	Bull Put Credit Spread	Sell OTM Put at S1 (Delta ~ 0.25) / Buy OTM Put (Delta ~ 0.15)
+Moderately Bullish	Moderate IV (30–50%)	Bull Call Debit Spread	Buy ATM Call / Sell OTM Call
+Neutral to Bullish	High IV (> 50%)	Bull Put Credit Spread	Sell OTM Put at S1 / Buy Lower Put
 Outright Bearish	Low IV (< 40%)	Long Put	Buy 30–45 DTE Put (Delta ~ -0.65–0.70)
-Moderately Bearish	Moderate IV (30–50%)	Bear Put Debit Spread	Buy ATM Put (Delta ~ -0.60) / Sell OTM Put (Delta ~ -0.30)
-Neutral to Bearish	High IV (> 50%)	Bear Call Credit Spread	Sell OTM Call at R1 (Delta ~ 0.25) / Buy OTM Call (Delta ~ 0.15)
-Neutral / Rangebound	High IV (> 60%)	Iron Condor / Short Strangle	Sell OTM Put below S1 + Sell OTM Call above R1
-Breakout Expected	Low IV (< 20%)	Long Straddle / Strangle	Buy ATM Call + Buy ATM Put (Vol expansion)
-3. DFOL Break-Even Golden Rules
-All break-evens are calculated using official DFOL rules:
-Bullish Debit (Call): Break-Even = Strike + Net Premium Paid
-Bearish Debit (Put): Break-Even = Strike - Net Premium Paid
-Bullish Credit (Bull Put Spread): Break-Even = Short Put Strike - Net Credit Received (RRR Rule)
-Bearish Credit (Bear Call Spread): Break-Even = Short Call Strike + Net Credit Received (RRR Rule)
-4. Dual Timeframe Execution
-Every #SYMBOL query delivers two distinct plans:
-⚡ Play A (7–14 DTE): Fast scalp / weekly momentum play. (Target exit: +50% to +80%; Stop-loss: -35%).
-🏛️ Play B (30–45 DTE): Standard institutional swing play. (Target exit: +40% to +60%; Trailing stop at 50D SMA).
+Moderately Bearish	Moderate IV (30–50%)	Bear Put Debit Spread	Buy ATM Put / Sell OTM Put
+Neutral to Bearish	High IV (> 50%)	Bear Call Credit Spread	Sell OTM Call at R1 / Buy Higher Call
+3. Dual Timeframe Trade Plans
+⚡ Play A (7–14 DTE): Fast scalp / weekly momentum (Target exit: +50% to +80%, Stop-loss: -35%).
+
+🏛️ Play B (30–45 DTE): Institutional swing play (Target exit: +40% to +60%, Trailing stop at 50D SMA).
+
+🛡️ Alternative Setup: Defensive spread or married hedge for risk mitigation.
+
 🏛️ Institutional Research Radar (%)
-Typing %SYMBOL triggers a live search across major financial news wires and research desks:
-Tier-1 Coverage Filter: Automatically searches for and extracts rating actions from:
-🇺🇸 Wall Street: Goldman Sachs, Morgan Stanley, JPMorgan, Bank of America, Wells Fargo, Citigroup, Barclays, UBS, Deutsche Bank, Jefferies, Piper Sandler, Wedbush, Rosenblatt, Wolfe Research.
-🍁 Bay Street: RBC Capital Markets, TD Cowen / TD Securities, BMO Capital Markets, Scotiabank Global Banking, CIBC World Markets, National Bank Financial.
-Automated Categorization:
-🟢 Bullish / High Target Reports: Price target raises, Outperform, Conviction Buys.
-🟡 Neutral / Reiteration Reports: Hold, Equal-Weight, Market Perform, valuation re-evaluations.
-🔴 Cautious / Downgrade Reports: Underperform, Sell, price target cuts.
-Direct Hyperlinks: Includes direct links to the source research notes.
+Typing %TICKER performs a multi-source scan across major financial news wires and research desks:
+
+Wall Street 🇺🇸: Goldman Sachs, Morgan Stanley, JPMorgan Chase, Bank of America, Wells Fargo, Citigroup, Barclays, UBS, Deutsche Bank, Jefferies, Piper Sandler, Wedbush, Evercore ISI, Baird, Stifel, Wolfe Research.
+
+Bay Street 🍁: RBC Capital Markets, TD Cowen / TD Securities, BMO Capital Markets, Scotiabank Global, CIBC World Markets, National Bank Financial, Desjardins.
+
+Smart Disambiguation: Differentiates between subject company tickers and research notes authored by bank analysts.
+
+Automatic Multi-Part Pagination: Splits large research sets into clean batches of 4 per Discord embed card with source hyperlinks.
+
 ⏰ Automated Scheduled Radars
-1. 30-Minute Price & Breaking News Radar
-Script: main.py (Runs every 30 minutes via Cron).
-Price Action Alerts: Scans all watchlist equities, commodities, and 24/7 crypto. Dispatches embed if price moves exceed threshold (+/- 2.0% regular, +/- 1.0% pre/after-market) with full institutional indicators and intraday path trail (1.50% -> 3.20%).
-Breaking News: Scans RSS and search feeds; dispatches articles < 45 minutes old with deduplication memory.
-2. 30-Minute Top 10 Nasdaq 100 Options Radar
-Script: main.py
-Operating Hours: Monday through Friday, 9:32 AM to 4:00 PM EST (Strictly during live options market trading).
-9:32 AM Opening Bell Buffer: Automatically pauses until 9:32 AM EST at market open so the opening auction settles before calculating options spreads.
-Output: Ranks the entire Nasdaq 100 and sends the Top 10 highest-conviction option setups with dual 7–14 DTE and 30–45 DTE plans.
-3. Daily 6:00 AM Multi-Market Earnings Radar
-Script: earnings.py (Runs Monday–Friday at 6:00 AM EST).
-Card 1: 📢 Yesterday's Scorecard: Official reported actuals, estimates, beats/misses, and stock moves across US and TSX listings. (Hierarchically ordered: 🍁 CAD Mega -> 🇺🇸 US Mega -> 🍁 CAD Mid -> 🇺🇸 US Mid).
+
+1. 30-Minute Price & Breaking News Radar (main.py)
+Price Movement Alerts: Scans watchlist equities, commodities, and 24/7 crypto. Dispatches alerts when session change crosses thresholds (±2.0% regular, ±1.0% pre/after-hours) with full technical blocks and intraday path trail history.
+
+Breaking News: Scans real-time financial RSS feeds and search APIs (< 45 minutes old) with fingerprint deduplication.
+
+2. 30-Minute Top 10 Nasdaq 100 Options Radar (main.py)
+Active Market Gate: Runs Monday through Friday, 9:32 AM to 4:00 PM EST.
+
+9:32 AM Opening Bell Buffer: Automatically pauses until 9:32 AM EST at market open so the opening auction settles before computing options spreads.
+
+Ranked Output: Ranks the entire Nasdaq 100 by conviction score and posts the Top 10 actionable options setups.
+
+3. Daily 6:00 AM Multi-Market Earnings Radar (earnings.py)
+Card 1: 📢 Yesterday's Scorecard: Official reported actuals, estimates, and beat/miss data across US and TSX listings (Hierarchically ordered: 🍁 CAD Mega ➔ 🇺🇸 US Mega ➔ 🍁 CAD Mid ➔ 🇺🇸 US Mid).
+
 Card 2: 🗓️ Watchlist Calendar (Next 45 Days): Upcoming reports across personal watchlist.
-Card 3A & 3B: 👑 Mega-Caps (Next 45 Days — >= $200B): Dedicated Canadian TSX and US Mega-Cap cards.
-Card 4A: 🍁 Canadian Mid-Caps (Next 45 Days — $1.5B - $200B): 100% complete coverage of Canadian mid-caps.
-Card 4B: 📈 US Mid-Caps (Next 7 Days — $1.5B - $200B): Paginated in clean batches of 15 (Part 1/X, Part 2/X).
+
+Card 3A & 3B: 👑 Mega-Caps (Next 45 Days —
+≥
+$
+200
+B
+≥$200B
+): Dedicated Canadian TSX and US Mega-Cap calendars.
+
+Card 4A: 🍁 Canadian Mid-Caps (Next 45 Days — 
+$
+1.5
+B
+−
+$
+200
+B
+$1.5B−$200B
+): Complete TSX mid-cap coverage.
+
+Card 4B: 📈 US Mid-Caps (Next 7 Days —
+$
+1.5
+B
+−
+$
+200
+B
+$1.5B−$200B
+): Paginated in clean batches of 15 per card.
+
+🛠️ Hosting & Deployment Architecture
+code
+Text
+┌────────────────────────────────────────────────────────┐
+│                   DEPLOYMENT MAP                       │
+├───────────────────┬───────────────────┬────────────────┤
+│ Service           │ Script            │ Hosting Model  │
+├───────────────────┼───────────────────┼────────────────┤
+│ On-Demand Bot     │ bot.py            │ Render (24/7)  │
+│ 30-Min Alert/Opt  │ main.py           │ Cron Service   │
+│ Daily Earnings    │ earnings.py       │ Cron (6:00 AM) │
+└───────────────────┴───────────────────┴────────────────┘
