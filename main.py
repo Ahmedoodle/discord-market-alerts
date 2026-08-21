@@ -68,16 +68,13 @@ NASDAQ_100 = [
 # 1. INSTITUTIONAL VOLUME PACING ENGINES (EQUITIES & CRYPTO)
 # ====================================================================
 def get_intraday_volume_pacing_factor(now_ny):
+    # Outside regular market hours (Pre-market, After-hours, Weekends),
+    # volume reflects completed daily bar; compare 1:1 against full average.
     if now_ny.weekday() > 4:
         return 1.0
 
     t = now_ny.time()
-    market_open = dtime(9, 30)
-    market_close = dtime(16, 0)
-
-    if t < market_open:
-        return 0.05
-    if t >= market_close:
+    if t < dtime(9, 30) or t >= dtime(16, 0):
         return 1.0
 
     minutes_elapsed = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
@@ -94,9 +91,8 @@ def get_intraday_volume_pacing_factor(now_ny):
         return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
 
 def get_crypto_volume_pacing_factor(now_utc):
-    # Crypto 24h cycle resets at 00:00 UTC (8:00 PM EST)
+    # Crypto 24h continuous cycle resets at 00:00 UTC (8:00 PM EST)
     mins_elapsed = (now_utc.hour * 60) + now_utc.minute
-    # 15-minute smoothing floor prevents artificial 100x spikes right at 00:01 UTC
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
@@ -408,13 +404,13 @@ def get_volume_tag(rvol, avg_vol):
         return "N/A"
     avg_fmt = format_large_number(avg_vol).replace("$", "") + " shares" if avg_vol >= 1000 else str(int(avg_vol)) + " shares"
     if rvol >= 2.0:
-        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
+        return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • 🔥 Unusual Surge)"
     elif rvol >= 1.3:
-        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • ⚡ Strong)"
+        return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • ⚡ Strong)"
     elif rvol < 0.6:
-        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 💤 Low)"
+        return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • 💤 Low)"
     else:
-        return f"**{rvol:.1f}x** &emsp;(`Avg: {avg_fmt}` • 📊 Normal)"
+        return f"**{rvol:.1f}x** (`Avg: {avg_fmt}` • 📊 Normal)"
 
 def get_rsi_tag(rsi):
     if rsi is None:
@@ -851,7 +847,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
                 be_long = sell_c_long + credit_long
 
                 play_7_14 = f"Sell ${sell_c_short:.2f} C / Buy ${buy_c_short:.2f} C | Credit: `${credit_short:.2f}`"
-                play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${buy_c_long:.2f} C | Credit: `${credit_long:.2f}`"
+                play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${buy_c_long + strike_step:.2f} C | Credit: `${credit_long:.2f}`"
 
         return {
             "ticker": sym,
