@@ -52,12 +52,20 @@ def auto_self_ping():
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. SESSIONS & BRANDING
+# 2. SESSIONS & CONFIG
 # -------------------------------------------------------------
 http_session = requests.Session()
 http_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "*/*"
+})
+
+nasdaq_session = requests.Session()
+nasdaq_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://www.nasdaq.com",
+    "Referer": "https://www.nasdaq.com/"
 })
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
@@ -96,8 +104,7 @@ def calculate_rsi(closes, period=14):
     deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
     gains = [max(d, 0) for d in deltas]
     losses = [max(-d, 0) for d in deltas]
-    avg_gain = sum(gains[:period]) / period
-    avg_loss = sum(losses[:period]) / period
+    avg_gain, avg_loss = sum(gains[:period]) / period, sum(losses[:period]) / period
     for i in range(period, len(deltas)):
         avg_gain = (avg_gain * (period - 1) + gains[i]) / period
         avg_loss = (avg_loss * (period - 1) + losses[i]) / period
@@ -184,13 +191,13 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
             if mean_t and current_price > 0 and mean_t < (current_price * 10):
                 upside = ((mean_t - current_price) / current_price) * 100
                 up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
-                return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**) | Rating: `{rating}`"
+                return f"Low: `N/A` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | Rating: `{rating}`"
     except Exception:
         pass
     return "N/A"
 
 # -------------------------------------------------------------
-# 3. ON-DEMAND TECHNICALS & DIVIDEND SNAPSHOT ($/!)
+# 3. ON-DEMAND TECHNICALS, STATEMENTS & DIVIDENDS ($/!)
 # -------------------------------------------------------------
 def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
@@ -251,7 +258,8 @@ def get_on_demand_data(ticker_symbol):
             elif current_price < sma_50 and current_price < sma_200: verdict_str = "`🔴 Strong Bearish Downtrend` *(Institutional Selling)*"
             elif current_price >= sma_200 and current_price < sma_50: verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
             else: verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
-        elif sma_50: verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
+        elif sma_50:
+            verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
 
         trend_block = f"• **50-Day SMA:** {sma_50_str}\n• **200-Day SMA:** {sma_200_str}\n• **Overall Verdict:** {verdict_str}"
         macd_str = calculate_macd(closes)
@@ -263,27 +271,62 @@ def get_on_demand_data(ticker_symbol):
 
         atr = calculate_atr(highs, lows, closes, 14)
         quote_type = meta.get("instrumentType", "EQUITY")
-        dividend_block = None
+        dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
 
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n• **Trading:** `24/7/365 Continuous Global Liquidity`"
-            catalysts_block, smart_money_block = None, None
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = f"• **Asset Class:** `Commodity / Index Derivative Contract`"
-            catalysts_block, smart_money_block = None, None
         else:
             is_etf = (quote_type == "ETF" or ticker_symbol in KNOWN_ETFS)
             profile_title = "🏢 Fund Profile & Structure" if is_etf else "🏢 Company Profile"
-            market_cap = None
-            try: market_cap = yf.Ticker(ticker_symbol).fast_info.market_cap
+            sector, industry, market_cap, shares = None, None, None, None
+            t_obj = yf.Ticker(ticker_symbol)
+
+            try:
+                shares = t_obj.fast_info.shares
+                market_cap = t_obj.fast_info.market_cap
+            except Exception: pass
+            if not market_cap and shares and current_price: market_cap = current_price * shares
+
+            # Sector & Industry search
+            try:
+                s_res = http_session.get(f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1", timeout=3)
+                if s_res.status_code == 200:
+                    sq = s_res.json().get("quotes", [])
+                    if sq: sector, industry = sq[0].get("sector"), sq[0].get("industry")
             except Exception: pass
 
-            profile_block = f"• **Market Cap:** `{format_large_number(market_cap)}`"
-            catalysts_block = f"• **Wall St. Targets:** {fetch_wallstreet_targets_tls(ticker_symbol, current_price)}"
+            cap_fmt = format_large_number(market_cap)
+            tier_str = "Mega-Cap 👑" if market_cap and market_cap >= 2e11 else ("Large-Cap 🏢" if market_cap and market_cap >= 1e10 else "Mid-Cap 📈")
+            line_sec = f"• **Sector / Industry:** `{sector} • {industry}`\n" if sector and industry else ""
+            profile_block = f"{line_sec}• **Market Cap:** `{cap_fmt}` ({tier_str})"
+
+            # Earnings timing
+            earnings_date_str, prev_surprise_str = "N/A", ""
+            try:
+                ed_df = t_obj.earnings_dates
+                if ed_df is not None and not ed_df.empty:
+                    f_rows = ed_df[ed_df['Reported EPS'].isna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
+                    if not f_rows.empty:
+                        nxt_dt = f_rows.index[-1]
+                        nxt_d = nxt_dt.date() if isinstance(nxt_dt, (datetime, pd.Timestamp)) else nxt_dt
+                        days_left = (nxt_d - datetime.now().date()).days
+                        earnings_date_str = f"`In {days_left} Days ({nxt_d.strftime('%b %d')})`" if days_left >= 0 else f"`{nxt_d.strftime('%b %d')}`"
+                    p_rows = ed_df[ed_df['Reported EPS'].notna()] if 'Reported EPS' in ed_df.columns else pd.DataFrame()
+                    if not p_rows.empty and "Surprise(%)" in p_rows.columns:
+                        raw_surp = float(p_rows["Surprise(%)"].iloc[0])
+                        surp_val = raw_surp * 100 if abs(raw_surp) <= 1.0 else raw_surp
+                        prev_surprise_str = f" | `Prev Beat: {surp_val:+.1f}% {'🎯' if surp_val>=0 else '⚠️'}`"
+            except Exception: pass
+
+            targets_line = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
+            catalysts_block = f"• **Next Earnings:** {earnings_date_str}{prev_surprise_str}\n• **Wall St. Targets:** {targets_line}"
+
             beta_val = calculate_beta_vs_spy(closes)
-            beta_str = f"`{beta_val:.2f}x`" if beta_val else "N/A"
+            beta_str = f"`{beta_val:.2f}x` ({'High Volatility 🔥' if beta_val and beta_val>=1.5 else 'Moderate 📊'})" if beta_val else "N/A"
             smart_money_block = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)`"
 
             # Dividend parsing
@@ -311,12 +354,107 @@ def get_on_demand_data(ticker_symbol):
                 if annual_rate and annual_rate > 0:
                     calc_yield = (annual_rate / current_price) * 100
                     per_payout = last_payout or (annual_rate / 4)
-                    pr_str = f"\n• **Sustainability:** Payout Ratio: `{payout_ratio*100:.1f}%`" if payout_ratio else ""
+                    pr_str = f"\n• **Sustainability:** Payout Ratio: `{payout_ratio*100:.1f}% 🟢`" if payout_ratio else ""
                     dividend_block = f"• **Yield & Payout:** `{calc_yield:.2f}%` • `${per_payout:.2f} / share` (`${annual_rate:.2f} Annualized`)\n• **Key Dates:** Ex-Dividend: `{ex_date_str}` • Pay Date: `{pay_date_str}`{pr_str}"
                 else:
                     dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
             except Exception:
                 dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
+
+            # -------------------------------------------------------------
+            # FULL FINANCIAL STATEMENTS, YOY GROWTH & CASH FLOW HEALTH
+            # -------------------------------------------------------------
+            try:
+                roe_str, margin_str, de_str, curr_ratio_str, fcf_str, quality_str = "N/A", "N/A", "N/A", "N/A", "N/A", "N/A"
+                rev_growth_pct, net_inc_growth_pct = None, None
+                ttm_rev, ttm_net_inc, ttm_fcf = None, None, None
+                stockholders_equity, total_debt, current_assets, current_liab = None, None, None, None
+
+                # Income Statement
+                q_inc = t_obj.quarterly_income_stmt
+                if q_inc is not None and not q_inc.empty:
+                    rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
+                    if rev_row:
+                        rev_s = q_inc.loc[rev_row].dropna()
+                        if len(rev_s) >= 5 and float(rev_s.iloc[4]) > 0:
+                            rev_growth_pct = ((float(rev_s.iloc[0]) - float(rev_s.iloc[4])) / float(rev_s.iloc[4])) * 100
+                        elif len(rev_s) >= 2 and float(rev_s.iloc[-1]) > 0:
+                            rev_growth_pct = ((float(rev_s.iloc[0]) - float(rev_s.iloc[-1])) / float(rev_s.iloc[-1])) * 100
+                        ttm_rev = float(rev_s.iloc[:4].sum()) if len(rev_s) >= 1 else None
+
+                    inc_row = next((r for r in ["Net Income", "Net Income Common Stockholders", "Net Income Continuous Operations"] if r in q_inc.index), None)
+                    if inc_row:
+                        inc_s = q_inc.loc[inc_row].dropna()
+                        if len(inc_s) >= 5 and float(inc_s.iloc[4]) != 0:
+                            net_inc_growth_pct = ((float(inc_s.iloc[0]) - float(inc_s.iloc[4])) / abs(float(inc_s.iloc[4]))) * 100
+                        elif len(inc_s) >= 2 and float(inc_s.iloc[-1]) != 0:
+                            net_inc_growth_pct = ((float(inc_s.iloc[0]) - float(inc_s.iloc[-1])) / abs(float(inc_s.iloc[-1]))) * 100
+                        ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
+
+                # Balance Sheet
+                q_bs = t_obj.quarterly_balance_sheet
+                if q_bs is not None and not q_bs.empty:
+                    eq_row = next((r for r in ["Stockholders Equity", "Total Stockholder Equity", "Common Stock Equity"] if r in q_bs.index), None)
+                    if eq_row: stockholders_equity = float(q_bs.loc[eq_row].dropna().iloc[0])
+                    debt_row = next((r for r in ["Total Debt", "Long Term Debt And Capital Lease Obligation", "Total Non Current Liabilities Net Minority Interest"] if r in q_bs.index), None)
+                    if debt_row: total_debt = float(q_bs.loc[debt_row].dropna().iloc[0])
+                    ca_row = next((r for r in ["Current Assets", "Total Current Assets"] if r in q_bs.index), None)
+                    cl_row = next((r for r in ["Current Liabilities", "Total Current Liabilities"] if r in q_bs.index), None)
+                    if ca_row and cl_row:
+                        current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
+                        current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
+
+                # Cash Flow
+                q_cf = t_obj.quarterly_cash_flow
+                if q_cf is not None and not q_cf.empty:
+                    ocf_row = next((r for r in ["Operating Cash Flow", "Cash Flow From Continuing Operating Activities"] if r in q_cf.index), None)
+                    capex_row = next((r for r in ["Capital Expenditure", "Capital Expenditures"] if r in q_cf.index), None)
+                    if ocf_row:
+                        ocf_s = q_cf.loc[ocf_row].dropna()
+                        ttm_ocf = float(ocf_s.iloc[:4].sum()) if len(ocf_s) >= 1 else 0
+                        capex_s = q_cf.loc[capex_row].dropna() if capex_row else pd.Series([0])
+                        ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
+                        ttm_fcf = ttm_ocf - ttm_capex
+
+                # Compute Ratios
+                if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
+                    roe_val = (ttm_net_inc / stockholders_equity) * 100
+                    roe_str = f"`{roe_val:.1f}% {'💎' if roe_val>=20 else '🟢'}`"
+                if ttm_net_inc and ttm_rev and ttm_rev > 0:
+                    m_val = (ttm_net_inc / ttm_rev) * 100
+                    margin_str = f"`{m_val:.1f}% {'💎' if m_val>=20 else '🟢'}`"
+                if total_debt is not None and stockholders_equity and stockholders_equity > 0:
+                    de_val = total_debt / stockholders_equity
+                    de_str = f"`{de_val:.2f}x` ({'Low Debt 🟢' if de_val<=0.6 else ('Moderate 🟡' if de_val<=1.5 else 'High Debt ⚠️')})"
+                if current_assets and current_liab and current_liab > 0:
+                    cr_val = current_assets / current_liab
+                    curr_ratio_str = f"`{cr_val:.2f}x` ({'🟢' if cr_val>=1.5 else ('🟡' if cr_val>=1.0 else '⚠️')})"
+                if ttm_fcf is not None:
+                    fcf_fmt = format_large_number(ttm_fcf)
+                    fcf_str = f"`{fcf_fmt}` (Yield: `{(ttm_fcf / market_cap) * 100:.1f}%`)" if (market_cap and market_cap > 0) else f"`{fcf_fmt}`"
+                if ttm_fcf is not None and ttm_net_inc and ttm_net_inc > 0:
+                    q_val = ttm_fcf / ttm_net_inc
+                    quality_str = f"`{q_val:.2f}x` 🟢 (Real Cash Backing)" if q_val >= 1.0 else (f"`{q_val:.2f}x` 🟡 (Moderate Cash Conversion)" if q_val >= 0.6 else f"`{q_val:.2f}x` ⚠️ (Accrual / Paper Earnings)")
+
+                # Trailing P/E and P/FCF
+                pe_str = f"`{current_price / (ttm_net_inc / shares):.1f}x`" if (ttm_net_inc and shares and (ttm_net_inc / shares) > 0) else "`N/A (Pre-Profit)`"
+                pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`" if (ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0) else ""
+
+                growth_parts = []
+                if rev_growth_pct is not None: growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
+                if net_inc_growth_pct is not None: growth_parts.append(f"Net Income: `{net_inc_growth_pct:+.1f}% 🚀`")
+                line_growth = f"• **Growth (YoY):** {' | '.join(growth_parts)}\n" if growth_parts else ""
+
+                health_block = (
+                    f"• **Capital Efficiency:** ROE: {roe_str} | Net Margin: {margin_str}\n"
+                    f"{line_growth}"
+                    f"• **Solvency & Liquidity:** Debt/Equity: {de_str} | Current Ratio: {curr_ratio_str}\n"
+                    f"• **Free Cash Flow:** {fcf_str}\n"
+                    f"• **Earnings Quality (FCF / Net Income):** {quality_str}\n"
+                    f"• **Valuation Multiples:** Trailing P/E: {pe_str}{pfcf_str}"
+                )
+            except Exception:
+                health_block = None
 
         return {
             "ticker": ticker_symbol, "price": current_price, "change_pct": change_pct,
@@ -324,7 +462,7 @@ def get_on_demand_data(ticker_symbol):
             "trend_block": trend_block, "macd_str": macd_str, "pivot_str": pivot_str,
             "dividend_block": dividend_block, "profile_title": profile_title,
             "profile_block": profile_block, "catalysts_block": catalysts_block,
-            "smart_money_block": smart_money_block
+            "smart_money_block": smart_money_block, "health_block": health_block
         }, None
     except Exception as e:
         return None, f"Error fetching `{ticker_symbol}`: {e}"
@@ -347,6 +485,7 @@ def create_market_embed(data):
     if data.get("catalysts_block"): embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
     if data.get("smart_money_block"): embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
     if data.get("profile_block"): embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
+    if data.get("health_block"): embed.add_field(name="📊 Balance Sheet & Cash Flow Health", value=data['health_block'], inline=False)
     embed.set_footer(text="Looney • On-Demand Market Terminal")
     return embed
 
@@ -393,14 +532,13 @@ def fetch_institutional_research_radar(ticker_symbol):
         try:
             current_price = float(t_obj.fast_info.last_price or 0.0)
             company_name = str(t_obj.fast_info.name or base_sym)
-        except Exception:
-            pass
+        except Exception: pass
 
         clean_company_short = re.sub(r'[\(\),.]|Inc|Corp|Ltd|Corporation|Company|Bank', '', company_name).strip()
         search_terms = list(dict.fromkeys([base_sym, sym, clean_company_short]))
         seen_banks = {}
 
-        # 1. Official Structured Feed
+        # 1. Structured Feed
         try:
             ud_df = t_obj.upgrades_downgrades
             if ud_df is not None and not ud_df.empty:
@@ -427,10 +565,9 @@ def fetch_institutional_research_radar(ticker_symbol):
                         "pub_dt": row_dt or now_ny
                     }
                     if matched_inst not in seen_banks: seen_banks[matched_inst] = entry
-        except Exception:
-            pass
+        except Exception: pass
 
-        # 2. Deep Web Search with Subject Disambiguation
+        # 2. Deep Web Search with Disambiguation
         raw_reports = []
         def search_yahoo():
             items = []
@@ -441,8 +578,7 @@ def fetch_institutional_research_radar(ticker_symbol):
                         title, link, pub_time = n.get("title", ""), n.get("link") or n.get("canonicalUrl", {}).get("url"), n.get("providerPublishTime") or n.get("pubDate")
                         pub_dt = datetime.fromtimestamp(pub_time if pub_time < 1e11 else pub_time/1000.0, tz=NY_TZ) if pub_time else None
                         if title and link: items.append({"title": title, "link": link, "pub_dt": pub_dt})
-            except Exception:
-                pass
+            except Exception: pass
             return items
 
         def search_google():
@@ -455,8 +591,7 @@ def fetch_institutional_research_radar(ticker_symbol):
                         title, link, pub_date_str = item.findtext("title"), item.findtext("link"), item.findtext("pubDate")
                         pub_dt = parsedate_to_datetime(pub_date_str).astimezone(NY_TZ) if pub_date_str else None
                         if title and link: items.append({"title": title, "link": link, "pub_dt": pub_dt})
-            except Exception:
-                pass
+            except Exception: pass
             return items
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -468,22 +603,18 @@ def fetch_institutional_research_radar(ticker_symbol):
             t_text, pub_dt = rep["title"], rep.get("pub_dt")
             if pub_dt and pub_dt < cutoff_time: continue
 
-            # Subject Verification (Discard if TD is author rating another stock)
             is_subject = False
             for term in search_terms:
                 if len(term) >= 2 and re.search(rf'\b{re.escape(term)}\b', t_text, re.IGNORECASE):
                     if term.upper() == "TD" and re.search(r'\bTD\s*(?:Cowen|Securities|Bank\s*Analyst)\s*(?:raises|cuts|maintains|lowers|sets|rates)\b', t_text, re.IGNORECASE):
-                        if not re.search(r'\b(?:Toronto[- ]Dominion|TD\s*stock|TD\s*shares|TD\.TO)\b', t_text, re.IGNORECASE):
-                            continue
-                    is_subject = True
-                    break
+                        if not re.search(r'\b(?:Toronto[- ]Dominion|TD\s*stock|TD\s*shares|TD\.TO)\b', t_text, re.IGNORECASE): continue
+                    is_subject = True; break
             if not is_subject: continue
 
             matched_inst, inst_badge = None, "🏦"
             for key_name, (full_name, badge) in INSTITUTION_REGISTRY.items():
                 if re.search(rf'\b{re.escape(key_name)}\b', t_text, re.IGNORECASE):
                     matched_inst, inst_badge = full_name, badge; break
-
             if not matched_inst:
                 if any(w in t_text.lower() for w in ["price target", "analyst", "upgrade", "downgrade", "outperform"]):
                     matched_inst = "Institutional Consensus"
@@ -495,16 +626,12 @@ def fetch_institutional_research_radar(ticker_symbol):
                 try:
                     cand_pt = float(pt_match.group(1).replace(',', ''))
                     if cand_pt not in [2024, 2025, 2026, 2027]:
-                        if current_price == 0 or (0.1 * current_price <= cand_pt <= 6.0 * current_price):
-                            pt_val = cand_pt
-                except Exception:
-                    pass
+                        if current_price == 0 or (0.1 * current_price <= cand_pt <= 6.0 * current_price): pt_val = cand_pt
+                except Exception: pass
 
             low_t = t_text.lower()
-            if any(b in low_t for b in ["strong buy", "conviction buy", "top pick", "outperform", "overweight", "raises target", "boosts target", "upgrade", "bullish"]):
-                rating_str, tier = "Outperform / Buy 🟢", "BULLISH"
-            elif any(b in low_t for b in ["downgrade", "underperform", "underweight", "cuts target", "lowers target", "sell", "bearish"]):
-                rating_str, tier = "Underperform / Cautious 🔴", "CAUTIOUS"
+            if any(b in low_t for b in ["strong buy", "conviction buy", "top pick", "outperform", "overweight", "raises target", "boosts target", "upgrade", "bullish"]): rating_str, tier = "Outperform / Buy 🟢", "BULLISH"
+            elif any(b in low_t for b in ["downgrade", "underperform", "underweight", "cuts target", "lowers target", "sell", "bearish"]): rating_str, tier = "Underperform / Cautious 🔴", "CAUTIOUS"
             else:
                 if current_price > 0 and pt_val and pt_val > current_price * 1.05: rating_str, tier = "Target Raised 🟢", "BULLISH"
                 elif current_price > 0 and pt_val and pt_val < current_price * 0.95: rating_str, tier = "Target Lowered 🔴", "CAUTIOUS"
@@ -523,8 +650,7 @@ def fetch_institutional_research_radar(ticker_symbol):
                 seen_banks[matched_inst] = entry
 
         valid_reports = list(seen_banks.values())
-        if not valid_reports:
-            return None, f"No verified institutional research notes found for `{sym}` in the last 90 days."
+        if not valid_reports: return None, f"No verified institutional research notes found for `{sym}` in the last 90 days."
 
         valid_reports.sort(key=lambda x: (x["target"] is not None, x["target"] or 0, x["pub_dt"]), reverse=True)
         return {
@@ -535,15 +661,9 @@ def fetch_institutional_research_radar(ticker_symbol):
     except Exception as e:
         return None, str(e)
 
-# Creates Multi-Part Embeds (batches of 4 reports per embed)
 def create_institutional_radar_embeds(data):
-    sym = data["ticker"]
-    curr = data["currency"]
-    p = data["current_price"]
-    reports = data["reports"]
-    c_name = data.get("company_name", sym)
-    is_ca = sym.endswith(".TO") or sym.endswith(".V")
-
+    sym, curr, p, reports = data["ticker"], data["currency"], data["current_price"], data["reports"]
+    c_name, is_ca = data.get("company_name", sym), sym.endswith(".TO") or sym.endswith(".V")
     price_header = f"${p:.2f} {curr}" if p > 0 else "Live"
     base_title = f"🏛️ BAY STREET RESEARCH RADAR: {sym} ({c_name}) 🍁" if is_ca else f"🏛️ WALL STREET RESEARCH RADAR: {sym} ({c_name})"
 
@@ -578,7 +698,6 @@ def create_institutional_radar_embeds(data):
             tier_badge = "🟢" if r["tier"] == "BULLISH" else ("🟡" if r["tier"] == "NEUTRAL" else "🔴")
             clean_headline = re.sub(r'[\[\]]', '', r['headline'])
             clean_link = r['link'] if r['link'].startswith("http") else f"https://finance.yahoo.com/quote/{sym}"
-
             entries_txt += f"**{start_num + j}. {tier_badge} {r['badge']} {r['institution']}** — `{r['rating']}`\n{pt_line}• **Research:** [{clean_headline[:70]}...]({clean_link})\n• **Date:** `{r['date_str']}`\n\n"
 
         embed.description += entries_txt.strip()
@@ -748,105 +867,4 @@ async def on_message(message):
     content = message.content.strip()
 
     # TRIGGER 1: Institutional Research Radar on `%TICKER` (Multi-Part Embeds)
-    if content.startswith("%") and len(content) >= 2:
-        raw_ticker = content[1:].split()[0].upper().replace("$", "")
-        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
-            async with message.channel.typing():
-                try:
-                    data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
-                    if err:
-                        await message.channel.send(f"❌ {err}")
-                        return
-                    if not data:
-                        await message.channel.send(f"❌ No research data found for `{raw_ticker}`.")
-                        return
-                    embeds = create_institutional_radar_embeds(data)
-                    for embed in embeds:
-                        await message.channel.send(embed=embed)
-                        await asyncio.sleep(0.4)
-                except Exception as e:
-                    await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
-                return
-
-    # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
-    if content.startswith("#") and len(content) >= 2:
-        raw_ticker = content[1:].split()[0].upper().replace("$", "")
-        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
-            async with message.channel.typing():
-                try:
-                    data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
-                    if not data:
-                        await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
-                        return
-                    embed = create_deep_dive_options_embed(data)
-                    await message.channel.send(embed=embed)
-                except Exception as e:
-                    await message.channel.send(f"❌ Options Error: {e}")
-                return
-
-    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
-    if content.startswith("!") or content.startswith("$"):
-        raw_cmd = content[1:].strip()
-        first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
-
-        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research"]:
-            await bot.process_commands(message)
-            return
-
-        potential_ticker = raw_cmd.split()[0].upper()
-        if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
-            async with message.channel.typing():
-                try:
-                    data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
-                    if err:
-                        await message.channel.send(f"❌ {err}")
-                        return
-                    embed = create_market_embed(data)
-                    await message.channel.send(embed=embed)
-                except Exception as e:
-                    await message.channel.send(f"❌ Snapshot Error: {e}")
-                return
-
-    await bot.process_commands(message)
-
-# Fallback Commands
-@bot.command(name="price", aliases=["p", "four", "check"])
-async def price_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(get_on_demand_data, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embed = create_market_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="opt", aliases=["options", "play"])
-async def options_command(ctx, ticker: str):
-    async with ctx.typing():
-        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
-        if not data:
-            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
-            return
-        embed = create_deep_dive_options_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="analyst", aliases=["research", "targets"])
-async def analyst_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embeds = create_institutional_radar_embeds(data)
-        for embed in embeds:
-            await ctx.send(embed=embed)
-            await asyncio.sleep(0.4)
-
-# -------------------------------------------------------------
-# 7. ENTRYPOINT
-# -------------------------------------------------------------
-if __name__ == "__main__":
-    if not BOT_TOKEN:
-        print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
-    else:
-        bot.run(BOT_TOKEN)
+    if content.startswith("%") and len(conte
