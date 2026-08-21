@@ -545,7 +545,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         if len(closes) < 2:
             return metrics
 
-        # --- TIME-WEIGHTED PACED RVOL (ACCURATE FOR MORNING/MIDDAY/CLOSE) ---
+        # --- TIME-WEIGHTED PACED RVOL ---
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -630,27 +630,27 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         quote_type = meta.get("instrumentType", "EQUITY")
         
         if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
-            metrics["profile_title"] = "🏢 Asset Class & Profile"
-            metrics["profile_block"] = (
+            profile_title = "🏢 Asset Class & Profile"
+            profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
                 f"• **Network Utility:** `Digital Asset / Smart Contract Network`\n"
                 f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
         elif quote_type == "ETF" or ticker_symbol in KNOWN_ETFS:
-            metrics["profile_title"] = "🏢 Fund Profile & Structure"
-            metrics["profile_block"] = (
+            profile_title = "🏢 Fund Profile & Structure"
+            profile_block = (
                 f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n"
                 f"• **Structure:** `Diversified Market Basket Holding`\n"
                 f"• **Type:** `Open-End Fund Vehicle`"
             )
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
-            metrics["profile_title"] = "🏢 Asset Class & Profile"
-            metrics["profile_block"] = (
+            profile_title = "🏢 Asset Class & Profile"
+            profile_block = (
                 f"• **Asset Class:** `Commodity / Index Derivative Contract`\n"
                 f"• **Contract Type:** `Standardized Delivery Futures`"
             )
         else:
-            metrics["profile_title"] = "🏢 Company Profile"
+            profile_title = "🏢 Company Profile"
             sector, industry = None, None
             try:
                 s_url = f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1&newsCount=0"
@@ -863,7 +863,116 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         return None, f"Error fetching `{ticker_symbol}`: {e}"
 
 # ====================================================================
-# 6. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR
+# 6. DISCORD WEBHOOK DISPATCHERS
+# ====================================================================
+def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, metrics=None):
+    if not DISCORD_PRICE_WEBHOOK_URL:
+        return
+
+    title_text = f"🚨 Market Alert: {ticker} {session_badge}"
+    desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
+    if step_change is not None:
+        desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total {session_badge}: **{change_pct:+.2f}%**)"
+
+    fields = [
+        {"name": "Current Price", "value": f"${current_price:.2f}", "inline": True},
+        {"name": f"{session_badge} Change", "value": f"{change_pct:+.2f}%", "inline": True}
+    ]
+
+    if history_trail and len(history_trail) > 0:
+        trail_str = " ➔ ".join(history_trail)
+        fields.append({
+            "name": f"🕒 Today's {session_badge} Path",
+            "value": f"`{trail_str}` ➔ **{change_pct:+.2f}%**",
+            "inline": False
+        })
+
+    if metrics:
+        if metrics.get("volume_block"):
+            fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
+        if metrics.get("rsi_block"):
+            fields.append({"name": "📈 Multi-Timeframe RSI", "value": metrics["rsi_block"], "inline": False})
+        if metrics.get("range_str"):
+            fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_str"], "inline": False})
+        if metrics.get("trend_block"):
+            fields.append({"name": "📈 Moving Averages & Trend", "value": metrics["trend_block"], "inline": False})
+        if metrics.get("macd_str"):
+            fields.append({"name": "📊 MACD (12,26,9)", "value": metrics["macd_str"], "inline": False})
+        if metrics.get("pivot_str"):
+            fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
+        if metrics.get("catalysts_block"):
+            fields.append({"name": "🗓️ Catalysts & Wall Street Targets", "value": metrics["catalysts_block"], "inline": False})
+        if metrics.get("smart_money_block"):
+            fields.append({"name": "🐋 Smart Money & Risk Metrics", "value": metrics["smart_money_block"], "inline": False})
+        if metrics.get("profile_block"):
+            fields.append({"name": metrics.get("profile_title", "🏢 Company Profile"), "value": metrics["profile_block"], "inline": False})
+        if metrics.get("health_block"):
+            fields.append({"name": "📊 Balance Sheet & Cash Flow Health", "value": metrics["health_block"], "inline": False})
+
+    payload = {
+        "username": BOT_NAME,
+        "avatar_url": BOT_AVATAR_URL,
+        "embeds": [{
+            "title": title_text,
+            "description": desc_text,
+            "color": 15158332 if change_pct < 0 else 3066993,
+            "fields": fields,
+            "footer": {"text": f"{BOT_NAME} • 24/7 Price Action Channel"}
+        }]
+    }
+    try:
+        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
+        res.raise_for_status()
+    except Exception as e:
+        print(f"Error sending price alert for {ticker}: {e}")
+
+def send_discord_holiday_announcement(us_name, ca_name):
+    if not DISCORD_PRICE_WEBHOOK_URL:
+        return
+
+    headline = f"US & Canadian Stock Markets are CLOSED today for {us_name} / {ca_name}!" if us_name and ca_name else (f"US Stock Markets (NYSE / NASDAQ) are CLOSED today for {us_name}!" if us_name else f"Canadian Stock Market (TSX) is CLOSED today for {ca_name}!")
+    payload = {
+        "username": BOT_NAME,
+        "avatar_url": BOT_AVATAR_URL,
+        "embeds": [{
+            "title": "🏛️ Market Notice: Exchange Holiday",
+            "description": f"**{headline}**\n\n• 📈 **Stocks & ETFs:** Paused for the holiday session.\n• 🪙 **Crypto Watcher:** Active 24/7.\n• 📰 **Breaking News:** Active 24/7.",
+            "color": 15844367,
+            "footer": {"text": f"{BOT_NAME} • Market Holiday Engine"}
+        }]
+    }
+    try:
+        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
+        res.raise_for_status()
+    except Exception as e:
+        print(f"Error sending holiday announcement: {e}")
+
+def send_discord_news_alert(article):
+    if not DISCORD_NEWS_WEBHOOK_URL:
+        return
+
+    payload = {
+        "username": BOT_NAME,
+        "avatar_url": BOT_AVATAR_URL,
+        "embeds": [{
+            "title": f"📰 Breaking News: {article['ticker']}",
+            "description": f"**[{article['title']}]({article['link']})**",
+            "color": 3447003,
+            "fields": [
+                {"name": "Publisher", "value": article["publisher"], "inline": True},
+                {"name": "Published (ET)", "value": article["time_str"], "inline": True}
+            ],
+            "footer": {"text": f"{BOT_NAME} • 24/7 Breaking News Channel"}
+        }]
+    }
+    try:
+        res = requests.post(DISCORD_NEWS_WEBHOOK_URL, json=payload, timeout=10)
+        res.raise_for_status()
+    except Exception as e:
+        print(f"Error sending news alert: {e}")
+
+# ====================================================================
+# 7. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR
 # ====================================================================
 def analyze_stock_options_setup(ticker_symbol, session_http):
     sym = ticker_symbol.upper().strip()
@@ -896,7 +1005,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
-        # --- TIME-WEIGHTED PACED RVOL FOR ACCURATE OPTIONS SCORING ---
+        # Time-Weighted Paced RVOL for Options Scoring
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
@@ -1087,7 +1196,7 @@ def dispatch_top10_options_radar(session_http):
         print(f"Error dispatching options radar: {e}")
 
 # ====================================================================
-# 7. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
+# 8. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
@@ -1204,7 +1313,7 @@ def fetch_ticker_news_rss(symbol, session):
     return news_items
 
 # ====================================================================
-# 8. MAIN EXECUTION CONTROLLER
+# 9. MAIN EXECUTION CONTROLLER
 # ====================================================================
 def check_market():
     now_ny = datetime.now(NY_TZ)
@@ -1368,52 +1477,4 @@ def check_market():
     # ==========================================
     price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
     if price_alerts_to_send:
-        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
-        for alert in price_alerts_to_send:
-            send_discord_price_alert(
-                ticker=alert["ticker"],
-                current_price=alert["price"],
-                change_pct=alert["change_pct"],
-                session_badge=alert["badge"],
-                step_change=alert["step_change"],
-                history_trail=alert["history_trail"],
-                metrics=alert["metrics"]
-            )
-            time.sleep(0.5)
-
-    if new_articles:
-        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
-        for article in new_articles:
-            send_discord_news_alert(article)
-            time.sleep(0.5)
-
-    # ==========================================
-    # 6. RUN TOP 10 OPTIONS RADAR (30-MIN SCAN)
-    # Strict Gate: Mon-Fri between 9:32 AM and 4:00 PM EST (Live Options Market Hours)
-    # ==========================================
-    reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
-    is_options_market_open = (
-        not is_stock_holiday and
-        now_ny.weekday() <= 4 and
-        dtime(9, 32) <= now_ny.time() <= reg_close_time
-    )
-
-    if is_options_market_open:
-        dispatch_top10_options_radar(session_http)
-    elif is_stock_holiday:
-        print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
-    elif now_ny.weekday() > 4:
-        print("⏭️ Skipping options radar: Weekend (Market Closed).")
-    else:
-        close_str = "1:00 PM" if is_early_close else "4:00 PM"
-        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
-
-    # ==========================================
-    # 7. PERSIST STATE
-    # ==========================================
-    save_alert_state(state)
-    print(f"\n=======================================================")
-    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News: {len(new_articles)}")
-
-if __name__ == "__main__":
-    check_market()
+        print(f"\nSending {len(price_alerts_to_sen
