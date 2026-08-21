@@ -67,7 +67,45 @@ NASDAQ_100 = [
 ]
 
 # ====================================================================
-# 1. BULLETPROOF NYSE & TSX MARKET HOLIDAY & EARLY CLOSE ENGINE
+# 1. INSTITUTIONAL U-CURVE VOLUME PACING ENGINE (9:30 AM - 4:00 PM EST)
+# ====================================================================
+def get_intraday_volume_pacing_factor(now_ny):
+    """
+    Calculates expected cumulative volume fraction based on the 
+    historical U-shaped intraday volume distribution (9:30 AM - 4:00 PM EST).
+    """
+    if now_ny.weekday() > 4:
+        return 1.0
+
+    t = now_ny.time()
+    market_open = dtime(9, 30)
+    market_close = dtime(16, 0)
+
+    # Pre-market
+    if t < market_open:
+        return 0.05
+    
+    # After-hours / Post-market
+    if t >= market_close:
+        return 1.0
+
+    # Minutes elapsed since 9:30 AM (1 to 390)
+    minutes_elapsed = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
+
+    # Institutional U-Curve Cumulative Distribution
+    if minutes_elapsed <= 30:       # 9:30 AM - 10:00 AM (Opening Rush: 2% to 18%)
+        return 0.02 + (minutes_elapsed / 30.0) * 0.16
+    elif minutes_elapsed <= 60:     # 10:00 AM - 10:30 AM (18% to 32%)
+        return 0.18 + ((minutes_elapsed - 30) / 30.0) * 0.14
+    elif minutes_elapsed <= 180:    # 10:30 AM - 12:30 PM (Midday slowing: 32% to 54%)
+        return 0.32 + ((minutes_elapsed - 60) / 120.0) * 0.22
+    elif minutes_elapsed <= 300:    # 12:30 PM - 2:30 PM (Lunch lull: 54% to 72%)
+        return 0.54 + ((minutes_elapsed - 180) / 120.0) * 0.18
+    else:                           # 2:30 PM - 4:00 PM (Power Hour: 72% to 100%)
+        return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
+
+# ====================================================================
+# 2. BULLETPROOF NYSE & TSX MARKET HOLIDAY & EARLY CLOSE ENGINE
 # ====================================================================
 def calculate_easter(year):
     a = year % 19
@@ -230,7 +268,7 @@ def check_early_close(target_date):
     return False, None
 
 # ====================================================================
-# 2. SESSION TIMING & DYNAMIC CLASSIFIER
+# 3. SESSION TIMING & DYNAMIC CLASSIFIER
 # ====================================================================
 def get_current_session_info(now_ny, is_early_close):
     if now_ny.weekday() > 4:
@@ -255,7 +293,7 @@ def normalize_title(title_text):
     return re.sub(r'[^a-zA-Z0-9]', '', title_text).lower()
 
 # ====================================================================
-# 3. STATE MEMORY & PERSISTENCE
+# 4. STATE MEMORY & PERSISTENCE
 # ====================================================================
 def load_alert_state():
     now_ny = datetime.now(NY_TZ)
@@ -308,7 +346,7 @@ def save_alert_state(state):
         print(f"Error saving state file: {e}")
 
 # ====================================================================
-# 4. INSTITUTIONAL TECHNICAL & STATEMENT-BASED METRICS ENGINE
+# 5. INSTITUTIONAL TECHNICAL & STATEMENT-BASED METRICS ENGINE
 # ====================================================================
 def format_large_number(num):
     if num is None:
@@ -463,46 +501,27 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
         if fz_res.status_code == 200:
-            tp_match = re.search(r'Target\s*Price[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
-            rec_match = re.search(r'Recom[^\d]+([\d,.]+)', fz_res.text, re.IGNORECASE)
-            if tp_match:
-                mean_t = float(tp_match.group(1).replace(',', ''))
-            if rec_match:
-                score = float(rec_match.group(1))
+            m_tp = re.search(r'Target\s*Price[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
+            m_rc = re.search(r'Recom[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
+            if m_tp:
+                mean_t = float(m_tp.group(1))
+            if m_rc:
+                score = float(m_rc.group(1))
                 rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
     except Exception:
         pass
 
-    if not mean_t:
-        try:
-            tr_url = f"https://market.tipranks.com/api/stocks/getData/?name={ticker_symbol}"
-            tr_res = cureq.get(tr_url, impersonate="chrome124", timeout=4)
-            if tr_res.status_code == 200:
-                tr_data = tr_res.json()
-                pt = tr_data.get("ptConsensus", {})
-                if pt:
-                    low_t = pt.get("low")
-                    mean_t = pt.get("priceTarget")
-                    high_t = pt.get("high")
-                c_rating = tr_data.get("consensuses", {}).get("consensusRating")
-                if c_rating:
-                    rating = c_rating.title() + " 🟢"
-        except Exception:
-            pass
-
-    if mean_t and current_price > 0:
+    if mean_t and current_price > 0 and mean_t < (current_price * 10):
         upside = ((mean_t - current_price) / current_price) * 100
         up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
         rating_part = f" | Rating: `{rating}`" if rating else ""
-        if low_t and high_t:
-            return f"Low: `${low_t:.2f}` | Mean: `${mean_t:.2f}` (**{upside:+.1f}%{up_tag}**) | High: `${high_t:.2f}`{rating_part}"
-        else:
-            return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
+        return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
 
     return "N/A"
 
 def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_session):
     metrics = {}
+    now_ny = datetime.now(NY_TZ)
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
         res = http_session.get(url, timeout=5)
@@ -526,6 +545,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         if len(closes) < 2:
             return metrics
 
+        # --- TIME-WEIGHTED PACED RVOL (ACCURATE FOR MORNING/MIDDAY/CLOSE) ---
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -533,9 +553,14 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         avg_vol_50 = (sum(volumes[-51:-1]) / len(volumes[-51:-1])) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
         avg_vol_90 = (sum(volumes[-91:-1]) / len(volumes[-91:-1])) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
 
-        rvol_20 = (vol_today / avg_vol_20) if avg_vol_20 else None
-        rvol_50 = (vol_today / avg_vol_50) if avg_vol_50 else None
-        rvol_90 = (vol_today / avg_vol_90) if avg_vol_90 else None
+        pacing_factor = get_intraday_volume_pacing_factor(now_ny)
+        exp_vol_20 = (avg_vol_20 * pacing_factor) if avg_vol_20 else None
+        exp_vol_50 = (avg_vol_50 * pacing_factor) if avg_vol_50 else None
+        exp_vol_90 = (avg_vol_90 * pacing_factor) if avg_vol_90 else None
+
+        rvol_20 = (vol_today / exp_vol_20) if exp_vol_20 and exp_vol_20 > 0 else None
+        rvol_50 = (vol_today / exp_vol_50) if exp_vol_50 and exp_vol_50 > 0 else None
+        rvol_90 = (vol_today / exp_vol_90) if exp_vol_90 and exp_vol_90 > 0 else None
 
         metrics["volume_block"] = (
             f"• **Today's Vol:** `{v_today_fmt}`\n"
@@ -767,7 +792,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
                     trailing_eps = ttm_net_inc / shares
                     pe_str = f"`{current_price / trailing_eps:.1f}x`" if trailing_eps > 0 else "`N/A (Pre-Profit)`"
                 else:
-                    pe_str = "`N/A (Pre-Profit)`"
+                    pe_str = "`N/A`"
 
                 if ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0:
                     pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`"
@@ -837,147 +862,12 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
     except Exception as e:
         return None, f"Error fetching `{ticker_symbol}`: {e}"
 
-def create_market_embed(data):
-    embed = discord.Embed(
-        title=f"🚨 Market Snapshot: {data['ticker']} [LIVE ON-DEMAND]",
-        description=f"**{data['ticker']}** is currently **{data['change_pct']:+.2f}%** today.",
-        color=0x2ecc71 if data['change_pct'] >= 0 else 0xe74c3c
-    )
-    embed.add_field(name="Current Price", value=f"${data['price']:.2f}", inline=True)
-    embed.add_field(name="1D Total Change", value=f"{data['change_pct']:+.2f}%", inline=True)
-    embed.add_field(name="📊 Volume Multipliers", value=data['volume_block'], inline=False)
-    embed.add_field(name="📈 Multi-Timeframe RSI", value=data['rsi_block'], inline=False)
-    embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=False)
-    embed.add_field(name="📈 Moving Averages & Trend", value=data['trend_block'], inline=False)
-    embed.add_field(name="📊 MACD (12,26,9)", value=data['macd_str'], inline=False)
-    embed.add_field(name="🛡️ Key Pivot Levels", value=data['pivot_str'], inline=False)
-    
-    if data.get("catalysts_block"):
-        embed.add_field(name="🗓️ Catalysts & Wall Street Targets", value=data['catalysts_block'], inline=False)
-    if data.get("smart_money_block"):
-        embed.add_field(name="🐋 Smart Money & Risk Metrics", value=data['smart_money_block'], inline=False)
-    if data.get("profile_block"):
-        embed.add_field(name=data.get("profile_title", "🏢 Company Profile"), value=data['profile_block'], inline=False)
-    if data.get("health_block"):
-        embed.add_field(name="📊 Balance Sheet & Cash Flow Health", value=data['health_block'], inline=False)
-
-    embed.set_footer(text="Looney • On-Demand Market Terminal")
-    return embed
-
-# ====================================================================
-# 5. DISCORD WEBHOOK DISPATCHERS
-# ====================================================================
-def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, metrics=None):
-    if not DISCORD_PRICE_WEBHOOK_URL:
-        return
-
-    title_text = f"🚨 Market Alert: {ticker} {session_badge}"
-    desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
-    if step_change is not None:
-        desc_text = f"**{ticker}** moved **{step_change:+.2f}%** since last alert! (Total {session_badge}: **{change_pct:+.2f}%**)"
-
-    fields = [
-        {"name": "Current Price", "value": f"${current_price:.2f}", "inline": True},
-        {"name": f"{session_badge} Change", "value": f"{change_pct:+.2f}%", "inline": True}
-    ]
-
-    if history_trail and len(history_trail) > 0:
-        trail_str = " ➔ ".join(history_trail)
-        fields.append({
-            "name": f"🕒 Today's {session_badge} Path",
-            "value": f"`{trail_str}` ➔ **{change_pct:+.2f}%**",
-            "inline": False
-        })
-
-    if metrics:
-        if metrics.get("volume_block"):
-            fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
-        if metrics.get("rsi_block"):
-            fields.append({"name": "📈 Multi-Timeframe RSI", "value": metrics["rsi_block"], "inline": False})
-        if metrics.get("range_str"):
-            fields.append({"name": "🏔️ 52-Week Range", "value": metrics["range_str"], "inline": False})
-        if metrics.get("trend_block"):
-            fields.append({"name": "📈 Moving Averages & Trend", "value": metrics["trend_block"], "inline": False})
-        if metrics.get("macd_str"):
-            fields.append({"name": "📊 MACD (12,26,9)", "value": metrics["macd_str"], "inline": False})
-        if metrics.get("pivot_str"):
-            fields.append({"name": "🛡️ Key Pivot Levels", "value": metrics["pivot_str"], "inline": False})
-        if metrics.get("catalysts_block"):
-            fields.append({"name": "🗓️ Catalysts & Wall Street Targets", "value": metrics["catalysts_block"], "inline": False})
-        if metrics.get("smart_money_block"):
-            fields.append({"name": "🐋 Smart Money & Risk Metrics", "value": metrics["smart_money_block"], "inline": False})
-        if metrics.get("profile_block"):
-            fields.append({"name": metrics.get("profile_title", "🏢 Company Profile"), "value": metrics["profile_block"], "inline": False})
-        if metrics.get("health_block"):
-            fields.append({"name": "📊 Balance Sheet & Cash Flow Health", "value": metrics["health_block"], "inline": False})
-
-    payload = {
-        "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
-        "embeds": [{
-            "title": title_text,
-            "description": desc_text,
-            "color": 15158332 if change_pct < 0 else 3066993,
-            "fields": fields,
-            "footer": {"text": f"{BOT_NAME} • 24/7 Price Action Channel"}
-        }]
-    }
-    try:
-        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Error sending price alert for {ticker}: {e}")
-
-def send_discord_holiday_announcement(us_name, ca_name):
-    if not DISCORD_PRICE_WEBHOOK_URL:
-        return
-
-    headline = f"US & Canadian Stock Markets are CLOSED today for {us_name} / {ca_name}!" if us_name and ca_name else (f"US Stock Markets (NYSE / NASDAQ) are CLOSED today for {us_name}!" if us_name else f"Canadian Stock Market (TSX) is CLOSED today for {ca_name}!")
-    payload = {
-        "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
-        "embeds": [{
-            "title": "🏛️ Market Notice: Exchange Holiday",
-            "description": f"**{headline}**\n\n• 📈 **Stocks & ETFs:** Paused for the holiday session.\n• 🪙 **Crypto Watcher:** Active 24/7.\n• 📰 **Breaking News:** Active 24/7.",
-            "color": 15844367,
-            "footer": {"text": f"{BOT_NAME} • Market Holiday Engine"}
-        }]
-    }
-    try:
-        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Error sending holiday announcement: {e}")
-
-def send_discord_news_alert(article):
-    if not DISCORD_NEWS_WEBHOOK_URL:
-        return
-
-    payload = {
-        "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
-        "embeds": [{
-            "title": f"📰 Breaking News: {article['ticker']}",
-            "description": f"**[{article['title']}]({article['link']})**",
-            "color": 3447003,
-            "fields": [
-                {"name": "Publisher", "value": article["publisher"], "inline": True},
-                {"name": "Published (ET)", "value": article["time_str"], "inline": True}
-            ],
-            "footer": {"text": f"{BOT_NAME} • 24/7 Breaking News Channel"}
-        }]
-    }
-    try:
-        res = requests.post(DISCORD_NEWS_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Error sending news alert: {e}")
-
 # ====================================================================
 # 6. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR
 # ====================================================================
 def analyze_stock_options_setup(ticker_symbol, session_http):
     sym = ticker_symbol.upper().strip()
+    now_ny = datetime.now(NY_TZ)
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1y"
         res = session_http.get(url, timeout=6)
@@ -1006,9 +896,12 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
+        # --- TIME-WEIGHTED PACED RVOL FOR ACCURATE OPTIONS SCORING ---
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
-        rvol = (vol_today / avg_vol_20) if avg_vol_20 > 0 else 1.0
+        pacing_factor = get_intraday_volume_pacing_factor(now_ny)
+        expected_vol_so_far = avg_vol_20 * pacing_factor
+        rvol = (vol_today / expected_vol_so_far) if expected_vol_so_far > 0 else 1.0
 
         h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
         p = (h_prev + l_prev + c_prev) / 3.0
@@ -1049,6 +942,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         elif "Bearish" in str(macd_verdict):
             bear_score += 12
 
+        # Volume Points (Powered by Time-Paced RVOL)
         if rvol >= 1.5:
             bull_score += 15 if change_pct >= 0 else 0
             bear_score += 15 if change_pct < 0 else 0
@@ -1172,7 +1066,7 @@ def dispatch_top10_options_radar(session_http):
             f"• **Strategy:** `{item['strategy_name']}` (IV Rank: `{item['iv_rank']}%`)\n"
             f"• ⚡ **7–14 DTE:** {item['play_7_14']}\n"
             f"• 🏛️ **30–45 DTE:** {item['play_30_45']}\n"
-            f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x`\n\n"
+            f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x (Time-Paced)`\n\n"
         )
 
     payload = {
