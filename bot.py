@@ -4,6 +4,7 @@ import asyncio
 import math
 import re
 import time
+import concurrent.futures
 import xml.etree.ElementTree as ET
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta, time as dtime
@@ -96,7 +97,7 @@ def get_intraday_volume_pacing_factor(now_ny):
     historical U-shaped intraday volume distribution (9:30 AM - 4:00 PM EST).
     """
     if now_ny.weekday() > 4:
-        return 1.0  # Weekend: full day comparison
+        return 1.0
 
     t = now_ny.time()
     market_open = dtime(9, 30)
@@ -104,11 +105,11 @@ def get_intraday_volume_pacing_factor(now_ny):
 
     # Pre-market
     if t < market_open:
-        return 0.05  # Pre-market volume baseline (~5% of normal day)
+        return 0.05
     
     # After-hours / Post-market
     if t >= market_close:
-        return 1.0  # Full trading day elapsed
+        return 1.0
 
     # Minutes elapsed since 9:30 AM (1 to 390)
     minutes_elapsed = max(1, int((now_ny - now_ny.replace(hour=9, minute=30, second=0, microsecond=0)).total_seconds() / 60))
@@ -1075,7 +1076,6 @@ def analyze_stock_options_setup(ticker_symbol):
 
         bull_score, bear_score = 0, 0
 
-        # 1. Trend (25 pts)
         if current_price >= sma_50 and current_price >= sma_200:
             bull_score += 25
         elif current_price >= sma_50:
@@ -1085,7 +1085,6 @@ def analyze_stock_options_setup(ticker_symbol):
         elif current_price < sma_50:
             bear_score += 15
 
-        # 2. RSI (20 pts)
         if 52 <= rsi_14 <= 68:
             bull_score += 20
         elif rsi_14 > 68:
@@ -1095,7 +1094,6 @@ def analyze_stock_options_setup(ticker_symbol):
         elif rsi_14 < 32:
             bear_score += 10
 
-        # 3. MACD (20 pts)
         if "Bullish Momentum" in str(macd_verdict):
             bull_score += 20
         elif "Bullish" in str(macd_verdict):
@@ -1105,7 +1103,6 @@ def analyze_stock_options_setup(ticker_symbol):
         elif "Bearish" in str(macd_verdict):
             bear_score += 12
 
-        # 4. Volume (15 pts) - Powered by Time-Weighted RVOL
         if rvol >= 1.5:
             bull_score += 15 if change_pct >= 0 else 0
             bear_score += 15 if change_pct < 0 else 0
@@ -1116,7 +1113,6 @@ def analyze_stock_options_setup(ticker_symbol):
             bull_score += 5
             bear_score += 5
 
-        # 5. Volatility Match (20 pts)
         if bull_score >= bear_score:
             bull_score += 20 if iv_rank_est < 35 else (18 if iv_rank_est > 50 else 12)
         else:
