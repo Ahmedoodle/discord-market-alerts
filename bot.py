@@ -70,6 +70,7 @@ nasdaq_session.headers.update({
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 NY_TZ = ZoneInfo("America/New_York")
+UTC_TZ = ZoneInfo("UTC")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
 
 intents = discord.Intents.default()
@@ -84,7 +85,7 @@ def format_large_number(num):
     elif num >= 1e3: return f"${num / 1e3:.1f}K"
     return str(int(num))
 
-# --- INSTITUTIONAL U-CURVE VOLUME PACING ---
+# --- INTRADAY VOLUME PACING (EQUITIES & CRYPTO) ---
 def get_intraday_volume_pacing_factor(now_ny):
     if now_ny.weekday() > 4: return 1.0
     t = now_ny.time()
@@ -97,6 +98,13 @@ def get_intraday_volume_pacing_factor(now_ny):
     elif mins <= 180: return 0.32 + ((mins - 60) / 120.0) * 0.22
     elif mins <= 300: return 0.54 + ((mins - 180) / 120.0) * 0.18
     else: return 0.72 + ((mins - 300) / 90.0) * 0.28
+
+def get_crypto_volume_pacing_factor(now_utc):
+    # Crypto 24h cycle resets at 00:00 UTC (8:00 PM EST)
+    mins_elapsed = (now_utc.hour * 60) + now_utc.minute
+    # 15-minute smoothing floor prevents artificial 100x spikes right at 00:01 UTC
+    effective_mins = max(15, mins_elapsed)
+    return min(1.0, max(0.01, effective_mins / 1440.0))
 
 # --- MATHEMATICAL INDICATORS ---
 def calculate_rsi(closes, period=14):
@@ -203,6 +211,7 @@ def get_on_demand_data(ticker_symbol):
     ticker_symbol = ticker_symbol.upper().strip()
     is_canadian = ticker_symbol.endswith(".TO") or ticker_symbol.endswith(".V")
     now_ny = datetime.now(NY_TZ)
+    now_utc = datetime.now(UTC_TZ)
 
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y&events=div"
@@ -224,14 +233,17 @@ def get_on_demand_data(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
         change_pct = ((current_price - prev_close) / prev_close) * 100
 
-        # Time-Paced RVOL
+        quote_type = meta.get("instrumentType", "EQUITY")
+        is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
+
+        # Time-Paced RVOL (Crypto 24H 00:00 UTC vs Stock 9:30-4:00 NY)
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
         avg_vol_20 = (sum(volumes[-21:-1]) / len(volumes[-21:-1])) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
         avg_vol_50 = (sum(volumes[-51:-1]) / len(volumes[-51:-1])) if len(volumes) >= 50 and sum(volumes[-51:-1]) > 0 else None
         avg_vol_90 = (sum(volumes[-91:-1]) / len(volumes[-91:-1])) if len(volumes) >= 90 and sum(volumes[-91:-1]) > 0 else None
 
-        pacing_factor = get_intraday_volume_pacing_factor(now_ny)
+        pacing_factor = get_crypto_volume_pacing_factor(now_utc) if is_crypto else get_intraday_volume_pacing_factor(now_ny)
         exp_vol_20 = (avg_vol_20 * pacing_factor) if avg_vol_20 else None
         exp_vol_50 = (avg_vol_50 * pacing_factor) if avg_vol_50 else None
         exp_vol_90 = (avg_vol_90 * pacing_factor) if avg_vol_90 else None
@@ -270,10 +282,9 @@ def get_on_demand_data(ticker_symbol):
             pivot_str = f"`Support (S1): ${(2.0 * p) - highs[-2]:.2f}` | `Resistance (R1): ${(2.0 * p) - lows[-2]:.2f}`"
 
         atr = calculate_atr(highs, lows, closes, 14)
-        quote_type = meta.get("instrumentType", "EQUITY")
         dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
 
-        if quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol:
+        if is_crypto:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n• **Trading:** `24/7/365 Continuous Global Liquidity`"
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
