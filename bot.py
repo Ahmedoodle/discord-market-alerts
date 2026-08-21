@@ -437,8 +437,15 @@ def get_on_demand_data(ticker_symbol):
                     quality_str = f"`{q_val:.2f}x` 🟢 (Real Cash Backing)" if q_val >= 1.0 else (f"`{q_val:.2f}x` 🟡 (Moderate Cash Conversion)" if q_val >= 0.6 else f"`{q_val:.2f}x` ⚠️ (Accrual / Paper Earnings)")
 
                 # Trailing P/E and P/FCF
+                calc_market_cap = market_cap if market_cap and market_cap > 0 else ((current_price * shares) if shares and current_price else None)
                 pe_str = f"`{current_price / (ttm_net_inc / shares):.1f}x`" if (ttm_net_inc and shares and (ttm_net_inc / shares) > 0) else "`N/A (Pre-Profit)`"
-                pfcf_str = f" | P/FCF: `{market_cap / ttm_fcf:.1f}x`" if (ttm_fcf and ttm_fcf > 0 and market_cap and market_cap > 0) else ""
+                
+                if ttm_fcf and ttm_fcf > 0 and calc_market_cap and calc_market_cap > 0:
+                    pfcf_str = f" | P/FCF: `{calc_market_cap / ttm_fcf:.1f}x`"
+                elif ttm_fcf and ttm_fcf <= 0:
+                    pfcf_str = " | P/FCF: `Negative FCF`"
+                else:
+                    pfcf_str = " | P/FCF: `N/A`"
 
                 growth_parts = []
                 if rev_growth_pct is not None: growth_parts.append(f"Revenue: `{rev_growth_pct:+.1f}%`")
