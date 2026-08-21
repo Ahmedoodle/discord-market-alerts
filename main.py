@@ -794,9 +794,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
             targets_line_str = fetch_wallstreet_targets_tls(ticker_symbol, current_price)
 
-            if is_etf:
-                line_sector = f"• **Asset Class:** `Exchange-Traded Fund (ETF Basket)`\n• **Structure:** `Diversified Market Basket Holding`"
-            elif sector and industry:
+            if sector and industry:
                 line_sector = f"• **Sector / Industry:** `{sector} • {industry}`"
             elif sector:
                 line_sector = f"• **Sector:** `{sector}`"
@@ -836,25 +834,9 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 
             health_block = "\n".join(health_elements)
 
-        return {
-            "ticker": ticker_symbol,
-            "price": current_price,
-            "change_pct": change_pct,
-            "volume_block": volume_block,
-            "rsi_block": rsi_block,
-            "range_str": range_str,
-            "trend_block": trend_block,
-            "macd_str": macd_str,
-            "pivot_str": pivot_str,
-            "catalysts_block": catalysts_block,
-            "smart_money_block": smart_money_block,
-            "profile_title": profile_title,
-            "profile_block": profile_block,
-            "health_block": health_block
-        }, None
-
-    except Exception as e:
-        return None, f"Error fetching `{ticker_symbol}`: {e}"
+        return metrics
+    except Exception:
+        return metrics
 
 # ====================================================================
 # 6. DISCORD WEBHOOK DISPATCHERS
@@ -862,6 +844,10 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
 def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, metrics=None):
     if not DISCORD_PRICE_WEBHOOK_URL:
         return
+
+    # Unpack tuple defensively if needed
+    if isinstance(metrics, tuple):
+        metrics = metrics[0] if len(metrics) > 0 else {}
 
     title_text = f"🚨 Market Alert: {ticker} {session_badge}"
     desc_text = f"**{ticker}** moved **{change_pct:+.2f}%** today!"
@@ -881,7 +867,7 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
             "inline": False
         })
 
-    if metrics:
+    if isinstance(metrics, dict):
         if metrics.get("volume_block"):
             fields.append({"name": "📊 Volume Multipliers", "value": metrics["volume_block"], "inline": False})
         if metrics.get("rsi_block"):
@@ -1015,6 +1001,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
         iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
 
+        # Quant Scoring (0 to 100)
         bull_score, bear_score = 0, 0
 
         if current_price >= sma_50 and current_price >= sma_200:
@@ -1044,6 +1031,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         elif "Bearish" in str(macd_verdict):
             bear_score += 12
 
+        # Volume Points (Powered by Time-Paced RVOL)
         if rvol >= 1.5:
             bull_score += 15 if change_pct >= 0 else 0
             bear_score += 15 if change_pct < 0 else 0
@@ -1406,115 +1394,4 @@ def check_market():
                         }
                         history_trail = []
                     else:
-                        print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change: {change_pct:+6.2f}%")
-
-                if should_alert:
-                    metrics = get_technical_and_fundamental_metrics(ticker_symbol, current_price, session_http)
-                    price_alerts_to_send.append({
-                        "ticker": ticker_symbol,
-                        "price": current_price,
-                        "change_pct": change_pct,
-                        "badge": badge,
-                        "step_change": step_change_pct,
-                        "history_trail": history_trail[:-1] if step_change_pct is not None else [],
-                        "metrics": metrics
-                    })
-
-            else:
-                print(f"⚠️ {ticker_symbol:10s} {badge} | SKIPPED: Insufficient realtime price data")
-        except Exception as e:
-            print(f"❌ Error checking {ticker_symbol}: {e}")
-        time.sleep(0.12)
-
-    # ==========================================
-    # 4. SCAN BREAKING NEWS
-    # ==========================================
-    print("\nScanning breaking news across all tickers...")
-    cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
-    seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
-    raw_news = []
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures_search = [executor.submit(fetch_ticker_news_search, sym, session_http) for sym in ALL_TICKERS]
-        futures_rss = [executor.submit(fetch_ticker_news_rss, sym, session_http) for sym in ALL_TICKERS]
-
-        for f in concurrent.futures.as_completed(futures_search + futures_rss):
-            raw_news.extend(f.result())
-
-    new_articles = []
-    for item in raw_news:
-        link = item["link"]
-        pub_dt = item.get("pub_dt")
-        title = item.get("title", "")
-
-        date_stamp = pub_dt.strftime("%Y-%m-%d") if pub_dt else "nodate"
-        norm_title = normalize_title(title)
-
-        title_date_key = f"title_{norm_title}_{date_stamp}"
-        link_key = f"link_{link}"
-
-        if link_key in seen_fingerprints_set or (norm_title and title_date_key in seen_fingerprints_set):
-            continue
-
-        seen_fingerprints_set.add(link_key)
-        seen_fingerprints_set.add(title_date_key)
-        state["seen_news_fingerprints"].append(link_key)
-        state["seen_news_fingerprints"].append(title_date_key)
-
-        if pub_dt and pub_dt >= cutoff_time:
-            new_articles.append(item)
-
-    # ==========================================
-    # 5. DISPATCH PRICE & NEWS DISCORD ALERTS
-    # ==========================================
-    price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
-    if price_alerts_to_send:
-        print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
-        for alert in price_alerts_to_send:
-            send_discord_price_alert(
-                ticker=alert["ticker"],
-                current_price=alert["price"],
-                change_pct=alert["change_pct"],
-                session_badge=alert["badge"],
-                step_change=alert["step_change"],
-                history_trail=alert["history_trail"],
-                metrics=alert["metrics"]
-            )
-            time.sleep(0.5)
-
-    if new_articles:
-        print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
-        for article in new_articles:
-            send_discord_news_alert(article)
-            time.sleep(0.5)
-
-    # ==========================================
-    # 6. RUN TOP 10 OPTIONS RADAR (30-MIN SCAN)
-    # Strict Gate: Mon-Fri between 9:32 AM and 4:00 PM EST (Live Options Market Hours)
-    # ==========================================
-    reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
-    is_options_market_open = (
-        not is_stock_holiday and
-        now_ny.weekday() <= 4 and
-        dtime(9, 32) <= now_ny.time() <= reg_close_time
-    )
-
-    if is_options_market_open:
-        dispatch_top10_options_radar(session_http)
-    elif is_stock_holiday:
-        print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
-    elif now_ny.weekday() > 4:
-        print("⏭️ Skipping options radar: Weekend (Market Closed).")
-    else:
-        close_str = "1:00 PM" if is_early_close else "4:00 PM"
-        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
-
-    # ==========================================
-    # 7. PERSIST STATE
-    # ==========================================
-    save_alert_state(state)
-    print(f"\n=======================================================")
-    print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News: {len(new_articles)}")
-
-if __name__ == "__main__":
-    check_market()
+                        print(f"✅ {ticker_symbol:10s} {badge} | Price: ${current_price:10.2f} | Change:
