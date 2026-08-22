@@ -183,6 +183,7 @@ def calculate_historical_volatility(closes, window=30):
     log_returns = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - window, len(closes))]
     mean_ret = sum(log_returns) / len(log_returns)
     variance = sum((r - mean_ret) ** 2 for r in log_returns) / (len(log_returns) - 1)
+    if variance <= 0: return 0.05
     return math.sqrt(variance) * math.sqrt(252)
 
 def calculate_beta_vs_spy(closes):
@@ -256,15 +257,29 @@ def get_on_demand_data(ticker_symbol):
         indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
         dividends_dict = chart_data.get("events", {}).get("dividends", {})
 
-        closes = [c for c in indicators.get("close", []) if c is not None]
-        volumes = [v for v in indicators.get("volume", []) if v is not None]
-        highs = [h for h in indicators.get("high", []) if h is not None]
-        lows = [l for l in indicators.get("low", []) if l is not None]
-        if len(closes) < 2: return None, f"Insufficient price history for `{ticker_symbol}`."
+        raw_c = indicators.get("close", []) or []
+        raw_v = indicators.get("volume", []) or []
+        raw_h = indicators.get("high", []) or []
+        raw_l = indicators.get("low", []) or []
+
+        # Synchronize candles together to prevent Null array length mismatch
+        valid_bars = []
+        for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
+            c, h, l = raw_c[i], raw_h[i], raw_l[i]
+            v = raw_v[i] if i < len(raw_v) and raw_v[i] is not None else 0
+            if c is not None and h is not None and l is not None and c > 0:
+                valid_bars.append((float(c), float(h), float(l), float(v)))
+
+        if len(valid_bars) < 2: return None, f"Insufficient price history for `{ticker_symbol}`."
+
+        closes = [b[0] for b in valid_bars]
+        highs = [b[1] for b in valid_bars]
+        lows = [b[2] for b in valid_bars]
+        volumes = [b[3] for b in valid_bars]
 
         current_price = meta.get("regularMarketPrice") or closes[-1]
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
-        change_pct = ((current_price - prev_close) / prev_close) * 100
+        change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
 
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
@@ -766,15 +781,29 @@ def analyze_stock_options_setup(ticker_symbol):
         meta = chart_data.get("meta", {})
         indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
 
-        closes = [c for c in indicators.get("close", []) if c is not None]
-        volumes = [v for v in indicators.get("volume", []) if v is not None]
-        highs = [h for h in indicators.get("high", []) if h is not None]
-        lows = [l for l in indicators.get("low", []) if l is not None]
-        if len(closes) < 50: return None
+        raw_c = indicators.get("close", []) or []
+        raw_v = indicators.get("volume", []) or []
+        raw_h = indicators.get("high", []) or []
+        raw_l = indicators.get("low", []) or []
+
+        # Synchronize candles together to prevent Null array length mismatch
+        valid_bars = []
+        for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
+            c, h, l = raw_c[i], raw_h[i], raw_l[i]
+            v = raw_v[i] if i < len(raw_v) and raw_v[i] is not None else 0
+            if c is not None and h is not None and l is not None and c > 0:
+                valid_bars.append((float(c), float(h), float(l), float(v)))
+
+        if len(valid_bars) < 50: return None
+
+        closes = [b[0] for b in valid_bars]
+        highs = [b[1] for b in valid_bars]
+        lows = [b[2] for b in valid_bars]
+        volumes = [b[3] for b in valid_bars]
 
         current_price = meta.get("regularMarketPrice") or closes[-1]
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
-        change_pct = ((current_price - prev_close) / prev_close) * 100
+        change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
 
         sma_50 = sum(closes[-50:]) / 50
         sma_200 = sum(closes[-200:]) / 200 if len(closes) >= 200 else sma_50
@@ -783,7 +812,7 @@ def analyze_stock_options_setup(ticker_symbol):
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
         vol_today = volumes[-1] if volumes else 0
-        avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
+        avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else (vol_today or 1.0)
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
         expected_vol_so_far = avg_vol_20 * pacing_factor
         rvol = (vol_today / expected_vol_so_far) if expected_vol_so_far > 0 else 1.0
@@ -792,7 +821,9 @@ def analyze_stock_options_setup(ticker_symbol):
         r1, s1 = (2.0 * p) - lows[-2], (2.0 * p) - highs[-2]
         hv_30 = calculate_historical_volatility(closes, 30)
         hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
-        iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
+        
+        denom = (hv_90 * 1.3) if (hv_90 and hv_90 > 0) else 1.0
+        iv_rank_est = max(5, min(95, int((hv_30 / denom) * 50)))
 
         bull_score, bear_score = 0, 0
         if current_price >= sma_50 and current_price >= sma_200: bull_score += 25
