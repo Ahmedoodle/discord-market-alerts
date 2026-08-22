@@ -4,6 +4,7 @@ import asyncio
 import math
 import re
 import time
+import json
 import concurrent.futures
 import xml.etree.ElementTree as ET
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -18,14 +19,25 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
-# 1. 24/7 KEEP-ALIVE SERVER WITH SELF-PINGER (FOR RENDER)
+# 1. FAILOVER CONFIGURATION & 24/7 KEEP-ALIVE SERVER
 # -------------------------------------------------------------
-class PingHandler(BaseHTTPRequestHandler):
+ROLE = os.getenv("ROLE", "PRIMARY").upper().strip()  # PRIMARY or BACKUP
+PRIMARY_URL = os.getenv("PRIMARY_URL", "https://discord-market-alerts.onrender.com").rstrip("/")
+BOT_STATE = {"status": "STARTING", "role": ROLE, "is_leader": False}
+
+class FailoverPingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"Looney On-Demand Discord Bot is Live 24/7!")
+        if self.path == "/status" or self.path == "/healthz":
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(BOT_STATE).encode("utf-8"))
+        else:
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            msg = f"Looney Bot Node Live! Role: {ROLE} | Status: {BOT_STATE['status']}"
+            self.wfile.write(msg.encode("utf-8"))
 
     def do_HEAD(self):
         self.send_response(200)
@@ -34,7 +46,7 @@ class PingHandler(BaseHTTPRequestHandler):
 
 def run_dummy_server():
     port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), PingHandler)
+    server = HTTPServer(("0.0.0.0", port), FailoverPingHandler)
     server.serve_forever()
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
@@ -43,8 +55,9 @@ def auto_self_ping():
     time.sleep(30)
     while True:
         try:
-            render_url = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com")
-            requests.get(render_url, timeout=10)
+            render_url = os.getenv("RENDER_EXTERNAL_URL")
+            if render_url:
+                requests.get(render_url, timeout=10)
         except Exception:
             pass
         time.sleep(600)
@@ -300,7 +313,6 @@ def get_on_demand_data(ticker_symbol):
             except Exception: pass
             if not market_cap and shares and current_price: market_cap = current_price * shares
 
-            # Sector & Industry search
             try:
                 s_res = http_session.get(f"https://query2.finance.yahoo.com/v1/finance/search?q={ticker_symbol}&quotesCount=1", timeout=3)
                 if s_res.status_code == 200:
@@ -313,7 +325,6 @@ def get_on_demand_data(ticker_symbol):
             line_sec = f"• **Sector / Industry:** `{sector} • {industry}`\n" if sector and industry else ""
             profile_block = f"{line_sec}• **Market Cap:** `{cap_fmt}` ({tier_str})"
 
-            # Earnings timing
             earnings_date_str, prev_surprise_str = "N/A", ""
             try:
                 ed_df = t_obj.earnings_dates
@@ -338,7 +349,6 @@ def get_on_demand_data(ticker_symbol):
             beta_str = f"`{beta_val:.2f}x` ({'High Volatility 🔥' if beta_val and beta_val>=1.5 else 'Moderate 📊'})" if beta_val else "N/A"
             smart_money_block = f"• **Beta (Market Volatility):** {beta_str}\n• **Expected Daily Move (ATR):** `±${atr:.2f} (±{(atr/current_price)*100:.1f}% swing)`"
 
-            # Dividend parsing
             try:
                 ex_date_str, pay_date_str, payout_ratio, trailing_div_rate = "N/A", "N/A", None, None
                 qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker_symbol}?modules=calendarEvents,summaryDetail,defaultKeyStatistics&region={'CA' if is_canadian else 'US'}&lang=en", impersonate="chrome124", timeout=4)
@@ -370,16 +380,12 @@ def get_on_demand_data(ticker_symbol):
             except Exception:
                 dividend_block = "• **Status:** `No Regular Dividend (Zero Yield / Pure Growth Stock)`"
 
-            # -------------------------------------------------------------
-            # FULL FINANCIAL STATEMENTS, YOY GROWTH & CASH FLOW HEALTH
-            # -------------------------------------------------------------
             try:
                 roe_str, margin_str, de_str, curr_ratio_str, fcf_str, quality_str = "N/A", "N/A", "N/A", "N/A", "N/A", "N/A"
                 rev_growth_pct, net_inc_growth_pct = None, None
                 ttm_rev, ttm_net_inc, ttm_fcf = None, None, None
                 stockholders_equity, total_debt, current_assets, current_liab = None, None, None, None
 
-                # Income Statement
                 q_inc = t_obj.quarterly_income_stmt
                 if q_inc is not None and not q_inc.empty:
                     rev_row = next((r for r in ["Total Revenue", "Operating Revenue", "Revenue"] if r in q_inc.index), None)
@@ -400,7 +406,6 @@ def get_on_demand_data(ticker_symbol):
                             net_inc_growth_pct = ((float(inc_s.iloc[0]) - float(inc_s.iloc[-1])) / abs(float(inc_s.iloc[-1]))) * 100
                         ttm_net_inc = float(inc_s.iloc[:4].sum()) if len(inc_s) >= 1 else None
 
-                # Balance Sheet
                 q_bs = t_obj.quarterly_balance_sheet
                 if q_bs is not None and not q_bs.empty:
                     eq_row = next((r for r in ["Stockholders Equity", "Total Stockholder Equity", "Common Stock Equity"] if r in q_bs.index), None)
@@ -413,7 +418,6 @@ def get_on_demand_data(ticker_symbol):
                         current_assets = float(q_bs.loc[ca_row].dropna().iloc[0])
                         current_liab = float(q_bs.loc[cl_row].dropna().iloc[0])
 
-                # Cash Flow
                 q_cf = t_obj.quarterly_cash_flow
                 if q_cf is not None and not q_cf.empty:
                     ocf_row = next((r for r in ["Operating Cash Flow", "Cash Flow From Continuing Operating Activities"] if r in q_cf.index), None)
@@ -425,7 +429,6 @@ def get_on_demand_data(ticker_symbol):
                         ttm_capex = abs(float(capex_s.iloc[:4].sum())) if len(capex_s) >= 1 else 0
                         ttm_fcf = ttm_ocf - ttm_capex
 
-                # Compute Ratios
                 if ttm_net_inc and stockholders_equity and stockholders_equity > 0:
                     roe_val = (ttm_net_inc / stockholders_equity) * 100
                     roe_str = f"`{roe_val:.1f}% {'💎' if roe_val>=20 else '🟢'}`"
@@ -445,7 +448,6 @@ def get_on_demand_data(ticker_symbol):
                     q_val = ttm_fcf / ttm_net_inc
                     quality_str = f"`{q_val:.2f}x` 🟢 (Real Cash Backing)" if q_val >= 1.0 else (f"`{q_val:.2f}x` 🟡 (Moderate Cash Conversion)" if q_val >= 0.6 else f"`{q_val:.2f}x` ⚠️ (Accrual / Paper Earnings)")
 
-                # Trailing P/E and P/FCF
                 calc_market_cap = market_cap if market_cap and market_cap > 0 else ((current_price * shares) if shares and current_price else None)
                 pe_str = f"`{current_price / (ttm_net_inc / shares):.1f}x`" if (ttm_net_inc and shares and (ttm_net_inc / shares) > 0) else "`N/A (Pre-Profit)`"
                 
@@ -871,7 +873,9 @@ def create_deep_dive_options_embed(data):
 # -------------------------------------------------------------
 @bot.event
 async def on_ready():
-    print(f"🤖 Looney is ONLINE and listening 24/7 as: {bot.user}", flush=True)
+    BOT_STATE["status"] = "CONNECTED"
+    BOT_STATE["is_leader"] = True
+    print(f"🤖 Looney is ONLINE and listening 24/7 as: {bot.user} (Node: {ROLE})", flush=True)
 
 @bot.event
 async def on_message(message):
@@ -976,23 +980,76 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. ENTRYPOINT (WITH CLEAN RETRY BACKOFF)
+# 7. ACTIVE-PASSIVE FAILOVER RUNNER
 # -------------------------------------------------------------
+def check_primary_health():
+    try:
+        res = requests.get(f"{PRIMARY_URL}/status", timeout=6)
+        if res.status_code == 200:
+            data = res.json()
+            # If Primary is connected and functioning normally
+            if data.get("status") == "CONNECTED":
+                return True
+    except Exception:
+        pass
+    return False
+
+def run_primary_node():
+    print(f"🚀 Starting PRIMARY node on Discord Gateway...", flush=True)
+    BOT_STATE["status"] = "CONNECTING"
+    try:
+        bot.run(BOT_TOKEN)
+    except discord.errors.HTTPException as e:
+        if e.status == 429:
+            BOT_STATE["status"] = "RATE_LIMITED_429"
+            print("⚠️ Primary node 429 Rate Limited. Entering 5-minute cooldown...", flush=True)
+            time.sleep(300)
+        else:
+            BOT_STATE["status"] = f"ERROR_{e.status}"
+            time.sleep(60)
+    except Exception as e:
+        BOT_STATE["status"] = "CRASHED"
+        print(f"❌ Primary crashed: {e}", flush=True)
+        time.sleep(30)
+
+def run_backup_node():
+    print(f"🛡️ Starting BACKUP node in STANDBY mode. Monitoring Primary at: {PRIMARY_URL}...", flush=True)
+    BOT_STATE["status"] = "STANDBY"
+    BOT_STATE["is_leader"] = False
+
+    while True:
+        primary_ok = check_primary_health()
+
+        if primary_ok:
+            # Primary is healthy: Backup stays quiet on Standby
+            BOT_STATE["status"] = "STANDBY"
+            BOT_STATE["is_leader"] = False
+            time.sleep(15)
+        else:
+            # Primary is DOWN or Rate-Limited: Backup takes over!
+            print("🚨 PRIMARY NODE DOWN OR RATE-LIMITED! BACKUP NODE TAKING OVER...", flush=True)
+            BOT_STATE["status"] = "CONNECTING"
+            BOT_STATE["is_leader"] = True
+            try:
+                bot.run(BOT_TOKEN)
+            except discord.errors.HTTPException as e:
+                if e.status == 429:
+                    print("⚠️ Backup node also rate-limited. Pausing 5 mins...", flush=True)
+                    time.sleep(300)
+                else:
+                    time.sleep(60)
+            except Exception as e:
+                print(f"❌ Backup error: {e}. Retrying in 15s...", flush=True)
+                time.sleep(15)
+
 if __name__ == "__main__":
-    print(f"🚀 Starting Looney On-Demand Terminal...", flush=True)
     if not BOT_TOKEN:
-        print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is EMPTY in Render!", flush=True)
+        print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is missing!", flush=True)
     else:
-        print(f"🔑 Token detected ({len(BOT_TOKEN)} chars). Connecting to Discord gateway...", flush=True)
-        try:
-            bot.run(BOT_TOKEN)
-        except discord.errors.HTTPException as e:
-            if e.status == 429:
-                print("⚠️ Discord Cloudflare IP ban (429) active. Pausing for 5 minutes before retrying...", flush=True)
-                time.sleep(300)
-            else:
-                print(f"❌ Discord Error ({e.status}): {e}", flush=True)
-                time.sleep(60)
-        except Exception as e:
-            print(f"❌ Startup Error: {e}", flush=True)
-            time.sleep(30)
+        print(f"🌟 Node Role: {ROLE} | Token Length: {len(BOT_TOKEN)} chars", flush=True)
+        if ROLE == "PRIMARY":
+            run_primary_node()
+        elif ROLE == "BACKUP":
+            run_backup_node()
+        else:
+            run_primary_node()
