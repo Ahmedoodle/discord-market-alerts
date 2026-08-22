@@ -27,7 +27,7 @@ BOT_STATE = {"status": "STARTING", "role": ROLE, "is_leader": False}
 
 class FailoverPingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == "/status" or self.path == "/healthz":
+        if self.path in ["/status", "/healthz"]:
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
@@ -85,10 +85,6 @@ BOT_TOKEN = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
-
-intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
 
 def format_large_number(num):
     if num is None: return "N/A"
@@ -869,125 +865,130 @@ def create_deep_dive_options_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 6. UNIFIED DISCORD EVENT HANDLERS
+# 6. BOT FACTORY (FRESH ISOLATED SESSION INSTANTIATION)
 # -------------------------------------------------------------
-@bot.event
-async def on_ready():
-    BOT_STATE["status"] = "CONNECTED"
-    BOT_STATE["is_leader"] = True
-    print(f"🤖 Looney is ONLINE and listening 24/7 as: {bot.user} (Node: {ROLE})", flush=True)
+def create_bot_instance():
+    intents = discord.Intents.default()
+    intents.message_content = True
+    b = commands.Bot(command_prefix="!", intents=intents)
 
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
+    @b.event
+    async def on_ready():
+        BOT_STATE["status"] = "CONNECTED"
+        BOT_STATE["is_leader"] = True
+        print(f"🤖 Looney is ONLINE and listening 24/7 as: {b.user} (Node: {ROLE})", flush=True)
 
-    content = message.content.strip()
+    @b.event
+    async def on_message(message):
+        if message.author.bot:
+            return
 
-    # TRIGGER 1: Institutional Research Radar on `%TICKER` (Multi-Part Embeds)
-    if content.startswith("%") and len(content) >= 2:
-        raw_ticker = content[1:].split()[0].upper().replace("$", "")
-        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
-            async with message.channel.typing():
-                try:
-                    data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
-                    if err:
-                        await message.channel.send(f"❌ {err}")
-                        return
-                    if not data:
-                        await message.channel.send(f"❌ No research data found for `{raw_ticker}`.")
-                        return
-                    embeds = create_institutional_radar_embeds(data)
-                    for embed in embeds:
+        content = message.content.strip()
+
+        # TRIGGER 1: Institutional Research Radar on `%TICKER` (Multi-Part Embeds)
+        if content.startswith("%") and len(content) >= 2:
+            raw_ticker = content[1:].split()[0].upper().replace("$", "")
+            if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+                async with message.channel.typing():
+                    try:
+                        data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
+                        if err:
+                            await message.channel.send(f"❌ {err}")
+                            return
+                        if not data:
+                            await message.channel.send(f"❌ No research data found for `{raw_ticker}`.")
+                            return
+                        embeds = create_institutional_radar_embeds(data)
+                        for embed in embeds:
+                            await message.channel.send(embed=embed)
+                            await asyncio.sleep(0.4)
+                    except Exception as e:
+                        await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
+                    return
+
+        # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
+        if content.startswith("#") and len(content) >= 2:
+            raw_ticker = content[1:].split()[0].upper().replace("$", "")
+            if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+                async with message.channel.typing():
+                    try:
+                        data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
+                        if not data:
+                            await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
+                            return
+                        embed = create_deep_dive_options_embed(data)
                         await message.channel.send(embed=embed)
-                        await asyncio.sleep(0.4)
-                except Exception as e:
-                    await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
+                    except Exception as e:
+                        await message.channel.send(f"❌ Options Error: {e}")
+                    return
+
+        # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
+        if content.startswith("!") or content.startswith("$"):
+            raw_cmd = content[1:].strip()
+            first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
+
+            if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research"]:
+                await b.process_commands(message)
                 return
 
-    # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
-    if content.startswith("#") and len(content) >= 2:
-        raw_ticker = content[1:].split()[0].upper().replace("$", "")
-        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
-            async with message.channel.typing():
-                try:
-                    data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
-                    if not data:
-                        await message.channel.send(f"❌ Could not compute options analytics for `{raw_ticker}`. Verify ticker symbol.")
-                        return
-                    embed = create_deep_dive_options_embed(data)
-                    await message.channel.send(embed=embed)
-                except Exception as e:
-                    await message.channel.send(f"❌ Options Error: {e}")
+            potential_ticker = raw_cmd.split()[0].upper()
+            if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
+                async with message.channel.typing():
+                    try:
+                        data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
+                        if err:
+                            await message.channel.send(f"❌ {err}")
+                            return
+                        embed = create_market_embed(data)
+                        await message.channel.send(embed=embed)
+                    except Exception as e:
+                        await message.channel.send(f"❌ Snapshot Error: {e}")
+                    return
+
+        await b.process_commands(message)
+
+    @b.command(name="price", aliases=["p", "four", "check"])
+    async def price_command(ctx, ticker: str):
+        async with ctx.typing():
+            data, err = await asyncio.to_thread(get_on_demand_data, ticker)
+            if err:
+                await ctx.send(f"❌ {err}")
                 return
-
-    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
-    if content.startswith("!") or content.startswith("$"):
-        raw_cmd = content[1:].strip()
-        first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
-
-        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research"]:
-            await bot.process_commands(message)
-            return
-
-        potential_ticker = raw_cmd.split()[0].upper()
-        if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
-            async with message.channel.typing():
-                try:
-                    data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
-                    if err:
-                        await message.channel.send(f"❌ {err}")
-                        return
-                    embed = create_market_embed(data)
-                    await message.channel.send(embed=embed)
-                except Exception as e:
-                    await message.channel.send(f"❌ Snapshot Error: {e}")
-                return
-
-    await bot.process_commands(message)
-
-# Fallback Commands
-@bot.command(name="price", aliases=["p", "four", "check"])
-async def price_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(get_on_demand_data, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embed = create_market_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="opt", aliases=["options", "play"])
-async def options_command(ctx, ticker: str):
-    async with ctx.typing():
-        data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
-        if not data:
-            await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
-            return
-        embed = create_deep_dive_options_embed(data)
-        await ctx.send(embed=embed)
-
-@bot.command(name="analyst", aliases=["research", "targets"])
-async def analyst_command(ctx, ticker: str):
-    async with ctx.typing():
-        data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
-        if err:
-            await ctx.send(f"❌ {err}")
-            return
-        embeds = create_institutional_radar_embeds(data)
-        for embed in embeds:
+            embed = create_market_embed(data)
             await ctx.send(embed=embed)
-            await asyncio.sleep(0.4)
+
+    @b.command(name="opt", aliases=["options", "play"])
+    async def options_command(ctx, ticker: str):
+        async with ctx.typing():
+            data = await asyncio.to_thread(analyze_stock_options_setup, ticker)
+            if not data:
+                await ctx.send(f"❌ Could not compute options analytics for `{ticker}`.")
+                return
+            embed = create_deep_dive_options_embed(data)
+            await ctx.send(embed=embed)
+
+    @b.command(name="analyst", aliases=["research", "targets"])
+    async def analyst_command(ctx, ticker: str):
+        async with ctx.typing():
+            data, err = await asyncio.to_thread(fetch_institutional_research_radar, ticker)
+            if err:
+                await ctx.send(f"❌ {err}")
+                return
+            embeds = create_institutional_radar_embeds(data)
+            for embed in embeds:
+                await ctx.send(embed=embed)
+                await asyncio.sleep(0.4)
+
+    return b
 
 # -------------------------------------------------------------
-# 7. ACTIVE-PASSIVE FAILOVER RUNNER
+# 7. ACTIVE-PASSIVE FAILOVER RUNNER (CLEAN FACTORY RECOVERY)
 # -------------------------------------------------------------
 def check_primary_health():
     try:
         res = requests.get(f"{PRIMARY_URL}/status", timeout=6)
         if res.status_code == 200:
             data = res.json()
-            # If Primary is connected and functioning normally
             if data.get("status") == "CONNECTED":
                 return True
     except Exception:
@@ -996,21 +997,23 @@ def check_primary_health():
 
 def run_primary_node():
     print(f"🚀 Starting PRIMARY node on Discord Gateway...", flush=True)
-    BOT_STATE["status"] = "CONNECTING"
-    try:
-        bot.run(BOT_TOKEN)
-    except discord.errors.HTTPException as e:
-        if e.status == 429:
-            BOT_STATE["status"] = "RATE_LIMITED_429"
-            print("⚠️ Primary node 429 Rate Limited. Entering 5-minute cooldown...", flush=True)
-            time.sleep(300)
-        else:
-            BOT_STATE["status"] = f"ERROR_{e.status}"
-            time.sleep(60)
-    except Exception as e:
-        BOT_STATE["status"] = "CRASHED"
-        print(f"❌ Primary crashed: {e}", flush=True)
-        time.sleep(30)
+    while True:
+        BOT_STATE["status"] = "CONNECTING"
+        try:
+            current_bot = create_bot_instance()
+            current_bot.run(BOT_TOKEN)
+        except discord.errors.HTTPException as e:
+            if e.status == 429:
+                BOT_STATE["status"] = "RATE_LIMITED_429"
+                print("⚠️ Primary node 429 Rate Limited. Entering 5-minute cooldown...", flush=True)
+                time.sleep(300)
+            else:
+                BOT_STATE["status"] = f"ERROR_{e.status}"
+                time.sleep(60)
+        except Exception as e:
+            BOT_STATE["status"] = "CRASHED"
+            print(f"❌ Primary crashed: {e}. Retrying in 30s...", flush=True)
+            time.sleep(30)
 
 def run_backup_node():
     print(f"🛡️ Starting BACKUP node in STANDBY mode. Monitoring Primary at: {PRIMARY_URL}...", flush=True)
@@ -1021,17 +1024,16 @@ def run_backup_node():
         primary_ok = check_primary_health()
 
         if primary_ok:
-            # Primary is healthy: Backup stays quiet on Standby
             BOT_STATE["status"] = "STANDBY"
             BOT_STATE["is_leader"] = False
             time.sleep(15)
         else:
-            # Primary is DOWN or Rate-Limited: Backup takes over!
             print("🚨 PRIMARY NODE DOWN OR RATE-LIMITED! BACKUP NODE TAKING OVER...", flush=True)
             BOT_STATE["status"] = "CONNECTING"
             BOT_STATE["is_leader"] = True
             try:
-                bot.run(BOT_TOKEN)
+                current_bot = create_bot_instance()
+                current_bot.run(BOT_TOKEN)
             except discord.errors.HTTPException as e:
                 if e.status == 429:
                     print("⚠️ Backup node also rate-limited. Pausing 5 mins...", flush=True)
