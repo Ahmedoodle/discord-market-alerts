@@ -76,7 +76,7 @@ http_session.headers.update({
 BOT_TOKEN = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
-KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
+KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA"}
 
 def format_large_number(num):
     if num is None: return "N/A"
@@ -126,7 +126,6 @@ def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
                     history = crypto_dict[ticker_symbol].get("history", [])
         else:
             if state.get("stock_session_date") == today_ny_str:
-                # Search regular, premarket, or afterhours records
                 for key in ["regular_tickers", "premarket_tickers", "afterhours_tickers"]:
                     session_dict = state.get(key, {})
                     if ticker_symbol in session_dict:
