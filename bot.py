@@ -979,18 +979,29 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. ENTRYPOINT (WITH AUTO-RECOVERY & RATE-LIMIT SAFETY NET)
+# 7. ENTRYPOINT (WITH CLEAN ASYNC SESSION RETRY & BACKOFF)
 # -------------------------------------------------------------
+async def run_bot_with_recovery():
+    while True:
+        try:
+            async with bot:
+                await bot.start(BOT_TOKEN)
+        except discord.errors.HTTPException as e:
+            if e.status == 429:
+                print("⚠️ Discord Rate Limit hit (429). Sleeping for 5 minutes before reconnecting...")
+                await asyncio.sleep(300)
+            else:
+                print(f"❌ Discord HTTP Error ({e.status}): {e}. Retrying in 60s...")
+                await asyncio.sleep(60)
+        except Exception as e:
+            print(f"❌ Connection error: {e}. Retrying in 30s...")
+            await asyncio.sleep(30)
+
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
     else:
-        while True:
-            try:
-                bot.run(BOT_TOKEN)
-            except discord.errors.HTTPException as e:
-                if e.status == 429:
-                    print("⚠️ Discord Rate Limit hit (429). Sleeping for 5 minutes before reconnecting...")
-                    time.sleep(300)
-                else:
-                    print(f"❌ Discord Error ({e.status}): {e}. Retrying in 60s...")
+        try:
+            asyncio.run(run_bot_with_recovery())
+        except KeyboardInterrupt:
+            print("🛑 Bot stopped manually.")
