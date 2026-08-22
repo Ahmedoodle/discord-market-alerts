@@ -619,14 +619,14 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         atr = calculate_atr(highs, lows, closes, 14)
 
         if is_crypto:
-            metrics["profile_title"] = "🏢 Asset Class & Profile"
-            metrics["profile_block"] = (
+            profile_title = "🏢 Asset Class & Profile"
+            profile_block = (
                 f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n"
                 f"• **Trading:** `24/7/365 Continuous Global Liquidity`"
             )
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
-            metrics["profile_title"] = "🏢 Asset Class & Profile"
-            metrics["profile_block"] = f"• **Asset Class:** `Commodity / Index Derivative Contract`"
+            profile_title = "🏢 Asset Class & Profile"
+            profile_block = f"• **Asset Class:** `Commodity / Index Derivative Contract`"
         else:
             market_cap = None
             try:
@@ -1108,24 +1108,11 @@ def check_market():
         send_discord_holiday_announcement(us_hol, ca_hol)
         state["holiday_announced_date"] = today_ny_str
 
-    if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
-        target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
-        sleep_seconds = max(0, (target_time - now_ny).total_seconds())
-        if sleep_seconds > 0:
-            print(f"⏳ Market opening bell ({now_ny.strftime('%I:%M:%S %p')}). Waiting {int(sleep_seconds)}s until 9:32 AM for opening cross...")
-            time.sleep(sleep_seconds)
-            now_ny = datetime.now(NY_TZ)
-
     session_type, threshold_pct, session_badge = get_current_session_info(now_ny, is_early_close)
     now_ny_str = now_ny.strftime("%Y-%m-%d %I:%M %p %Z")
 
     print(f"Current Time (NY): {now_ny_str}")
-    if is_stock_holiday:
-        print(f"US Stock Market Status: 🏛️ CLOSED for Holiday ({us_hol}) - Crypto & News Active\n")
-    elif is_early_close:
-        print(f"US Stock Market Session: {session_badge} ⚠️ EARLY CLOSE DAY: {early_close_reason} (Threshold: ±{threshold_pct}%)\n")
-    else:
-        print(f"US Stock Market Session: {session_badge} (Threshold: ±{threshold_pct}%)\n")
+    print(f"Market Session: {session_badge} (Running in FORCED TEST MODE)\n")
 
     session_http = requests.Session()
     session_http.headers.update({
@@ -1135,9 +1122,8 @@ def check_market():
     price_alerts_to_send = []
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
     
-    if not is_stock_holiday and session_type != "CLOSED":
-        for s in STOCK_ETF_WATCHLIST:
-            active_watchlist.append((s, session_type, threshold_pct, session_badge))
+    for s in STOCK_ETF_WATCHLIST:
+        active_watchlist.append((s, "REGULAR", 2.0, "[TEST]"))
 
     for ticker_symbol, s_type, req_threshold, badge in active_watchlist:
         try:
@@ -1148,14 +1134,8 @@ def check_market():
 
                 if s_type == "CRYPTO":
                     tracked_dict = state["crypto_tickers"]
-                elif s_type == "PRE_MARKET":
-                    tracked_dict = state["premarket_tickers"]
-                elif s_type == "REGULAR":
-                    tracked_dict = state["regular_tickers"]
-                elif s_type == "AFTER_HOURS":
-                    tracked_dict = state["afterhours_tickers"]
                 else:
-                    tracked_dict = {}
+                    tracked_dict = state["regular_tickers"]
 
                 should_alert = False
                 step_change_pct = None
@@ -1176,7 +1156,7 @@ def check_market():
                             "history": history_trail
                         }
                     else:
-                        print(f"⏭️ {ticker_symbol} {badge} | Price: ${current_price:.2f} | Step: {step_change_pct:+.2f}% (Below {req_threshold}%)")
+                        print(f"⏭️ {ticker_symbol} {badge} | Price: ${current_price:.2f} | Step: {step_change_pct:+.2f}%")
                 else:
                     if abs(change_pct) >= req_threshold:
                         should_alert = True
@@ -1263,22 +1243,11 @@ def check_market():
             send_discord_news_alert(article)
             time.sleep(1.0)
 
-    reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
-    is_options_market_open = (
-        not is_stock_holiday and
-        now_ny.weekday() <= 4 and
-        dtime(9, 32) <= now_ny.time() <= reg_close_time
-    )
-
-    if is_options_market_open:
-        dispatch_top100_options_radar(session_http)
-    elif is_stock_holiday:
-        print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
-    elif now_ny.weekday() > 4:
-        print("⏭️ Skipping options radar: Weekend (Market Closed).")
-    else:
-        close_str = "1:00 PM" if is_early_close else "4:00 PM"
-        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
+    # =================================================================
+    # FORCED OPTIONS RADAR EXECUTION (TEST MODE - RUNS IMMEDIATELY)
+    # =================================================================
+    print("\n⚡ Running Top 100 Options Radar immediately (Market Hour Check Bypassed)...")
+    dispatch_top100_options_radar(session_http)
 
     save_alert_state(state)
     print(f"\n=======================================================")
