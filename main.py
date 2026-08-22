@@ -35,34 +35,57 @@ UTC_TZ = ZoneInfo("UTC")
 
 MAX_NEWS_AGE_MINUTES = 45
 
-# Watchlists
+# ====================================================================
+# WATCHLISTS & MARKET UNIVERSE CONFIGURATION
+# ====================================================================
 CRYPTO_WATCHLIST = [
     "BTC-USD", "ETH-USD", "XRP-USD", "SOL-USD", "LINK-USD"
 ]
 
 STOCK_ETF_WATCHLIST = [
+    # --- Commodity & Index Futures (9) ---
     "GC=F", "SI=F", "CL=F", "BZ=F", "NG=F", "NQ=F", "ES=F", "YM=F", "RTY=F",
-    "USO", "BNO", "GLD", "SLV", "IBIT", "ETHA", "MSTR", "IREN",
-    "BLSH", "NVDA", "AMD", "MU", "SNDK", "INTC", "AVGO", "ASML",
-    "CBRS", "SKHY", "IBM", "TSLA", "SPCX", "RKLB", "PLTR", "META",
-    "NBIS", "ORCL", "RBLX"
+
+    # --- Core Index, Commodity & Crypto ETFs (12) ---
+    "SPY", "QQQ", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA",
+
+    # --- S&P 500 (SPY) Top 100 & Mega-Caps ---
+    "MSFT", "AAPL", "NVDA", "AMZN", "GOOGL", "GOOG", "META", "BRK-B", "LLY", "AVGO",
+    "TSLA", "JPM", "V", "UNH", "XOM", "MA", "JNJ", "PG", "HD", "COST",
+    "ABBV", "MRK", "NFLX", "BAC", "CRM", "CVX", "WMT", "AMD", "PEP", "KO",
+    "LIN", "TMO", "ACN", "ADBE", "MCD", "DIS", "CSCO", "QCOM", "ORCL", "GE",
+    "WFC", "INTU", "CAT", "IBM", "TXN", "AMAT", "VZ", "NOW", "DHR", "CMCSA",
+    "PM", "ISRG", "COP", "AMGN", "UNP", "LOW", "NEE", "HON", "BKNG", "GS",
+    "RTX", "SPGI", "T", "BLK", "ELV", "SYK", "PLTR", "MDLZ", "TJX", "BSX",
+    "PGR", "DE", "VRTX", "SBUX", "AXP", "MMC", "BA", "PANW", "LRCX", "ETN",
+    "ADP", "MU", "REGN", "LMT", "CB", "GILD", "ADI", "MDT", "CI", "SCHW",
+    "CVS", "KLAC", "FI", "SNPS", "CDNS", "MO", "CRWD", "ICE", "ABNB", "WM",
+
+    # --- Nasdaq 100 Additions & High-Beta Growth ---
+    "TMUS", "MELI", "PYPL", "MAR", "CSX", "CTAS", "ORLY", "NXPI", "PCAR", "WBD",
+    "MRVL", "ROP", "MCHP", "FTNT", "DXCM", "KDP", "MNST", "LULU", "KHC", "PAYX",
+    "ROST", "IDXX", "ODFL", "EXC", "CHTR", "AEP", "FAST", "BIIB", "CPRT", "GEHC",
+    "TEAM", "VRSK", "EA", "BKR", "CTSH", "DDOG", "ZS", "ANSS", "CSGP", "ON",
+    "MRNA", "ILMN", "DLTR", "WDAY", "CEG", "SMCI", "DASH", "ARM", "TTD", "RBLX",
+
+    # --- Custom Watchlist, High-Beta & Crypto Miners ---
+    "MSTR", "IREN", "BLSH", "SNDK", "INTC", "ASML", "CBRS", "SKHY", "SPCX", "RKLB", "NBIS",
+
+    # --- S&P/TSX 60 Canadian Leaders (60) ---
+    "RY.TO", "TD.TO", "BNS.TO", "BMO.TO", "CM.TO", "NA.TO", "MFC.TO", "SLF.TO", "POW.TO", "IFC.TO", "IGM.TO",
+    "ENB.TO", "CNQ.TO", "SU.TO", "TRP.TO", "CVE.TO", "IMO.TO", "TOU.TO", "ARX.TO", "PPL.TO", "KEY.TO", "MEG.TO",
+    "ABX.TO", "AEM.TO", "FNV.TO", "WPM.TO", "NTR.TO", "TECK-B.TO", "FM.TO", "K.TO", "CCO.TO", "IVN.TO", "WDO.TO", "LUN.TO",
+    "SHOP.TO", "CSU.TO", "TRI.TO", "OTEX.TO", "GIB-A.TO", "LSPD.TO",
+    "CNR.TO", "CP.TO", "WCN.TO", "TFII.TO", "CAE.TO", "STN.TO", "ATS.TO", "TIH.TO",
+    "ATD.TO", "L.TO", "DOL.TO", "MG.TO", "MRU.TO", "QSR.TO",
+    "BCE.TO", "T.TO", "RCI-B.TO", "BIP-UN.TO", "BEP-UN.TO", "FTS.TO"
 ]
 
 ALL_TICKERS = CRYPTO_WATCHLIST + STOCK_ETF_WATCHLIST
-KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA", "SPCX"}
+KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA"}
 
-NASDAQ_100 = [
-    "NVDA", "AAPL", "MSFT", "AMZN", "META", "GOOGL", "GOOG", "TSLA", "AVGO", "COST",
-    "ASML", "PEP", "NFLX", "AZN", "LIN", "AMD", "TMUS", "ADBE", "CSCO", "QCOM",
-    "TXN", "AMAT", "INTU", "ISRG", "CMCSA", "HON", "AMGN", "BKNG", "VRTX", "SBUX",
-    "PANW", "MDLZ", "GILD", "LRCX", "REGN", "ADP", "MU", "MELI", "KLAC", "SNPS",
-    "CDNS", "PYPL", "CRWD", "ABNB", "MAR", "CSX", "CTAS", "ORLY", "NXPI", "PCAR",
-    "WBD", "MRVL", "ROP", "MCHP", "FTNT", "DXCM", "KDP", "MNST", "LULU", "ADI",
-    "KHC", "PAYX", "ROST", "IDXX", "ODFL", "EXC", "CHTR", "AEP", "FAST", "BIIB",
-    "CPRT", "GEHC", "TEAM", "VRSK", "EA", "BKR", "CTSH", "DDOG", "ZS", "ANSS",
-    "CSGP", "ON", "MRNA", "ILMN", "DLTR", "WDAY", "CEG", "SMCI", "DASH", "MSTR",
-    "ARM", "TTD", "RBLX", "PLTR", "IREN", "RKLB", "SHOP.TO", "INTC", "IBM"
-]
+# Full Options Radar Universe (All Stocks & ETFs, excluding Futures)
+OPTIONS_RADAR_UNIVERSE = [sym for sym in STOCK_ETF_WATCHLIST if not sym.endswith("=F")]
 
 # ====================================================================
 # 0. SMART RATE-LIMIT COMPLIANT WEBHOOK DISPATCHER
@@ -451,26 +474,22 @@ def get_rsi_tag(rsi):
         return f"**{rsi:.1f}** (🔴 Bearish Trend)"
 
 def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
-    low_t, mean_t, high_t, rating = None, None, None, None
     try:
         fz_url = f"https://finviz.com/quote.ashx?t={ticker_symbol}&p=d"
         fz_res = cureq.get(fz_url, impersonate="chrome124", timeout=4)
         if fz_res.status_code == 200:
             m_tp = re.search(r'Target\s*Price[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
             m_rc = re.search(r'Recom[^\d]+(\d+\.\d+)', fz_res.text, re.IGNORECASE)
-            if m_tp:
-                mean_t = float(m_tp.group(1))
-            if m_rc:
-                score = float(m_rc.group(1))
-                rating = "Strong Buy 🟢" if score <= 1.8 else ("Buy 🟢" if score <= 2.5 else ("Hold 🟡" if score <= 3.5 else "Sell 🔴"))
+            mean_t = float(m_tp.group(1)) if m_tp else None
+            score = float(m_rc.group(1)) if m_rc else None
+            rating = "Strong Buy 🟢" if score and score <= 1.8 else ("Buy 🟢" if score and score <= 2.5 else ("Hold 🟡" if score and score <= 3.5 else "Sell 🔴"))
+            if mean_t and current_price > 0 and mean_t < (current_price * 10):
+                upside = ((mean_t - current_price) / current_price) * 100
+                up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
+                rating_part = f" | Rating: `{rating}`" if rating else ""
+                return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
     except Exception:
         pass
-
-    if mean_t and current_price > 0 and mean_t < (current_price * 10):
-        upside = ((mean_t - current_price) / current_price) * 100
-        up_tag = " 🔥" if upside >= 15 else (" 🟢" if upside > 0 else " 🔴")
-        rating_part = f" | Rating: `{rating}`" if rating else ""
-        return f"Mean: `${mean_t:.2f}` (**{upside:+.1f}% Upside{up_tag}**){rating_part}"
     return "N/A"
 
 # ====================================================================
@@ -605,7 +624,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         return metrics
 
 # ====================================================================
-# 6. DISCORD WEBHOOK DISPATCHERS (WITH 1-SECOND SAFE SPACING)
+# 6. DISCORD WEBHOOK DISPATCHERS
 # ====================================================================
 def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, metrics=None):
     if isinstance(metrics, tuple):
@@ -695,7 +714,7 @@ def send_discord_news_alert(article):
     safe_post_webhook(DISCORD_NEWS_WEBHOOK_URL, payload)
 
 # ====================================================================
-# 7. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR (TOP 50 PAGINATED)
+# 7. 30-MINUTE OPTIONS STRATEGY RADAR (TOP 50 PAGINATED)
 # ====================================================================
 def analyze_stock_options_setup(ticker_symbol, session_http):
     sym = ticker_symbol.upper().strip()
@@ -810,12 +829,10 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
                 sell_p_short = round((s1 - (atr_14 * 0.2)) / strike_step) * strike_step
                 buy_p_short = sell_p_short - strike_step
                 credit_short = round(strike_step * 0.28, 2)
-                be_short = sell_p_short - credit_short
 
                 sell_p_long = round((current_price * 0.95) / strike_step) * strike_step
                 buy_p_long = sell_p_long - strike_step
                 credit_long = round(strike_step * 0.33, 2)
-                be_long = sell_p_long - credit_long
 
                 play_7_14 = f"Sell ${sell_p_short:.2f} P / Buy ${buy_p_short:.2f} P | Credit: `${credit_short:.2f}`"
                 play_30_45 = f"Sell ${sell_p_long:.2f} P / Buy ${buy_p_long:.2f} P | Credit: `${credit_long:.2f}`"
@@ -825,26 +842,22 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
                 buy_p_short = round((current_price + (atr_14 * 0.2)) / strike_step) * strike_step
                 sell_p_short = buy_p_short - strike_step
                 debit_short = round(strike_step * 0.45, 2)
-                be_short = buy_p_short - debit_short
 
                 buy_p_long = round(current_price / strike_step) * strike_step
                 sell_p_long = buy_p_long - (strike_step * 2)
                 debit_long = round(strike_step * 0.90, 2)
-                be_long = buy_p_long - debit_long
 
-                play_7_14 = f"Buy ${buy_p_short:.2f} P / Sell ${sell_p_short:.2f} P | Debit: `${debit_short:.2f}`"
-                play_30_45 = f"Buy ${buy_p_long:.2f} P / Sell ${sell_p_long:.2f} P | Debit: `${debit_long:.2f}`"
+                play_7_14 = f"Buy ${buy_p_short:.2f} P / Sell ${buy_p_short - strike_step:.2f} P | Debit: `${debit_short:.2f}`"
+                play_30_45 = f"Buy ${buy_p_long:.2f} P / Sell ${buy_p_long - (strike_step*2):.2f} P | Debit: `${debit_long:.2f}`"
             else:
                 strategy_name = "Bear Call Credit Spread (Resistance Rejection)"
                 sell_c_short = round((r1 + (atr_14 * 0.2)) / strike_step) * strike_step
                 buy_c_short = sell_c_short + strike_step
                 credit_short = round(strike_step * 0.26, 2)
-                be_short = sell_c_short + credit_short
 
                 sell_c_long = round((current_price * 1.05) / strike_step) * strike_step
                 buy_c_long = sell_c_long + strike_step
                 credit_long = round(strike_step * 0.32, 2)
-                be_long = sell_c_long + credit_long
 
                 play_7_14 = f"Sell ${sell_c_short:.2f} C / Buy ${buy_c_short:.2f} C | Credit: `${credit_short:.2f}`"
                 play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${buy_c_long + strike_step:.2f} C | Credit: `${credit_long:.2f}`"
@@ -870,11 +883,11 @@ def dispatch_top50_options_radar(session_http):
 
     now_ny = datetime.now(NY_TZ)
     time_str = now_ny.strftime("%I:%M %p %Z")
-    print(f"\nScanning 100 Nasdaq Securities for Top 50 Options Radar ({time_str})...")
+    print(f"\nScanning {len(OPTIONS_RADAR_UNIVERSE)} Securities for Top 50 Options Radar ({time_str})...")
 
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        futures = {executor.submit(analyze_stock_options_setup, sym, session_http): sym for sym in NASDAQ_100}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+        futures = {executor.submit(analyze_stock_options_setup, sym, session_http): sym for sym in OPTIONS_RADAR_UNIVERSE}
         for f in concurrent.futures.as_completed(futures):
             res = f.result()
             if res:
@@ -904,8 +917,8 @@ def dispatch_top50_options_radar(session_http):
                 f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x (Time-Paced)`\n\n"
             )
 
-        title = f"🚨 NASDAQ 100 OPTIONS RADAR [TOP 50 PICKS • PART {part_idx}/{total_parts}]" if total_parts > 1 else "🚨 NASDAQ 100 OPTIONS RADAR [TOP QUANTITATIVE PICKS]"
-        description_header = f"*Live Quantitative Ranking across 100 Nasdaq Securities as of {time_str}.*\n*Showing Top Picks {start_num} to {start_num + len(chunk) - 1} of {len(top_50)} total.*\n\n"
+        title = f"🚨 MARKET OPTIONS RADAR [TOP 50 PICKS • PART {part_idx}/{total_parts}]" if total_parts > 1 else "🚨 MARKET OPTIONS RADAR [TOP QUANTITATIVE PICKS]"
+        description_header = f"*Live Quantitative Ranking across {len(OPTIONS_RADAR_UNIVERSE)} Market Securities as of {time_str}.*\n*Showing Top Picks {start_num} to {start_num + len(chunk) - 1} of {len(top_50)} total.*\n\n"
 
         payload = {
             "username": BOT_NAME,
@@ -1154,14 +1167,14 @@ def check_market():
                 print(f"⚠️ {ticker_symbol} {badge} | SKIPPED: Insufficient realtime price data")
         except Exception as e:
             print(f"❌ Error checking {ticker_symbol}: {e}")
-        time.sleep(0.12)
+        time.sleep(0.08)
 
     print("\nScanning breaking news across all tickers...")
     cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
     seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
     raw_news = []
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
         futures_search = [executor.submit(fetch_ticker_news_search, sym, session_http) for sym in ALL_TICKERS]
         futures_rss = [executor.submit(fetch_ticker_news_rss, sym, session_http) for sym in ALL_TICKERS]
 
