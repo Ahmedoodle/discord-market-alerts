@@ -141,19 +141,25 @@ def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
 
 # --- MATHEMATICAL INDICATORS ---
 def calculate_rsi(closes, period=14):
-    if len(closes) < period + 1: return 50.0
+    if len(closes) < 2: return 50.0
+    p = min(period, len(closes) - 1)
     deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
     gains = [max(d, 0) for d in deltas]
     losses = [max(-d, 0) for d in deltas]
-    avg_gain, avg_loss = sum(gains[:period]) / period, sum(losses[:period]) / period
-    for i in range(period, len(deltas)):
-        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
-        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+    avg_gain = sum(gains[:p]) / max(1, p)
+    avg_loss = sum(losses[:p]) / max(1, p)
+    for i in range(p, len(deltas)):
+        avg_gain = (avg_gain * (p - 1) + gains[i]) / p
+        avg_loss = (avg_loss * (p - 1) + losses[i]) / p
     if avg_loss == 0: return 100.0
     return 100.0 - (100.0 / (1.0 + (avg_gain / avg_loss)))
 
 def calculate_macd(closes):
-    if len(closes) < 35: return "N/A"
+    if len(closes) < 35:
+        if len(closes) >= 3:
+            slope = closes[-1] - closes[0]
+            return "Bullish Momentum 🟢 (Short-term)" if slope >= 0 else "Bearish Momentum 🔴 (Short-term)"
+        return "N/A"
     alpha_12, alpha_26 = 2.0 / 13, 2.0 / 27
     curr_12, curr_26 = sum(closes[:12]) / 12, sum(closes[:26]) / 26
     ema_12, ema_26 = [], []
@@ -174,26 +180,30 @@ def calculate_macd(closes):
         return "Bearish Momentum 🔴 (Expanding Downward)" if hist_curr <= hist_prev else "Bearish Trend 🔴 (Weakening / Slowing)"
 
 def calculate_atr(highs, lows, closes, period=14):
-    if len(closes) < period + 1: return 1.0
+    if len(closes) < 2: return 0.50
+    p = min(period, len(closes) - 1)
     trs = [max(highs[i] - lows[i], abs(highs[i] - closes[i - 1]), abs(lows[i] - closes[i - 1])) for i in range(1, len(closes))]
-    return sum(trs[-period:]) / period
+    val = sum(trs[-p:]) / max(1, p)
+    return max(0.05, val)
 
 def calculate_historical_volatility(closes, window=30):
-    if len(closes) < window + 1: return 0.25
-    log_returns = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - window, len(closes))]
+    if len(closes) < 3: return 0.25
+    w = min(window, len(closes) - 1)
+    log_returns = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - w, len(closes)) if closes[i-1] > 0]
+    if not log_returns: return 0.25
     mean_ret = sum(log_returns) / len(log_returns)
-    variance = sum((r - mean_ret) ** 2 for r in log_returns) / (len(log_returns) - 1)
+    variance = sum((r - mean_ret) ** 2 for r in log_returns) / max(1, (len(log_returns) - 1))
     if variance <= 0: return 0.05
     return math.sqrt(variance) * math.sqrt(252)
 
 def calculate_beta_vs_spy(closes):
     try:
-        if len(closes) < 50: return None
+        if len(closes) < 15: return None
         res_spy = http_session.get("https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y", timeout=4)
         if res_spy.status_code == 200:
             spy_closes = [c for c in res_spy.json()["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
             min_len = min(len(closes), len(spy_closes))
-            if min_len >= 50:
+            if min_len >= 15:
                 s_ret = [closes[i] / closes[i-1] - 1 for i in range(len(closes) - min_len + 1, len(closes))]
                 m_ret = [spy_closes[i] / spy_closes[i-1] - 1 for i in range(len(spy_closes) - min_len + 1, len(spy_closes))]
                 mean_s, mean_m = sum(s_ret) / len(s_ret), sum(m_ret) / len(m_ret)
@@ -262,7 +272,6 @@ def get_on_demand_data(ticker_symbol):
         raw_h = indicators.get("high", []) or []
         raw_l = indicators.get("low", []) or []
 
-        # Synchronize candles together to prevent Null array length mismatch
         valid_bars = []
         for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
             c, h, l = raw_c[i], raw_h[i], raw_l[i]
@@ -284,7 +293,6 @@ def get_on_demand_data(ticker_symbol):
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
-        # Retrieve Today's Path from automated memory (Read-Only)
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
 
         vol_today = volumes[-1] if volumes else 0
@@ -309,10 +317,11 @@ def get_on_demand_data(ticker_symbol):
         dist_high = (((high_52w - current_price) / high_52w) * 100) if high_52w and low_52w and high_52w > low_52w else 0
         range_str = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)" if high_52w and low_52w else "N/A"
 
-        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else None
+        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else (sum(closes) / len(closes))
         sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else None
+        
         sma_50_str = f"`${sma_50:.2f}` (Above by +{((current_price-sma_50)/sma_50)*100:.1f}% 🟢)" if sma_50 and current_price >= sma_50 else (f"`${sma_50:.2f}` (Below by {((current_price-sma_50)/sma_50)*100:.1f}% 🔴)" if sma_50 else "N/A")
-        sma_200_str = f"`${sma_200:.2f}` (Above by +{((current_price-sma_200)/sma_200)*100:.1f}% 🟢)" if sma_200 and current_price >= sma_200 else (f"`${sma_200:.2f}` (Below by {((current_price-sma_200)/sma_200)*100:.1f}% 🔴)" if sma_200 else "N/A")
+        sma_200_str = f"`${sma_200:.2f}` (Above by +{((current_price-sma_200)/sma_200)*100:.1f}% 🟢)" if sma_200 and current_price >= sma_200 else (f"`${sma_200:.2f}` (Below by {((current_price-sma_200)/sma_200)*100:.1f}% 🔴)" if sma_200 else "`Young Listing (<200D)`")
 
         verdict_str = "N/A"
         if sma_50 and sma_200:
@@ -321,7 +330,7 @@ def get_on_demand_data(ticker_symbol):
             elif current_price >= sma_200 and current_price < sma_50: verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
             else: verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
         elif sma_50:
-            verdict_str = "`🟢 Short-Term Uptrend`" if current_price >= sma_50 else "`🔴 Short-Term Downtrend`"
+            verdict_str = "`🟢 Uptrend vs Listing Average`" if current_price >= sma_50 else "`🔴 Downtrend vs Listing Average`"
 
         trend_block = f"• **50-Day SMA:** {sma_50_str}\n• **200-Day SMA:** {sma_200_str}\n• **Overall Verdict:** {verdict_str}"
         macd_str = calculate_macd(closes)
@@ -767,13 +776,13 @@ def create_institutional_radar_embeds(data):
     return embeds
 
 # -------------------------------------------------------------
-# 5. ON-DEMAND OPTIONS DEEP-DIVE ENGINE (#TICKER)
+# 5. ADAPTIVE OPTIONS DEEP-DIVE ENGINE (#TICKER)
 # -------------------------------------------------------------
 def analyze_stock_options_setup(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     now_ny = datetime.now(NY_TZ)
     try:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1y"
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2y"
         res = http_session.get(url, timeout=6)
         if res.status_code != 200: return None
 
@@ -786,7 +795,7 @@ def analyze_stock_options_setup(ticker_symbol):
         raw_h = indicators.get("high", []) or []
         raw_l = indicators.get("low", []) or []
 
-        # Synchronize candles together to prevent Null array length mismatch
+        # Synchronize candles together to prevent null/length mismatch
         valid_bars = []
         for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
             c, h, l = raw_c[i], raw_h[i], raw_l[i]
@@ -794,7 +803,8 @@ def analyze_stock_options_setup(ticker_symbol):
             if c is not None and h is not None and l is not None and c > 0:
                 valid_bars.append((float(c), float(h), float(l), float(v)))
 
-        if len(valid_bars) < 50: return None
+        # Adaptive minimum data floor (allows fresh IPOs / SPACs from 3 days onward)
+        if len(valid_bars) < 3: return None
 
         closes = [b[0] for b in valid_bars]
         highs = [b[1] for b in valid_bars]
@@ -802,34 +812,54 @@ def analyze_stock_options_setup(ticker_symbol):
         volumes = [b[3] for b in valid_bars]
 
         current_price = meta.get("regularMarketPrice") or closes[-1]
-        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
+        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
 
-        sma_50 = sum(closes[-50:]) / 50
-        sma_200 = sum(closes[-200:]) / 200 if len(closes) >= 200 else sma_50
-        rsi_14 = calculate_rsi(closes, 14)
+        # Adaptive Moving Averages & Trend Diagnosis
+        if len(closes) >= 200:
+            sma_50 = sum(closes[-50:]) / 50
+            sma_200 = sum(closes[-200:]) / 200
+            trend_diag = f"Above 50D SMA (`${sma_50:.2f}`) & 200D SMA (`${sma_200:.2f}`)" if current_price >= sma_50 and current_price >= sma_200 else f"50D SMA: `${sma_50:.2f}` | 200D SMA: `${sma_200:.2f}`"
+        elif len(closes) >= 50:
+            sma_50 = sum(closes[-50:]) / 50
+            sma_200 = sma_50
+            trend_diag = f"50D SMA: `${sma_50:.2f}` ({'Above 🟢' if current_price >= sma_50 else 'Below 🔴'}) • Young Listing (<200D)"
+        else:
+            sma_avail = sum(closes) / len(closes)
+            sma_50 = sma_avail
+            sma_200 = sma_avail
+            trend_diag = f"Listing Avg ({len(closes)}D): `${sma_avail:.2f}` ({'Above 🟢' if current_price >= sma_avail else 'Below 🔴'}) • Fresh IPO"
+
+        rsi_14 = calculate_rsi(closes, period=min(14, len(closes)-1))
         macd_verdict = calculate_macd(closes)
-        atr_14 = calculate_atr(highs, lows, closes, 14)
+        atr_14 = calculate_atr(highs, lows, closes, period=14)
 
+        # Adaptive RVOL Calculation
         vol_today = volumes[-1] if volumes else 0
-        avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else (vol_today or 1.0)
+        hist_vols = volumes[:-1]
+        avg_vol = (sum(hist_vols) / len(hist_vols)) if hist_vols and sum(hist_vols) > 0 else (vol_today or 1.0)
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
-        expected_vol_so_far = avg_vol_20 * pacing_factor
-        rvol = (vol_today / expected_vol_so_far) if expected_vol_so_far > 0 else 1.0
+        expected_vol = avg_vol * pacing_factor
+        rvol = (vol_today / expected_vol) if expected_vol > 0 else 1.0
 
-        p = (highs[-2] + lows[-2] + closes[-2]) / 3.0
-        r1, s1 = (2.0 * p) - lows[-2], (2.0 * p) - highs[-2]
-        hv_30 = calculate_historical_volatility(closes, 30)
-        hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
-        
+        # Floor Trader Pivots (Adaptive for short history)
+        h_prev = highs[-2] if len(highs) >= 2 else highs[-1]
+        l_prev = lows[-2] if len(lows) >= 2 else lows[-1]
+        c_prev = closes[-2] if len(closes) >= 2 else closes[-1]
+        p = (h_prev + l_prev + c_prev) / 3.0
+        r1 = (2.0 * p) - l_prev
+        s1 = (2.0 * p) - h_prev
+
+        # Elastic Volatility & IV Estimation
+        hv_30 = calculate_historical_volatility(closes, window=30)
+        hv_90 = calculate_historical_volatility(closes, window=90) if len(closes) >= 91 else hv_30
         denom = (hv_90 * 1.3) if (hv_90 and hv_90 > 0) else 1.0
         iv_rank_est = max(5, min(95, int((hv_30 / denom) * 50)))
 
+        # 100-Point Quantitative Scoring (Adaptive)
         bull_score, bear_score = 0, 0
-        if current_price >= sma_50 and current_price >= sma_200: bull_score += 25
-        elif current_price >= sma_50: bull_score += 15
-        elif current_price < sma_50 and current_price < sma_200: bear_score += 25
-        elif current_price < sma_50: bear_score += 15
+        if current_price >= sma_50: bull_score += 25
+        else: bear_score += 25
 
         if 52 <= rsi_14 <= 68: bull_score += 20
         elif rsi_14 > 68: bull_score += 10
@@ -858,24 +888,25 @@ def analyze_stock_options_setup(ticker_symbol):
         badge = "🟢 HIGH CONVICTION" if final_score >= 80 else ("🟠 DEVELOPING / WATCHLIST" if final_score >= 60 else "🔴 LOW CONVICTION / AVOID")
         color = 0x2ecc71 if final_score >= 80 else (0xe67e22 if final_score >= 60 else 0xe74c3c)
 
-        strike_step = 2.5 if current_price < 100 else (5.0 if current_price < 300 else 10.0)
+        # Adaptive Strike Step (Handles low priced stocks / SPACs cleanly)
+        strike_step = 0.5 if current_price < 15 else (1.0 if current_price < 50 else (2.5 if current_price < 100 else (5.0 if current_price < 300 else 10.0)))
 
         if is_bullish:
             if iv_rank_est < 40:
                 strategy_name = "Long Call (Outright Bullish Momentum)"
                 strike_short = round((current_price + (atr_14 * 0.5)) / strike_step) * strike_step
-                prem_short = round(max(0.5, atr_14 * 0.9), 2)
+                prem_short = round(max(0.15, atr_14 * 0.9), 2)
                 strike_long = round((current_price - (atr_14 * 0.3)) / strike_step) * strike_step
-                prem_long = round(max(1.0, atr_14 * 2.1), 2)
+                prem_long = round(max(0.25, atr_14 * 2.1), 2)
                 play_7_14 = f"Buy ${strike_short:.2f} Call @ ~${prem_short:.2f} | Break-Even: `${strike_short + prem_short:.2f}`"
                 play_30_45 = f"Buy ${strike_long:.2f} Call @ ~${prem_long:.2f} | Break-Even: `${strike_long + prem_long:.2f}`"
                 defensive_play = f"Bull Call Debit Spread: Buy ${strike_long:.2f} C / Sell ${strike_long + (strike_step*2):.2f} C"
             else:
                 strategy_name = "Bull Put Credit Spread (Neutral to Bullish Income)"
                 sell_p_short = round((s1 - (atr_14 * 0.2)) / strike_step) * strike_step
-                credit_short = round(strike_step * 0.28, 2)
+                credit_short = round(max(0.10, strike_step * 0.28), 2)
                 sell_p_long = round((current_price * 0.95) / strike_step) * strike_step
-                credit_long = round(strike_step * 0.33, 2)
+                credit_long = round(max(0.15, strike_step * 0.33), 2)
                 play_7_14 = f"Sell ${sell_p_short:.2f} P / Buy ${sell_p_short - strike_step:.2f} P | Credit: `${credit_short:.2f}`"
                 play_30_45 = f"Sell ${sell_p_long:.2f} P / Buy ${sell_p_long - strike_step:.2f} P | Credit: `${credit_long:.2f}`"
                 defensive_play = f"Covered Call / Protective Married Put at ${s1:.2f} Support"
@@ -883,18 +914,18 @@ def analyze_stock_options_setup(ticker_symbol):
             if iv_rank_est < 40:
                 strategy_name = "Bear Put Debit Spread (Moderately Bearish Momentum)"
                 buy_p_short = round((current_price + (atr_14 * 0.2)) / strike_step) * strike_step
-                debit_short = round(strike_step * 0.45, 2)
+                debit_short = round(max(0.15, strike_step * 0.45), 2)
                 buy_p_long = round(current_price / strike_step) * strike_step
-                debit_long = round(strike_step * 0.90, 2)
+                debit_long = round(max(0.25, strike_step * 0.90), 2)
                 play_7_14 = f"Buy ${buy_p_short:.2f} P / Sell ${buy_p_short - strike_step:.2f} P | Debit: `${debit_short:.2f}`"
                 play_30_45 = f"Buy ${buy_p_long:.2f} P / Sell ${buy_p_long - (strike_step*2):.2f} P | Debit: `${debit_long:.2f}`"
                 defensive_play = f"Long Put: Buy 35-DTE ${buy_p_long:.2f} Put @ ~${debit_long*1.2:.2f}"
             else:
                 strategy_name = "Bear Call Credit Spread (Neutral to Bearish Resistance Play)"
                 sell_c_short = round((r1 + (atr_14 * 0.2)) / strike_step) * strike_step
-                credit_short = round(strike_step * 0.26, 2)
+                credit_short = round(max(0.10, strike_step * 0.26), 2)
                 sell_c_long = round((current_price * 1.05) / strike_step) * strike_step
-                credit_long = round(strike_step * 0.32, 2)
+                credit_long = round(max(0.15, strike_step * 0.32), 2)
                 play_7_14 = f"Sell ${sell_c_short:.2f} C / Buy ${sell_c_short + strike_step:.2f} C | Credit: `${credit_short:.2f}`"
                 play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${sell_c_long + strike_step:.2f} C | Credit: `${credit_long:.2f}`"
                 defensive_play = f"Iron Condor: Range-bound between ${s1:.2f} and ${r1:.2f}"
@@ -903,7 +934,7 @@ def analyze_stock_options_setup(ticker_symbol):
             "ticker": sym, "name": meta.get("shortName") or sym, "price": current_price,
             "change_pct": change_pct, "score": final_score, "badge": badge, "color": color,
             "is_bullish": is_bullish, "strategy_name": strategy_name, "iv_rank": iv_rank_est,
-            "rsi_14": rsi_14, "rvol": rvol, "sma_50": sma_50, "sma_200": sma_200,
+            "rsi_14": rsi_14, "rvol": rvol, "trend_diag": trend_diag,
             "macd_verdict": macd_verdict, "s1": s1, "r1": r1,
             "play_7_14": play_7_14, "play_30_45": play_30_45, "defensive_play": defensive_play
         }
@@ -916,7 +947,7 @@ def create_deep_dive_options_embed(data):
         description=f"**{data['ticker']}** is trading at **${data['price']:.2f}** ({data['change_pct']:+.2f}% today).\n**Quantitative Confidence Score:** `{data['score']} / 100`",
         color=data['color']
     )
-    diag_text = f"• **Trend Health:** Above 50D SMA (`${data['sma_50']:.2f}`) & 200D SMA (`${data['sma_200']:.2f}`)\n• **Momentum:** RSI-14: `{data['rsi_14']:.1f}` | MACD: `{data['macd_verdict']}`\n• **Volume & Volatility:** RVOL: `{data['rvol']:.1f}x (Time-Paced)` | IV Rank: `{data['iv_rank']}%`\n• **Key Levels:** Support (S1): `${data['s1']:.2f}` | Resistance (R1): `${data['r1']:.2f}`"
+    diag_text = f"• **Trend Health:** {data['trend_diag']}\n• **Momentum:** RSI: `{data['rsi_14']:.1f}` | MACD: `{data['macd_verdict']}`\n• **Volume & Volatility:** RVOL: `{data['rvol']:.1f}x (Time-Paced)` | IV Rank: `{data['iv_rank']}%`\n• **Key Levels:** Support (S1): `${data['s1']:.2f}` | Resistance (R1): `${data['r1']:.2f}`"
     embed.add_field(name="📊 Technical & Volatility Environment", value=diag_text, inline=False)
     embed.add_field(name="🏆 Primary DFOL Strategy", value=f"**{data['strategy_name']}**", inline=False)
     embed.add_field(name="⚡ PLAY A: 7 – 14 DTE (Fast Scalp / Weekly Momentum)", value=f"• **Trade Plan:** {data['play_7_14']}\n• **Target Exit:** +50% to +80% on contract | Stop-Loss: Cut at -35% loss", inline=False)
