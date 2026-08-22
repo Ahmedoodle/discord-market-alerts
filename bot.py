@@ -238,7 +238,6 @@ def get_on_demand_data(ticker_symbol):
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
-        # Time-Paced RVOL (Crypto 24H 00:00 UTC vs Stock 9:30-4:00 NY)
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
         avg_vol_20 = (sum(volumes[-21:-1]) / len(volumes[-21:-1])) if len(volumes) >= 20 and sum(volumes[-21:-1]) > 0 else None
@@ -558,7 +557,6 @@ def fetch_institutional_research_radar(ticker_symbol):
         search_terms = list(dict.fromkeys([base_sym, sym, clean_company_short]))
         seen_banks = {}
 
-        # 1. Structured Feed
         try:
             ud_df = t_obj.upgrades_downgrades
             if ud_df is not None and not ud_df.empty:
@@ -587,7 +585,6 @@ def fetch_institutional_research_radar(ticker_symbol):
                     if matched_inst not in seen_banks: seen_banks[matched_inst] = entry
         except Exception: pass
 
-        # 2. Deep Web Search with Disambiguation
         raw_reports = []
         def search_yahoo():
             items = []
@@ -982,10 +979,18 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. ENTRYPOINT
+# 7. ENTRYPOINT (WITH AUTO-RECOVERY & RATE-LIMIT SAFETY NET)
 # -------------------------------------------------------------
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("❌ Error: DISCORD_BOT_TOKEN environment variable not set.")
     else:
-        bot.run(BOT_TOKEN)
+        while True:
+            try:
+                bot.run(BOT_TOKEN)
+            except discord.errors.HTTPException as e:
+                if e.status == 429:
+                    print("⚠️ Discord Rate Limit hit (429). Sleeping for 5 minutes before reconnecting...")
+                    time.sleep(300)
+                else:
+                    print(f"❌ Discord Error ({e.status}): {e}. Retrying in 60s...")
