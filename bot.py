@@ -19,11 +19,12 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
-# 1. 24/7 KEEP-ALIVE HTTP SERVER (RENDER COMPATIBILITY)
+# 1. 24/7 KEEP-ALIVE SERVER (RENDER COMPATIBILITY)
 # -------------------------------------------------------------
+RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts-backup.onrender.com").rstrip("/")
 BOT_STATE = {"status": "STARTING"}
 
-class KeepAliveHandler(BaseHTTPRequestHandler):
+class RenderKeepAliveHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ["/status", "/healthz"]:
             self.send_response(200)
@@ -34,7 +35,7 @@ class KeepAliveHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
-            msg = f"Looney Bot Node Live! Status: {BOT_STATE['status']}"
+            msg = f"Looney Bot Online! Status: {BOT_STATE['status']}"
             self.wfile.write(msg.encode("utf-8"))
 
     def do_HEAD(self):
@@ -42,23 +43,23 @@ class KeepAliveHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/plain")
         self.end_headers()
 
-def run_dummy_server():
+def run_http_server():
     port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), KeepAliveHandler)
+    server = HTTPServer(("0.0.0.0", port), RenderKeepAliveHandler)
     server.serve_forever()
 
-threading.Thread(target=run_dummy_server, daemon=True).start()
+threading.Thread(target=run_http_server, daemon=True).start()
 
 def auto_self_ping():
     time.sleep(30)
     while True:
         try:
-            render_url = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts-backup.onrender.com")
-            if render_url:
-                requests.get(render_url, timeout=10)
+            target_url = RENDER_URL
+            if target_url:
+                requests.get(target_url, timeout=10)
         except Exception:
             pass
-        time.sleep(600)
+        time.sleep(600)  # Pings every 10 mins so Render never goes to sleep
 
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
@@ -69,14 +70,6 @@ http_session = requests.Session()
 http_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "*/*"
-})
-
-nasdaq_session = requests.Session()
-nasdaq_session.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/plain, */*",
-    "Origin": "https://www.nasdaq.com",
-    "Referer": "https://www.nasdaq.com/"
 })
 
 BOT_TOKEN = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
@@ -749,7 +742,6 @@ def analyze_stock_options_setup(ticker_symbol):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
-        # Time-Weighted Paced RVOL (Stock Market Hours)
         vol_today = volumes[-1] if volumes else 0
         avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
@@ -881,7 +873,7 @@ async def on_message(message):
 
     content = message.content.strip()
 
-    # TRIGGER 1: Institutional Research Radar on `%TICKER` (Multi-Part Embeds)
+    # TRIGGER 1: Institutional Research Radar on `%TICKER`
     if content.startswith("%") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -902,7 +894,7 @@ async def on_message(message):
                     await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
 
-    # TRIGGER 2: Options Deep-Dive on `#TICKER` (e.g. #NVDA, #TSLA)
+    # TRIGGER 2: Options Deep-Dive on `#TICKER`
     if content.startswith("#") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -918,7 +910,7 @@ async def on_message(message):
                     await message.channel.send(f"❌ Options Error: {e}")
                 return
 
-    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER` (e.g. !NVDA or $NVDA)
+    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER`
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
@@ -976,13 +968,13 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. MAIN ENTRYPOINT
+# 7. DIRECT BOT RUNNER
 # -------------------------------------------------------------
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is missing!", flush=True)
     else:
-        print(f"🚀 Starting Looney Bot on Render Web Service...", flush=True)
+        print(f"🚀 Starting Looney Bot on Render...", flush=True)
         while True:
             try:
                 BOT_STATE["status"] = "CONNECTING"
@@ -997,5 +989,5 @@ if __name__ == "__main__":
                     time.sleep(30)
             except Exception as e:
                 BOT_STATE["status"] = "CRASHED"
-                print(f"❌ Bot connection error: {e}. Retrying in 15s...", flush=True)
+                print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
