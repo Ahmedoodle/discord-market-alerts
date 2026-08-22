@@ -52,6 +52,28 @@ yahoo_session.headers.update({
     "Accept": "*/*"
 })
 
+def safe_post_webhook(url, payload, max_retries=3):
+    if not url:
+        return False
+    for attempt in range(max_retries):
+        try:
+            res = requests.post(url, json=payload, timeout=10)
+            if res.status_code == 429:
+                try:
+                    retry_after = float(res.json().get("retry_after", 1.5))
+                except Exception:
+                    retry_after = float(res.headers.get("Retry-After", 1.5))
+                logging.warning(f"Discord 429 Rate Limit on earnings webhook. Sleeping {retry_after:.2f}s...")
+                time.sleep(retry_after + 0.2)
+                continue
+            res.raise_for_status()
+            return True
+        except Exception as e:
+            if attempt == max_retries - 1:
+                logging.error(f"Failed to deliver earnings webhook: {e}")
+            time.sleep(1.0)
+    return False
+
 def clean_currency(val):
     if val is None or str(val).strip() in ["", "N/A", "None"]:
         return "N/A"
@@ -330,9 +352,6 @@ def format_scorecard_entry(idx, item):
     )
 
 def dispatch_discord_earnings_embed(title, description, entries_text, color=3447003, footer_text=None):
-    if not DISCORD_EARNINGS_WEBHOOK_URL:
-        return
-
     footer = footer_text or f"Looney • Daily 6:00 AM Earnings Radar"
     payload = {
         "username": BOT_NAME,
@@ -344,12 +363,8 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
             "footer": {"text": footer}
         }]
     }
-    try:
-        res = requests.post(DISCORD_EARNINGS_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-        time.sleep(0.6)
-    except Exception as e:
-        logging.error(f"Error sending embed: {e}")
+    safe_post_webhook(DISCORD_EARNINGS_WEBHOOK_URL, payload)
+    time.sleep(1.0)
 
 # ====================================================================
 # UNIVERSAL PAGINATION DISPATCHER (100% of data delivered in batches)
