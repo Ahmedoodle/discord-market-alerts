@@ -1039,14 +1039,9 @@ def fetch_ticker_news_rss(symbol, session):
     return news_items
 
 # ====================================================================
-# 9. MAIN EXECUTION CONTROLLER (WITH TEST OVERRIDE)
+# 9. MAIN EXECUTION CONTROLLER
 # ====================================================================
 def check_market():
-    # -------------------------------------------------------------
-    # 🧪 TEMPORARY TEST TOGGLE (Set to False to restore live schedule)
-    # -------------------------------------------------------------
-    FORCE_TEST_RUN = True
-
     now_ny = datetime.now(NY_TZ)
     today_ny_date = now_ny.date()
     today_ny_str = now_ny.strftime("%Y-%m-%d")
@@ -1057,11 +1052,11 @@ def check_market():
 
     state = load_alert_state()
 
-    if is_stock_holiday and state.get("holiday_announced_date") != today_ny_str and not FORCE_TEST_RUN:
+    if is_stock_holiday and state.get("holiday_announced_date") != today_ny_str:
         send_discord_holiday_announcement(us_hol, ca_hol)
         state["holiday_announced_date"] = today_ny_str
 
-    if not FORCE_TEST_RUN and not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
+    if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
         target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
         sleep_seconds = max(0, (target_time - now_ny).total_seconds())
         if sleep_seconds > 0:
@@ -1073,9 +1068,7 @@ def check_market():
     now_ny_str = now_ny.strftime("%Y-%m-%d %I:%M %p %Z")
 
     print(f"Current Time (NY): {now_ny_str}")
-    if FORCE_TEST_RUN:
-        print("🧪 TEST MODE ACTIVE: Bypassing time restrictions to dispatch live options radar & scan.\n")
-    elif is_stock_holiday:
+    if is_stock_holiday:
         print(f"US Stock Market Status: 🏛️ CLOSED for Holiday ({us_hol}) - Crypto & News Active\n")
     elif is_early_close:
         print(f"US Stock Market Session: {session_badge} ⚠️ EARLY CLOSE DAY: {early_close_reason} (Threshold: ±{threshold_pct}%)\n")
@@ -1087,19 +1080,12 @@ def check_market():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     })
 
-    # ==========================================
-    # 3. SCAN PRICES (With Paced RVOL)
-    # ==========================================
     price_alerts_to_send = []
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
     
-    # In test mode, include stocks regardless of market hours
-    if FORCE_TEST_RUN or (not is_stock_holiday and session_type != "CLOSED"):
-        s_badge = session_badge if not FORCE_TEST_RUN else "[TEST_RUN]"
-        s_thresh = threshold_pct if not FORCE_TEST_RUN else 2.0
-        s_mode = session_type if not FORCE_TEST_RUN else "REGULAR"
+    if not is_stock_holiday and session_type != "CLOSED":
         for s in STOCK_ETF_WATCHLIST:
-            active_watchlist.append((s, s_mode, s_thresh, s_badge))
+            active_watchlist.append((s, session_type, threshold_pct, session_badge))
 
     for ticker_symbol, s_type, req_threshold, badge in active_watchlist:
         try:
@@ -1117,7 +1103,7 @@ def check_market():
                 elif s_type == "AFTER_HOURS":
                     tracked_dict = state["afterhours_tickers"]
                 else:
-                    tracked_dict = state["regular_tickers"]
+                    tracked_dict = {}
 
                 should_alert = False
                 step_change_pct = None
@@ -1169,9 +1155,6 @@ def check_market():
             print(f"❌ Error checking {ticker_symbol}: {e}")
         time.sleep(0.12)
 
-    # ==========================================
-    # 4. SCAN BREAKING NEWS
-    # ==========================================
     print("\nScanning breaking news across all tickers...")
     cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
     seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
@@ -1207,9 +1190,6 @@ def check_market():
         if pub_dt and pub_dt >= cutoff_time:
             new_articles.append(item)
 
-    # ==========================================
-    # 5. DISPATCH PRICE & NEWS DISCORD ALERTS
-    # ==========================================
     price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
     if price_alerts_to_send:
         print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
@@ -1231,9 +1211,6 @@ def check_market():
             send_discord_news_alert(article)
             time.sleep(0.5)
 
-    # ==========================================
-    # 6. RUN TOP 50 OPTIONS RADAR (FORCED IN TEST MODE)
-    # ==========================================
     reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
     is_options_market_open = (
         not is_stock_holiday and
@@ -1241,7 +1218,7 @@ def check_market():
         dtime(9, 32) <= now_ny.time() <= reg_close_time
     )
 
-    if FORCE_TEST_RUN or is_options_market_open:
+    if is_options_market_open:
         dispatch_top50_options_radar(session_http)
     elif is_stock_holiday:
         print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
@@ -1251,9 +1228,6 @@ def check_market():
         close_str = "1:00 PM" if is_early_close else "4:00 PM"
         print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
 
-    # ==========================================
-    # 7. PERSIST STATE
-    # ==========================================
     save_alert_state(state)
     print(f"\n=======================================================")
     print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News: {len(new_articles)}")
