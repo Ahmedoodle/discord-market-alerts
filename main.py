@@ -351,18 +351,19 @@ def format_large_number(num):
     return str(int(num))
 
 def calculate_rsi(closes, period=14):
-    if len(closes) < period + 1:
+    if len(closes) < 2:
         return 50.0
+    p = min(period, len(closes) - 1)
     deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
     gains = [max(d, 0) for d in deltas]
     losses = [max(-d, 0) for d in deltas]
 
-    avg_gain = sum(gains[:period]) / period
-    avg_loss = sum(losses[:period]) / period
+    avg_gain = sum(gains[:p]) / max(1, p)
+    avg_loss = sum(losses[:p]) / max(1, p)
 
-    for i in range(period, len(deltas)):
-        avg_gain = (avg_gain * (period - 1) + gains[i]) / period
-        avg_loss = (avg_loss * (period - 1) + losses[i]) / period
+    for i in range(p, len(deltas)):
+        avg_gain = (avg_gain * (p - 1) + gains[i]) / p
+        avg_loss = (avg_loss * (p - 1) + losses[i]) / p
 
     if avg_loss == 0:
         return 100.0
@@ -371,6 +372,9 @@ def calculate_rsi(closes, period=14):
 
 def calculate_macd(closes):
     if len(closes) < 35:
+        if len(closes) >= 3:
+            slope = closes[-1] - closes[0]
+            return "Bullish Momentum 🟢 (Short-term)" if slope >= 0 else "Bearish Momentum 🔴 (Short-term)"
         return "N/A"
     alpha_12 = 2.0 / 13
     alpha_26 = 2.0 / 27
@@ -408,30 +412,37 @@ def calculate_macd(closes):
         return "Bearish Momentum 🔴 (Expanding Downward)" if hist_curr <= hist_prev else "Bearish Trend 🔴 (Weakening / Slowing)"
 
 def calculate_atr(highs, lows, closes, period=14):
-    if len(closes) < period + 1:
-        return 1.0
+    if len(closes) < 2:
+        return 0.50
+    p = min(period, len(closes) - 1)
     trs = [max(highs[i] - lows[i], abs(highs[i] - closes[i - 1]), abs(lows[i] - closes[i - 1])) for i in range(1, len(closes))]
-    return sum(trs[-period:]) / period
+    val = sum(trs[-p:]) / max(1, p)
+    return max(0.05, val)
 
 def calculate_historical_volatility(closes, window=30):
-    if len(closes) < window + 1:
+    if len(closes) < 3:
         return 0.25
-    log_returns = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - window, len(closes))]
+    w = min(window, len(closes) - 1)
+    log_returns = [math.log(closes[i] / closes[i - 1]) for i in range(len(closes) - w, len(closes)) if closes[i-1] > 0]
+    if not log_returns:
+        return 0.25
     mean_ret = sum(log_returns) / len(log_returns)
-    variance = sum((r - mean_ret) ** 2 for r in log_returns) / (len(log_returns) - 1)
+    variance = sum((r - mean_ret) ** 2 for r in log_returns) / max(1, (len(log_returns) - 1))
+    if variance <= 0:
+        return 0.05
     daily_vol = math.sqrt(variance)
     return daily_vol * math.sqrt(252)
 
 def calculate_beta_vs_spy(closes, http_session):
     try:
-        if len(closes) < 50:
+        if len(closes) < 15:
             return None
         url_spy = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=1y"
         res_spy = http_session.get(url_spy, timeout=4)
         if res_spy.status_code == 200:
             spy_closes = [c for c in res_spy.json()["chart"]["result"][0]["indicators"]["quote"][0]["close"] if c is not None]
             min_len = min(len(closes), len(spy_closes))
-            if min_len >= 50:
+            if min_len >= 15:
                 s_ret = [closes[i] / closes[i-1] - 1 for i in range(len(closes) - min_len + 1, len(closes))]
                 m_ret = [spy_closes[i] / spy_closes[i-1] - 1 for i in range(len(spy_closes) - min_len + 1, len(spy_closes))]
                 mean_s = sum(s_ret) / len(s_ret)
@@ -500,7 +511,7 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
     now_ny = datetime.now(NY_TZ)
     now_utc = datetime.now(UTC_TZ)
     try:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=1y"
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y"
         res = http_session.get(url, timeout=5)
         if res.status_code != 200:
             return metrics
@@ -509,13 +520,25 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         meta = chart_data.get("meta", {})
         indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
 
-        closes = [c for c in indicators.get("close", []) if c is not None]
-        volumes = [v for v in indicators.get("volume", []) if v is not None]
-        highs = [h for h in indicators.get("high", []) if h is not None]
-        lows = [l for l in indicators.get("low", []) if l is not None]
+        raw_c = indicators.get("close", []) or []
+        raw_v = indicators.get("volume", []) or []
+        raw_h = indicators.get("high", []) or []
+        raw_l = indicators.get("low", []) or []
 
-        if len(closes) < 2:
+        valid_bars = []
+        for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
+            c, h, l = raw_c[i], raw_h[i], raw_l[i]
+            v = raw_v[i] if i < len(raw_v) and raw_v[i] is not None else 0
+            if c is not None and h is not None and l is not None and c > 0:
+                valid_bars.append((float(c), float(h), float(l), float(v)))
+
+        if len(valid_bars) < 2:
             return metrics
+
+        closes = [b[0] for b in valid_bars]
+        highs = [b[1] for b in valid_bars]
+        lows = [b[2] for b in valid_bars]
+        volumes = [b[3] for b in valid_bars]
 
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
@@ -559,11 +582,11 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
             dist_high = ((high_52w - current_price) / high_52w) * 100
             metrics["range_str"] = f"`${low_52w:.2f} - ${high_52w:.2f}` ({dist_high:.1f}% below 52W High)"
 
-        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else None
+        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else (sum(closes) / len(closes))
         sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else None
 
         sma_50_str = f"`${sma_50:.2f}` (Above by +{((current_price-sma_50)/sma_50)*100:.1f}% 🟢)" if sma_50 and current_price >= sma_50 else (f"`${sma_50:.2f}` (Below by {((current_price-sma_50)/sma_50)*100:.1f}% 🔴)" if sma_50 else "N/A")
-        sma_200_str = f"`${sma_200:.2f}` (Above by +{((current_price-sma_200)/sma_200)*100:.1f}% 🟢)" if sma_200 and current_price >= sma_200 else (f"`${sma_200:.2f}` (Below by {((current_price-sma_200)/sma_200)*100:.1f}% 🔴)" if sma_200 else "N/A")
+        sma_200_str = f"`${sma_200:.2f}` (Above by +{((current_price-sma_200)/sma_200)*100:.1f}% 🟢)" if sma_200 and current_price >= sma_200 else (f"`${sma_200:.2f}` (Below by {((current_price-sma_200)/sma_200)*100:.1f}% 🔴)" if sma_200 else "`Young Listing (<200D)`")
 
         verdict_str = "N/A"
         if sma_50 and sma_200:
@@ -575,6 +598,8 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
                 verdict_str = "`🟡 Pullback in Macro Uptrend` *(Testing Support)*"
             else:
                 verdict_str = "`🟡 Counter-Trend Rebound` *(Bear Market Bounce)*"
+        elif sma_50:
+            verdict_str = "`🟢 Uptrend vs Listing Average`" if current_price >= sma_50 else "`🔴 Downtrend vs Listing Average`"
 
         metrics["trend_block"] = (
             f"• **50-Day SMA:** {sma_50_str}\n"
@@ -714,13 +739,13 @@ def send_discord_news_alert(article):
     safe_post_webhook(DISCORD_NEWS_WEBHOOK_URL, payload)
 
 # ====================================================================
-# 7. 30-MINUTE OPTIONS STRATEGY RADAR (TOP 50 PAGINATED)
+# 7. 30-MINUTE OPTIONS STRATEGY RADAR (TOP 100 PAGINATED)
 # ====================================================================
 def analyze_stock_options_setup(ticker_symbol, session_http):
     sym = ticker_symbol.upper().strip()
     now_ny = datetime.now(NY_TZ)
     try:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1y"
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2y"
         res = session_http.get(url, timeout=6)
         if res.status_code != 200:
             return None
@@ -729,49 +754,62 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         meta = chart_data.get("meta", {})
         indicators = chart_data.get("indicators", {}).get("quote", [{}])[0]
 
-        closes = [c for c in indicators.get("close", []) if c is not None]
-        volumes = [v for v in indicators.get("volume", []) if v is not None]
-        highs = [h for h in indicators.get("high", []) if h is not None]
-        lows = [l for l in indicators.get("low", []) if l is not None]
+        raw_c = indicators.get("close", []) or []
+        raw_v = indicators.get("volume", []) or []
+        raw_h = indicators.get("high", []) or []
+        raw_l = indicators.get("low", []) or []
 
-        if len(closes) < 50:
+        valid_bars = []
+        for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
+            c, h, l = raw_c[i], raw_h[i], raw_l[i]
+            v = raw_v[i] if i < len(raw_v) and raw_v[i] is not None else 0
+            if c is not None and h is not None and l is not None and c > 0:
+                valid_bars.append((float(c), float(h), float(l), float(v)))
+
+        # Adaptive minimum data floor (allows fresh IPOs / SPACs from 3 days onward)
+        if len(valid_bars) < 3:
             return None
 
-        current_price = meta.get("regularMarketPrice") or closes[-1]
-        prev_close = meta.get("regularMarketPreviousClose") or closes[-2]
-        change_pct = ((current_price - prev_close) / prev_close) * 100
+        closes = [b[0] for b in valid_bars]
+        highs = [b[1] for b in valid_bars]
+        lows = [b[2] for b in valid_bars]
+        volumes = [b[3] for b in valid_bars]
 
-        sma_50 = sum(closes[-50:]) / 50
-        sma_200 = sum(closes[-200:]) / 200 if len(closes) >= 200 else sma_50
-        rsi_14 = calculate_rsi(closes, 14)
+        current_price = meta.get("regularMarketPrice") or closes[-1]
+        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
+        change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
+
+        sma_50 = (sum(closes[-50:]) / 50) if len(closes) >= 50 else (sum(closes) / len(closes))
+        sma_200 = (sum(closes[-200:]) / 200) if len(closes) >= 200 else sma_50
+        rsi_14 = calculate_rsi(closes, period=min(14, len(closes)-1))
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, 14)
 
         vol_today = volumes[-1] if volumes else 0
-        avg_vol_20 = (sum(volumes[-21:-1]) / 20) if len(volumes) >= 21 else vol_today
+        hist_vols = volumes[:-1]
+        avg_vol = (sum(hist_vols) / len(hist_vols)) if hist_vols and sum(hist_vols) > 0 else (vol_today or 1.0)
         pacing_factor = get_intraday_volume_pacing_factor(now_ny)
-        expected_vol_so_far = avg_vol_20 * pacing_factor
-        rvol = (vol_today / expected_vol_so_far) if expected_vol_so_far > 0 else 1.0
+        expected_vol = avg_vol * pacing_factor
+        rvol = (vol_today / expected_vol) if expected_vol > 0 else 1.0
 
-        h_prev, l_prev, c_prev = highs[-2], lows[-2], closes[-2]
+        h_prev = highs[-2] if len(highs) >= 2 else highs[-1]
+        l_prev = lows[-2] if len(lows) >= 2 else lows[-1]
+        c_prev = closes[-2] if len(closes) >= 2 else closes[-1]
         p = (h_prev + l_prev + c_prev) / 3.0
         r1 = (2.0 * p) - l_prev
         s1 = (2.0 * p) - h_prev
 
         hv_30 = calculate_historical_volatility(closes, 30)
         hv_90 = calculate_historical_volatility(closes, 90) if len(closes) >= 91 else hv_30
-        iv_rank_est = max(5, min(95, int((hv_30 / (hv_90 * 1.3 if hv_90 > 0 else 1.0)) * 50)))
+        denom = (hv_90 * 1.3) if (hv_90 and hv_90 > 0) else 1.0
+        iv_rank_est = max(5, min(95, int((hv_30 / denom) * 50)))
 
         bull_score, bear_score = 0, 0
 
-        if current_price >= sma_50 and current_price >= sma_200:
+        if current_price >= sma_50:
             bull_score += 25
-        elif current_price >= sma_50:
-            bull_score += 15
-        elif current_price < sma_50 and current_price < sma_200:
+        else:
             bear_score += 25
-        elif current_price < sma_50:
-            bear_score += 15
 
         if 52 <= rsi_14 <= 68:
             bull_score += 20
@@ -809,17 +847,17 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         final_score = max(bull_score, bear_score)
         is_bullish = bull_score >= bear_score
 
-        strike_step = 2.5 if current_price < 100 else (5.0 if current_price < 300 else 10.0)
+        strike_step = 0.5 if current_price < 15 else (1.0 if current_price < 50 else (2.5 if current_price < 100 else (5.0 if current_price < 300 else 10.0)))
 
         if is_bullish:
             if iv_rank_est < 40:
                 strategy_name = "Long Call (Outright Bullish Momentum)"
                 strike_short = round((current_price + (atr_14 * 0.5)) / strike_step) * strike_step
-                prem_short = round(max(0.5, atr_14 * 0.9), 2)
+                prem_short = round(max(0.15, atr_14 * 0.9), 2)
                 be_short = strike_short + prem_short
 
                 strike_long = round((current_price - (atr_14 * 0.3)) / strike_step) * strike_step
-                prem_long = round(max(1.0, atr_14 * 2.1), 2)
+                prem_long = round(max(0.25, atr_14 * 2.1), 2)
                 be_long = strike_long + prem_long
 
                 play_7_14 = f"Buy ${strike_short:.2f} C @ ~${prem_short:.2f} | B/E: `${be_short:.2f}`"
@@ -828,11 +866,11 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
                 strategy_name = "Bull Put Credit Spread (Support Income)"
                 sell_p_short = round((s1 - (atr_14 * 0.2)) / strike_step) * strike_step
                 buy_p_short = sell_p_short - strike_step
-                credit_short = round(strike_step * 0.28, 2)
+                credit_short = round(max(0.10, strike_step * 0.28), 2)
 
                 sell_p_long = round((current_price * 0.95) / strike_step) * strike_step
                 buy_p_long = sell_p_long - strike_step
-                credit_long = round(strike_step * 0.33, 2)
+                credit_long = round(max(0.15, strike_step * 0.33), 2)
 
                 play_7_14 = f"Sell ${sell_p_short:.2f} P / Buy ${buy_p_short:.2f} P | Credit: `${credit_short:.2f}`"
                 play_30_45 = f"Sell ${sell_p_long:.2f} P / Buy ${buy_p_long:.2f} P | Credit: `${credit_long:.2f}`"
@@ -841,11 +879,11 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
                 strategy_name = "Bear Put Debit Spread (Downside Momentum)"
                 buy_p_short = round((current_price + (atr_14 * 0.2)) / strike_step) * strike_step
                 sell_p_short = buy_p_short - strike_step
-                debit_short = round(strike_step * 0.45, 2)
+                debit_short = round(max(0.15, strike_step * 0.45), 2)
 
                 buy_p_long = round(current_price / strike_step) * strike_step
                 sell_p_long = buy_p_long - (strike_step * 2)
-                debit_long = round(strike_step * 0.90, 2)
+                debit_long = round(max(0.25, strike_step * 0.90), 2)
 
                 play_7_14 = f"Buy ${buy_p_short:.2f} P / Sell ${buy_p_short - strike_step:.2f} P | Debit: `${debit_short:.2f}`"
                 play_30_45 = f"Buy ${buy_p_long:.2f} P / Sell ${buy_p_long - (strike_step*2):.2f} P | Debit: `${debit_long:.2f}`"
@@ -853,14 +891,14 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
                 strategy_name = "Bear Call Credit Spread (Resistance Rejection)"
                 sell_c_short = round((r1 + (atr_14 * 0.2)) / strike_step) * strike_step
                 buy_c_short = sell_c_short + strike_step
-                credit_short = round(strike_step * 0.26, 2)
+                credit_short = round(max(0.10, strike_step * 0.26), 2)
 
                 sell_c_long = round((current_price * 1.05) / strike_step) * strike_step
                 buy_c_long = sell_c_long + strike_step
-                credit_long = round(strike_step * 0.32, 2)
+                credit_long = round(max(0.15, strike_step * 0.32), 2)
 
-                play_7_14 = f"Sell ${sell_c_short:.2f} C / Buy ${buy_c_short:.2f} C | Credit: `${credit_short:.2f}`"
-                play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${buy_c_long + strike_step:.2f} C | Credit: `${credit_long:.2f}`"
+                play_7_14 = f"Sell ${sell_c_short:.2f} C / Buy ${sell_c_short + strike_step:.2f} C | Credit: `${credit_short:.2f}`"
+                play_30_45 = f"Sell ${sell_c_long:.2f} C / Buy ${sell_c_long + strike_step:.2f} C | Credit: `${credit_long:.2f}`"
 
         return {
             "ticker": sym,
@@ -877,13 +915,13 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
     except Exception:
         return None
 
-def dispatch_top50_options_radar(session_http):
+def dispatch_top100_options_radar(session_http):
     if not DISCORD_OPTIONS_WEBHOOK_URL:
         return
 
     now_ny = datetime.now(NY_TZ)
     time_str = now_ny.strftime("%I:%M %p %Z")
-    print(f"\nScanning {len(OPTIONS_RADAR_UNIVERSE)} Securities for Top 50 Options Radar ({time_str})...")
+    print(f"\nScanning {len(OPTIONS_RADAR_UNIVERSE)} Securities for Top 100 Options Radar ({time_str})...")
 
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
@@ -894,14 +932,14 @@ def dispatch_top50_options_radar(session_http):
                 results.append(res)
 
     results.sort(key=lambda x: x["score"], reverse=True)
-    top_50 = results[:50]
+    top_100 = results[:100]
 
-    if not top_50:
+    if not top_100:
         print("No options radar data generated.")
         return
 
     chunk_size = 10
-    chunks = [top_50[i:i + chunk_size] for i in range(0, len(top_50), chunk_size)]
+    chunks = [top_100[i:i + chunk_size] for i in range(0, len(top_100), chunk_size)]
     total_parts = len(chunks)
 
     for part_idx, chunk in enumerate(chunks, 1):
@@ -917,8 +955,8 @@ def dispatch_top50_options_radar(session_http):
                 f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x (Time-Paced)`\n\n"
             )
 
-        title = f"🚨 MARKET OPTIONS RADAR [TOP 50 PICKS • PART {part_idx}/{total_parts}]" if total_parts > 1 else "🚨 MARKET OPTIONS RADAR [TOP QUANTITATIVE PICKS]"
-        description_header = f"*Live Quantitative Ranking across {len(OPTIONS_RADAR_UNIVERSE)} Market Securities as of {time_str}.*\n*Showing Top Picks {start_num} to {start_num + len(chunk) - 1} of {len(top_50)} total.*\n\n"
+        title = f"🚨 MARKET OPTIONS RADAR [TOP 100 PICKS • PART {part_idx}/{total_parts}]" if total_parts > 1 else "🚨 MARKET OPTIONS RADAR [TOP QUANTITATIVE PICKS]"
+        description_header = f"*Live Quantitative Ranking across {len(OPTIONS_RADAR_UNIVERSE)} Market Securities as of {time_str}.*\n*Showing Top Picks {start_num} to {start_num + len(chunk) - 1} of {len(top_100)} total.*\n\n"
 
         payload = {
             "username": BOT_NAME,
@@ -932,7 +970,7 @@ def dispatch_top50_options_radar(session_http):
         }
         success = safe_post_webhook(DISCORD_OPTIONS_WEBHOOK_URL, payload)
         if success:
-            print(f"Top 50 Options Radar Part {part_idx}/{total_parts} successfully posted at {time_str}!")
+            print(f"Top 100 Options Radar Part {part_idx}/{total_parts} successfully posted at {time_str}!")
         time.sleep(1.0)
 
 # ====================================================================
@@ -1233,7 +1271,7 @@ def check_market():
     )
 
     if is_options_market_open:
-        dispatch_top50_options_radar(session_http)
+        dispatch_top100_options_radar(session_http)
     elif is_stock_holiday:
         print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
     elif now_ny.weekday() > 4:
