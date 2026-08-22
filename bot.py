@@ -19,12 +19,12 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
-# 1. 24/7 KEEP-ALIVE SERVER (PRIMARY RENDER COMPATIBILITY)
+# 1. 24/7 KEEP-ALIVE SERVER (AUTO-DETECTS RENDER URL)
 # -------------------------------------------------------------
-PRIMARY_RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com").rstrip("/")
+RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 BOT_STATE = {"status": "STARTING"}
 
-class PrimaryKeepAliveHandler(BaseHTTPRequestHandler):
+class RenderHealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ["/status", "/healthz"]:
             self.send_response(200)
@@ -35,7 +35,7 @@ class PrimaryKeepAliveHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
-            msg = f"Looney Primary Node Online! Status: {BOT_STATE['status']}"
+            msg = f"Looney Bot Live! Status: {BOT_STATE['status']}"
             self.wfile.write(msg.encode("utf-8"))
 
     def do_HEAD(self):
@@ -45,7 +45,7 @@ class PrimaryKeepAliveHandler(BaseHTTPRequestHandler):
 
 def run_http_server():
     port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), PrimaryKeepAliveHandler)
+    server = HTTPServer(("0.0.0.0", port), RenderHealthHandler)
     server.serve_forever()
 
 threading.Thread(target=run_http_server, daemon=True).start()
@@ -54,9 +54,9 @@ def auto_self_ping():
     time.sleep(30)
     while True:
         try:
-            target_url = PRIMARY_RENDER_URL
-            if target_url:
-                requests.get(target_url, timeout=10)
+            target = os.getenv("RENDER_EXTERNAL_URL") or RENDER_URL
+            if target:
+                requests.get(target, timeout=10)
         except Exception:
             pass
         time.sleep(600)  # Pings every 10 minutes to prevent Render free-tier sleep
@@ -864,7 +864,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     BOT_STATE["status"] = "CONNECTED"
-    print(f"🤖 Looney PRIMARY is ONLINE and listening 24/7 as: {bot.user}", flush=True)
+    print(f"🤖 Looney is ONLINE and listening 24/7 as: {bot.user}", flush=True)
 
 @bot.event
 async def on_message(message):
@@ -968,13 +968,13 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. PRIMARY RUNNER LOOP
+# 7. MAIN ENTRYPOINT
 # -------------------------------------------------------------
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is missing!", flush=True)
     else:
-        print(f"🚀 Starting Looney Primary Node on Render...", flush=True)
+        print(f"🚀 Starting Looney Bot on Render...", flush=True)
         while True:
             try:
                 BOT_STATE["status"] = "CONNECTING"
