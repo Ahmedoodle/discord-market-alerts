@@ -68,8 +68,6 @@ NASDAQ_100 = [
 # 1. INSTITUTIONAL VOLUME PACING ENGINES (EQUITIES & CRYPTO)
 # ====================================================================
 def get_intraday_volume_pacing_factor(now_ny):
-    # Outside regular market hours (Pre-market, After-hours, Weekends),
-    # volume reflects completed daily bar; compare 1:1 against full average.
     if now_ny.weekday() > 4:
         return 1.0
 
@@ -91,7 +89,6 @@ def get_intraday_volume_pacing_factor(now_ny):
         return 0.72 + ((minutes_elapsed - 300) / 90.0) * 0.28
 
 def get_crypto_volume_pacing_factor(now_utc):
-    # Crypto 24h continuous cycle resets at 00:00 UTC (8:00 PM EST)
     mins_elapsed = (now_utc.hour * 60) + now_utc.minute
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
@@ -479,7 +476,6 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
-        # Time-Paced RVOL (Crypto 24H 00:00 UTC vs Stock 9:30-4:00 NY)
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
 
@@ -695,7 +691,7 @@ def send_discord_news_alert(article):
         print(f"Error sending news alert: {e}")
 
 # ====================================================================
-# 7. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR
+# 7. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR (TOP 50 PAGINATED)
 # ====================================================================
 def analyze_stock_options_setup(ticker_symbol, session_http):
     sym = ticker_symbol.upper().strip()
@@ -864,13 +860,13 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
     except Exception:
         return None
 
-def dispatch_top10_options_radar(session_http):
+def dispatch_top50_options_radar(session_http):
     if not DISCORD_OPTIONS_WEBHOOK_URL:
         return
 
     now_ny = datetime.now(NY_TZ)
     time_str = now_ny.strftime("%I:%M %p %Z")
-    print(f"\nScanning 100 Nasdaq Securities for Top 10 Options Radar ({time_str})...")
+    print(f"\nScanning 100 Nasdaq Securities for Top 50 Options Radar ({time_str})...")
 
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
@@ -881,39 +877,49 @@ def dispatch_top10_options_radar(session_http):
                 results.append(res)
 
     results.sort(key=lambda x: x["score"], reverse=True)
-    top_10 = results[:10]
+    top_50 = results[:50]
 
-    if not top_10:
+    if not top_50:
         print("No options radar data generated.")
         return
 
-    embed_desc = ""
-    for i, item in enumerate(top_10, 1):
-        direction_tag = "🟢 (Bullish)" if item["is_bullish"] else "🔴 (Bearish)"
-        embed_desc += (
-            f"**{i}. {item['ticker']} — ${item['price']:.2f}** | **Score: {item['score']}%** {direction_tag}\n"
-            f"• **Strategy:** `{item['strategy_name']}` (IV Rank: `{item['iv_rank']}%`)\n"
-            f"• ⚡ **7–14 DTE:** {item['play_7_14']}\n"
-            f"• 🏛️ **30–45 DTE:** {item['play_30_45']}\n"
-            f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x (Time-Paced)`\n\n"
-        )
+    chunk_size = 10
+    chunks = [top_50[i:i + chunk_size] for i in range(0, len(top_50), chunk_size)]
+    total_parts = len(chunks)
 
-    payload = {
-        "username": BOT_NAME,
-        "avatar_url": BOT_AVATAR_URL,
-        "embeds": [{
-            "title": f"🚨 NASDAQ 100 OPTIONS RADAR [TOP 10 QUANTITATIVE PICKS]",
-            "description": f"*Live Quantitative Ranking across 100 Nasdaq Securities as of {time_str}.*\n\n{embed_desc}"[:4000],
-            "color": 3066993,
-            "footer": {"text": "Looney Options Intelligence • Type '#TICKER' in chat for deep-dive Greeks & exit targets"}
-        }]
-    }
-    try:
-        res = requests.post(DISCORD_OPTIONS_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-        print(f"Top 10 Options Radar successfully posted to Discord at {time_str}!")
-    except Exception as e:
-        print(f"Error dispatching options radar: {e}")
+    for part_idx, chunk in enumerate(chunks, 1):
+        start_num = (part_idx - 1) * chunk_size + 1
+        embed_desc = ""
+        for j, item in enumerate(chunk):
+            direction_tag = "🟢 (Bullish)" if item["is_bullish"] else "🔴 (Bearish)"
+            embed_desc += (
+                f"**{start_num + j}. {item['ticker']} — ${item['price']:.2f}** | **Score: {item['score']}%** {direction_tag}\n"
+                f"• **Strategy:** `{item['strategy_name']}` (IV Rank: `{item['iv_rank']}%`)\n"
+                f"• ⚡ **7–14 DTE:** {item['play_7_14']}\n"
+                f"• 🏛️ **30–45 DTE:** {item['play_30_45']}\n"
+                f"• **Catalyst:** RSI: `{item['rsi_14']:.1f}` • RVOL: `{item['rvol']:.1f}x (Time-Paced)`\n\n"
+            )
+
+        title = f"🚨 NASDAQ 100 OPTIONS RADAR [TOP 50 PICKS • PART {part_idx}/{total_parts}]" if total_parts > 1 else "🚨 NASDAQ 100 OPTIONS RADAR [TOP QUANTITATIVE PICKS]"
+        description_header = f"*Live Quantitative Ranking across 100 Nasdaq Securities as of {time_str}.*\n*Showing Top Picks {start_num} to {start_num + len(chunk) - 1} of {len(top_50)} total.*\n\n"
+
+        payload = {
+            "username": BOT_NAME,
+            "avatar_url": BOT_AVATAR_URL,
+            "embeds": [{
+                "title": title,
+                "description": f"{description_header}{embed_desc}"[:4000],
+                "color": 3066993,
+                "footer": {"text": f"Looney Options Intelligence • Part {part_idx} of {total_parts} • Type '#TICKER' in chat for deep-dive Greeks"}
+            }]
+        }
+        try:
+            res = requests.post(DISCORD_OPTIONS_WEBHOOK_URL, json=payload, timeout=10)
+            res.raise_for_status()
+            print(f"Top 50 Options Radar Part {part_idx}/{total_parts} successfully posted to Discord at {time_str}!")
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"Error dispatching options radar part {part_idx}: {e}")
 
 # ====================================================================
 # 8. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
@@ -1050,7 +1056,6 @@ def check_market():
         send_discord_holiday_announcement(us_hol, ca_hol)
         state["holiday_announced_date"] = today_ny_str
 
-    # 9:30 AM OPENING BELL BUFFER (Waits until 9:32 AM)
     if not is_stock_holiday and now_ny.weekday() <= 4 and dtime(9, 30) <= now_ny.time() < dtime(9, 32):
         target_time = now_ny.replace(hour=9, minute=32, second=0, microsecond=0)
         sleep_seconds = max(0, (target_time - now_ny).total_seconds())
@@ -1075,9 +1080,6 @@ def check_market():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     })
 
-    # ==========================================
-    # 3. SCAN PRICES (With Paced RVOL)
-    # ==========================================
     price_alerts_to_send = []
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
     
@@ -1153,9 +1155,6 @@ def check_market():
             print(f"❌ Error checking {ticker_symbol}: {e}")
         time.sleep(0.12)
 
-    # ==========================================
-    # 4. SCAN BREAKING NEWS
-    # ==========================================
     print("\nScanning breaking news across all tickers...")
     cutoff_time = now_ny - timedelta(minutes=MAX_NEWS_AGE_MINUTES)
     seen_fingerprints_set = set(state.get("seen_news_fingerprints", []))
@@ -1191,9 +1190,6 @@ def check_market():
         if pub_dt and pub_dt >= cutoff_time:
             new_articles.append(item)
 
-    # ==========================================
-    # 5. DISPATCH PRICE & NEWS DISCORD ALERTS
-    # ==========================================
     price_alerts_to_send.sort(key=lambda x: x["change_pct"], reverse=True)
     if price_alerts_to_send:
         print(f"\nSending {len(price_alerts_to_send)} price alert(s) to PRICE CHANNEL...")
@@ -1215,10 +1211,6 @@ def check_market():
             send_discord_news_alert(article)
             time.sleep(0.5)
 
-    # ==========================================
-    # 6. RUN TOP 10 OPTIONS RADAR (30-MIN SCAN)
-    # Strict Gate: Mon-Fri between 9:32 AM and 4:00 PM EST
-    # ==========================================
     reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
     is_options_market_open = (
         not is_stock_holiday and
@@ -1227,7 +1219,7 @@ def check_market():
     )
 
     if is_options_market_open:
-        dispatch_top10_options_radar(session_http)
+        dispatch_top50_options_radar(session_http)
     elif is_stock_holiday:
         print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
     elif now_ny.weekday() > 4:
@@ -1236,9 +1228,6 @@ def check_market():
         close_str = "1:00 PM" if is_early_close else "4:00 PM"
         print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
 
-    # ==========================================
-    # 7. PERSIST STATE
-    # ==========================================
     save_alert_state(state)
     print(f"\n=======================================================")
     print(f"Check Complete. Price Alerts: {len(price_alerts_to_send)} | Fresh News: {len(new_articles)}")
