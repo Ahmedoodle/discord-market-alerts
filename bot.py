@@ -965,30 +965,36 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. ENTRYPOINT (WITH REAL-TIME DIAGNOSTICS & RECOVERY BACKOFF)
+# 7. ENTRYPOINT (WITH CLEAN SESSION RE-INITIALIZATION)
 # -------------------------------------------------------------
+async def run_bot_with_clean_session():
+    while True:
+        try:
+            # Reopen fresh session if previously closed
+            bot._closed = False
+            if hasattr(bot, 'http'):
+                bot.http.recreate()
+            
+            async with bot:
+                await bot.start(BOT_TOKEN)
+        except discord.errors.HTTPException as e:
+            if e.status == 429:
+                print("⚠️ Discord Rate Limit (429) hit. Pausing for 5 minutes before reconnecting...", flush=True)
+                await asyncio.sleep(300)
+            else:
+                print(f"❌ Discord HTTP Error ({e.status}): {e}. Retrying in 60s...", flush=True)
+                await asyncio.sleep(60)
+        except Exception as e:
+            print(f"❌ Connection error: {e}. Retrying in 30s...", flush=True)
+            await asyncio.sleep(30)
+
 if __name__ == "__main__":
     print(f"🚀 Starting Looney On-Demand Terminal...", flush=True)
     if not BOT_TOKEN:
-        print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is EMPTY or NOT SET in Render!", flush=True)
+        print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is EMPTY in Render!", flush=True)
     else:
-        print(f"🔑 Token detected (Length: {len(BOT_TOKEN)} characters). Connecting to Discord gateway...", flush=True)
-        while True:
-            try:
-                bot.run(BOT_TOKEN)
-            except discord.errors.PrivilegedIntentsRequired:
-                print("❌ ERROR: Privileged Gateway Intents (Message Content) is OFF in Discord Dev Portal! Enable it under Bot tab.", flush=True)
-                time.sleep(300)
-            except discord.errors.LoginFailure as e:
-                print(f"❌ CRITICAL ERROR: Invalid Bot Token! {e}. Please check DISCORD_BOT_TOKEN in Render.", flush=True)
-                time.sleep(300)
-            except discord.errors.HTTPException as e:
-                if e.status == 429:
-                    print("⚠️ Discord Rate Limit (429) hit. Pausing for 5 minutes before reconnecting...", flush=True)
-                    time.sleep(300)
-                else:
-                    print(f"❌ Discord HTTP Error ({e.status}): {e}. Retrying in 60s...", flush=True)
-                    time.sleep(60)
-            except Exception as e:
-                print(f"❌ Connection error: {e}. Retrying in 30s...", flush=True)
-                time.sleep(30)
+        print(f"🔑 Token detected ({len(BOT_TOKEN)} chars). Connecting to Discord gateway...", flush=True)
+        try:
+            asyncio.run(run_bot_with_clean_session())
+        except KeyboardInterrupt:
+            print("🛑 Bot stopped manually.", flush=True)
