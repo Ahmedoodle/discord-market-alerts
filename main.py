@@ -65,6 +65,31 @@ NASDAQ_100 = [
 ]
 
 # ====================================================================
+# 0. SMART RATE-LIMIT COMPLIANT WEBHOOK DISPATCHER
+# ====================================================================
+def safe_post_webhook(url, payload, max_retries=3):
+    if not url:
+        return False
+    for attempt in range(max_retries):
+        try:
+            res = requests.post(url, json=payload, timeout=10)
+            if res.status_code == 429:
+                try:
+                    retry_after = float(res.json().get("retry_after", 1.5))
+                except Exception:
+                    retry_after = float(res.headers.get("Retry-After", 1.5))
+                print(f"⚠️ Discord Webhook 429 Rate Limit. Pausing for {retry_after:.2f}s before retry...")
+                time.sleep(retry_after + 0.2)
+                continue
+            res.raise_for_status()
+            return True
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print(f"❌ Failed to deliver webhook: {e}")
+            time.sleep(1.0)
+    return False
+
+# ====================================================================
 # 1. INSTITUTIONAL VOLUME PACING ENGINES (EQUITIES & CRYPTO)
 # ====================================================================
 def get_intraday_volume_pacing_factor(now_ny):
@@ -580,12 +605,9 @@ def get_technical_and_fundamental_metrics(ticker_symbol, current_price, http_ses
         return metrics
 
 # ====================================================================
-# 6. DISCORD WEBHOOK DISPATCHERS
+# 6. DISCORD WEBHOOK DISPATCHERS (WITH 1-SECOND SAFE SPACING)
 # ====================================================================
 def send_discord_price_alert(ticker, current_price, change_pct, session_badge, step_change=None, history_trail=None, metrics=None):
-    if not DISCORD_PRICE_WEBHOOK_URL:
-        return
-
     if isinstance(metrics, tuple):
         metrics = metrics[0] if len(metrics) > 0 else {}
     if not isinstance(metrics, dict):
@@ -639,16 +661,9 @@ def send_discord_price_alert(ticker, current_price, change_pct, session_badge, s
             "footer": {"text": f"{BOT_NAME} • 24/7 Price Action Channel"}
         }]
     }
-    try:
-        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Error sending price alert for {ticker}: {e}")
+    safe_post_webhook(DISCORD_PRICE_WEBHOOK_URL, payload)
 
 def send_discord_holiday_announcement(us_name, ca_name):
-    if not DISCORD_PRICE_WEBHOOK_URL:
-        return
-
     headline = f"US & Canadian Stock Markets are CLOSED today for {us_name} / {ca_name}!" if us_name and ca_name else (f"US Stock Markets (NYSE / NASDAQ) are CLOSED today for {us_name}!" if us_name else f"Canadian Stock Market (TSX) is CLOSED today for {ca_name}!")
     payload = {
         "username": BOT_NAME,
@@ -660,16 +675,9 @@ def send_discord_holiday_announcement(us_name, ca_name):
             "footer": {"text": f"{BOT_NAME} • Market Holiday Engine"}
         }]
     }
-    try:
-        res = requests.post(DISCORD_PRICE_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Error sending holiday announcement: {e}")
+    safe_post_webhook(DISCORD_PRICE_WEBHOOK_URL, payload)
 
 def send_discord_news_alert(article):
-    if not DISCORD_NEWS_WEBHOOK_URL:
-        return
-
     payload = {
         "username": BOT_NAME,
         "avatar_url": BOT_AVATAR_URL,
@@ -684,11 +692,7 @@ def send_discord_news_alert(article):
             "footer": {"text": f"{BOT_NAME} • 24/7 Breaking News Channel"}
         }]
     }
-    try:
-        res = requests.post(DISCORD_NEWS_WEBHOOK_URL, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Error sending news alert: {e}")
+    safe_post_webhook(DISCORD_NEWS_WEBHOOK_URL, payload)
 
 # ====================================================================
 # 7. 30-MINUTE NASDAQ 100 OPTIONS STRATEGY RADAR (TOP 50 PAGINATED)
@@ -913,13 +917,10 @@ def dispatch_top50_options_radar(session_http):
                 "footer": {"text": f"Looney Options Intelligence • Part {part_idx} of {total_parts} • Type '#TICKER' in chat for deep-dive Greeks"}
             }]
         }
-        try:
-            res = requests.post(DISCORD_OPTIONS_WEBHOOK_URL, json=payload, timeout=10)
-            res.raise_for_status()
-            print(f"Top 50 Options Radar Part {part_idx}/{total_parts} successfully posted to Discord at {time_str}!")
-            time.sleep(0.5)
-        except Exception as e:
-            print(f"Error dispatching options radar part {part_idx}: {e}")
+        success = safe_post_webhook(DISCORD_OPTIONS_WEBHOOK_URL, payload)
+        if success:
+            print(f"Top 50 Options Radar Part {part_idx}/{total_parts} successfully posted at {time_str}!")
+        time.sleep(1.0)
 
 # ====================================================================
 # 8. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
@@ -1203,13 +1204,13 @@ def check_market():
                 history_trail=alert["history_trail"],
                 metrics=alert["metrics"]
             )
-            time.sleep(0.5)
+            time.sleep(1.0)
 
     if new_articles:
         print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
         for article in new_articles:
             send_discord_news_alert(article)
-            time.sleep(0.5)
+            time.sleep(1.0)
 
     reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
     is_options_market_open = (
