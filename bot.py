@@ -23,6 +23,7 @@ from curl_cffi import requests as cureq
 # -------------------------------------------------------------
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
 BOT_STATE = {"status": "STARTING"}
+STATE_FILE = "alerts_state.json"
 
 class RenderHealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -104,6 +105,40 @@ def get_crypto_volume_pacing_factor(now_utc):
     mins_elapsed = (now_utc.hour * 60) + now_utc.minute
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
+
+# --- READ-ONLY AUTOMATION PATH RETRIEVAL ---
+def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
+    if not os.path.exists(STATE_FILE):
+        return None
+    try:
+        now_ny = datetime.now(NY_TZ)
+        today_ny_str = now_ny.strftime("%Y-%m-%d")
+        today_utc_str = datetime.now(UTC_TZ).strftime("%Y-%m-%d")
+
+        with open(STATE_FILE, "r") as f:
+            state = json.load(f)
+
+        history = []
+        if is_crypto:
+            if state.get("crypto_session_date") == today_utc_str:
+                crypto_dict = state.get("crypto_tickers", {})
+                if ticker_symbol in crypto_dict:
+                    history = crypto_dict[ticker_symbol].get("history", [])
+        else:
+            if state.get("stock_session_date") == today_ny_str:
+                # Search regular, premarket, or afterhours records
+                for key in ["regular_tickers", "premarket_tickers", "afterhours_tickers"]:
+                    session_dict = state.get(key, {})
+                    if ticker_symbol in session_dict:
+                        history = session_dict[ticker_symbol].get("history", [])
+                        break
+
+        if history:
+            trail_str = " ➔ ".join(history)
+            return f"`{trail_str}` ➔ **{change_pct:+.2f}%**"
+    except Exception:
+        pass
+    return None
 
 # --- MATHEMATICAL INDICATORS ---
 def calculate_rsi(closes, period=14):
@@ -234,6 +269,9 @@ def get_on_demand_data(ticker_symbol):
 
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
+
+        # Retrieve Today's Path from automated memory (Read-Only)
+        path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
 
         vol_today = volumes[-1] if volumes else 0
         v_today_fmt = format_large_number(vol_today).replace("$", "") + " shares" if vol_today >= 1000 else str(int(vol_today))
@@ -463,6 +501,7 @@ def get_on_demand_data(ticker_symbol):
 
         return {
             "ticker": ticker_symbol, "price": current_price, "change_pct": change_pct,
+            "path_trail_str": path_trail_str,
             "volume_block": volume_block, "rsi_block": rsi_block, "range_str": range_str,
             "trend_block": trend_block, "macd_str": macd_str, "pivot_str": pivot_str,
             "dividend_block": dividend_block, "profile_title": profile_title,
@@ -480,6 +519,8 @@ def create_market_embed(data):
     )
     embed.add_field(name="Current Price", value=f"${data['price']:.2f}", inline=True)
     embed.add_field(name="1D Total Change", value=f"{data['change_pct']:+.2f}%", inline=True)
+    if data.get("path_trail_str"):
+        embed.add_field(name="🕒 Today's Path", value=data["path_trail_str"], inline=False)
     embed.add_field(name="📊 Volume Multipliers", value=data['volume_block'], inline=False)
     embed.add_field(name="📈 Multi-Timeframe RSI", value=data['rsi_block'], inline=False)
     embed.add_field(name="🏔️ 52-Week Range", value=data['range_str'], inline=False)
