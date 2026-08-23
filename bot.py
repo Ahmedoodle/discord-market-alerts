@@ -108,12 +108,19 @@ def get_crypto_volume_pacing_factor(now_utc):
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
-# --- DYNAMIC GITHUB STATE FETCHER (SOLUTION B: ZERO REDEPLOYS) ---
+# --- DYNAMIC GITHUB STATE FETCHER (WITH 0.0s CDN CACHE-BUSTER) ---
 def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
     state = None
     try:
-        # 1. Fetch freshest state directly from GitHub Raw URL in memory
-        res = http_session.get(GITHUB_RAW_STATE_URL, timeout=3)
+        # 1. Fetch live state from GitHub Raw URL with millisecond cache-busting headers
+        ts_ms = int(time.time() * 1000)
+        cache_bypass_url = f"{GITHUB_RAW_STATE_URL}?_={ts_ms}"
+        cache_headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+        res = http_session.get(cache_bypass_url, headers=cache_headers, timeout=3)
         if res.status_code == 200:
             state = res.json()
     except Exception:
@@ -310,7 +317,7 @@ def get_on_demand_data(ticker_symbol):
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
-        # Retrieve Today's Path via Live GitHub Fetch (Solution B)
+        # Retrieve Today's Path via Instant Live GitHub Fetch (0.0s Cache-Buster)
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
 
         vol_today = volumes[-1] if volumes else 0
