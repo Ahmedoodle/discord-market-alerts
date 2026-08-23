@@ -19,9 +19,9 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # -------------------------------------------------------------
-# 1. 24/7 KEEP-ALIVE SERVER (AUTO-DETECTS RENDER URL)
+# 1. 24/7 KEEP-ALIVE SERVER (RENDER HEALTH SHIELD)
 # -------------------------------------------------------------
-RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "").rstrip("/")
+RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com").rstrip("/")
 BOT_STATE = {"status": "STARTING"}
 STATE_FILE = "alerts_state.json"
 
@@ -49,6 +49,7 @@ def run_http_server():
     server = HTTPServer(("0.0.0.0", port), RenderHealthHandler)
     server.serve_forever()
 
+# Starts immediately on Line 1 so Render health checks get 200 OK instantly
 threading.Thread(target=run_http_server, daemon=True).start()
 
 def auto_self_ping():
@@ -1070,8 +1071,52 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 7. MAIN ENTRYPOINT
+# 7. SMART PRE-FLIGHT GATEWAY HANDSHAKE & RUNNER
 # -------------------------------------------------------------
+def smart_gateway_preflight(token):
+    """
+    Checks Discord Gateway status before calling bot.run().
+    If rate limited, sleeps for the exact retry_after countdown sent by Discord.
+    """
+    url = "https://discord.com/api/v10/gateway/bot"
+    headers = {"Authorization": f"Bot {token}"}
+
+    while True:
+        try:
+            res = requests.get(url, headers=headers, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                start_limit = data.get("session_start_limit", {})
+                remaining = start_limit.get("remaining", 1000)
+                reset_after = start_limit.get("reset_after", 0)
+
+                if remaining <= 0:
+                    wait_sec = (reset_after / 1000.0) + 1.0
+                    print(f"⏳ Discord session start limit reached (0 remaining). Sleeping {wait_sec:.1f}s until reset...", flush=True)
+                    time.sleep(wait_sec)
+                    continue
+
+                print(f"✅ Discord Gateway pre-flight passed. Remaining session logins: {remaining}/1000", flush=True)
+                return True
+
+            elif res.status_code == 429:
+                try:
+                    retry_after = float(res.json().get("retry_after", 60.0))
+                except Exception:
+                    retry_after = float(res.headers.get("Retry-After", 60.0))
+
+                print(f"⏳ Discord 429 Rate Limit active. Pre-flight sleeping for {retry_after:.2f}s before connecting...", flush=True)
+                BOT_STATE["status"] = "RATE_LIMITED_COOLDOWN"
+                time.sleep(retry_after + 1.0)
+                continue
+
+            else:
+                print(f"⚠️ Gateway pre-flight response {res.status_code}. Retrying in 10s...", flush=True)
+                time.sleep(10)
+        except Exception as e:
+            print(f"⚠️ Gateway pre-flight network error: {e}. Retrying in 10s...", flush=True)
+            time.sleep(10)
+
 if __name__ == "__main__":
     if not BOT_TOKEN:
         print("❌ CRITICAL ERROR: DISCORD_BOT_TOKEN environment variable is missing!", flush=True)
@@ -1079,13 +1124,15 @@ if __name__ == "__main__":
         print(f"🚀 Starting Looney Bot on Render...", flush=True)
         while True:
             try:
+                # Pre-flight check ensures we never hammer Discord if rate limited
+                smart_gateway_preflight(BOT_TOKEN)
                 BOT_STATE["status"] = "CONNECTING"
                 bot.run(BOT_TOKEN)
             except discord.errors.HTTPException as e:
                 if e.status == 429:
                     BOT_STATE["status"] = "RATE_LIMITED_429"
-                    print("⚠️ 429 Rate Limited. Pausing for 5 minutes...", flush=True)
-                    time.sleep(300)
+                    print("⚠️ 429 Rate Limited during runtime. Re-checking gateway...", flush=True)
+                    time.sleep(15)
                 else:
                     BOT_STATE["status"] = f"ERROR_{e.status}"
                     time.sleep(30)
