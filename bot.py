@@ -24,7 +24,7 @@ from curl_cffi import requests as cureq
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com").rstrip("/")
 BOT_STATE = {"status": "STARTING"}
 STATE_FILE = "alerts_state.json"
-GITHUB_RAW_STATE_URL = "https://raw.githubusercontent.com/Ahmedoodle/discord-market-alerts/main/alerts_state.json"
+GITHUB_API_STATE_URL = "https://api.github.com/repos/Ahmedoodle/discord-market-alerts/contents/alerts_state.json"
 GITHUB_TOKEN = (os.getenv("GITHUB_TOKEN") or "").strip()
 
 class RenderHealthHandler(BaseHTTPRequestHandler):
@@ -109,21 +109,18 @@ def get_crypto_volume_pacing_factor(now_utc):
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
-# --- DYNAMIC GITHUB STATE FETCHER (AUTHORIZED FOR PRIVATE REPO) ---
+# --- DYNAMIC GITHUB STATE FETCHER (OFFICIAL GITHUB REST API) ---
 def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
     state = None
     try:
-        ts_ms = int(time.time() * 1000)
-        cache_bypass_url = f"{GITHUB_RAW_STATE_URL}?_={ts_ms}"
-        cache_headers = {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
+        headers = {
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "Looney-Market-Terminal"
         }
         if GITHUB_TOKEN:
-            cache_headers["Authorization"] = f"token {GITHUB_TOKEN}"
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
-        res = http_session.get(cache_bypass_url, headers=cache_headers, timeout=3)
+        res = http_session.get(GITHUB_API_STATE_URL, headers=headers, timeout=4)
         if res.status_code == 200:
             state = res.json()
     except Exception:
@@ -320,7 +317,7 @@ def get_on_demand_data(ticker_symbol):
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
-        # Retrieve Today's Path via Authorized Live GitHub Fetch
+        # Retrieve Today's Path via Official GitHub API (0.0s updates)
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
 
         vol_today = volumes[-1] if volumes else 0
