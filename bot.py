@@ -75,6 +75,13 @@ NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA"}
 
+# Top Curated Cryptocurrency Universe for !crypto / !cryptos
+TOP_CRYPTO_LIST = [
+    "BTC-USD", "ETH-USD", "XRP-USD", "BNB-USD", "SOL-USD",
+    "LINK-USD", "ADA-USD", "XLM-USD", "DOGE-USD", "SHIB-USD",
+    "XMR-USD", "TRX-USD", "HYPE-USD"
+]
+
 START_TIME_UTC = datetime.now(UTC_TZ)
 
 DIAGNOSTICS_STATE = {
@@ -1488,6 +1495,20 @@ async def on_message(message):
             await message.channel.send(embed=embed)
             return
 
+    # TRIGGER 0C: 13-Crypto Sequential Paced Scanner on `!crypto` or `!cryptos`
+    if low_content in ["!crypto", "!cryptos"]:
+        async with message.channel.typing():
+            for sym in TOP_CRYPTO_LIST:
+                data, err = await asyncio.to_thread(get_on_demand_data, sym)
+                if data and not err:
+                    embed = create_market_embed(data)
+                    DIAGNOSTICS_STATE["cmd_price_today"] += 1
+                    DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                    DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                    await message.channel.send(embed=embed)
+                    await asyncio.sleep(1.0)
+            return
+
     # TRIGGER 1: Head-to-Head Comparison on `!vs TICKER1 TICKER2`
     if low_content.startswith("!vs ") or low_content.startswith("vs "):
         parts = content.split()
@@ -1582,7 +1603,7 @@ async def on_message(message):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
 
-        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research", "health", "status", "ping", "vs", "insider", "short", "macro", "econ"]:
+        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research", "health", "status", "ping", "vs", "insider", "short", "macro", "econ", "crypto", "cryptos"]:
             await bot.process_commands(message)
             return
 
@@ -1608,6 +1629,19 @@ async def on_message(message):
 # -------------------------------------------------------------
 # 10. BOT COMMAND ALIASES
 # -------------------------------------------------------------
+@bot.command(name="crypto", aliases=["cryptos"])
+async def crypto_command(ctx):
+    async with ctx.typing():
+        for sym in TOP_CRYPTO_LIST:
+            data, err = await asyncio.to_thread(get_on_demand_data, sym)
+            if data and not err:
+                embed = create_market_embed(data)
+                DIAGNOSTICS_STATE["cmd_price_today"] += 1
+                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                await ctx.send(embed=embed)
+                await asyncio.sleep(1.0)
+
 @bot.command(name="health", aliases=["status", "ping"])
 async def health_command(ctx):
     async with ctx.typing():
