@@ -1118,7 +1118,7 @@ def compare_two_stocks(sym1, sym2):
     embed.set_footer(text="Looney Market Terminal • Head-to-Head Valuation Engine")
     return embed, None
 
-# --- 7B. INSIDER BUYING, TOP 20 WHALES & 8-K DISPOSITIONS (?TICKER) ---
+# --- 7B. INSIDER BUYING, TOP 10 WHALES, TOP 10 INDIVIDUALS & 8-K DISPOSITIONS (?TICKER) ---
 def fetch_insider_and_institutional_data(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     try:
@@ -1143,27 +1143,39 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         insider_own_str = f"`{insider_pct_raw * 100:.1f}%`" if insider_pct_raw is not None else "`N/A`"
         float_str = format_large_number(float_raw).replace("$", "") + " shares" if float_raw else "N/A"
 
-        # 2. Top 20 Institutional Whales (Split into two 10-item columns)
-        whales_col1 = []
-        whales_col2 = []
+        # 2. Top 10 Institutional Whales (Funds)
+        whales_col = []
         try:
             inst_df = t_obj.institutional_holders
             if inst_df is not None and not inst_df.empty:
-                for idx, r in inst_df.head(20).iterrows():
+                for idx, r in inst_df.head(10).iterrows():
                     rank = idx + 1
                     h_name = str(r.get("Holder", "Whale Fund"))[:20]
                     pct_held = float(r.get("pctHeld", 0) or 0) * 100
-                    line = f"**{rank}. {h_name}:** `{pct_held:.1f}%`"
-                    if rank <= 10:
-                        whales_col1.append(line)
-                    else:
-                        whales_col2.append(line)
+                    whales_col.append(f"**{rank}. {h_name}:** `{pct_held:.1f}%`")
         except Exception: pass
+        whales_txt = "\n".join(whales_col) if whales_col else "• *Registry Syncing*"
 
-        whales_txt1 = "\n".join(whales_col1) if whales_col1 else "• *Registry Syncing*"
-        whales_txt2 = "\n".join(whales_col2) if whales_col2 else "• *Registry Syncing*"
+        # 3. Top 10 Individual Insider Owners (People / Roster)
+        insiders_col = []
+        try:
+            roster_df = t_obj.insider_roster_holders
+            if roster_df is not None and not roster_df.empty:
+                for idx, r in roster_df.head(10).iterrows():
+                    rank = idx + 1
+                    p_name = str(r.get("Name", "Insider"))[:18]
+                    pos = str(r.get("Position", ""))
+                    pos_tag = f" ({pos[:10]})" if pos and pos.lower() not in ["none", "nan", ""] else ""
+                    sh = r.get("Shares Owned Directly") or r.get("Shares Owned Indirectly") or 0
+                    try:
+                        sh_fmt = format_large_number(int(sh)).replace("$", "")
+                    except Exception:
+                        sh_fmt = str(sh)
+                    insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
+        except Exception: pass
+        insiders_txt = "\n".join(insiders_col) if insiders_col else "• *Roster Pending*"
 
-        # 3. C-Suite Form 4 Trades with Dollar Cash Calculation
+        # 4. C-Suite Form 4 Trades (Math Calculation Fix: Value is total amount)
         trades = []
         try:
             it_df = t_obj.insider_transactions
@@ -1172,28 +1184,35 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                     insider_name = str(r.get("Insider", "Officer"))[:18]
                     text_action = str(r.get("Text", "Transaction"))
                     shares = r.get("Shares") or 0
-                    trade_price = r.get("Value") or price or 0
-                    
+                    raw_val = r.get("Value")
+
                     is_buy = "Buy" in text_action or "Purchase" in text_action
                     badge = "🟢 BUY" if is_buy else "🔴 SELL"
-                    
+
                     try:
                         sh_int = int(shares)
-                        p_flt = float(trade_price)
-                        tot_val = sh_int * p_flt
-                        val_fmt = format_large_number(tot_val)
-                        sh_fmt = format_large_number(sh_int).replace("$", "")
-                        trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shares` @ `${p_flt:.2f}` ➔ **`{val_fmt} Total Value`**)")
+                        if raw_val is not None and float(raw_val) > 0 and sh_int > 0:
+                            tot_val = float(raw_val)
+                            p_per_share = tot_val / sh_int
+                            val_fmt = format_large_number(tot_val)
+                            sh_fmt = format_large_number(sh_int).replace("$", "")
+                            trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shares` @ `${p_per_share:.2f}` ➔ **`{val_fmt} Total Value`**)")
+                        elif price > 0 and sh_int > 0:
+                            tot_val = sh_int * price
+                            val_fmt = format_large_number(tot_val)
+                            sh_fmt = format_large_number(sh_int).replace("$", "")
+                            trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shares` @ `${price:.2f}` ➔ **`{val_fmt} Total Value`**)")
+                        else:
+                            trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shares` • *{text_action}*)")
                     except Exception:
                         trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shares` • *{text_action}*)")
         except Exception: pass
 
         trades_txt = "\n".join(trades) if trades else "• *No Form 4 open market filings recorded in last 90 days.*"
 
-        # 4. Material Corporate Dispositions & 8-K Asset Sales
+        # 5. Material Corporate Dispositions & 8-K Asset Sales
         disposition_notes = []
         try:
-            # Query recent 8-Ks or company news for asset/business unit sales
             res_news = http_session.get(f"https://query2.finance.yahoo.com/v1/finance/search?q={sym}+Form+8-K+OR+divestiture+OR+sale+agreement&newsCount=3", timeout=3)
             if res_news.status_code == 200:
                 for n in res_news.json().get("news", [])[:2]:
@@ -1207,7 +1226,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
 
         embed = discord.Embed(
             title=f"🐋 INSIDER & CORPORATE DISPOSITION RADAR: {sym}",
-            description=f"**{sym} ({c_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings, Top 20 Whales & Form 8-K Corporate Dispositions*",
+            description=f"**{sym} ({c_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings, Top Whales & Form 8-K Corporate Dispositions*",
             color=0x9b59b6
         )
         embed.add_field(
@@ -1218,8 +1237,8 @@ def fetch_insider_and_institutional_data(ticker_symbol):
             ),
             inline=False
         )
-        embed.add_field(name="🏢 Top Institutional Whales (1–10)", value=whales_txt1, inline=True)
-        embed.add_field(name="🏢 Top Institutional Whales (11–20)", value=whales_txt2, inline=True)
+        embed.add_field(name="🏢 Top 10 Institutional Whales (Funds)", value=whales_txt, inline=True)
+        embed.add_field(name="👤 Top 10 Individual Insider Owners (People)", value=insiders_txt, inline=True)
         embed.add_field(name="📝 Recent C-Suite Form 4 Filings (Shares + Price + Total Value)", value=trades_txt, inline=False)
         embed.add_field(name="🏢 Material Corporate Dispositions & 8-K Asset Sales", value=disposition_txt, inline=False)
         embed.set_footer(text="Looney Insider Intelligence • SEC Form 4, 13F & Form 8-K Engine")
