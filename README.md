@@ -1,7 +1,7 @@
 # 🚀 Looney Market Intelligence Terminal
 
 > **An institutional-grade, multi-asset quantitative intelligence bot and automated radar for Discord.**  
-> Delivering real-time market snapshots, technical & balance sheet audits, adaptive DFOL options strategies, Wall Street/Bay Street research, 24/7 breaking news, and multi-tier earnings intelligence across US 🇺🇸 and Canadian 🍁 markets.
+> Delivering real-time market snapshots, balance sheet & cash flow audits, adaptive DFOL options strategies, SEC Form 4 insider & Form 8-K corporate tracking, short squeeze metrics, head-to-head asset battles, Wall Street/Bay Street research, global macro economic calendars, 24/7 breaking news, and multi-tier earnings intelligence across US 🇺🇸 and Canadian 🍁 markets.
 
 ---
 
@@ -9,11 +9,16 @@
 
 In any Discord channel where Looney is active, type one of the following triggers followed by any ticker symbol (e.g., `NVDA`, `AAPL`, `TSLA`, `TD.TO`, `RY.TO`, `SPCX`, `BTC-USD`):
 
-| Trigger Prefix | Example | Command Name | What It Delivers |
+| Trigger / Command | Example | Command Name | What It Delivers |
 | :--- | :--- | :--- | :--- |
 | **`!`** or **`$`** | `!NVDA` or `$TD.TO` | **Market & Financial Health Snapshot** | Real-time technical indicators (RSI, MACD, SMAs, Pivots), time-paced institutional volume (RVOL), **🕒 Today's Path** intraday trail, balance sheet & cash flow audit, valuation multiples (P/E & P/FCF), and dividend schedules. |
-| **`#`** | `#NVDA` or `#SPCX` | **Adaptive Options Deep-Dive** | Quant Confidence Score (0–100%), recommended DFOL options strategy, **Adaptive IPO/SPAC Engine** for fresh listings, and dual **7–14 DTE (Weekly Momentum)** vs. **30–45 DTE (Institutional Swing)** setups with exact strikes and break-even math. |
+| **`#`** | `#NVDA` or `#SPCX` | **Adaptive Options Deep-Dive** | Quant Confidence Score (0–100%), recommended DFOL options strategy, **Adaptive IPO/SPAC Engine** for fresh listings ($\ge 3$ days), and dual **7–14 DTE (Weekly Momentum)** vs. **30–45 DTE (Institutional Swing)** setups with exact strikes and break-even math. |
 | **`%`** | `%NVDA` or `%RY.TO` | **Institutional Research Radar** | Real-time research notes, price target revisions, and rating actions from Tier-1 Wall Street (Goldman, Morgan Stanley, JPM) and Bay Street (RBC, TD, BMO, Scotia, CIBC) banks with direct source links. |
+| **`?`** or `!insider` | `?NVDA` or `?AMD` | **Insider Trading & Corporate Dispositions** | Direct SEC Form 4 filings with **Dollar Cash Value** ($\text{Shares} \times \text{Price}$), **Top 10 Institutional Whales (Funds)**, **Top 10 Individual Insider Owners (People)**, and **Form 8-K Material Corporate Asset Sales / Divestitures**. |
+| **`^`** or `!short` | `^AMD` or `^KUST` | **Short Squeeze & Borrow Risk Metrics** | Short Interest % of Float (with risk badges), **Days to Cover (Short Ratio)**, Month-over-Month short trend %, and accurate **Tradable Float** share counts. |
+| **`!vs`** | `!vs NVDA AMD` | **Head-to-Head Comparative Battle** | Side-by-side comparative showdown across 1D Return, 14D RSI, ROE, Net Margin, Market Cap, and P/E Valuation with automatic **🏆 Crown Badges** for winning metrics. |
+| **`!!macro`** or `!macro` | `!!macro` or `!econ` | **Global Macro Pulse & Fed Watch** | Real-time price matrix for Major Indices (`SPY`, `QQQ`, `DIA`, `IWM`), 10Y Yield (`^TNX`), VIX (`^VIX`), US Dollar (`DX-Y.NYB`), Gold, Oil, Bitcoin, and High-Impact Weekly Economic Releases (FOMC, CPI, NFP Jobs). |
+| **`!!health`** or `!health` | `!!health` or `!status` | **System Diagnostics & Gateway Monitor** | 24-hour daily volume bucket (**Auto-Resets 12:00 AM EST**), uptime duration, container RAM usage, WebSocket latency (ms), session resumes vs. logins, and live Discord 24h login quota. |
 
 ---
 
@@ -21,14 +26,20 @@ In any Discord channel where Looney is active, type one of the following trigger
 1. [Core Features & Architecture](#-core-features--architecture)
 2. [Master Asset Universe (~225 Monitored Assets)](#-master-asset-universe-225-monitored-assets)
 3. [Dual-Engine Volume Pacing (Equities & Crypto)](#-dual-engine-volume-pacing-equities--crypto)
-4. [Technical & Fundamental Indicator Guide](#-technical--fundamental-indicator-guide)
-5. [Adaptive DFOL Options Strategy Engine](#-adaptive-dfol-options-strategy-engine)
-6. [Institutional Research Radar (`%`)](#-institutional-research-radar-)
-7. [Automated Scheduled Radars](#-automated-scheduled-radars)
+4. [On-Demand Intelligence Suite](#-on-demand-intelligence-suite)
+   * [1. Market Snapshot & Balance Sheet Audit (`!/$`)](#1-market-snapshot--balance-sheet-audit-)
+   * [2. Adaptive DFOL Options Engine (`#`)](#2-adaptive-dfol-options-engine-)
+   * [3. Institutional Research Radar (`%`)](#3-institutional-research-radar-)
+   * [4. Insider Trading, Whales & 8-K Dispositions (`?`)](#4-insider-trading-whales--8-k-dispositions-)
+   * [5. Short Squeeze & Borrow Risk Metrics (`^`)](#5-short-squeeze--borrow-risk-metrics-)
+   * [6. Head-to-Head Comparative Battle (`!vs`)](#6-head-to-head-comparative-battle-vs)
+   * [7. Global Macro Pulse & Economic Calendar (`!!macro`)](#7-global-macro-pulse--economic-calendar-macro)
+   * [8. System Health & Gateway Diagnostics (`!!health`)](#8-system-health--gateway-diagnostics-health)
+5. [Automated Scheduled Radars](#-automated-scheduled-radars)
    * [30-Minute Price & Breaking News Radar](#1-30-minute-price--breaking-news-radar-mainpy)
    * [30-Minute Top 100 Market Options Radar](#2-30-minute-top-100-market-options-radar-mainpy)
    * [Daily 6:00 AM Multi-Market Earnings Radar](#3-daily-600-am-multi-market-earnings-radar-earningspy)
-8. [Hosting & Deployment Architecture](#-hosting--deployment-architecture)
+6. [Hosting & Deployment Architecture](#-hosting--deployment-architecture)
 
 ---
 
@@ -49,60 +60,35 @@ In any Discord channel where Looney is active, type one of the following trigger
 │ • 🕒 Today's Path│                           │ • Breaking News  │                           │ • Watchlist 45D  │
 │ • # Options Play │                           │ • Top 100 Options│                           │ • Mega & Mid-Cap │
 │ • % Analyst Rprt │                           │  (10-Part Radar) │                           │   (US & TSX 🍁)  │
+│ • ? Insider & 8-K│                           │                  │                           │                  │
+│ • ^ Short Squeeze│                           │                  │                           │                  │
+│ • !vs Battle     │                           │                  │                           │                  │
+│ • !!macro Pulse  │                           │                  │                           │                  │
+│ • !!health Check │                           │                  │                           │                  │
 │ • 24/7 Web Server│                           │                  │                           │                  │
 └──────────────────┘                           └──────────────────┘                           └──────────────────┘
-
 🌐 Master Asset Universe (~225 Monitored Assets)
 Every 30 minutes, main.py scans a comprehensive cross-asset universe:
 🪙 24/7 Cryptocurrencies (5): BTC-USD, ETH-USD, XRP-USD, SOL-USD, LINK-USD.
 🛢️ Commodity & Index Futures (9): Gold (GC=F), Silver (SI=F), Crude Oil (CL=F), Brent (BZ=F), Natural Gas (NG=F), Nasdaq (NQ=F), S&P 500 (ES=F), Dow (YM=F), Russell (RTY=F).
 📊 Major ETFs (12): SPY, QQQ, IWM, DIA, VOO, VTI, GLD, SLV, USO, BNO, IBIT, ETHA.
-🇺🇸 S&P 500 (SPY) Top 100 & Nasdaq 100 Leaders (~140): All mega-cap tech, semiconductors, financial giants, consumer leaders, and high-beta growth stocks (NVDA, AAPL, MSFT, TSLA, PLTR, MSTR, IREN, RKLB, SPCX, etc.).
+🇺🇸 S&P 500 (SPY) Top 100 & Nasdaq 100 Leaders (~140): Mega-cap tech, semiconductors, financial giants, consumer leaders, and high-beta growth stocks (NVDA, AAPL, MSFT, TSLA, PLTR, MSTR, IREN, RKLB, SPCX, etc.).
 🍁 S&P/TSX 60 Canadian Blue-Chips (60): Big 6 Banks (RY.TO, TD.TO, etc.), Energy Titans (ENB.TO, CNQ.TO), Mining & Gold (ABX.TO, AEM.TO), and Canadian Tech (SHOP.TO, CSU.TO).
 📊 Dual-Engine Volume Pacing (Equities & Crypto)
 Raw cumulative volume creates distorted readings when compared directly against full-day averages. Looney uses two specialized pacing engines to evaluate Relative Volume (RVOL) accurately:
 1. Equities Institutional U-Curve Engine (Stocks & ETFs)
-Market Hours (9:30 AM – 4:00 PM EST): Pacing factors scale dynamically along Wall Street's U-shaped intraday volume distribution curve.
+Market Hours (9:30 AM – 4:00 PM EST): Pacing factors scale dynamically along Wall Street's U-shaped intraday volume distribution curve down to the exact minute.
 Pre-Market, After-Hours & Weekends: Automatically defaults to 1.0x (100% full-day baseline), ensuring finished prior-session bars do not trigger false pre-market surge alerts.
 2. 24/7 Continuous Crypto Volume Surfing Engine
 00:00 UTC (8:00 PM EST) Daily Reset: Tracks elapsed minutes across the continuous 1,440-minute crypto trading day.
 Early-Session Noise Buffer: Applies a 15-minute smoothing floor immediately after 00:00 UTC rollover to prevent false volume alerts while catching genuine early-session volume surges.
-📈 Technical & Fundamental Indicator Guide
-Every indicator in the !TICKER and $TICKER snapshot is calculated live:
-1. 🕒 Today's Path (Session Trails)
-Pulls real-time step history recorded in alerts_state.json by automated market scans.
-Formats step-by-step price action trails (e.g. `+2.15% ➔ +4.30%` ➔ **+5.10%**).
-2. Multi-Timeframe Volume Multipliers (RVOL)
-Compares current time-paced volume against historical averages across 20-Day (1-Month), 50-Day (Quarterly), and 90-Day (Long-Term) benchmarks.
-🔥 
-≥
-≥
- 2.0x (Unusual Surge): Heavy institutional accumulation or distribution.
-⚡ 
-≥
-≥
- 1.3x (Strong): Active institutional participation.
-💤 < 0.6x (Low): Retail-only drift; low breakout conviction.
-3. Multi-Timeframe RSI (Relative Strength Index)
-Horizons: 7D (Fast/Scalp Momentum), 14D (Standard), 30D (Macro Trend).
-🟢 50.0 – 68.0 (Bullish Trend): Momentum expanding with room to run.
-🔴 32.0 – 48.0 (Bearish Trend): Downward momentum dominant.
-⚠️ 
-≥
-≥
- 70.0 (Overbought): Near-term pullback risk.
-🟢 
-≤
-≤
- 30.0 (Oversold): High probability relief bounce zone.
-4. Moving Averages & Structural Trend (50D & 200D SMA)
-🟢 Strong Bullish Uptrend: Price above both 50D & 200D SMA (Institutional Support).
-🔴 Strong Bearish Downtrend: Price below both 50D & 200D SMA (Institutional Selling).
-🟡 Pullback in Macro Uptrend: Price above 200D SMA but testing 50D SMA.
-🟡 Counter-Trend Rebound: Price below 200D SMA but bouncing above 50D SMA.
-Young / IPO Listings: Automatically displays Listing Average ($X.XX) over available days.
-5. Floor Trader Pivot Points (S1 & R1)
-Calculates key support (
+🔍 On-Demand Intelligence Suite
+1. Market Snapshot & Balance Sheet Audit (!/$)
+🕒 Today's Path: Real-time intraday session trail fetched live over HTTP from GitHub via private REST API with 0.0s latency.
+Multi-Timeframe RVOL: 20D (1-Month), 50D (Quarterly), and 90D (Long-Term) volume pacing tags.
+Multi-Timeframe RSI: 7D (Fast/Scalp), 14D (Standard), and 30D (Macro Trend).
+Moving Averages: 50D and 200D SMAs (or Listing Average for young IPOs).
+Floor Trader Pivots: Key Support (
 S
 1
 =
@@ -114,7 +100,7 @@ S
 1
 ​
  =2P−H
-) and resistance (
+) and Resistance (
 R
 1
 =
@@ -126,67 +112,62 @@ R
 1
 ​
  =2P−L
-) levels based on previous session range, where 
-P
-=
-H
-+
-L
-+
-C
-3
-P= 
-3
-H+L+C
-​
- 
-.
-6. Capital Efficiency, Cash Flow & Valuation Multiples
-ROE (Return on Equity): Capital efficiency metric (💎 
+).
+Fundamental Audit: Return on Equity (ROE), Net Profit Margin, Debt/Equity, Current Ratio, Free Cash Flow (FCF), and Trailing P/E vs. P/FCF valuation multiples.
+2. Adaptive DFOL Options Engine (#)
+100-Point Conviction Matrix: Evaluates Trend Alignment (25 pts), RSI Sweet Spot (20 pts), MACD Momentum (20 pts), Time-Paced RVOL (15 pts), and Implied Volatility Match (20 pts).
+Adaptive IPO / SPAC Floor: Computes options analytics for fresh listings with as few as 3 trading days (SPCX, fresh IPOs).
+Dual Timeframe Trade Plans:
+⚡ Play A (7–14 DTE): Fast scalp / weekly momentum (Target exit: +50% to +80%, Stop-loss: -35%).
+🏛️ Play B (30–45 DTE): Institutional swing play (Target exit: +40% to +60%, Trailing stop at 50D SMA).
+🛡️ Alternative Setup: Defensive spreads, iron condors, or protective married puts.
+3. Institutional Research Radar (%)
+Coverage: Wall Street 🇺🇸 & Bay Street 🍁 Tier-1 banks (Goldman Sachs, Morgan Stanley, JPM, RBC, TD, BMO, Scotia, etc.).
+Smart Filtering: Verified analyst actions and price target adjustments from the last 90 days.
+Chunked Embeds: Clean 4-per-card pagination with direct research hyperlinks.
+4. Insider Trading, Whales & 8-K Dispositions (?)
+Ownership Structure: Direct JSON extraction of Institutional Ownership %, Officer/Insider Ownership %, and Tradable Float.
+Whale Registries:
+🏢 Top 10 Institutional Whales (Funds): Top asset managers and % stake of float.
+👤 Top 10 Individual Insider Owners (People): Founders, CEO, Directors, and Officers with direct share counts.
+Dollar-Calculated Form 4 Trades: Formats executed insider transactions with share counts, prices, and Total Dollar Cash Value ($) (e.g. 600 shares @ $1,162.16 ➔ $697.3K Total Value).
+Material Corporate Dispositions (Form 8-K): Tracks when the company itself sells a business unit, subsidiary, or material asset (SEC Items 1.01 & 2.01).
+5. Short Squeeze & Borrow Risk Metrics (^)
+Short Interest % of Float: With institutional risk badges:
+🔥 Extreme Squeeze Risk (
 ≥
 20
 %
 ≥20%
- denotes elite return).
-Net Margin: Percentage of top-line revenue converted to net profit.
-Solvency & Liquidity: Debt-to-Equity and Current Ratio.
-Free Cash Flow (FCF) & Quality Ratio: Operating Cash Flow minus CapEx, verified by FCF / Net Income cash backing.
-Valuation Multiples: Dual display of Trailing P/E and P/FCF (Price to Free Cash Flow).
-🎯 Adaptive DFOL Options Strategy Engine
-When typing #TICKER or reviewing the scheduled Top 100 Options Radar, Looney applies official DFOL (Derivatives Fundamentals & Options Licensing) principles:
-1. 100-Point Quantitative Conviction Matrix
-
-[ 100-Point Scoring Algorithm ]
- ├── 25 pts: Trend Alignment (Price vs. 50D & 200D SMA or Listing Baseline)
- ├── 20 pts: RSI Momentum Sweet Spot (52–68 Bullish / 32–48 Bearish)
- ├── 20 pts: MACD Directional Momentum & Histogram Expansion
- ├── 15 pts: Time-Paced RVOL (Volume Confirmation >= 1.3x)
- └── 20 pts: Implied Volatility Match (DFOL Strategy Selection)
-
- 🟢 
+)
+⚡ Elevated Short Interest (
 ≥
-≥
- 80% (High Conviction): High technical and volatility alignment.
-🟠 60% – 79% (Developing / Watchlist): Solid setup pending confirmation.
-🔴 < 60% (Low Conviction / Avoid): Conflicting signals or poor risk/reward.
-2. Adaptive IPO & Fresh Listing Engine
-No Historical Data Rejections: Analyzes listings with as few as 3 trading days of history.
-Synchronized Candle Scrubbing: Eliminates null candle gaps to prevent array index errors on illiquid or newly-listed tickers (SPCX, fresh SPACs, IPOs).
-Elastic Volatility & ATR: Dynamically sizes strike intervals based on actual trading range.
-3. Strategy Selection Matrix
-Directional Bias	IV Environment	Selected DFOL Strategy	Execution Setup
-Outright Bullish	Low IV (< 40%)	Long Call	Buy 30–45 DTE Call (Delta ~ 0.65–0.70)
-Moderately Bullish	Moderate IV (30–50%)	Bull Call Debit Spread	Buy ATM Call / Sell OTM Call
-Neutral to Bullish	High IV (> 50%)	Bull Put Credit Spread	Sell OTM Put at S1 / Buy Lower Put
-Outright Bearish	Low IV (< 40%)	Long Put	Buy 30–45 DTE Put (Delta ~ -0.65–0.70)
-Moderately Bearish	Moderate IV (30–50%)	Bear Put Debit Spread	Buy ATM Put / Sell OTM Put
-Neutral to Bearish	High IV (> 50%)	Bear Call Credit Spread	Sell OTM Call at R1 / Buy Higher Call
-🏛️ Institutional Research Radar (%)
-Typing %TICKER performs a multi-source scan across major financial news wires and research desks:
-Wall Street 🇺🇸: Goldman Sachs, Morgan Stanley, JPMorgan Chase, Bank of America, Wells Fargo, Citigroup, Barclays, UBS, Deutsche Bank, Jefferies, Piper Sandler, Wedbush, Evercore ISI, Baird, Stifel, Wolfe Research.
-Bay Street 🍁: RBC Capital Markets, TD Cowen / TD Securities, BMO Capital Markets, Scotiabank Global, CIBC World Markets, National Bank Financial, Desjardins.
-Smart Disambiguation: Differentiates between subject company tickers and research notes authored by bank analysts.
-Automatic Multi-Part Pagination: Splits large research sets into clean batches of 4 per Discord embed card with source hyperlinks.
+10
+%
+≥10%
+)
+🟢 Normal / Low Short Interest (
+<
+5
+%
+<5%
+)
+Days to Cover (Short Ratio): Measures how many trading days shorts need to buy back shares.
+Month-over-Month Trend: Tracks whether short sellers are piling in or covering.
+6. Head-to-Head Comparative Battle (!vs)
+Direct Rivalry Showdown: Compares two assets side-by-side (!vs NVDA AMD or !vs SPY QQQ).
+Visual 🏆 Crown Badges: Automatically awards crowns to the winner for 1D Change, RSI Momentum, ROE, Net Margin, and Valuation (P/E).
+7. Global Macro Pulse & Economic Calendar (!!macro)
+Multi-Asset Dashboard: Live prices and 1D returns across:
+Indices: SPY, QQQ, DIA, IWM
+Yields & Fear: 10Y Treasury Yield (^TNX), VIX Volatility (^VIX)
+Commodities & Dollar: US Dollar Index (DX-Y.NYB), Gold (GC=F), Oil (CL=F)
+Crypto: Bitcoin (BTC-USD)
+Fed Watch & High-Impact Events: Upcoming FOMC rate policies, CPI/PPI inflation releases, Non-Farm Payrolls jobs data, and Fed Chair speeches.
+8. System Health & Gateway Diagnostics (!!health)
+24-Hour Daily Tracking: Counts messages processed, embeds dispatched, and command popularity. Automatically resets at 12:00:00 AM EST (Midnight).
+Server Status: Continuous container uptime, RAM memory usage (MB), Port 8080 keep-alive state.
+Gateway Health: Real-time ping (ms), Session resumes, and live remaining session start quota (e.g. 997 / 1,000 Remaining).
 ⏰ Automated Scheduled Radars
 1. 30-Minute Price & Breaking News Radar (main.py)
 Price Movement Alerts: Scans all ~225 watchlist equities, ETFs, commodities, and 24/7 crypto. Dispatches alerts when session change crosses thresholds (
@@ -245,8 +226,9 @@ $
 B
 $1.5B−$200B
 ): Paginated in clean batches of 15 per card.
-
-
+🛠️ Hosting & Deployment Architecture
+code
+Text
 ┌────────────────────────────────────────────────────────┐
 │                   DEPLOYMENT MAP                       │
 ├───────────────────┬───────────────────┬────────────────┤
