@@ -25,6 +25,7 @@ RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onr
 BOT_STATE = {"status": "STARTING"}
 STATE_FILE = "alerts_state.json"
 GITHUB_RAW_STATE_URL = "https://raw.githubusercontent.com/Ahmedoodle/discord-market-alerts/main/alerts_state.json"
+GITHUB_TOKEN = (os.getenv("GITHUB_TOKEN") or "").strip()
 
 class RenderHealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -108,11 +109,10 @@ def get_crypto_volume_pacing_factor(now_utc):
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
-# --- DYNAMIC GITHUB STATE FETCHER (WITH 0.0s CDN CACHE-BUSTER) ---
+# --- DYNAMIC GITHUB STATE FETCHER (AUTHORIZED FOR PRIVATE REPO) ---
 def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
     state = None
     try:
-        # 1. Fetch live state from GitHub Raw URL with millisecond cache-busting headers
         ts_ms = int(time.time() * 1000)
         cache_bypass_url = f"{GITHUB_RAW_STATE_URL}?_={ts_ms}"
         cache_headers = {
@@ -120,13 +120,16 @@ def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
             "Pragma": "no-cache",
             "Expires": "0"
         }
+        if GITHUB_TOKEN:
+            cache_headers["Authorization"] = f"token {GITHUB_TOKEN}"
+
         res = http_session.get(cache_bypass_url, headers=cache_headers, timeout=3)
         if res.status_code == 200:
             state = res.json()
     except Exception:
         pass
 
-    # 2. Local fallback if GitHub network query failed
+    # Local fallback if network query failed
     if not state and os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
@@ -317,7 +320,7 @@ def get_on_demand_data(ticker_symbol):
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
-        # Retrieve Today's Path via Instant Live GitHub Fetch (0.0s Cache-Buster)
+        # Retrieve Today's Path via Authorized Live GitHub Fetch
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
 
         vol_today = volumes[-1] if volumes else 0
