@@ -24,6 +24,7 @@ from curl_cffi import requests as cureq
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com").rstrip("/")
 BOT_STATE = {"status": "STARTING"}
 STATE_FILE = "alerts_state.json"
+GITHUB_RAW_STATE_URL = "https://raw.githubusercontent.com/Ahmedoodle/discord-market-alerts/main/alerts_state.json"
 
 class RenderHealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -107,17 +108,32 @@ def get_crypto_volume_pacing_factor(now_utc):
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
-# --- READ-ONLY AUTOMATION PATH RETRIEVAL ---
+# --- DYNAMIC GITHUB STATE FETCHER (SOLUTION B: ZERO REDEPLOYS) ---
 def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
-    if not os.path.exists(STATE_FILE):
+    state = None
+    try:
+        # 1. Fetch freshest state directly from GitHub Raw URL in memory
+        res = http_session.get(GITHUB_RAW_STATE_URL, timeout=3)
+        if res.status_code == 200:
+            state = res.json()
+    except Exception:
+        pass
+
+    # 2. Local fallback if GitHub network query failed
+    if not state and os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r") as f:
+                state = json.load(f)
+        except Exception:
+            pass
+
+    if not state:
         return None
+
     try:
         now_ny = datetime.now(NY_TZ)
         today_ny_str = now_ny.strftime("%Y-%m-%d")
         today_utc_str = datetime.now(UTC_TZ).strftime("%Y-%m-%d")
-
-        with open(STATE_FILE, "r") as f:
-            state = json.load(f)
 
         history = []
         if is_crypto:
@@ -294,6 +310,7 @@ def get_on_demand_data(ticker_symbol):
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
 
+        # Retrieve Today's Path via Live GitHub Fetch (Solution B)
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
 
         vol_today = volumes[-1] if volumes else 0
