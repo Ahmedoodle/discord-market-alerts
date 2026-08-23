@@ -713,7 +713,9 @@ def fetch_institutional_research_radar(ticker_symbol):
         t_obj = yf.Ticker(sym)
         try:
             current_price = float(t_obj.fast_info.last_price or 0.0)
-            company_name = str(t_obj.fast_info.name or base_sym)
+        except Exception: pass
+        try:
+            company_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or base_sym)
         except Exception: pass
 
         clean_company_short = re.sub(r'[\(\),.]|Inc|Corp|Ltd|Corporation|Company|Bank', '', company_name).strip()
@@ -1062,7 +1064,7 @@ def create_deep_dive_options_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 7. NEW ADVANCED MARKET INTELLIGENCE ENGINES
+# 7. ADVANCED MARKET INTELLIGENCE ENGINES
 # -------------------------------------------------------------
 
 # --- 7A. HEAD-TO-HEAD COMPARATIVE BATTLE (!vs) ---
@@ -1123,8 +1125,12 @@ def fetch_insider_and_institutional_data(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     try:
         t_obj = yf.Ticker(sym)
-        price = float(t_obj.fast_info.last_price or 0.0)
-        c_name = str(t_obj.fast_info.name or sym)
+        price = 0.0
+        c_name = sym
+        try: price = float(t_obj.fast_info.last_price or 0.0)
+        except Exception: pass
+        try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
+        except Exception: pass
 
         insider_own_pct, inst_own_pct, trans_6m_pct = "N/A", "N/A", "N/A"
         try:
@@ -1184,10 +1190,14 @@ def fetch_short_squeeze_metrics(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     try:
         t_obj = yf.Ticker(sym)
-        price = float(t_obj.fast_info.last_price or 0.0)
-        c_name = str(t_obj.fast_info.name or sym)
+        price = 0.0
+        c_name = sym
+        try: price = float(t_obj.fast_info.last_price or 0.0)
+        except Exception: pass
+        try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
+        except Exception: pass
 
-        short_pct_float, short_ratio, float_shares, short_shares = None, None, None, None
+        short_pct_float, short_ratio, float_shares = None, None, None
         try:
             fz_res = cureq.get(f"https://finviz.com/quote.ashx?t={sym}&p=d", impersonate="chrome124", timeout=4)
             if fz_res.status_code == 200:
@@ -1204,7 +1214,6 @@ def fetch_short_squeeze_metrics(ticker_symbol):
                 k_data = t_obj.info
                 short_pct_float = float(k_data.get("shortPercentOfFloat", 0) or 0) * 100
                 short_ratio = float(k_data.get("shortRatio", 0) or 0)
-                short_shares = k_data.get("sharesShort")
             except Exception: pass
 
         if short_pct_float is None: short_pct_float = 3.2
@@ -1253,8 +1262,6 @@ def fetch_global_macro_pulse():
 
     quotes_map = {}
     try:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=2d"
-        # Fast concurrent fetch across macro basket
         def get_mini_quote(sym):
             try:
                 res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2d", timeout=3)
