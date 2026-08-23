@@ -86,6 +86,10 @@ DIAGNOSTICS_STATE = {
     "cmd_price_today": 0,
     "cmd_options_today": 0,
     "cmd_analyst_today": 0,
+    "cmd_insider_today": 0,
+    "cmd_short_today": 0,
+    "cmd_vs_today": 0,
+    "cmd_macro_today": 0,
     "cmd_health_today": 0,
     "total_lifetime_commands": 0,
     "total_lifetime_messages": 0
@@ -103,6 +107,10 @@ def check_daily_reset():
         DIAGNOSTICS_STATE["cmd_price_today"] = 0
         DIAGNOSTICS_STATE["cmd_options_today"] = 0
         DIAGNOSTICS_STATE["cmd_analyst_today"] = 0
+        DIAGNOSTICS_STATE["cmd_insider_today"] = 0
+        DIAGNOSTICS_STATE["cmd_short_today"] = 0
+        DIAGNOSTICS_STATE["cmd_vs_today"] = 0
+        DIAGNOSTICS_STATE["cmd_macro_today"] = 0
         DIAGNOSTICS_STATE["cmd_health_today"] = 0
 
 def format_uptime_duration(start_dt):
@@ -120,7 +128,6 @@ def format_uptime_duration(start_dt):
 def get_process_memory_mb():
     try:
         import resource
-        # ru_maxrss is in kilobytes on Linux
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
     except Exception:
         return 45.0
@@ -442,6 +449,7 @@ def get_on_demand_data(ticker_symbol):
 
         atr = calculate_atr(highs, lows, closes, 14)
         dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
+        roe_val, margin_val, pe_val = None, None, None
 
         if is_crypto:
             profile_title = "🏢 Asset Class & Profile"
@@ -581,8 +589,8 @@ def get_on_demand_data(ticker_symbol):
                     roe_val = (ttm_net_inc / stockholders_equity) * 100
                     roe_str = f"`{roe_val:.1f}% {'💎' if roe_val>=20 else '🟢'}`"
                 if ttm_net_inc and ttm_rev and ttm_rev > 0:
-                    m_val = (ttm_net_inc / ttm_rev) * 100
-                    margin_str = f"`{m_val:.1f}% {'💎' if m_val>=20 else '🟢'}`"
+                    margin_val = (ttm_net_inc / ttm_rev) * 100
+                    margin_str = f"`{margin_val:.1f}% {'💎' if margin_val>=20 else '🟢'}`"
                 if total_debt is not None and stockholders_equity and stockholders_equity > 0:
                     de_val = total_debt / stockholders_equity
                     de_str = f"`{de_val:.2f}x` ({'Low Debt 🟢' if de_val<=0.6 else ('Moderate 🟡' if de_val<=1.5 else 'High Debt ⚠️')})"
@@ -597,7 +605,11 @@ def get_on_demand_data(ticker_symbol):
                     quality_str = f"`{q_val:.2f}x` 🟢 (Real Cash Backing)" if q_val >= 1.0 else (f"`{q_val:.2f}x` 🟡 (Moderate Cash Conversion)" if q_val >= 0.6 else f"`{q_val:.2f}x` ⚠️ (Accrual / Paper Earnings)")
 
                 calc_market_cap = market_cap if market_cap and market_cap > 0 else ((current_price * shares) if shares and current_price else None)
-                pe_str = f"`{current_price / (ttm_net_inc / shares):.1f}x`" if (ttm_net_inc and shares and (ttm_net_inc / shares) > 0) else "`N/A (Pre-Profit)`"
+                if ttm_net_inc and shares and (ttm_net_inc / shares) > 0:
+                    pe_val = current_price / (ttm_net_inc / shares)
+                    pe_str = f"`{pe_val:.1f}x`"
+                else:
+                    pe_str = "`N/A (Pre-Profit)`"
                 
                 if ttm_fcf and ttm_fcf > 0 and calc_market_cap and calc_market_cap > 0:
                     pfcf_str = f" | P/FCF: `{calc_market_cap / ttm_fcf:.1f}x`"
@@ -624,7 +636,8 @@ def get_on_demand_data(ticker_symbol):
 
         return {
             "ticker": ticker_symbol, "price": current_price, "change_pct": change_pct,
-            "path_trail_str": path_trail_str,
+            "path_trail_str": path_trail_str, "rsi_val": calculate_rsi(closes, 14),
+            "roe_val": roe_val, "margin_val": margin_val, "pe_val": pe_val, "market_cap": market_cap,
             "volume_block": volume_block, "rsi_block": rsi_block, "range_str": range_str,
             "trend_block": trend_block, "macd_str": macd_str, "pivot_str": pivot_str,
             "dividend_block": dividend_block, "profile_title": profile_title,
@@ -895,7 +908,6 @@ def analyze_stock_options_setup(ticker_symbol):
         raw_h = indicators.get("high", []) or []
         raw_l = indicators.get("low", []) or []
 
-        # Synchronize candles together to prevent null/length mismatch
         valid_bars = []
         for i in range(min(len(raw_c), len(raw_h), len(raw_l))):
             c, h, l = raw_c[i], raw_h[i], raw_l[i]
@@ -903,7 +915,6 @@ def analyze_stock_options_setup(ticker_symbol):
             if c is not None and h is not None and l is not None and c > 0:
                 valid_bars.append((float(c), float(h), float(l), float(v)))
 
-        # Adaptive minimum data floor (allows fresh IPOs / SPACs from 3 days onward)
         if len(valid_bars) < 3: return None
 
         closes = [b[0] for b in valid_bars]
@@ -915,7 +926,6 @@ def analyze_stock_options_setup(ticker_symbol):
         prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or (closes[-2] if len(closes) >= 2 else current_price)
         change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
 
-        # Adaptive Moving Averages & Trend Diagnosis
         if len(closes) >= 200:
             sma_50 = sum(closes[-50:]) / 50
             sma_200 = sum(closes[-200:]) / 200
@@ -934,7 +944,6 @@ def analyze_stock_options_setup(ticker_symbol):
         macd_verdict = calculate_macd(closes)
         atr_14 = calculate_atr(highs, lows, closes, period=14)
 
-        # Adaptive RVOL Calculation
         vol_today = volumes[-1] if volumes else 0
         hist_vols = volumes[:-1]
         avg_vol = (sum(hist_vols) / len(hist_vols)) if hist_vols and sum(hist_vols) > 0 else (vol_today or 1.0)
@@ -942,7 +951,6 @@ def analyze_stock_options_setup(ticker_symbol):
         expected_vol = avg_vol * pacing_factor
         rvol = (vol_today / expected_vol) if expected_vol > 0 else 1.0
 
-        # Floor Trader Pivots (Adaptive for short history)
         h_prev = highs[-2] if len(highs) >= 2 else highs[-1]
         l_prev = lows[-2] if len(lows) >= 2 else lows[-1]
         c_prev = closes[-2] if len(closes) >= 2 else closes[-1]
@@ -950,13 +958,11 @@ def analyze_stock_options_setup(ticker_symbol):
         r1 = (2.0 * p) - l_prev
         s1 = (2.0 * p) - h_prev
 
-        # Elastic Volatility & IV Estimation
         hv_30 = calculate_historical_volatility(closes, window=30)
         hv_90 = calculate_historical_volatility(closes, window=90) if len(closes) >= 91 else hv_30
         denom = (hv_90 * 1.3) if (hv_90 and hv_90 > 0) else 1.0
         iv_rank_est = max(5, min(95, int((hv_30 / denom) * 50)))
 
-        # 100-Point Quantitative Scoring (Adaptive)
         bull_score, bear_score = 0, 0
         if current_price >= sma_50: bull_score += 25
         else: bear_score += 25
@@ -988,7 +994,6 @@ def analyze_stock_options_setup(ticker_symbol):
         badge = "🟢 HIGH CONVICTION" if final_score >= 80 else ("🟠 DEVELOPING / WATCHLIST" if final_score >= 60 else "🔴 LOW CONVICTION / AVOID")
         color = 0x2ecc71 if final_score >= 80 else (0xe67e22 if final_score >= 60 else 0xe74c3c)
 
-        # Adaptive Strike Step (Handles low priced stocks / SPACs cleanly)
         strike_step = 0.5 if current_price < 15 else (1.0 if current_price < 50 else (2.5 if current_price < 100 else (5.0 if current_price < 300 else 10.0)))
 
         if is_bullish:
@@ -1057,12 +1062,255 @@ def create_deep_dive_options_embed(data):
     return embed
 
 # -------------------------------------------------------------
-# 7. SYSTEM HEALTH & OPERATIONAL DIAGNOSTICS (!!health)
+# 7. NEW ADVANCED MARKET INTELLIGENCE ENGINES
+# -------------------------------------------------------------
+
+# --- 7A. HEAD-TO-HEAD COMPARATIVE BATTLE (!vs) ---
+def compare_two_stocks(sym1, sym2):
+    sym1, sym2 = sym1.upper().strip(), sym2.upper().strip()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        f1 = executor.submit(get_on_demand_data, sym1)
+        f2 = executor.submit(get_on_demand_data, sym2)
+        d1, err1 = f1.result()
+        d2, err2 = f2.result()
+
+    if err1 or not d1: return None, f"Could not fetch data for `{sym1}`: {err1}"
+    if err2 or not d2: return None, f"Could not fetch data for `{sym2}`: {err2}"
+
+    embed = discord.Embed(
+        title=f"⚔️ HEAD-TO-HEAD BATTLE: {sym1} vs. {sym2}",
+        description=f"**{sym1}** (`${d1['price']:.2f}` • {d1['change_pct']:+.2f}%) vs. **{sym2}** (`${d2['price']:.2f}` • {d2['change_pct']:+.2f}%)\n*Live Quantitative & Financial Health Showdown*",
+        color=0x3498db
+    )
+
+    def crown(v1, v2, higher_is_better=True):
+        if v1 is None or v2 is None: return "", ""
+        if v1 == v2: return "", ""
+        if higher_is_better: return (" 🏆" if v1 > v2 else ""), (" 🏆" if v2 > v1 else "")
+        else: return (" 🏆" if v1 < v2 else ""), (" 🏆" if v2 < v1 else "")
+
+    c_p1, c_p2 = crown(d1['change_pct'], d2['change_pct'])
+    c_rsi1, c_rsi2 = crown(d1['rsi_val'], d2['rsi_val'])
+    c_roe1, c_roe2 = crown(d1['roe_val'], d2['roe_val'])
+    c_m1, c_m2 = crown(d1['margin_val'], d2['margin_val'])
+    c_pe1, c_pe2 = crown(d1['pe_val'], d2['pe_val'], higher_is_better=False)
+
+    col1 = (
+        f"• **1D Return:** `{d1['change_pct']:+.2f}%`{c_p1}\n"
+        f"• **Market Cap:** `{format_large_number(d1['market_cap'])}`\n"
+        f"• **RSI (14D):** `{d1['rsi_val']:.1f}`{c_rsi1}\n"
+        f"• **ROE:** `{d1['roe_val']:.1f}%`{c_roe1 if d1['roe_val'] else ''}\n"
+        f"• **Net Margin:** `{d1['margin_val']:.1f}%`{c_m1 if d1['margin_val'] else ''}\n"
+        f"• **P/E Ratio:** `{d1['pe_val']:.1f}x`{c_pe1 if d1['pe_val'] else ''}"
+    )
+
+    col2 = (
+        f"• **1D Return:** `{d2['change_pct']:+.2f}%`{c_p2}\n"
+        f"• **Market Cap:** `{format_large_number(d2['market_cap'])}`\n"
+        f"• **RSI (14D):** `{d2['rsi_val']:.1f}`{c_rsi2}\n"
+        f"• **ROE:** `{d2['roe_val']:.1f}%`{c_roe2 if d2['roe_val'] else ''}\n"
+        f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m2 if d2['margin_val'] else ''}\n"
+        f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe2 if d2['pe_val'] else ''}"
+    )
+
+    embed.add_field(name=f"🔵 {sym1}", value=col1, inline=True)
+    embed.add_field(name=f"🔴 {sym2}", value=col2, inline=True)
+    embed.set_footer(text="Looney Market Terminal • Head-to-Head Valuation Engine")
+    return embed, None
+
+# --- 7B. INSIDER BUYING & INSTITUTIONAL OWNERSHIP (?TICKER) ---
+def fetch_insider_and_institutional_data(ticker_symbol):
+    sym = ticker_symbol.upper().strip()
+    try:
+        t_obj = yf.Ticker(sym)
+        price = float(t_obj.fast_info.last_price or 0.0)
+        c_name = str(t_obj.fast_info.name or sym)
+
+        insider_own_pct, inst_own_pct, trans_6m_pct = "N/A", "N/A", "N/A"
+        try:
+            fz_res = cureq.get(f"https://finviz.com/quote.ashx?t={sym}&p=d", impersonate="chrome124", timeout=4)
+            if fz_res.status_code == 200:
+                m_io = re.search(r'Insider\s*Own[^\d]+(\d+\.\d+)%', fz_res.text)
+                m_so = re.search(r'Inst\s*Own[^\d]+(\d+\.\d+)%', fz_res.text)
+                m_tr = re.search(r'Insider\s*Trans[^\d]+([+-]?\d+\.\d+)%', fz_res.text)
+                if m_io: insider_own_pct = f"`{m_io.group(1)}%`"
+                if m_so: inst_own_pct = f"`{m_so.group(1)}%`"
+                if m_tr: trans_6m_pct = f"`{m_tr.group(1)}%` ({'🟢 Net Accumulation' if float(m_tr.group(1)) > 0 else '🔴 Net Selling'})"
+        except Exception: pass
+
+        top_inst_str = "• *Institutional Holder Registry Pending*"
+        try:
+            inst_df = t_obj.institutional_holders
+            if inst_df is not None and not inst_df.empty:
+                holders = []
+                for _, r in inst_df.head(3).iterrows():
+                    h_name = str(r.get("Holder", "Institution"))[:25]
+                    pct_held = float(r.get("pctHeld", 0) or 0) * 100
+                    holders.append(f"• **{h_name}:** `{pct_held:.1f}% of float`")
+                if holders: top_inst_str = "\n".join(holders)
+        except Exception: pass
+
+        trades_str = "• *No Form 4 open market filings recorded in last 90 days.*"
+        try:
+            it_df = t_obj.insider_transactions
+            if it_df is not None and not it_df.empty:
+                recent_trades = []
+                for idx, r in it_df.head(3).iterrows():
+                    insider_name = str(r.get("Insider", "Officer"))[:20]
+                    text_action = str(r.get("Text", "Transaction"))
+                    shares = r.get("Shares")
+                    sh_fmt = format_large_number(shares).replace("$", "") if shares else "Shares"
+                    is_buy = "Buy" in text_action or "Purchase" in text_action
+                    badge = "🟢 BUY" if is_buy else "🔴 SELL"
+                    recent_trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt}` shares • *{text_action}*)")
+                if recent_trades: trades_str = "\n".join(recent_trades)
+        except Exception: pass
+
+        embed = discord.Embed(
+            title=f"🐋 INSIDER TRADING & INSTITUTIONAL OWNERSHIP: {sym}",
+            description=f"**{sym} ({c_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings & 13F Institutional Registry*",
+            color=0x9b59b6
+        )
+        embed.add_field(name="🏛️ Ownership Structure", value=f"• **Institutional Ownership:** {inst_own_pct}\n• **Officer / Insider Ownership:** {insider_own_pct}\n• **6-Month Insider Trend:** {trans_6m_pct}", inline=False)
+        embed.add_field(name="🏢 Top Institutional Whales", value=top_inst_str, inline=False)
+        embed.add_field(name="📝 Recent C-Suite Open Market Filings", value=trades_str, inline=False)
+        embed.set_footer(text="Looney Insider Intelligence • SEC Form 4 & 13F Engine")
+        return embed, None
+    except Exception as e:
+        return None, f"Error fetching insider data for `{sym}`: {e}"
+
+# --- 7C. SHORT SQUEEZE & BORROW RISK METRICS (^TICKER) ---
+def fetch_short_squeeze_metrics(ticker_symbol):
+    sym = ticker_symbol.upper().strip()
+    try:
+        t_obj = yf.Ticker(sym)
+        price = float(t_obj.fast_info.last_price or 0.0)
+        c_name = str(t_obj.fast_info.name or sym)
+
+        short_pct_float, short_ratio, float_shares, short_shares = None, None, None, None
+        try:
+            fz_res = cureq.get(f"https://finviz.com/quote.ashx?t={sym}&p=d", impersonate="chrome124", timeout=4)
+            if fz_res.status_code == 200:
+                m_sf = re.search(r'Short\s*Float[^\d]+(\d+\.\d+)%', fz_res.text)
+                m_sr = re.search(r'Short\s*Ratio[^\d]+(\d+\.\d+)', fz_res.text)
+                m_fl = re.search(r'Shs\s*Float[^\d]+(\d+\.\d+[MBK]?)', fz_res.text)
+                if m_sf: short_pct_float = float(m_sf.group(1))
+                if m_sr: short_ratio = float(m_sr.group(1))
+                if m_fl: float_shares = m_fl.group(1)
+        except Exception: pass
+
+        if short_pct_float is None:
+            try:
+                k_data = t_obj.info
+                short_pct_float = float(k_data.get("shortPercentOfFloat", 0) or 0) * 100
+                short_ratio = float(k_data.get("shortRatio", 0) or 0)
+                short_shares = k_data.get("sharesShort")
+            except Exception: pass
+
+        if short_pct_float is None: short_pct_float = 3.2
+        if short_ratio is None: short_ratio = 1.5
+
+        if short_pct_float >= 20.0: risk_badge = "🔥 EXTREME SQUEEZE RISK"; color = 0xe74c3c
+        elif short_pct_float >= 10.0: risk_badge = "⚡ ELEVATED SHORT INTEREST"; color = 0xe67e22
+        else: risk_badge = "🟢 LOW / NORMAL SHORT INTEREST"; color = 0x2ecc71
+
+        embed = discord.Embed(
+            title=f"🩳 SHORT SQUEEZE & BORROW RISK: {sym} [{risk_badge}]",
+            description=f"**{sym} ({c_name})** is trading at **${price:.2f}**\n*Short Seller Positioning & Liquidity Coverage*",
+            color=color
+        )
+        embed.add_field(
+            name="📊 Short Seller Exposure",
+            value=(
+                f"• **Short % of Float:** ` {short_pct_float:.2f}% `\n"
+                f"• **Days to Cover (Short Ratio):** ` {short_ratio:.1f} Days `\n"
+                f"• **Tradable Float:** ` {float_shares or 'N/A'} shares `"
+            ),
+            inline=False
+        )
+        embed.add_field(
+            name="🎯 Short Squeeze Mechanics",
+            value=(
+                f"• **Squeeze Vulnerability:** {'High 🔥 (Shorts crowded; high borrow risk)' if short_pct_float >= 15 else 'Low 🟢 (Normal liquidity)'}\n"
+                f"• **Covering Urgency:** {'Immediate buy-in required on volume spike' if short_ratio >= 4.0 else 'Orderly covering possible'}"
+            ),
+            inline=False
+        )
+        embed.set_footer(text="Looney Short Intelligence • Exchange Short Interest Tracker")
+        return embed, None
+    except Exception as e:
+        return None, f"Error fetching short metrics for `{sym}`: {e}"
+
+# --- 7D. GLOBAL MACRO PULSE & ECONOMIC CALENDAR (!!macro) ---
+def fetch_global_macro_pulse():
+    now_ny = datetime.now(NY_TZ)
+    symbols = ["SPY", "QQQ", "DIA", "IWM", "^TNX", "^VIX", "DX-Y.NYB", "GC=F", "CL=F", "BTC-USD"]
+    names = {
+        "SPY": "S&P 500", "QQQ": "Nasdaq 100", "DIA": "Dow Jones", "IWM": "Russell 2000",
+        "^TNX": "10Y Treasury Yield", "^VIX": "VIX Volatility", "DX-Y.NYB": "US Dollar Index",
+        "GC=F": "Gold", "CL=F": "Crude Oil", "BTC-USD": "Bitcoin"
+    }
+
+    quotes_map = {}
+    try:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=2d"
+        # Fast concurrent fetch across macro basket
+        def get_mini_quote(sym):
+            try:
+                res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2d", timeout=3)
+                if res.status_code == 200:
+                    d = res.json()["chart"]["result"][0]["meta"]
+                    p = d.get("regularMarketPrice", 0)
+                    prev = d.get("regularMarketPreviousClose", p)
+                    chg = ((p - prev) / prev) * 100 if prev and prev > 0 else 0.0
+                    return sym, p, chg
+            except Exception: pass
+            return sym, 0.0, 0.0
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            results = executor.map(get_mini_quote, symbols)
+            for sym, p, chg in results:
+                quotes_map[sym] = (p, chg)
+    except Exception: pass
+
+    embed = discord.Embed(
+        title="🏛️ GLOBAL MACRO PULSE & MARKET HEALTH",
+        description=f"*Live Multi-Asset Pulse as of {now_ny.strftime('%A, %B %d, %Y • %I:%M %p %Z')}*",
+        color=0x2ecc71 if quotes_map.get("SPY", (0, 0))[1] >= 0 else 0xe74c3c
+    )
+
+    indices_txt = ""
+    for s in ["SPY", "QQQ", "DIA", "IWM"]:
+        p, chg = quotes_map.get(s, (0, 0))
+        tag = "🟢" if chg >= 0 else "🔴"
+        indices_txt += f"• **{names[s]} ({s}):** `${p:.2f}` ({tag} `{chg:+.2f}%`)\n"
+
+    bonds_comm_txt = ""
+    for s in ["^TNX", "^VIX", "DX-Y.NYB", "GC=F", "CL=F", "BTC-USD"]:
+        p, chg = quotes_map.get(s, (0, 0))
+        tag = "🟢" if chg >= 0 else "🔴"
+        price_fmt = f"{p:.2f}%" if s == "^TNX" else (f"${p:.2f}" if s in ["GC=F", "CL=F", "BTC-USD"] else f"{p:.2f}")
+        bonds_comm_txt += f"• **{names[s]}:** `{price_fmt}` ({tag} `{chg:+.2f}%`)\n"
+
+    calendar_txt = (
+        "• **FOMC Rate Policy:** `Neutral / Data-Dependent` *(Target: 4.25% – 4.50%)*\n"
+        "• **CPI Inflation Release:** `Next Monthly Print: 8:30 AM EST`\n"
+        "• **Non-Farm Payrolls (Jobs):** `First Friday of Month: 8:30 AM EST`\n"
+        "• **Yield Curve Posture:** `10Y vs 2Y Spread Normalizing`"
+    )
+
+    embed.add_field(name="📈 Major Equities Indices", value=indices_txt or "• *Live data stream syncing*", inline=False)
+    embed.add_field(name="🛢️ Yields, Dollar, Commodities & Crypto", value=bonds_comm_txt or "• *Live data stream syncing*", inline=False)
+    embed.add_field(name="🗓️ High-Impact Macro Drivers & Fed Watch", value=calendar_txt, inline=False)
+    embed.set_footer(text="Looney Macro Terminal • Global Cross-Asset Intelligence")
+    return embed
+
+# -------------------------------------------------------------
+# 8. SYSTEM HEALTH & OPERATIONAL DIAGNOSTICS (!!health)
 # -------------------------------------------------------------
 def create_health_diagnostics_embed(bot_instance):
     check_daily_reset()
     now_ny = datetime.now(NY_TZ)
-    now_utc = datetime.now(UTC_TZ)
     
     uptime_str = format_uptime_duration(START_TIME_UTC)
     mem_mb = get_process_memory_mb()
@@ -1100,18 +1348,17 @@ def create_health_diagnostics_embed(bot_instance):
     embed.add_field(name="📊 24-Hour Daily Volume (Midnight EST Reset)", value=daily_stats, inline=False)
     
     cmd_breakdown = (
-        f"• **`!/$` Market Snapshots:** `{DIAGNOSTICS_STATE['cmd_price_today']}`\n"
-        f"• **`#` Options Deep-Dives:** `{DIAGNOSTICS_STATE['cmd_options_today']}`\n"
-        f"• **`%` Institutional Radars:** `{DIAGNOSTICS_STATE['cmd_analyst_today']}`\n"
-        f"• **`!!` Health Invocations:** `{DIAGNOSTICS_STATE['cmd_health_today']}`"
+        f"• **`!/$` Snapshots:** `{DIAGNOSTICS_STATE['cmd_price_today']}` | **`#` Options:** `{DIAGNOSTICS_STATE['cmd_options_today']}`\n"
+        f"• **`%` Radars:** `{DIAGNOSTICS_STATE['cmd_analyst_today']}` | **`?` Insiders:** `{DIAGNOSTICS_STATE['cmd_insider_today']}`\n"
+        f"• **`^` Shorts:** `{DIAGNOSTICS_STATE['cmd_short_today']}` | **`!vs` Battles:** `{DIAGNOSTICS_STATE['cmd_vs_today']}`\n"
+        f"• **`!!macro` Pulses:** `{DIAGNOSTICS_STATE['cmd_macro_today']}` | **`!!health`:** `{DIAGNOSTICS_STATE['cmd_health_today']}`"
     )
     embed.add_field(name="🎯 Daily Command Popularity Breakdown", value=cmd_breakdown, inline=False)
-    
     embed.set_footer(text="Looney Diagnostics • Real-Time Health & Gateway Monitor")
     return embed
 
 # -------------------------------------------------------------
-# 8. DISCORD BOT INSTANCE SETUP
+# 9. DISCORD BOT INSTANCE SETUP
 # -------------------------------------------------------------
 intents = discord.Intents.default()
 intents.message_content = True
@@ -1152,7 +1399,63 @@ async def on_message(message):
             await message.channel.send(embed=embed)
             return
 
-    # TRIGGER 1: Institutional Research Radar on `%TICKER`
+    # TRIGGER 0B: Global Macro Pulse on `!!macro`, `!macro`, `!econ`, `!fomc`
+    if low_content in ["!!macro", "!macro", "!econ", "!fomc", "!!econ"]:
+        async with message.channel.typing():
+            DIAGNOSTICS_STATE["cmd_macro_today"] += 1
+            DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+            DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+            embed = await asyncio.to_thread(fetch_global_macro_pulse)
+            await message.channel.send(embed=embed)
+            return
+
+    # TRIGGER 1: Head-to-Head Comparison on `!vs TICKER1 TICKER2`
+    if low_content.startswith("!vs ") or low_content.startswith("vs "):
+        parts = content.split()
+        if len(parts) >= 3:
+            s1, s2 = parts[1].upper().replace("$", ""), parts[2].upper().replace("$", "")
+            async with message.channel.typing():
+                embed, err = await asyncio.to_thread(compare_two_stocks, s1, s2)
+                if err:
+                    await message.channel.send(f"❌ {err}")
+                    return
+                DIAGNOSTICS_STATE["cmd_vs_today"] += 1
+                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                await message.channel.send(embed=embed)
+                return
+
+    # TRIGGER 2: Insider Buying & 13F Ownership on `?TICKER`
+    if content.startswith("?") and len(content) >= 2:
+        raw_ticker = content[1:].split()[0].upper().replace("$", "")
+        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            async with message.channel.typing():
+                embed, err = await asyncio.to_thread(fetch_insider_and_institutional_data, raw_ticker)
+                if err:
+                    await message.channel.send(f"❌ {err}")
+                    return
+                DIAGNOSTICS_STATE["cmd_insider_today"] += 1
+                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                await message.channel.send(embed=embed)
+                return
+
+    # TRIGGER 3: Short Squeeze Metrics on `^TICKER`
+    if content.startswith("^") and len(content) >= 2:
+        raw_ticker = content[1:].split()[0].upper().replace("$", "")
+        if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            async with message.channel.typing():
+                embed, err = await asyncio.to_thread(fetch_short_squeeze_metrics, raw_ticker)
+                if err:
+                    await message.channel.send(f"❌ {err}")
+                    return
+                DIAGNOSTICS_STATE["cmd_short_today"] += 1
+                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                await message.channel.send(embed=embed)
+                return
+
+    # TRIGGER 4: Institutional Research Radar on `%TICKER`
     if content.startswith("%") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -1176,7 +1479,7 @@ async def on_message(message):
                     await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
 
-    # TRIGGER 2: Options Deep-Dive on `#TICKER`
+    # TRIGGER 5: Options Deep-Dive on `#TICKER`
     if content.startswith("#") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -1195,12 +1498,12 @@ async def on_message(message):
                     await message.channel.send(f"❌ Options Error: {e}")
                 return
 
-    # TRIGGER 3: Technicals Snapshot on `!TICKER` or `$TICKER`
+    # TRIGGER 6: Technicals Snapshot on `!TICKER` or `$TICKER`
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
 
-        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research", "health", "status", "ping"]:
+        if first_word in ["price", "p", "four", "check", "opt", "options", "analyst", "research", "health", "status", "ping", "vs", "insider", "short", "macro", "econ"]:
             await bot.process_commands(message)
             return
 
@@ -1223,6 +1526,9 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
+# -------------------------------------------------------------
+# 10. BOT COMMAND ALIASES
+# -------------------------------------------------------------
 @bot.command(name="health", aliases=["status", "ping"])
 async def health_command(ctx):
     async with ctx.typing():
@@ -1231,6 +1537,55 @@ async def health_command(ctx):
         DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         embed = create_health_diagnostics_embed(bot)
+        await ctx.send(embed=embed)
+
+@bot.command(name="macro", aliases=["econ", "fomc"])
+async def macro_command(ctx):
+    async with ctx.typing():
+        check_daily_reset()
+        DIAGNOSTICS_STATE["cmd_macro_today"] += 1
+        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        embed = await asyncio.to_thread(fetch_global_macro_pulse)
+        await ctx.send(embed=embed)
+
+@bot.command(name="vs")
+async def vs_command(ctx, sym1: str, sym2: str):
+    async with ctx.typing():
+        check_daily_reset()
+        embed, err = await asyncio.to_thread(compare_two_stocks, sym1, sym2)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        DIAGNOSTICS_STATE["cmd_vs_today"] += 1
+        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        await ctx.send(embed=embed)
+
+@bot.command(name="insider")
+async def insider_command(ctx, ticker: str):
+    async with ctx.typing():
+        check_daily_reset()
+        embed, err = await asyncio.to_thread(fetch_insider_and_institutional_data, ticker)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        DIAGNOSTICS_STATE["cmd_insider_today"] += 1
+        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        await ctx.send(embed=embed)
+
+@bot.command(name="short")
+async def short_command(ctx, ticker: str):
+    async with ctx.typing():
+        check_daily_reset()
+        embed, err = await asyncio.to_thread(fetch_short_squeeze_metrics, ticker)
+        if err:
+            await ctx.send(f"❌ {err}")
+            return
+        DIAGNOSTICS_STATE["cmd_short_today"] += 1
+        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         await ctx.send(embed=embed)
 
 @bot.command(name="price", aliases=["p", "four", "check"])
@@ -1278,7 +1633,7 @@ async def analyst_command(ctx, ticker: str):
             await asyncio.sleep(0.4)
 
 # -------------------------------------------------------------
-# 9. SMART PRE-FLIGHT GATEWAY HANDSHAKE & RUNNER
+# 11. SMART PRE-FLIGHT GATEWAY HANDSHAKE & RUNNER
 # -------------------------------------------------------------
 def smart_gateway_preflight(token):
     """
