@@ -363,6 +363,10 @@ def get_on_demand_data(ticker_symbol):
     now_ny = datetime.now(NY_TZ)
     now_utc = datetime.now(UTC_TZ)
 
+    # Initialized at top so variables always exist across all asset classes
+    dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
+    roe_val, margin_val, pe_val, market_cap = None, None, None, None
+
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1d&range=2y&events=div"
         res = http_session.get(url, timeout=5)
@@ -448,19 +452,22 @@ def get_on_demand_data(ticker_symbol):
             pivot_str = f"`Support (S1): ${(2.0 * p) - highs[-2]:.2f}` | `Resistance (R1): ${(2.0 * p) - lows[-2]:.2f}`"
 
         atr = calculate_atr(highs, lows, closes, 14)
-        dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
-        roe_val, margin_val, pe_val = None, None, None
 
         if is_crypto:
             profile_title = "🏢 Asset Class & Profile"
-            profile_block = f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n• **Trading:** `24/7/365 Continuous Global Liquidity`"
+            try:
+                t_obj = yf.Ticker(ticker_symbol)
+                market_cap = t_obj.fast_info.market_cap
+            except Exception: pass
+            cap_str = f"• **Market Cap:** `{format_large_number(market_cap)}`\n" if market_cap else ""
+            profile_block = f"• **Asset Class:** `Cryptocurrency (Decentralized Protocol)`\n{cap_str}• **Trading:** `24/7/365 Continuous Global Liquidity`"
         elif quote_type == "FUTURE" or "=F" in ticker_symbol:
             profile_title = "🏢 Asset Class & Profile"
             profile_block = f"• **Asset Class:** `Commodity / Index Derivative Contract`"
         else:
             is_etf = (quote_type == "ETF" or ticker_symbol in KNOWN_ETFS)
             profile_title = "🏢 Fund Profile & Structure" if is_etf else "🏢 Company Profile"
-            sector, industry, market_cap, shares = None, None, None, None
+            sector, industry, shares = None, None, None
             t_obj = yf.Ticker(ticker_symbol)
 
             try:
