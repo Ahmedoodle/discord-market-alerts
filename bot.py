@@ -7,6 +7,7 @@ import time
 import json
 import concurrent.futures
 import xml.etree.ElementTree as ET
+from urllib.parse import urljoin
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from datetime import datetime, date, timedelta, time as dtime
 from email.utils import parsedate_to_datetime
@@ -383,7 +384,7 @@ def parse_finviz_number_str(val_str):
 def fetch_finviz_security_fundamentals(ticker_symbol):
     """
     Direct Cloud-Immune Finviz Browser TLS Parser.
-    Extracts FINRA-reported Short Float, Days to Cover, Float, and Ownership.
+    Extracts FINRA-reported Short Float %, Short Ratio, Float, and Ownership.
     """
     res_dict = {}
     try:
@@ -1182,7 +1183,7 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
     """
     Institutional SEC EDGAR Form 4 XML parser.
     - Validates <issuerTradingSymbol> to eliminate cross-company ingestion.
-    - Parses Form 4 XMLs directly from EDGAR filing directory indexes.
+    - Parses Form 4 XMLs directly from EDGAR filing directory indexes with safe urljoin.
     - Accurately classifies Open Market Buys, Sells, Option Exercises, Grants, Gifts, and Tax Withholdings.
     """
     sym = ticker_symbol.upper().strip()
@@ -1205,21 +1206,15 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
         ns = {"atom": "http://www.w3.org/2005/Atom"}
         entries = root.findall("atom:entry", ns)
 
-        def parse_single_edgar_entry(entry):
-            local_trades = []
+        for entry in entries[:8]:
             try:
                 link_el = entry.find("atom:link", ns)
-                if link_el is None:
-                    return []
+                if link_el is None: continue
                 doc_page_url = link_el.attrib.get("href", "")
-                
-                # Fetch directory index page to locate the exact form4 XML file
                 dir_url = doc_page_url.rsplit('/', 1)[0] + '/'
                 dir_res = http_session.get(dir_url, headers=sec_headers, timeout=4)
-                if dir_res.status_code != 200:
-                    return []
+                if dir_res.status_code != 200: continue
 
-                # Find .xml file in filing directory (excluding submission header and xsl files)
                 xml_matches = re.findall(r'href=["\']([^"\']+\.xml)["\']', dir_res.text, re.IGNORECASE)
                 form4_xml_rel = None
                 for xm in xml_matches:
@@ -1229,20 +1224,17 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                     form4_xml_rel = xm
                     break
 
-                if not form4_xml_rel:
-                    return []
+                if not form4_xml_rel: continue
 
-                target_xml_url = dir_url + form4_xml_rel if not form4_xml_rel.startswith("http") else form4_xml_rel
+                target_xml_url = urljoin(dir_url, form4_xml_rel)
                 xml_res = http_session.get(target_xml_url, headers=sec_headers, timeout=4)
-                if xml_res.status_code != 200 or b"<ownershipDocument" not in xml_res.content:
-                    return []
+                if xml_res.status_code != 200 or b"<ownershipDocument" not in xml_res.content: continue
 
                 form_root = ET.fromstring(xml_res.content)
 
-                # STRICT ISSUER VALIDATION GUARD: Discard cross-company entries
+                # Strict issuer check
                 issuer_sym = form_root.findtext(".//issuer/issuerTradingSymbol") or form_root.findtext(".//issuerTradingSymbol")
-                if issuer_sym and issuer_sym.upper().strip() != sym:
-                    return []
+                if issuer_sym and issuer_sym.upper().strip() != sym: continue
 
                 owner_name = form_root.findtext(".//rptOwnerName") or "Insider"
                 officer_title = form_root.findtext(".//officerTitle") or ""
@@ -1257,7 +1249,7 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
 
                 role_tag = f" ({role_label[:14]})"
 
-                # 1. Non-Derivative Transactions (Table I - Common Stock)
+                # Table I Common stock
                 for tx in form_root.findall(".//nonDerivativeTransaction"):
                     shares_str = tx.findtext(".//transactionShares/value")
                     price_str = tx.findtext(".//transactionPricePerShare/value")
@@ -1265,8 +1257,7 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                     tx_code = tx.findtext(".//transactionCoding/transactionCode")
                     tx_date = tx.findtext(".//transactionDate/value") or "Recent"
 
-                    if not shares_str:
-                        continue
+                    if not shares_str: continue
 
                     shares = float(shares_str)
                     price_per_share = float(price_str) if price_str and float(price_str) > 0 else 0.0
@@ -1299,9 +1290,9 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                         p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
                         line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
 
-                    local_trades.append((tx_date, line))
+                    trades.append((tx_date, line))
 
-                # 2. Derivative Transactions (Table II - Stock Options)
+                # Table II Options
                 for tx in form_root.findall(".//derivativeTransaction"):
                     shares_str = tx.findtext(".//transactionShares/value")
                     conv_price_str = tx.findtext(".//conversionOrExercisePrice/value")
@@ -1309,8 +1300,7 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                     tx_code = tx.findtext(".//transactionCoding/transactionCode")
                     tx_date = tx.findtext(".//transactionDate/value") or "Recent"
 
-                    if not shares_str:
-                        continue
+                    if not shares_str: continue
 
                     shares = float(shares_str)
                     strike_val = float(conv_price_str) if conv_price_str and float(conv_price_str) > 0 else (float(price_str) if price_str and float(price_str) > 0 else 0.0)
@@ -1319,23 +1309,13 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
 
                     if tx_code == "M":
                         line = f"• **⚡ OPTION EXERCISE** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} contracts`{strike_str} on `{tx_date}`)"
-                        local_trades.append((tx_date, line))
+                        trades.append((tx_date, line))
                     elif tx_code == "A":
                         line = f"• **🎁 OPTION GRANT** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} options`{strike_str} on `{tx_date}`)"
-                        local_trades.append((tx_date, line))
-
+                        trades.append((tx_date, line))
             except Exception:
-                pass
-            return local_trades
+                continue
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
-            future_to_entry = [executor.submit(parse_single_edgar_entry, entry) for entry in entries[:12]]
-            for future in concurrent.futures.as_completed(future_to_entry):
-                res_list = future.result()
-                if res_list:
-                    trades.extend(res_list)
-
-        # Sort newest date first and take Top 10
         trades.sort(key=lambda x: x[0], reverse=True)
         return [t[1] for t in trades[:10]]
 
@@ -1353,7 +1333,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
-        # 1. Direct Ownership Extraction (Finviz TLS Engine Primary + Yahoo Fallback)
+        # 1. Direct Ownership Extraction (Finviz TLS Primary)
         fz_data = fetch_finviz_security_fundamentals(sym)
         
         k_info = {}
@@ -1368,62 +1348,67 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         insider_own_str = f"`{insider_pct_raw * 100:.1f}%`" if insider_pct_raw is not None else "`N/A`"
         float_str = format_large_number(float_raw).replace("$", "") + " shares" if float_raw else "N/A"
 
-        # 2. Top 10 Institutional Whales (Funds)
+        # 2 & 3: Pull Whales & Insiders with Cloud-Immune TLS Engine
         whales_col = []
-        try:
-            inst_df = t_obj.institutional_holders
-            if inst_df is not None and not inst_df.empty:
-                for idx, r in inst_df.head(10).iterrows():
-                    rank = idx + 1
-                    h_name = str(r.get("Holder", "Whale Fund"))[:20]
-                    pct_held = float(r.get("pctHeld", 0) or 0) * 100
-                    whales_col.append(f"**{rank}. {h_name}:** `{pct_held:.1f}%`")
-        except Exception: pass
-        whales_txt = "\n".join(whales_col) if whales_col else "• *Registry Syncing*"
-
-        # 3. Top 10 Individual Insider Owners (Ranked from Highest to Lowest Shareholder)
         insiders_col = []
         try:
-            roster_df = t_obj.insider_roster_holders
-            if roster_df is not None and not roster_df.empty:
-                parsed_insiders = []
-                for _, r in roster_df.iterrows():
-                    p_name = str(r.get("Name", "Insider"))[:18]
-                    pos = str(r.get("Position", ""))
-                    pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
-                    
-                    sh_direct = r.get("Shares Owned Directly")
-                    sh_indirect = r.get("Shares Owned Indirectly")
-                    
-                    total_sh = 0
-                    if pd.notna(sh_direct) and float(sh_direct) > 0:
-                        total_sh += float(sh_direct)
-                    if pd.notna(sh_indirect) and float(sh_indirect) > 0:
-                        total_sh += float(sh_indirect)
-                    
-                    parsed_insiders.append({
-                        "name": p_name,
-                        "pos_tag": pos_tag,
-                        "shares": total_sh
-                    })
-
-                # Sort descending: Highest share count to lowest
-                parsed_insiders.sort(key=lambda x: x["shares"], reverse=True)
-
-                for idx, person in enumerate(parsed_insiders[:10]):
+            qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=institutionOwnership,insiderHolders", impersonate="chrome124", timeout=4)
+            if qs_res.status_code == 200:
+                res_json = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                
+                # Whales
+                inst_owners = res_json.get("institutionOwnership", {}).get("ownershipList", []) or []
+                for idx, r in enumerate(inst_owners[:10]):
                     rank = idx + 1
-                    if person["shares"] > 0:
-                        sh_fmt = format_large_number(int(person["shares"])).replace("$", "")
-                        insiders_col.append(f"**{rank}. {person['name']}{person['pos_tag']}:** `{sh_fmt} shs`")
+                    h_name = str(r.get("organization", "Whale Fund"))[:20]
+                    pct_held = float(r.get("pctHeld", {}).get("raw", 0) or 0) * 100
+                    whales_col.append(f"**{rank}. {h_name}:** `{pct_held:.1f}%`")
+                
+                # Insiders
+                insider_holders = res_json.get("insiderHolders", {}).get("holders", []) or []
+                for idx, person in enumerate(insider_holders[:10]):
+                    rank = idx + 1
+                    p_name = str(person.get("name", "Insider"))[:18]
+                    pos = str(person.get("relation", ""))
+                    pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
+                    sh_total = person.get("totalShares", {}).get("raw") or 0
+                    if sh_total > 0:
+                        sh_fmt = format_large_number(int(sh_total)).replace("$", "")
+                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
                     else:
-                        insiders_col.append(f"**{rank}. {person['name']}{person['pos_tag']}:** `Trust / Direct Holder`")
+                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `Direct Holder`")
         except Exception: pass
+
+        # Fallback to yfinance if cureq missed
+        if not whales_col:
+            try:
+                inst_df = t_obj.institutional_holders
+                if inst_df is not None and not inst_df.empty:
+                    for idx, r in inst_df.head(10).iterrows():
+                        rank = idx + 1
+                        h_name = str(r.get("Holder", "Whale Fund"))[:20]
+                        pct_held = float(r.get("pctHeld", 0) or 0) * 100
+                        whales_col.append(f"**{rank}. {h_name}:** `{pct_held:.1f}%`")
+            except Exception: pass
+
+        if not insiders_col:
+            try:
+                roster_df = t_obj.insider_roster_holders
+                if roster_df is not None and not roster_df.empty:
+                    for idx, r in roster_df.head(10).iterrows():
+                        rank = idx + 1
+                        p_name = str(r.get("Name", "Insider"))[:18]
+                        pos = str(r.get("Position", ""))
+                        pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
+                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `Direct Holder`")
+            except Exception: pass
+
+        whales_txt = "\n".join(whales_col) if whales_col else "• *Registry Syncing*"
         insiders_txt = "\n".join(insiders_col) if insiders_col else "• *Roster Pending*"
 
-        # 4. C-Suite Form 4 Trades (SEC EDGAR Direct Ground-Truth Parser: Top 10 Newest)
+        # 4. Form 4 Trades (SEC EDGAR Primary + TLS Fallback)
         raw_trades = fetch_sec_edgar_form4_trades(sym)
 
-        # Fallback to yfinance for Canadian tickers or if EDGAR feed had no recent entries
         if not raw_trades:
             try:
                 it_df = t_obj.insider_transactions
@@ -1439,14 +1424,10 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                         is_gift = "gift" in low_act or "charit" in low_act
                         is_sale = "sale" in low_act or "sold" in low_act
 
-                        if is_buy:
-                            badge = "🟢 BUY (Open Mkt)"
-                        elif is_gift:
-                            badge = "🎁 GIFT / TRANSFER"
-                        elif is_sale:
-                            badge = "🔴 SELL (Open Mkt)"
-                        else:
-                            badge = "⚡ OPTION / GRANT"
+                        if is_buy: badge = "🟢 BUY (Open Mkt)"
+                        elif is_gift: badge = "🎁 GIFT / TRANSFER"
+                        elif is_sale: badge = "🔴 SELL (Open Mkt)"
+                        else: badge = "⚡ OPTION / GRANT"
 
                         try:
                             sh_int = int(shares)
@@ -1477,7 +1458,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
 
         trades_txt = "\n".join(trades_lines) if trades_lines else "• *No Form 4 open market filings recorded in last 90 days.*"
 
-        # 5. Material Corporate Dispositions & 8-K Filings (Direct from Official SEC EDGAR Database)
+        # 5. Form 8-K
         disposition_notes = []
         try:
             sec_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={sym}&type=8-K&count=5&output=atom"
@@ -1493,26 +1474,18 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                     t_el = entry.find("atom:title", ns)
                     l_el = entry.find("atom:link", ns)
                     u_el = entry.find("atom:updated", ns)
-                    
                     raw_title = t_el.text if t_el is not None else "Form 8-K"
                     link = l_el.attrib.get("href", "") if l_el is not None else "https://www.sec.gov"
-                    
                     date_str = "Recent"
                     if u_el is not None and u_el.text:
-                        try:
-                            date_str = u_el.text.split("T")[0]
-                        except Exception:
-                            pass
-                    
+                        try: date_str = u_el.text.split("T")[0]
+                        except Exception: pass
                     clean_title = re.sub(r'^(?:8-K(?:\/A)?\s*-\s*)', '', raw_title).strip()
                     if not clean_title or clean_title.lower() == "current report":
                         clean_title = "Current Report Filing (Material Event)"
-                    
                     disposition_notes.append(f"• 📄 **Form 8-K** (`{date_str}`): [{clean_title[:65]}]({link})")
-                    if len(disposition_notes) >= 3:
-                        break
-        except Exception:
-            pass
+                    if len(disposition_notes) >= 3: break
+        except Exception: pass
 
         disposition_txt = "\n".join(disposition_notes) if disposition_notes else "• *No material Form 8-K filings reported in the current quarter.*"
 
@@ -1567,15 +1540,16 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         shares_short = k_info.get("sharesShort")
         shares_prior = k_info.get("sharesShortPriorMonth")
 
-        # If shares_short was missing, compute it from float * short_pct_float
-        if shares_short is None and float_shares and short_pct_float is not None:
-            shares_short = float_shares * (short_pct_float / 100.0)
-        # If short_pct_float was missing, compute manually from shares_short / float_shares
-        elif short_pct_float is None and float_shares and shares_short and float_shares > 0:
+        # PURE MANUAL MATHEMATICAL CALCULATION of Short % of Float:
+        # Short % of Float = (Total Shares Shorted / Tradable Float) * 100
+        if shares_short is not None and float_shares and float_shares > 0:
             short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
+        elif short_pct_float is not None and float_shares and shares_short is None:
+            shares_short = float_shares * (short_pct_float / 100.0)
 
         float_fmt = format_large_number(float_shares).replace("$", "") + " shares" if float_shares else "N/A"
-        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else "N/A"
+        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else ("N/A" if not float_shares or short_pct_float is None else format_large_number(float_shares * (short_pct_float / 100.0)).replace("$", "") + " shares")
+
         short_pct_str = f"{short_pct_float:.2f}%" if short_pct_float is not None else "N/A"
         short_ratio_str = f"{short_ratio:.1f} Days" if short_ratio is not None else "N/A"
 
