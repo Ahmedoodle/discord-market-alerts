@@ -79,7 +79,7 @@ KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BN
 TOP_CRYPTO_LIST = [
     "BTC-USD", "ETH-USD", "XRP-USD", "BNB-USD", "SOL-USD",
     "LINK-USD", "ADA-USD", "XLM-USD", "DOGE-USD", "SHIB-USD",
-    "XMR-USD", "TRX-USD", "HYPE-USD"
+    "XMR-USD", "TRX-USD", "HYPE32196-USD"
 ]
 
 START_TIME_UTC = datetime.now(UTC_TZ)
@@ -370,7 +370,6 @@ def get_on_demand_data(ticker_symbol):
     now_ny = datetime.now(NY_TZ)
     now_utc = datetime.now(UTC_TZ)
 
-    # Initialized at top so variables always exist across all asset classes
     dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
     roe_val, margin_val, pe_val, market_cap = None, None, None, None
 
@@ -1057,7 +1056,7 @@ def analyze_stock_options_setup(ticker_symbol):
             "macd_verdict": macd_verdict, "s1": s1, "r1": r1,
             "play_7_14": play_7_14, "play_30_45": play_30_45, "defensive_play": defensive_play
         }
-    except Exception:
+    except Exception as e:
         return None
 
 def create_deep_dive_options_embed(data):
@@ -1170,7 +1169,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         except Exception: pass
         whales_txt = "\n".join(whales_col) if whales_col else "• *Registry Syncing*"
 
-        # 3. Top 10 Individual Insider Owners (People / Roster)
+        # 3. Top 10 Individual Insider Owners (People / Roster - Direct + Indirect Trusts)
         insiders_col = []
         try:
             roster_df = t_obj.insider_roster_holders
@@ -1179,13 +1178,22 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                     rank = idx + 1
                     p_name = str(r.get("Name", "Insider"))[:18]
                     pos = str(r.get("Position", ""))
-                    pos_tag = f" ({pos[:10]})" if pos and pos.lower() not in ["none", "nan", ""] else ""
-                    sh = r.get("Shares Owned Directly") or r.get("Shares Owned Indirectly") or 0
-                    try:
-                        sh_fmt = format_large_number(int(sh)).replace("$", "")
-                    except Exception:
-                        sh_fmt = str(sh)
-                    insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
+                    pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
+                    
+                    sh_direct = r.get("Shares Owned Directly")
+                    sh_indirect = r.get("Shares Owned Indirectly")
+                    
+                    total_sh = 0
+                    if pd.notna(sh_direct) and float(sh_direct) > 0:
+                        total_sh += float(sh_direct)
+                    if pd.notna(sh_indirect) and float(sh_indirect) > 0:
+                        total_sh += float(sh_indirect)
+                    
+                    if total_sh > 0:
+                        sh_fmt = format_large_number(int(total_sh)).replace("$", "")
+                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
+                    else:
+                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `Trust / Direct Holder`")
         except Exception: pass
         insiders_txt = "\n".join(insiders_col) if insiders_col else "• *Roster Pending*"
 
@@ -1224,16 +1232,21 @@ def fetch_insider_and_institutional_data(ticker_symbol):
 
         trades_txt = "\n".join(trades) if trades else "• *No Form 4 open market filings recorded in last 90 days.*"
 
-        # 5. Material Corporate Dispositions & 8-K Asset Sales
+        # 5. Material Corporate Dispositions & 8-K Filings (From Official SEC EDGAR / secFilings)
         disposition_notes = []
         try:
-            res_news = http_session.get(f"https://query2.finance.yahoo.com/v1/finance/search?q={sym}+Form+8-K+OR+divestiture+OR+sale+agreement&newsCount=3", timeout=3)
-            if res_news.status_code == 200:
-                for n in res_news.json().get("news", [])[:2]:
-                    title = n.get("title", "")
-                    link = n.get("link") or n.get("canonicalUrl", {}).get("url")
-                    if any(w in title.lower() for w in ["8-k", "sale", "sells", "divest", "agreement", "acquire", "deal", "merger"]):
-                        disposition_notes.append(f"• 📄 [{title[:65]}...]({link})")
+            qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=secFilings", impersonate="chrome124", timeout=4)
+            if qs_res.status_code == 200:
+                filings_list = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0].get("secFilings", {}).get("filings", [])
+                for f in filings_list:
+                    form_type = f.get("type", "")
+                    title = f.get("title") or f.get("description") or f"Form {form_type}"
+                    date_str = f.get("date", "")
+                    link = f.get("edgarUrl", "")
+                    if form_type in ["8-K", "8-K/A", "10-K", "10-Q"] and link:
+                        disposition_notes.append(f"• 📄 **Form {form_type}** ({date_str}): [{title[:65]}...]({link})")
+                    if len(disposition_notes) >= 2:
+                        break
         except Exception: pass
 
         disposition_txt = "\n".join(disposition_notes) if disposition_notes else "• *No material Form 8-K asset sales or divestitures reported in the current quarter.*"
@@ -1254,7 +1267,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         embed.add_field(name="🏢 Top 10 Institutional Whales (Funds)", value=whales_txt, inline=True)
         embed.add_field(name="👤 Top 10 Individual Insider Owners (People)", value=insiders_txt, inline=True)
         embed.add_field(name="📝 Recent C-Suite Form 4 Filings (Shares + Price + Total Value)", value=trades_txt, inline=False)
-        embed.add_field(name="🏢 Material Corporate Dispositions & 8-K Asset Sales", value=disposition_txt, inline=False)
+        embed.add_field(name="🏢 Material Corporate Dispositions & 8-K Filings", value=disposition_txt, inline=False)
         embed.set_footer(text="Looney Insider Intelligence • SEC Form 4, 13F & Form 8-K Engine")
         return embed, None
     except Exception as e:
