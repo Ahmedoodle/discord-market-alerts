@@ -171,6 +171,14 @@ http_session.headers.update({
     "Accept": "*/*"
 })
 
+nasdaq_short_session = requests.Session()
+nasdaq_short_session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://www.nasdaq.com",
+    "Referer": "https://www.nasdaq.com/"
+})
+
 YAHOO_AUTH_CACHE = {"crumb": None, "session": None, "expiry": 0}
 
 def get_authenticated_yahoo_session():
@@ -403,10 +411,35 @@ def parse_finviz_number_str(val_str):
     except Exception:
         return None
 
+def fetch_official_nasdaq_short_interest(ticker_symbol):
+    """
+    Official NASDAQ Exchange API for bi-monthly regulatory short interest.
+    Provides accurate settlement short interest volume and days to cover for all US equities.
+    """
+    sym = ticker_symbol.upper().replace(".TO", "").replace(".V", "").strip()
+    data_dict = {}
+    try:
+        url = f"https://api.nasdaq.com/api/quote/{sym}/short-interest?assetclass=stocks"
+        res = nasdaq_short_session.get(url, timeout=5)
+        if res.status_code == 200:
+            rows = res.json().get("data", {}).get("shortInterestTable", {}).get("rows", [])
+            if rows:
+                latest = rows[0]
+                raw_interest = str(latest.get("interest", "")).replace(",", "").strip()
+                raw_dtc = str(latest.get("daysToCover", "")).replace(",", "").strip()
+                if raw_interest and raw_interest.isdigit():
+                    data_dict["shares_short"] = float(raw_interest)
+                if raw_dtc:
+                    try: data_dict["short_ratio"] = float(raw_dtc)
+                    except Exception: pass
+    except Exception:
+        pass
+    return data_dict
+
 def fetch_finviz_security_fundamentals(ticker_symbol):
     """
     Direct Cloud-Immune Finviz Browser TLS Parser.
-    Extracts FINRA-reported Short Float %, Short Ratio, Float, and Ownership.
+    Extracts Short Float %, Short Ratio, Float, and Ownership.
     """
     res_dict = {}
     try:
@@ -1191,7 +1224,7 @@ def compare_two_stocks(sym1, sym2):
         f"• **Market Cap:** `{format_large_number(d2['market_cap'])}`\n"
         f"• **RSI (14D):** `{d2['rsi_val']:.1f}`{c_rsi2}\n"
         f"• **ROE:** `{d2['roe_val']:.1f}%`{c_roe2 if d2['roe_val'] else ''}\n"
-        f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m1 if d2['margin_val'] else ''}\n"
+        f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m2 if d2['margin_val'] else ''}\n"
         f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe2 if d2['pe_val'] else ''}"
     )
 
@@ -1556,30 +1589,37 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
-        # 1. Pull Short Interest & Float from Cloud-Immune Finviz Engine Primary
+        # 1. Primary Source: Official NASDAQ Exchange Regulatory Short Data
+        nasdaq_short = fetch_official_nasdaq_short_interest(sym)
+
+        # 2. Secondary Source: Finviz Cloud Engine
         fz_data = fetch_finviz_security_fundamentals(sym)
 
-        # 2. Yahoo Fallback Layer
+        # 3. Fallback Source: Yahoo Info
         k_info = {}
         try: k_info = t_obj.info or {}
         except Exception: pass
 
+        # Float Extraction
         float_shares = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
         
-        # Prioritize Live FINRA Short Float % directly from exchange feed
-        short_pct_float = fz_data.get("short_float_pct")
-        if short_pct_float is None and k_info.get("shortPercentOfFloat") is not None:
-            short_pct_float = k_info.get("shortPercentOfFloat") * 100.0
-
-        short_ratio = fz_data.get("short_ratio") or k_info.get("shortRatio")
-        shares_short = fz_data.get("shares_short") or k_info.get("sharesShort")
+        # Real Shares Shorted
+        shares_short = nasdaq_short.get("shares_short") or (float_shares * (fz_data["short_float_pct"] / 100.0) if float_shares and fz_data.get("short_float_pct") else None) or k_info.get("sharesShort")
+        
+        # Days to Cover (Short Ratio)
+        short_ratio = nasdaq_short.get("short_ratio") or fz_data.get("short_ratio") or k_info.get("shortRatio")
+        
         shares_prior = k_info.get("sharesShortPriorMonth")
 
-        # Compute accurate true shares shorted from live float and short %
-        if float_shares and short_pct_float is not None:
-            shares_short = float_shares * (short_pct_float / 100.0)
-        elif shares_short is not None and float_shares and float_shares > 0 and short_pct_float is None:
+        # PURE MANUAL MATHEMATICAL CALCULATION of Short % of Float:
+        # Short % of Float = (Total Shares Shorted / Tradable Float) * 100
+        short_pct_float = None
+        if shares_short is not None and float_shares and float_shares > 0:
             short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
+        elif fz_data.get("short_float_pct") is not None:
+            short_pct_float = fz_data.get("short_float_pct")
+        elif k_info.get("shortPercentOfFloat") is not None:
+            short_pct_float = k_info.get("shortPercentOfFloat") * 100.0
 
         float_fmt = format_large_number(float_shares).replace("$", "") + " shares" if float_shares else "N/A"
         short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else "N/A"
@@ -1630,7 +1670,7 @@ def fetch_short_squeeze_metrics(ticker_symbol):
             ),
             inline=False
         )
-        embed.set_footer(text="Looney Short Intelligence • FINRA & Exchange Short Interest Tracker")
+        embed.set_footer(text="Looney Short Intelligence • Official NASDAQ & Exchange Regulatory Data")
         return embed, None
     except Exception as e:
         return None, f"Error fetching short metrics for `{sym}`: {e}"
@@ -2121,3 +2161,4 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
+--- EN
