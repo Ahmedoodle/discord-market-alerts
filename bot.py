@@ -361,6 +361,53 @@ def fetch_wallstreet_targets_tls(ticker_symbol, current_price):
         pass
     return "N/A"
 
+def parse_finviz_number_str(val_str):
+    if not val_str or val_str.strip() in ["-", "N/A", ""]:
+        return None
+    clean = val_str.strip().replace(",", "").replace("%", "")
+    multiplier = 1.0
+    if clean.endswith("B"):
+        multiplier = 1e9
+        clean = clean[:-1]
+    elif clean.endswith("M"):
+        multiplier = 1e6
+        clean = clean[:-1]
+    elif clean.endswith("K"):
+        multiplier = 1e3
+        clean = clean[:-1]
+    try:
+        return float(clean) * multiplier
+    except Exception:
+        return None
+
+def fetch_finviz_security_fundamentals(ticker_symbol):
+    """
+    Direct Cloud-Immune Finviz Browser TLS Parser.
+    Extracts FINRA-reported Short Interest, Days to Cover, Float, and Ownership.
+    """
+    res_dict = {}
+    try:
+        sym = ticker_symbol.upper().replace(".TO", "").replace(".V", "").strip()
+        url = f"https://finviz.com/quote.ashx?t={sym}&p=d"
+        fz_res = cureq.get(url, impersonate="chrome124", timeout=5)
+        if fz_res.status_code == 200:
+            text = fz_res.text
+            def get_val(key):
+                m = re.search(rf'<td[^>]*>{key}</td>\s*<td[^>]*><b>([^<]+)</b></td>', text, re.IGNORECASE)
+                if not m:
+                    m = re.search(rf'{key}[^\d\w<]+([0-9\.\,\%\-]+[B|M|K]?)', text, re.IGNORECASE)
+                return m.group(1).strip() if m else None
+
+            res_dict["shs_float"] = parse_finviz_number_str(get_val("Shs Float"))
+            res_dict["short_float_pct"] = parse_finviz_number_str(get_val("Short Float / %") or get_val("Short Float"))
+            res_dict["short_ratio"] = parse_finviz_number_str(get_val("Short Ratio"))
+            res_dict["inst_own_pct"] = parse_finviz_number_str(get_val("Inst Own"))
+            res_dict["insider_own_pct"] = parse_finviz_number_str(get_val("Insider Own"))
+            res_dict["shs_outstand"] = parse_finviz_number_str(get_val("Shs Outstand"))
+    except Exception:
+        pass
+    return res_dict
+
 # -------------------------------------------------------------
 # 4. ON-DEMAND TECHNICALS, STATEMENTS & DIVIDENDS ($/!)
 # -------------------------------------------------------------
@@ -1307,14 +1354,16 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
-        # 1. Direct Structured JSON Ownership Extraction
+        # 1. Direct Ownership Extraction (Finviz TLS Engine Primary + Yahoo Fallback)
+        fz_data = fetch_finviz_security_fundamentals(sym)
+        
         k_info = {}
         try: k_info = t_obj.info or {}
         except Exception: pass
 
-        inst_pct_raw = k_info.get("heldPercentInstitutions")
-        insider_pct_raw = k_info.get("heldPercentInsiders")
-        float_raw = k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
+        inst_pct_raw = (fz_data.get("inst_own_pct") / 100.0) if fz_data.get("inst_own_pct") is not None else k_info.get("heldPercentInstitutions")
+        insider_pct_raw = (fz_data.get("insider_own_pct") / 100.0) if fz_data.get("insider_own_pct") is not None else k_info.get("heldPercentInsiders")
+        float_raw = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
 
         inst_own_str = f"`{inst_pct_raw * 100:.1f}%`" if inst_pct_raw is not None else "`N/A`"
         insider_own_str = f"`{insider_pct_raw * 100:.1f}%`" if insider_pct_raw is not None else "`N/A`"
@@ -1502,24 +1551,31 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
+        # 1. Pull Short Interest & Float from Cloud-Immune Finviz Engine Primary
+        fz_data = fetch_finviz_security_fundamentals(sym)
+
+        # 2. Yahoo Fallback Layer
         k_info = {}
         try: k_info = t_obj.info or {}
         except Exception: pass
 
-        short_pct_raw = k_info.get("shortPercentOfFloat")
-        short_ratio = k_info.get("shortRatio")
-        float_shares = k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
+        short_pct_float = fz_data.get("short_float_pct")
+        if short_pct_float is None and k_info.get("shortPercentOfFloat") is not None:
+            short_pct_float = k_info.get("shortPercentOfFloat") * 100.0
+
+        short_ratio = fz_data.get("short_ratio") or k_info.get("shortRatio")
+        float_shares = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
         shares_short = k_info.get("sharesShort")
         shares_prior = k_info.get("sharesShortPriorMonth")
 
-        if short_pct_raw is not None:
-            short_pct_float = short_pct_raw * 100
-        else:
-            short_pct_float = 2.5
+        if short_pct_float is None and float_shares and shares_short and float_shares > 0:
+            short_pct_float = (shares_short / float_shares) * 100.0
 
+        if short_pct_float is None: short_pct_float = 2.5
         if short_ratio is None: short_ratio = 1.2
+
         float_fmt = format_large_number(float_shares).replace("$", "") + " shares" if float_shares else "N/A"
-        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else "N/A"
+        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else ("N/A" if not float_shares or not short_pct_float else format_large_number(float_shares * (short_pct_float / 100.0)).replace("$", "") + " shares")
 
         mom_trend_str = ""
         if shares_short and shares_prior and shares_prior > 0:
