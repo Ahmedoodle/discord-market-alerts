@@ -1,27 +1,3 @@
-Here is the complete, updated bot.py with the direct mathematical calculation
-engine implemented.
-
-Key Highlights of this Build:
-
-1.  100% Calculated Short Metrics (^ Command):
-      - Dynamically computes
-        \text{Short \% of Float} = \left(\frac{\text{Total Shares Shorted}}{\text{Tradable Float}}\right) \times 100.
-      - Dynamically computes
-        \text{Days to Cover} = \frac{\text{Total Shares Shorted}}{\text{30D Avg Volume}}.
-      - Hardcoded 2.5% / 1.2 Days fallbacks are completely removed; genuine
-        non-shortable assets (e.g. crypto/futures) cleanly display N/A.
-2.  Dynamic Risk Categorization:
-      - \ge 20.0\% \rightarrow 🔥 EXTREME SQUEEZE RISK (Red Embed)
-      - \ge 10.0\% \rightarrow ⚡ ELEVATED SHORT INTEREST (Orange Embed)
-      - < 10.0\% \rightarrow 🟢 LOW / NORMAL SHORT INTEREST (Green Embed)
-3.  Robust Ownership Extraction & SEC EDGAR Verified Feed (? Command):
-      - Multi-source float and ownership extraction with SEC Form 4 issuer
-        validation guards.
-4.  All other features, commands, volume pacers, and 24/7 web server
-    architecture remain completely untouched.
-
---- START OF FILE bot.py ---
-
 import os
 import threading
 import asyncio
@@ -2165,4 +2141,3 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
---- END OF FILE bot.py ---
