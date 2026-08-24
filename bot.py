@@ -171,6 +171,28 @@ http_session.headers.update({
     "Accept": "*/*"
 })
 
+YAHOO_AUTH_CACHE = {"crumb": None, "session": None, "expiry": 0}
+
+def get_authenticated_yahoo_session():
+    """Fetches and caches a valid Yahoo cookie + crumb using Chrome TLS impersonation."""
+    now = time.time()
+    if YAHOO_AUTH_CACHE["crumb"] and YAHOO_AUTH_CACHE["session"] and now < YAHOO_AUTH_CACHE["expiry"]:
+        return YAHOO_AUTH_CACHE["session"], YAHOO_AUTH_CACHE["crumb"]
+    try:
+        s = cureq.Session(impersonate="chrome124")
+        s.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"})
+        s.get("https://fc.yahoo.com", timeout=4)
+        c_res = s.get("https://query2.finance.yahoo.com/v1/test/getcrumb", timeout=4)
+        if c_res.status_code == 200 and len(c_res.text.strip()) > 2:
+            crumb = c_res.text.strip()
+            YAHOO_AUTH_CACHE["crumb"] = crumb
+            YAHOO_AUTH_CACHE["session"] = s
+            YAHOO_AUTH_CACHE["expiry"] = now + 1800  # Cache for 30 minutes
+            return s, crumb
+    except Exception:
+        pass
+    return None, None
+
 def format_large_number(num):
     if num is None: return "N/A"
     if num >= 1e12: return f"${num / 1e12:.2f} Trillion"
@@ -1353,40 +1375,44 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         insider_own_str = f"`{insider_pct_raw * 100:.1f}%`" if insider_pct_raw is not None else "`N/A`"
         float_str = format_large_number(float_raw).replace("$", "") + " shares" if float_raw else "N/A"
 
-        # 2 & 3: Pull Whales & Insiders with Cloud-Immune TLS Engine (Universal Value Parser)
+        # 2 & 3: Pull Whales & Insiders with Authenticated Yahoo TLS Session
         whales_col = []
         insiders_col = []
         try:
-            qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=institutionOwnership,insiderHolders", impersonate="chrome124", timeout=5)
-            if qs_res.status_code == 200:
-                res_json = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
-                
-                # Whales
-                inst_owners = res_json.get("institutionOwnership", {}).get("ownershipList", []) or []
-                for idx, r in enumerate(inst_owners[:10]):
-                    rank = idx + 1
-                    h_name = str(r.get("organization", "Whale Fund"))[:20]
-                    raw_pct = safe_extract_val(r.get("pctHeld"))
-                    pct_val = float(raw_pct) * 100.0 if raw_pct is not None else 0.0
-                    whales_col.append(f"**{rank}. {h_name}:** `{pct_val:.1f}%`")
-                
-                # Insiders
-                insider_holders = res_json.get("insiderHolders", {}).get("holders", []) or []
-                for idx, person in enumerate(insider_holders[:10]):
-                    rank = idx + 1
-                    p_name = str(person.get("name", "Insider"))[:18]
-                    pos = str(person.get("relation", ""))
-                    pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
-                    raw_sh = safe_extract_val(person.get("totalShares"))
-                    sh_total = float(raw_sh) if raw_sh is not None else 0
-                    if sh_total > 0:
-                        sh_fmt = format_large_number(int(sh_total)).replace("$", "")
-                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
-                    else:
-                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `Direct Holder`")
-        except Exception: pass
+            y_sess, y_crumb = get_authenticated_yahoo_session()
+            if y_sess and y_crumb:
+                qs_url = f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?crumb={y_crumb}&modules=institutionOwnership,insiderRoster,insiderHolders"
+                qs_res = y_sess.get(qs_url, timeout=5)
+                if qs_res.status_code == 200:
+                    res_json = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
+                    
+                    # Top 10 Institutional Whales
+                    inst_owners = res_json.get("institutionOwnership", {}).get("ownershipList", []) or []
+                    for idx, r in enumerate(inst_owners[:10]):
+                        rank = idx + 1
+                        h_name = str(r.get("organization", "Whale Fund"))[:20]
+                        raw_pct = safe_extract_val(r.get("pctHeld"))
+                        pct_val = float(raw_pct) * 100.0 if raw_pct is not None else 0.0
+                        whales_col.append(f"**{rank}. {h_name}:** `{pct_val:.1f}%`")
+                    
+                    # Top 10 Individual Insider Owners
+                    holders = res_json.get("insiderRoster", {}).get("holders", []) or res_json.get("insiderHolders", {}).get("holders", []) or []
+                    for idx, person in enumerate(holders[:10]):
+                        rank = idx + 1
+                        p_name = str(person.get("name", "Insider"))[:18]
+                        pos = str(person.get("relation") or person.get("position") or "")
+                        pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
+                        raw_sh = safe_extract_val(person.get("totalShares") or person.get("shares"))
+                        sh_total = float(raw_sh) if raw_sh is not None else 0
+                        if sh_total > 0:
+                            sh_fmt = format_large_number(int(sh_total)).replace("$", "")
+                            insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
+                        else:
+                            insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `Direct Holder`")
+        except Exception:
+            pass
 
-        # Fallback to yfinance if cureq missed
+        # Fallback to yfinance if crumb missed
         if not whales_col:
             try:
                 inst_df = t_obj.institutional_holders
