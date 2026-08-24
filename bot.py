@@ -1184,11 +1184,11 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
 
                 role_label = officer_title
                 if not role_label:
-                    if is_dir in ["1", "true", "True"]: role_label = "Board Director"
-                    elif is_ten in ["1", "true", "True"]: role_label = "10% Major Owner"
-                    else: role_label = "Corporate Insider"
+                    if is_dir in ["1", "true", "True"]: role_label = "Director"
+                    elif is_ten in ["1", "true", "True"]: role_label = "10% Owner"
+                    else: role_label = "Insider"
 
-                role_tag = f" ({role_label[:22]})"
+                role_tag = f" ({role_label[:14]})"
 
                 # 1. Non-Derivative Transactions (Table I - Common Stock)
                 for tx in form_root.findall(".//nonDerivativeTransaction"):
@@ -1207,30 +1207,30 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                     sh_fmt = format_large_number(int(shares)).replace("$", "")
 
                     if tx_code == "P":
-                        badge = "🟢 OPEN-MARKET BUY"
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Bought `{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)} Invested`**"
+                        badge = "🟢 BUY (Open Mkt)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)}`**)"
                     elif tx_code == "S":
-                        badge = "🔴 OPEN-MARKET SALE"
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Sold `{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)} Proceeds`**"
+                        badge = "🔴 SELL (Open Mkt)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)}`**)"
                     elif tx_code == "M":
                         badge = "⚡ OPTION EXERCISE"
                         p_str = f" @ `${price_per_share:.2f} strike`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Exercised `{sh_fmt} shs`{p_str} on `{tx_date}` (Acquisition)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
                     elif tx_code == "A":
-                        badge = "🎁 EQUITY GRANT"
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Awarded `{sh_fmt} shs` on `{tx_date}`"
+                        badge = "🎁 GRANT"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
                     elif tx_code == "F":
                         badge = "🏛️ TAX WITHHOLDING"
                         p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Surrendered `{sh_fmt} shs`{p_str} for statutory taxes on `{tx_date}`"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
                     elif tx_code == "G":
-                        badge = "🤝 GIFT / TRANSFER"
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Gifted/Transferred `{sh_fmt} shs` on `{tx_date}`"
+                        badge = "🤝 GIFT/TRANSFER"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
                     else:
                         is_buy = acq_disp == "A"
                         badge = "🟢 ACQUIRED" if is_buy else "🔴 DISPOSED"
                         p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:20]}{role_tag}**\n  └─ Transacted `{sh_fmt} shs`{p_str} on `{tx_date}`"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
 
                     local_trades.append((tx_date, line))
 
@@ -1251,10 +1251,10 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                     strike_str = f" @ `${strike_val:.2f} strike`" if strike_val > 0 else ""
 
                     if tx_code == "M":
-                        line = f"• **⚡ OPTION EXERCISE** by **{owner_name[:20]}{role_tag}**\n  └─ Converted `{sh_fmt} options`{strike_str} into common stock on `{tx_date}`"
+                        line = f"• **⚡ OPTION EXERCISE** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} contracts`{strike_str} on `{tx_date}`)"
                         local_trades.append((tx_date, line))
                     elif tx_code == "A":
-                        line = f"• **🎁 OPTION GRANT** by **{owner_name[:20]}{role_tag}**\n  └─ Granted `{sh_fmt} stock options`{strike_str} on `{tx_date}`"
+                        line = f"• **🎁 OPTION GRANT** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} options`{strike_str} on `{tx_date}`)"
                         local_trades.append((tx_date, line))
 
             except Exception:
@@ -1352,21 +1352,21 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         insiders_txt = "\n".join(insiders_col) if insiders_col else "• *Roster Pending*"
 
         # 4. C-Suite Form 4 Trades (SEC EDGAR Direct Ground-Truth Parser: Top 10 Newest)
-        trades = fetch_sec_edgar_form4_trades(sym)
+        raw_trades = fetch_sec_edgar_form4_trades(sym)
 
         # Fallback to yfinance for Canadian tickers or if EDGAR feed had no recent entries
-        if not trades:
+        if not raw_trades:
             try:
                 it_df = t_obj.insider_transactions
                 if it_df is not None and not it_df.empty:
                     for _, r in it_df.head(10).iterrows():
-                        insider_name = str(r.get("Insider", "Officer"))[:18]
+                        insider_name = str(r.get("Insider", "Officer"))[:16]
                         text_action = str(r.get("Text", "Transaction"))
                         shares = r.get("Shares") or 0
                         raw_val = r.get("Value")
 
                         is_buy = "Buy" in text_action or "Purchase" in text_action
-                        badge = "🟢 OPEN-MARKET BUY" if is_buy else ("🔴 OPEN-MARKET SALE" if "Sale" in text_action else "⚡ OPTION / GRANT")
+                        badge = "🟢 BUY" if is_buy else ("🔴 SELL" if "Sale" in text_action else "⚡ OPTION")
 
                         try:
                             sh_int = int(shares)
@@ -1375,15 +1375,25 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                                 p_per_share = tot_val / sh_int
                                 val_fmt = format_large_number(tot_val)
                                 sh_fmt = format_large_number(sh_int).replace("$", "")
-                                trades.append(f"• **{badge}** by **{insider_name}**\n  └─ Transacted `{sh_fmt} shs` @ `${p_per_share:.2f}` ➔ **`{val_fmt} Total`**")
+                                raw_trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` @ `${p_per_share:.2f}` ➔ **`{val_fmt}`**)")
                             else:
                                 sh_fmt = format_large_number(sh_int).replace("$", "") if sh_int > 0 else str(shares)
-                                trades.append(f"• **{badge}** by **{insider_name}**\n  └─ `{sh_fmt} shs` • *{text_action}*")
+                                raw_trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` • *{text_action}*)")
                         except Exception:
-                            trades.append(f"• **{badge}** by **{insider_name}**\n  └─ `{shares} shs` • *{text_action}*")
+                            raw_trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shs` • *{text_action}*)")
             except Exception: pass
 
-        trades_txt = "\n".join(trades[:10]) if trades else "• *No Form 4 open market filings recorded in last 90 days.*"
+        # Guarantee Discord 1024-Character Embed Field Limit
+        trades_lines = []
+        curr_len = 0
+        for t_line in raw_trades[:10]:
+            if curr_len + len(t_line) + 1 < 1000:
+                trades_lines.append(t_line)
+                curr_len += len(t_line) + 1
+            else:
+                break
+
+        trades_txt = "\n".join(trades_lines) if trades_lines else "• *No Form 4 open market filings recorded in last 90 days.*"
 
         # 5. Material Corporate Dispositions & 8-K Filings (Direct from Official SEC EDGAR Database)
         disposition_notes = []
