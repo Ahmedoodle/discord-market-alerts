@@ -1689,15 +1689,14 @@ def fetch_global_macro_pulse():
     try:
         def get_mini_quote(sym):
             try:
-                res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d", timeout=4)
+                # Use range=1d so chartPreviousClose reflects official yesterday's close (or 24h for crypto)
+                res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1d", timeout=4)
                 if res.status_code == 200:
                     data = res.json()["chart"]["result"][0]
                     meta = data.get("meta", {})
-                    indicators = data.get("indicators", {}).get("quote", [{}])[0]
-                    closes = [c for c in indicators.get("close", []) if c is not None and c > 0]
                     
-                    p = meta.get("regularMarketPrice") or (closes[-1] if closes else 0.0)
-                    prev = meta.get("previousClose") or meta.get("chartPreviousClose") or meta.get("regularMarketPreviousClose") or (closes[-2] if len(closes) >= 2 else p)
+                    p = meta.get("regularMarketPrice", 0.0)
+                    prev = meta.get("chartPreviousClose") or meta.get("previousClose") or p
                     
                     chg = (((p - prev) / prev) * 100) if prev and prev > 0 else 0.0
                     return sym, p, chg
