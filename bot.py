@@ -1135,13 +1135,14 @@ def compare_two_stocks(sym1, sym2):
 def fetch_sec_edgar_form4_trades(ticker_symbol):
     """
     Direct institutional SEC EDGAR Form 4 XML parser.
-    Extracts Top 10 newest Form 4 transactions with exact trade classification:
-    - 🔴 OPEN-MARKET SALE (Code S)
-    - 🟢 OPEN-MARKET BUY (Code P)
-    - ⚡ OPTION EXERCISE (Code M)
-    - 🎁 EQUITY GRANT (Code A)
-    - 🏛️ TAX WITHHOLDING (Code F)
-    - 🤝 GIFT / TRANSFER (Code G)
+    - Validates <issuerTradingSymbol> to eliminate cross-company ingestion.
+    - Accurately classifies:
+      * 🔴 OPEN-MARKET SALE (Code S)
+      * 🟢 OPEN-MARKET BUY (Code P)
+      * ⚡ OPTION EXERCISE (Code M)
+      * 🎁 GIFT / TRANSFER (Code G)
+      * 🎁 EQUITY GRANT (Code A)
+      * 🏛️ TAX WITHHOLDING (Code F)
     """
     sym = ticker_symbol.upper().strip()
     if sym.endswith(".TO") or sym.endswith(".V"):
@@ -1177,6 +1178,12 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                     return []
 
                 form_root = ET.fromstring(xml_res.content)
+
+                # STRICT ISSUER VALIDATION GUARD: Discard cross-company entries
+                issuer_sym = form_root.findtext(".//issuer/issuerTradingSymbol") or form_root.findtext(".//issuerTradingSymbol")
+                if issuer_sym and issuer_sym.upper().strip() != sym:
+                    return []
+
                 owner_name = form_root.findtext(".//rptOwnerName") or "Insider"
                 officer_title = form_root.findtext(".//officerTitle") or ""
                 is_dir = form_root.findtext(".//isDirector")
@@ -1216,6 +1223,9 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                         badge = "⚡ OPTION EXERCISE"
                         p_str = f" @ `${price_per_share:.2f} strike`" if price_per_share > 0 else ""
                         line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
+                    elif tx_code == "G":
+                        badge = "🎁 GIFT / TRANSFER"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
                     elif tx_code == "A":
                         badge = "🎁 GRANT"
                         line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
@@ -1223,9 +1233,6 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                         badge = "🏛️ TAX WITHHOLDING"
                         p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
                         line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
-                    elif tx_code == "G":
-                        badge = "🤝 GIFT/TRANSFER"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
                     else:
                         is_buy = acq_disp == "A"
                         badge = "🟢 ACQUIRED" if is_buy else "🔴 DISPOSED"
@@ -1365,8 +1372,19 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                         shares = r.get("Shares") or 0
                         raw_val = r.get("Value")
 
-                        is_buy = "Buy" in text_action or "Purchase" in text_action
-                        badge = "🟢 BUY" if is_buy else ("🔴 SELL" if "Sale" in text_action else "⚡ OPTION")
+                        low_act = text_action.lower()
+                        is_buy = "buy" in low_act or "purchase" in low_act
+                        is_gift = "gift" in low_act or "charit" in low_act
+                        is_sale = "sale" in low_act or "sold" in low_act
+
+                        if is_buy:
+                            badge = "🟢 BUY (Open Mkt)"
+                        elif is_gift:
+                            badge = "🎁 GIFT / TRANSFER"
+                        elif is_sale:
+                            badge = "🔴 SELL (Open Mkt)"
+                        else:
+                            badge = "⚡ OPTION / GRANT"
 
                         try:
                             sh_int = int(shares)
