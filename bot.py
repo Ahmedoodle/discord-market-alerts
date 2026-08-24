@@ -1689,12 +1689,17 @@ def fetch_global_macro_pulse():
     try:
         def get_mini_quote(sym):
             try:
-                res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2d", timeout=3)
+                res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d", timeout=4)
                 if res.status_code == 200:
-                    d = res.json()["chart"]["result"][0]["meta"]
-                    p = d.get("regularMarketPrice", 0)
-                    prev = d.get("regularMarketPreviousClose", p)
-                    chg = ((p - prev) / prev) * 100 if prev and prev > 0 else 0.0
+                    data = res.json()["chart"]["result"][0]
+                    meta = data.get("meta", {})
+                    indicators = data.get("indicators", {}).get("quote", [{}])[0]
+                    closes = [c for c in indicators.get("close", []) if c is not None and c > 0]
+                    
+                    p = meta.get("regularMarketPrice") or (closes[-1] if closes else 0.0)
+                    prev = meta.get("previousClose") or meta.get("chartPreviousClose") or meta.get("regularMarketPreviousClose") or (closes[-2] if len(closes) >= 2 else p)
+                    
+                    chg = (((p - prev) / prev) * 100) if prev and prev > 0 else 0.0
                     return sym, p, chg
             except Exception: pass
             return sym, 0.0, 0.0
@@ -2161,4 +2166,3 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
---- EN
