@@ -1191,7 +1191,7 @@ def compare_two_stocks(sym1, sym2):
         f"• **Market Cap:** `{format_large_number(d2['market_cap'])}`\n"
         f"• **RSI (14D):** `{d2['rsi_val']:.1f}`{c_rsi2}\n"
         f"• **ROE:** `{d2['roe_val']:.1f}%`{c_roe2 if d2['roe_val'] else ''}\n"
-        f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m2 if d2['margin_val'] else ''}\n"
+        f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m1 if d2['margin_val'] else ''}\n"
         f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe2 if d2['pe_val'] else ''}"
     )
 
@@ -1565,23 +1565,24 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         except Exception: pass
 
         float_shares = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
+        
+        # Prioritize Live FINRA Short Float % directly from exchange feed
         short_pct_float = fz_data.get("short_float_pct")
         if short_pct_float is None and k_info.get("shortPercentOfFloat") is not None:
             short_pct_float = k_info.get("shortPercentOfFloat") * 100.0
 
         short_ratio = fz_data.get("short_ratio") or k_info.get("shortRatio")
-        shares_short = k_info.get("sharesShort")
+        shares_short = fz_data.get("shares_short") or k_info.get("sharesShort")
         shares_prior = k_info.get("sharesShortPriorMonth")
 
-        # PURE MANUAL MATHEMATICAL CALCULATION of Short % of Float:
-        # Short % of Float = (Total Shares Shorted / Tradable Float) * 100
-        if shares_short is not None and float_shares and float_shares > 0:
-            short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
-        elif short_pct_float is not None and float_shares and shares_short is None:
+        # Compute accurate true shares shorted from live float and short %
+        if float_shares and short_pct_float is not None:
             shares_short = float_shares * (short_pct_float / 100.0)
+        elif shares_short is not None and float_shares and float_shares > 0 and short_pct_float is None:
+            short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
 
         float_fmt = format_large_number(float_shares).replace("$", "") + " shares" if float_shares else "N/A"
-        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else ("N/A" if not float_shares or short_pct_float is None else format_large_number(float_shares * (short_pct_float / 100.0)).replace("$", "") + " shares")
+        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else "N/A"
 
         short_pct_str = f"{short_pct_float:.2f}%" if short_pct_float is not None else "N/A"
         short_ratio_str = f"{short_ratio:.1f} Days" if short_ratio is not None else "N/A"
@@ -2120,4 +2121,3 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
---- EN
