@@ -370,6 +370,7 @@ def get_on_demand_data(ticker_symbol):
     now_ny = datetime.now(NY_TZ)
     now_utc = datetime.now(UTC_TZ)
 
+    # Initialized at top so variables always exist across all asset classes
     dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
     roe_val, margin_val, pe_val, market_cap = None, None, None, None
 
@@ -1056,7 +1057,7 @@ def analyze_stock_options_setup(ticker_symbol):
             "macd_verdict": macd_verdict, "s1": s1, "r1": r1,
             "play_7_14": play_7_14, "play_30_45": play_30_45, "defensive_play": defensive_play
         }
-    except Exception as e:
+    except Exception:
         return None
 
 def create_deep_dive_options_embed(data):
@@ -1169,13 +1170,13 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         except Exception: pass
         whales_txt = "\n".join(whales_col) if whales_col else "• *Registry Syncing*"
 
-        # 3. Top 10 Individual Insider Owners (People / Roster - Direct + Indirect Trusts)
+        # 3. Top 10 Individual Insider Owners (Ranked from Highest to Lowest Shareholder)
         insiders_col = []
         try:
             roster_df = t_obj.insider_roster_holders
             if roster_df is not None and not roster_df.empty:
-                for idx, r in roster_df.head(10).iterrows():
-                    rank = idx + 1
+                parsed_insiders = []
+                for _, r in roster_df.iterrows():
                     p_name = str(r.get("Name", "Insider"))[:18]
                     pos = str(r.get("Position", ""))
                     pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
@@ -1189,11 +1190,22 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                     if pd.notna(sh_indirect) and float(sh_indirect) > 0:
                         total_sh += float(sh_indirect)
                     
-                    if total_sh > 0:
-                        sh_fmt = format_large_number(int(total_sh)).replace("$", "")
-                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
+                    parsed_insiders.append({
+                        "name": p_name,
+                        "pos_tag": pos_tag,
+                        "shares": total_sh
+                    })
+
+                # Sort descending: Highest share count to lowest
+                parsed_insiders.sort(key=lambda x: x["shares"], reverse=True)
+
+                for idx, person in enumerate(parsed_insiders[:10]):
+                    rank = idx + 1
+                    if person["shares"] > 0:
+                        sh_fmt = format_large_number(int(person["shares"])).replace("$", "")
+                        insiders_col.append(f"**{rank}. {person['name']}{person['pos_tag']}:** `{sh_fmt} shs`")
                     else:
-                        insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `Trust / Direct Holder`")
+                        insiders_col.append(f"**{rank}. {person['name']}{person['pos_tag']}:** `Trust / Direct Holder`")
         except Exception: pass
         insiders_txt = "\n".join(insiders_col) if insiders_col else "• *Roster Pending*"
 
