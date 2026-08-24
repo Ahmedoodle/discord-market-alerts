@@ -1134,15 +1134,10 @@ def compare_two_stocks(sym1, sym2):
 # --- 7B. INSIDER BUYING, TOP 10 WHALES, TOP 10 INDIVIDUALS & 8-K DISPOSITIONS (?TICKER) ---
 def fetch_sec_edgar_form4_trades(ticker_symbol):
     """
-    Direct institutional SEC EDGAR Form 4 XML parser.
+    Institutional SEC EDGAR Form 4 XML parser.
     - Validates <issuerTradingSymbol> to eliminate cross-company ingestion.
-    - Accurately classifies:
-      * 🔴 OPEN-MARKET SALE (Code S)
-      * 🟢 OPEN-MARKET BUY (Code P)
-      * ⚡ OPTION EXERCISE (Code M)
-      * 🎁 GIFT / TRANSFER (Code G)
-      * 🎁 EQUITY GRANT (Code A)
-      * 🏛️ TAX WITHHOLDING (Code F)
+    - Parses Form 4 XMLs directly from EDGAR filing directory indexes.
+    - Accurately classifies Open Market Buys, Sells, Option Exercises, Grants, Gifts, and Tax Withholdings.
     """
     sym = ticker_symbol.upper().strip()
     if sym.endswith(".TO") or sym.endswith(".V"):
@@ -1150,7 +1145,7 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
 
     sec_headers = {
         "User-Agent": "LooneyMarketTerminal admin@looney.app",
-        "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8"
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
     }
 
     trades = []
@@ -1171,10 +1166,29 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                 if link_el is None:
                     return []
                 doc_page_url = link_el.attrib.get("href", "")
-                xml_url = doc_page_url.replace("-index.htm", ".xml").replace("-index.html", ".xml")
+                
+                # Fetch directory index page to locate the exact form4 XML file
+                dir_url = doc_page_url.rsplit('/', 1)[0] + '/'
+                dir_res = http_session.get(dir_url, headers=sec_headers, timeout=4)
+                if dir_res.status_code != 200:
+                    return []
 
-                xml_res = http_session.get(xml_url, headers=sec_headers, timeout=4)
-                if xml_res.status_code != 200:
+                # Find .xml file in filing directory (excluding submission header and xsl files)
+                xml_matches = re.findall(r'href=["\']([^"\']+\.xml)["\']', dir_res.text, re.IGNORECASE)
+                form4_xml_rel = None
+                for xm in xml_matches:
+                    low_xm = xm.lower()
+                    if not low_xm.endswith(".xml"): continue
+                    if any(bad in low_xm for bad in ["xsl", "header", "eis", "submission"]): continue
+                    form4_xml_rel = xm
+                    break
+
+                if not form4_xml_rel:
+                    return []
+
+                target_xml_url = dir_url + form4_xml_rel if not form4_xml_rel.startswith("http") else form4_xml_rel
+                xml_res = http_session.get(target_xml_url, headers=sec_headers, timeout=4)
+                if xml_res.status_code != 200 or b"<ownershipDocument" not in xml_res.content:
                     return []
 
                 form_root = ET.fromstring(xml_res.content)
@@ -1218,21 +1232,21 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
                         line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)}`**)"
                     elif tx_code == "S":
                         badge = "🔴 SELL (Open Mkt)"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)}`**)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)} Proceeds`**)"
                     elif tx_code == "M":
                         badge = "⚡ OPTION EXERCISE"
                         p_str = f" @ `${price_per_share:.2f} strike`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}` • Common Stock Acquisition)"
                     elif tx_code == "G":
                         badge = "🎁 GIFT / TRANSFER"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}` • Bona Fide Gift)"
                     elif tx_code == "A":
-                        badge = "🎁 GRANT"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}`)"
+                        badge = "🎁 EQUITY GRANT"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}` • Restricted Stock Units)"
                     elif tx_code == "F":
                         badge = "🏛️ TAX WITHHOLDING"
                         p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
+                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}` • Tax Settlement)"
                     else:
                         is_buy = acq_disp == "A"
                         badge = "🟢 ACQUIRED" if is_buy else "🔴 DISPOSED"
@@ -1396,9 +1410,11 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                                 raw_trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` @ `${p_per_share:.2f}` ➔ **`{val_fmt}`**)")
                             else:
                                 sh_fmt = format_large_number(sh_int).replace("$", "") if sh_int > 0 else str(shares)
-                                raw_trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` • *{text_action}*)")
+                                clean_act = text_action if text_action.strip() else "Transaction Filed"
+                                raw_trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` • {clean_act})")
                         except Exception:
-                            raw_trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shs` • *{text_action}*)")
+                            clean_act = text_action if text_action.strip() else "Transaction Filed"
+                            raw_trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shs` • {clean_act})")
             except Exception: pass
 
         # Guarantee Discord 1024-Character Embed Field Limit
