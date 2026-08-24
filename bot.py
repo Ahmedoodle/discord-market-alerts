@@ -1322,6 +1322,11 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
     except Exception:
         return []
 
+def safe_extract_val(obj):
+    if isinstance(obj, dict):
+        return obj.get("raw") or obj.get("value")
+    return obj
+
 def fetch_insider_and_institutional_data(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     try:
@@ -1348,11 +1353,11 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         insider_own_str = f"`{insider_pct_raw * 100:.1f}%`" if insider_pct_raw is not None else "`N/A`"
         float_str = format_large_number(float_raw).replace("$", "") + " shares" if float_raw else "N/A"
 
-        # 2 & 3: Pull Whales & Insiders with Cloud-Immune TLS Engine
+        # 2 & 3: Pull Whales & Insiders with Cloud-Immune TLS Engine (Universal Value Parser)
         whales_col = []
         insiders_col = []
         try:
-            qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=institutionOwnership,insiderHolders", impersonate="chrome124", timeout=4)
+            qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=institutionOwnership,insiderHolders", impersonate="chrome124", timeout=5)
             if qs_res.status_code == 200:
                 res_json = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0]
                 
@@ -1361,8 +1366,9 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                 for idx, r in enumerate(inst_owners[:10]):
                     rank = idx + 1
                     h_name = str(r.get("organization", "Whale Fund"))[:20]
-                    pct_held = float(r.get("pctHeld", {}).get("raw", 0) or 0) * 100
-                    whales_col.append(f"**{rank}. {h_name}:** `{pct_held:.1f}%`")
+                    raw_pct = safe_extract_val(r.get("pctHeld"))
+                    pct_val = float(raw_pct) * 100.0 if raw_pct is not None else 0.0
+                    whales_col.append(f"**{rank}. {h_name}:** `{pct_val:.1f}%`")
                 
                 # Insiders
                 insider_holders = res_json.get("insiderHolders", {}).get("holders", []) or []
@@ -1371,7 +1377,8 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                     p_name = str(person.get("name", "Insider"))[:18]
                     pos = str(person.get("relation", ""))
                     pos_tag = f" ({pos[:10]})" if pos and str(pos).lower() not in ["none", "nan", ""] else ""
-                    sh_total = person.get("totalShares", {}).get("raw") or 0
+                    raw_sh = safe_extract_val(person.get("totalShares"))
+                    sh_total = float(raw_sh) if raw_sh is not None else 0
                     if sh_total > 0:
                         sh_fmt = format_large_number(int(sh_total)).replace("$", "")
                         insiders_col.append(f"**{rank}. {p_name}{pos_tag}:** `{sh_fmt} shs`")
