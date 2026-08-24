@@ -398,6 +398,7 @@ def fetch_finviz_security_fundamentals(ticker_symbol):
                 return m.group(1).strip() if m else None
 
             res_dict["shs_float"] = parse_finviz_number_str(get_val("Shs Float"))
+            res_dict["shares_short"] = parse_finviz_number_str(get_val("Short Interest"))
             res_dict["short_float_pct"] = parse_finviz_number_str(get_val("Short Float"))
             res_dict["short_ratio"] = parse_finviz_number_str(get_val("Short Ratio"))
             res_dict["inst_own_pct"] = parse_finviz_number_str(get_val("Inst Own"))
@@ -1550,7 +1551,7 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
-        # 1. Pull Raw Fundamental Data (Finviz Primary + Yahoo Fallback)
+        # 1. Pull Raw Fundamental Data from Cloud-Immune Finviz Browser Engine
         fz_data = fetch_finviz_security_fundamentals(sym)
 
         k_info = {}
@@ -1558,7 +1559,7 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         except Exception: pass
 
         float_shares = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
-        shares_short = k_info.get("sharesShort")
+        shares_short = fz_data.get("shares_short") or k_info.get("sharesShort")
         shares_prior = k_info.get("sharesShortPriorMonth")
 
         # Average Daily Volume for Days to Cover Calculation
@@ -1581,6 +1582,10 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         elif k_info.get("shortPercentOfFloat") is not None:
             short_pct_float = float(k_info["shortPercentOfFloat"]) * 100.0
 
+        # If shares_short was missing from online feeds but we have float and short_pct_float, calculate shares_short
+        if not shares_short and float_shares and short_pct_float is not None:
+            shares_short = float_shares * (short_pct_float / 100.0)
+
         short_ratio = None
         if shares_short and avg_vol and avg_vol > 0:
             short_ratio = float(shares_short) / float(avg_vol)
@@ -1588,10 +1593,6 @@ def fetch_short_squeeze_metrics(ticker_symbol):
             short_ratio = float(fz_data["short_ratio"])
         elif k_info.get("shortRatio") is not None:
             short_ratio = float(k_info["shortRatio"])
-
-        # If shares_short was missing but we have float and short_pct_float, calculate shares_short
-        if not shares_short and float_shares and short_pct_float is not None:
-            shares_short = float_shares * (short_pct_float / 100.0)
 
         # 3. FORMATTING STRINGS & RISK BADGING
         float_fmt = format_large_number(float_shares).replace("$", "") + " shares" if float_shares else "N/A"
