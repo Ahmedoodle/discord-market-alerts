@@ -370,7 +370,6 @@ def get_on_demand_data(ticker_symbol):
     now_ny = datetime.now(NY_TZ)
     now_utc = datetime.now(UTC_TZ)
 
-    # Initialized at top so variables always exist across all asset classes
     dividend_block, health_block, catalysts_block, smart_money_block = None, None, None, None
     roe_val, margin_val, pe_val, market_cap = None, None, None, None
 
@@ -1141,7 +1140,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         c_name = sym
         try: price = float(t_obj.fast_info.last_price or 0.0)
         except Exception: pass
-        try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
+        try: company_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
         # 1. Direct Structured JSON Ownership Extraction
@@ -1244,28 +1243,48 @@ def fetch_insider_and_institutional_data(ticker_symbol):
 
         trades_txt = "\n".join(trades) if trades else "• *No Form 4 open market filings recorded in last 90 days.*"
 
-        # 5. Material Corporate Dispositions & 8-K Filings (From Official SEC EDGAR / secFilings)
+        # 5. Material Corporate Dispositions & 8-K Filings (Direct from Official SEC EDGAR Database)
         disposition_notes = []
         try:
-            qs_res = cureq.get(f"https://query2.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules=secFilings", impersonate="chrome124", timeout=4)
-            if qs_res.status_code == 200:
-                filings_list = qs_res.json().get("quoteSummary", {}).get("result", [{}])[0].get("secFilings", {}).get("filings", [])
-                for f in filings_list:
-                    form_type = f.get("type", "")
-                    title = f.get("title") or f.get("description") or f"Form {form_type}"
-                    date_str = f.get("date", "")
-                    link = f.get("edgarUrl", "")
-                    if form_type in ["8-K", "8-K/A", "10-K", "10-Q"] and link:
-                        disposition_notes.append(f"• 📄 **Form {form_type}** ({date_str}): [{title[:65]}...]({link})")
-                    if len(disposition_notes) >= 2:
+            sec_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={sym}&type=8-K&count=5&output=atom"
+            sec_headers = {
+                "User-Agent": "LooneyMarketTerminal admin@looney.app",
+                "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8"
+            }
+            sec_res = http_session.get(sec_url, headers=sec_headers, timeout=4)
+            if sec_res.status_code == 200 and b"<feed" in sec_res.content:
+                root = ET.fromstring(sec_res.content)
+                ns = {"atom": "http://www.w3.org/2005/Atom"}
+                for entry in root.findall("atom:entry", ns)[:3]:
+                    t_el = entry.find("atom:title", ns)
+                    l_el = entry.find("atom:link", ns)
+                    u_el = entry.find("atom:updated", ns)
+                    
+                    raw_title = t_el.text if t_el is not None else "Form 8-K"
+                    link = l_el.attrib.get("href", "") if l_el is not None else "https://www.sec.gov"
+                    
+                    date_str = "Recent"
+                    if u_el is not None and u_el.text:
+                        try:
+                            date_str = u_el.text.split("T")[0]
+                        except Exception:
+                            pass
+                    
+                    clean_title = re.sub(r'^(?:8-K(?:\/A)?\s*-\s*)', '', raw_title).strip()
+                    if not clean_title or clean_title.lower() == "current report":
+                        clean_title = "Current Report Filing (Material Event)"
+                    
+                    disposition_notes.append(f"• 📄 **Form 8-K** (`{date_str}`): [{clean_title[:65]}]({link})")
+                    if len(disposition_notes) >= 3:
                         break
-        except Exception: pass
+        except Exception:
+            pass
 
-        disposition_txt = "\n".join(disposition_notes) if disposition_notes else "• *No material Form 8-K asset sales or divestitures reported in the current quarter.*"
+        disposition_txt = "\n".join(disposition_notes) if disposition_notes else "• *No material Form 8-K filings reported in the current quarter.*"
 
         embed = discord.Embed(
             title=f"🐋 INSIDER & CORPORATE DISPOSITION RADAR: {sym}",
-            description=f"**{sym} ({c_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings, Top Whales & Form 8-K Corporate Dispositions*",
+            description=f"**{sym} ({company_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings, Top Whales & Form 8-K Corporate Dispositions*",
             color=0x9b59b6
         )
         embed.add_field(
@@ -1280,7 +1299,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         embed.add_field(name="👤 Top 10 Individual Insider Owners (People)", value=insiders_txt, inline=True)
         embed.add_field(name="📝 Recent C-Suite Form 4 Filings (Shares + Price + Total Value)", value=trades_txt, inline=False)
         embed.add_field(name="🏢 Material Corporate Dispositions & 8-K Filings", value=disposition_txt, inline=False)
-        embed.set_footer(text="Looney Insider Intelligence • SEC Form 4, 13F & Form 8-K Engine")
+        embed.set_footer(text="Looney Insider Intelligence • SEC Form 4, 13F & SEC EDGAR 8-K Engine")
         return embed, None
     except Exception as e:
         return None, f"Error fetching insider data for `{sym}`: {e}"
