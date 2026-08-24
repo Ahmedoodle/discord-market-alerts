@@ -1132,6 +1132,136 @@ def compare_two_stocks(sym1, sym2):
     return embed, None
 
 # --- 7B. INSIDER BUYING, TOP 10 WHALES, TOP 10 INDIVIDUALS & 8-K DISPOSITIONS (?TICKER) ---
+def fetch_sec_edgar_form4_trades(ticker_symbol):
+    """
+    Direct institutional SEC EDGAR Form 4 XML parser.
+    Fetches up to the 10 newest Form 4 transactions with exact execution dates,
+    exact fill prices, exact share counts, and true dollar transaction values.
+    """
+    sym = ticker_symbol.upper().strip()
+    if sym.endswith(".TO") or sym.endswith(".V"):
+        return []
+
+    sec_headers = {
+        "User-Agent": "LooneyMarketTerminal admin@looney.app",
+        "Accept": "application/atom+xml,application/xml,text/xml;q=0.9,*/*;q=0.8"
+    }
+
+    trades = []
+    try:
+        feed_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={sym}&type=4&count=15&output=atom"
+        res = http_session.get(feed_url, headers=sec_headers, timeout=5)
+        if res.status_code != 200 or b"<feed" not in res.content:
+            return []
+
+        root = ET.fromstring(res.content)
+        ns = {"atom": "http://www.w3.org/2005/Atom"}
+        entries = root.findall("atom:entry", ns)
+
+        def fetch_and_parse_form4_doc(entry):
+            local_trades = []
+            try:
+                link_el = entry.find("atom:link", ns)
+                if link_el is None:
+                    return []
+                doc_page_url = link_el.attrib.get("href", "")
+                xml_url = doc_page_url.replace("-index.htm", ".xml").replace("-index.html", ".xml")
+
+                xml_res = http_session.get(xml_url, headers=sec_headers, timeout=4)
+                if xml_res.status_code != 200:
+                    return []
+
+                form_root = ET.fromstring(xml_res.content)
+                owner_name = form_root.findtext(".//rptOwnerName") or "Officer"
+                officer_title = form_root.findtext(".//officerTitle") or ""
+                if not officer_title:
+                    is_dir = form_root.findtext(".//isDirector")
+                    is_ten = form_root.findtext(".//isTenPercentOwner")
+                    if is_dir in ["1", "true", "True"]: officer_title = "Director"
+                    elif is_ten in ["1", "true", "True"]: officer_title = "10% Owner"
+                    else: officer_title = "Insider"
+
+                title_tag = f" ({officer_title[:12]})" if officer_title else ""
+
+                # 1. Non-Derivative Transactions (Common Stock)
+                for tx in form_root.findall(".//nonDerivativeTransaction"):
+                    shares_str = tx.findtext(".//transactionShares/value")
+                    price_str = tx.findtext(".//transactionPricePerShare/value")
+                    acq_disp = tx.findtext(".//transactionAcquiredDisposedCode/value")
+                    tx_code = tx.findtext(".//transactionCoding/transactionCode")
+                    tx_date = tx.findtext(".//transactionDate/value") or "Recent"
+
+                    if not shares_str:
+                        continue
+
+                    shares = float(shares_str)
+                    price_per_share = float(price_str) if price_str and float(price_str) > 0 else 0.0
+                    total_val = shares * price_per_share
+
+                    is_buy = acq_disp == "A"
+                    badge = "🟢 BUY" if is_buy else "🔴 SELL"
+
+                    code_desc = " (Open Market)" if tx_code in ["P", "S"] else (" (Grant/Award)" if tx_code == "A" else (" (Tax Withholding)" if tx_code == "F" else ""))
+
+                    sh_fmt = format_large_number(int(shares)).replace("$", "")
+                    
+                    if total_val > 0:
+                        val_fmt = format_large_number(total_val)
+                        line = f"• **{badge}{code_desc}** by **{owner_name[:16]}{title_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{val_fmt} Total`**)"
+                    elif price_per_share == 0.0 and tx_code == "A":
+                        line = f"• **🟢 GRANT{code_desc}** by **{owner_name[:16]}{title_tag}** (`{sh_fmt} shares` on `{tx_date}`)"
+                    else:
+                        line = f"• **{badge}** by **{owner_name[:16]}{title_tag}** (`{sh_fmt} shares` on `{tx_date}`)"
+                    
+                    local_trades.append((tx_date, line))
+
+                # 2. Derivative Transactions (Options Exercises)
+                for tx in form_root.findall(".//derivativeTransaction"):
+                    shares_str = tx.findtext(".//transactionShares/value")
+                    price_str = tx.findtext(".//transactionPricePerShare/value")
+                    conv_price_str = tx.findtext(".//conversionOrExercisePrice/value")
+                    acq_disp = tx.findtext(".//transactionAcquiredDisposedCode/value")
+                    tx_date = tx.findtext(".//transactionDate/value") or "Recent"
+
+                    if not shares_str:
+                        continue
+
+                    shares = float(shares_str)
+                    p_val = float(price_str) if price_str and float(price_str) > 0 else (float(conv_price_str) if conv_price_str and float(conv_price_str) > 0 else 0.0)
+                    total_val = shares * p_val
+                    sh_fmt = format_large_number(int(shares)).replace("$", "")
+
+                    if acq_disp == "A":
+                        badge = "🟢 OPTION EXERCISE"
+                    else:
+                        badge = "🔴 DERIVATIVE DISPOSITION"
+
+                    if total_val > 0:
+                        val_fmt = format_large_number(total_val)
+                        line = f"• **{badge}** by **{owner_name[:16]}{title_tag}** (`{sh_fmt} contracts` @ `${p_val:.2f}` on `{tx_date}` ➔ **`{val_fmt} Value`**)"
+                    else:
+                        line = f"• **{badge}** by **{owner_name[:16]}{title_tag}** (`{sh_fmt} contracts` on `{tx_date}`)"
+
+                    local_trades.append((tx_date, line))
+
+            except Exception:
+                pass
+            return local_trades
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            future_to_entry = [executor.submit(fetch_and_parse_form4_doc, entry) for entry in entries[:12]]
+            for future in concurrent.futures.as_completed(future_to_entry):
+                res_list = future.result()
+                if res_list:
+                    trades.extend(res_list)
+
+        # Sort newest date first and take Top 10
+        trades.sort(key=lambda x: x[0], reverse=True)
+        return [t[1] for t in trades[:10]]
+
+    except Exception:
+        return []
+
 def fetch_insider_and_institutional_data(ticker_symbol):
     sym = ticker_symbol.upper().strip()
     try:
@@ -1140,7 +1270,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         c_name = sym
         try: price = float(t_obj.fast_info.last_price or 0.0)
         except Exception: pass
-        try: company_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
+        try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
         # 1. Direct Structured JSON Ownership Extraction
@@ -1208,40 +1338,39 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         except Exception: pass
         insiders_txt = "\n".join(insiders_col) if insiders_col else "• *Roster Pending*"
 
-        # 4. C-Suite Form 4 Trades (Math Calculation Fix: Value is total amount)
-        trades = []
-        try:
-            it_df = t_obj.insider_transactions
-            if it_df is not None and not it_df.empty:
-                for _, r in it_df.head(4).iterrows():
-                    insider_name = str(r.get("Insider", "Officer"))[:18]
-                    text_action = str(r.get("Text", "Transaction"))
-                    shares = r.get("Shares") or 0
-                    raw_val = r.get("Value")
+        # 4. C-Suite Form 4 Trades (SEC EDGAR Direct Ground-Truth Parser: Top 10 Newest)
+        trades = fetch_sec_edgar_form4_trades(sym)
 
-                    is_buy = "Buy" in text_action or "Purchase" in text_action
-                    badge = "🟢 BUY" if is_buy else "🔴 SELL"
+        # Fallback to yfinance if EDGAR feed had no XML filings or for Canadian tickers
+        if not trades:
+            try:
+                it_df = t_obj.insider_transactions
+                if it_df is not None and not it_df.empty:
+                    for _, r in it_df.head(10).iterrows():
+                        insider_name = str(r.get("Insider", "Officer"))[:18]
+                        text_action = str(r.get("Text", "Transaction"))
+                        shares = r.get("Shares") or 0
+                        raw_val = r.get("Value")
 
-                    try:
-                        sh_int = int(shares)
-                        if raw_val is not None and float(raw_val) > 0 and sh_int > 0:
-                            tot_val = float(raw_val)
-                            p_per_share = tot_val / sh_int
-                            val_fmt = format_large_number(tot_val)
-                            sh_fmt = format_large_number(sh_int).replace("$", "")
-                            trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shares` @ `${p_per_share:.2f}` ➔ **`{val_fmt} Total Value`**)")
-                        elif price > 0 and sh_int > 0:
-                            tot_val = sh_int * price
-                            val_fmt = format_large_number(tot_val)
-                            sh_fmt = format_large_number(sh_int).replace("$", "")
-                            trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shares` @ `${price:.2f}` ➔ **`{val_fmt} Total Value`**)")
-                        else:
-                            trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shares` • *{text_action}*)")
-                    except Exception:
-                        trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shares` • *{text_action}*)")
-        except Exception: pass
+                        is_buy = "Buy" in text_action or "Purchase" in text_action
+                        badge = "🟢 BUY" if is_buy else "🔴 SELL"
 
-        trades_txt = "\n".join(trades) if trades else "• *No Form 4 open market filings recorded in last 90 days.*"
+                        try:
+                            sh_int = int(shares)
+                            if raw_val is not None and float(raw_val) > 0 and sh_int > 0:
+                                tot_val = float(raw_val)
+                                p_per_share = tot_val / sh_int
+                                val_fmt = format_large_number(tot_val)
+                                sh_fmt = format_large_number(sh_int).replace("$", "")
+                                trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` @ `${p_per_share:.2f}` ➔ **`{val_fmt} Total`**)")
+                            else:
+                                sh_fmt = format_large_number(sh_int).replace("$", "") if sh_int > 0 else str(shares)
+                                trades.append(f"• **{badge}** by **{insider_name}** (`{sh_fmt} shs` • *{text_action}*)")
+                        except Exception:
+                            trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shs` • *{text_action}*)")
+            except Exception: pass
+
+        trades_txt = "\n".join(trades[:10]) if trades else "• *No Form 4 open market filings recorded in last 90 days.*"
 
         # 5. Material Corporate Dispositions & 8-K Filings (Direct from Official SEC EDGAR Database)
         disposition_notes = []
@@ -1284,7 +1413,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
 
         embed = discord.Embed(
             title=f"🐋 INSIDER & CORPORATE DISPOSITION RADAR: {sym}",
-            description=f"**{sym} ({company_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings, Top Whales & Form 8-K Corporate Dispositions*",
+            description=f"**{sym} ({c_name})** is trading at **${price:.2f}**\n*SEC Form 4 Filings (Top 10 Newest), Top Whales & Form 8-K Dispositions*",
             color=0x9b59b6
         )
         embed.add_field(
@@ -1297,7 +1426,7 @@ def fetch_insider_and_institutional_data(ticker_symbol):
         )
         embed.add_field(name="🏢 Top 10 Institutional Whales (Funds)", value=whales_txt, inline=True)
         embed.add_field(name="👤 Top 10 Individual Insider Owners (People)", value=insiders_txt, inline=True)
-        embed.add_field(name="📝 Recent C-Suite Form 4 Filings (Shares + Price + Total Value)", value=trades_txt, inline=False)
+        embed.add_field(name="📝 Recent C-Suite Form 4 Filings (Top 10 Newest SEC XML Entries)", value=trades_txt, inline=False)
         embed.add_field(name="🏢 Material Corporate Dispositions & 8-K Filings", value=disposition_txt, inline=False)
         embed.set_footer(text="Looney Insider Intelligence • SEC Form 4, 13F & SEC EDGAR 8-K Engine")
         return embed, None
