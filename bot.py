@@ -383,7 +383,7 @@ def parse_finviz_number_str(val_str):
 def fetch_finviz_security_fundamentals(ticker_symbol):
     """
     Direct Cloud-Immune Finviz Browser TLS Parser.
-    Extracts FINRA-reported Short Interest, Days to Cover, Float, and Ownership.
+    Extracts FINRA-reported Short Float, Days to Cover, Float, and Ownership.
     """
     res_dict = {}
     try:
@@ -392,14 +392,13 @@ def fetch_finviz_security_fundamentals(ticker_symbol):
         fz_res = cureq.get(url, impersonate="chrome124", timeout=5)
         if fz_res.status_code == 200:
             text = fz_res.text
-            def get_val(key):
-                m = re.search(rf'<td[^>]*>{key}</td>\s*<td[^>]*><b>([^<]+)</b></td>', text, re.IGNORECASE)
-                if not m:
-                    m = re.search(rf'{key}[^\d\w<]+([0-9\.\,\%\-]+[B|M|K]?)', text, re.IGNORECASE)
+            def get_val(label):
+                pattern = rf'{re.escape(label)}.*?</td\s*>\s*<td[^>]*>(?:<[^>]+>)*<b>?([0-9\.\,\%\-]+[B|M|K]?)'
+                m = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
                 return m.group(1).strip() if m else None
 
             res_dict["shs_float"] = parse_finviz_number_str(get_val("Shs Float"))
-            res_dict["short_float_pct"] = parse_finviz_number_str(get_val("Short Float / %") or get_val("Short Float"))
+            res_dict["short_float_pct"] = parse_finviz_number_str(get_val("Short Float"))
             res_dict["short_ratio"] = parse_finviz_number_str(get_val("Short Ratio"))
             res_dict["inst_own_pct"] = parse_finviz_number_str(get_val("Inst Own"))
             res_dict["insider_own_pct"] = parse_finviz_number_str(get_val("Insider Own"))
@@ -1560,24 +1559,23 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         except Exception: pass
 
         float_shares = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
-        shares_short = k_info.get("sharesShort")
-        shares_prior = k_info.get("sharesShortPriorMonth")
-
-        # PURE MANUAL MATHEMATICAL CALCULATION of Short % of Float:
-        # Short % of Float = (Total Shares Shorted / Tradable Float) * 100
-        short_pct_float = None
-        if shares_short is not None and float_shares and float_shares > 0:
-            short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
-        elif fz_data.get("short_float_pct") is not None:
-            short_pct_float = fz_data.get("short_float_pct")
-        elif k_info.get("shortPercentOfFloat") is not None:
+        short_pct_float = fz_data.get("short_float_pct")
+        if short_pct_float is None and k_info.get("shortPercentOfFloat") is not None:
             short_pct_float = k_info.get("shortPercentOfFloat") * 100.0
 
         short_ratio = fz_data.get("short_ratio") or k_info.get("shortRatio")
+        shares_short = k_info.get("sharesShort")
+        shares_prior = k_info.get("sharesShortPriorMonth")
+
+        # If shares_short was missing, compute it from float * short_pct_float
+        if shares_short is None and float_shares and short_pct_float is not None:
+            shares_short = float_shares * (short_pct_float / 100.0)
+        # If short_pct_float was missing, compute manually from shares_short / float_shares
+        elif short_pct_float is None and float_shares and shares_short and float_shares > 0:
+            short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
 
         float_fmt = format_large_number(float_shares).replace("$", "") + " shares" if float_shares else "N/A"
-        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else ("N/A" if not float_shares or short_pct_float is None else format_large_number(float_shares * (short_pct_float / 100.0)).replace("$", "") + " shares")
-
+        short_fmt = format_large_number(shares_short).replace("$", "") + " shares" if shares_short else "N/A"
         short_pct_str = f"{short_pct_float:.2f}%" if short_pct_float is not None else "N/A"
         short_ratio_str = f"{short_ratio:.1f} Days" if short_ratio is not None else "N/A"
 
@@ -2115,4 +2113,4 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
---- E
+--- EN
