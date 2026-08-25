@@ -135,9 +135,20 @@ def load_persistent_analytics():
             headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
         res = requests.get(GITHUB_API_STATE_URL, headers=headers, timeout=5)
         if res.status_code == 200:
-            state = res.json()
+            try:
+                state = res.json()
+            except Exception:
+                state = json.loads(res.text)
     except Exception:
         pass
+
+    # Universal Base64 decoder if GitHub returned standard API JSON envelope
+    if isinstance(state, dict) and "content" in state and state.get("encoding") == "base64":
+        try:
+            content_raw = base64.b64decode(state["content"]).decode("utf-8")
+            state = json.loads(content_raw)
+        except Exception:
+            pass
 
     if not state and os.path.exists(STATE_FILE):
         try:
@@ -390,6 +401,14 @@ def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
             state = res.json()
     except Exception:
         pass
+
+    # Universal Base64 decoder if GitHub returned wrapped envelope
+    if isinstance(state, dict) and "content" in state and state.get("encoding") == "base64":
+        try:
+            content_raw = base64.b64decode(state["content"]).decode("utf-8")
+            state = json.loads(content_raw)
+        except Exception:
+            pass
 
     # Local fallback if network query failed
     if not state and os.path.exists(STATE_FILE):
@@ -2396,4 +2415,3 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
---- E
