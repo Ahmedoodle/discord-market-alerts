@@ -115,6 +115,28 @@ def load_earnings_state():
 
 def save_earnings_state(state):
     try:
+        # Non-destructive merge: read latest disk state first so main.py & bot.py stats are preserved
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r") as f:
+                    disk_saved = json.load(f)
+                    if isinstance(disk_saved.get("persistent_analytics"), dict):
+                        state["persistent_analytics"] = disk_saved["persistent_analytics"]
+                    if isinstance(disk_saved.get("stats_today"), dict):
+                        for k in ["news_dispatches", "price_fires", "options_radars", "options_setups"]:
+                            state["stats_today"][k] = max(
+                                state["stats_today"].get(k, 0),
+                                int(disk_saved["stats_today"].get(k, 0))
+                            )
+                    if isinstance(disk_saved.get("stats_lifetime"), dict):
+                        for k in ["news_dispatches", "price_fires", "options_radars", "options_setups"]:
+                            state["stats_lifetime"][k] = max(
+                                state["stats_lifetime"].get(k, 0),
+                                int(disk_saved["stats_lifetime"].get(k, 0))
+                            )
+            except Exception:
+                pass
+
         with open(STATE_FILE, "w") as f:
             json.dump(state, f, indent=2)
     except Exception:
