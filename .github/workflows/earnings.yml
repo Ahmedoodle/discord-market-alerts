@@ -1,21 +1,62 @@
 name: Run Daily Earnings Radar
 
 on:
-  workflow_dispatch:   # <--- This allows cron-job.org to trigger it instantly
+  workflow_dispatch:   # <--- Allows cron-job.org to trigger it instantly
   # You can remove or keep the schedule block
+
+permissions:
+  contents: write
 
 jobs:
   run-earnings:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+
       - name: Install Dependencies
         run: |
+          pip install --upgrade pip
           pip install requests yfinance pandas
+
       - name: Run Script
         env:
           DISCORD_EARNINGS_WEBHOOK_URL: ${{ secrets.DISCORD_EARNINGS_WEBHOOK_URL }}
         run: python earnings.py
+
+      - name: Commit and Push State Memory
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Self-healing retry loop (up to 5 automatic attempts)
+          for i in {1..5}; do
+            git add alerts_state.json || true
+            git commit -m "Update earnings state [skip ci]" || echo "No local changes to commit"
+            
+            # Pull latest commits and auto-resolve any concurrent edits cleanly
+            if git pull --rebase -X theirs origin main; then
+              if git push origin main; then
+                echo "✅ Successfully synced earnings state on attempt $i"
+                exit 0
+              fi
+            else
+              echo "⚠️ Rebase conflict encountered on attempt $i. Aborting rebase and retrying..."
+              git rebase --abort || true
+            fi
+            
+            echo "Pausing 3s before retry $i/5..."
+            sleep 3
+          done
+          
+          echo "No state push needed or push completed."
+          exit 0
