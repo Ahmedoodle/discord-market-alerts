@@ -19,7 +19,10 @@ DISCORD_EARNINGS_WEBHOOK_URL = os.getenv(
 BOT_NAME = "Looney"
 BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
 
+STATE_FILE = "alerts_state.json"
 NY_TZ = ZoneInfo("America/New_York")
+UTC_TZ = ZoneInfo("UTC")
+
 LOOKAHEAD_DAYS = 45
 US_MIDCAP_LOOKAHEAD_DAYS = 7  # Specifically narrowed to 7 Days for US Mid-Caps
 CHUNK_SIZE = 15  # Maximum safe entries per Discord embed
@@ -51,6 +54,71 @@ yahoo_session.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
     "Accept": "*/*"
 })
+
+# ====================================================================
+# STATE MEMORY SYNC (TODAY & LIFETIME ACCUMULATION)
+# ====================================================================
+DEFAULT_METRICS = {
+    "news_dispatches": 0,
+    "price_fires": 0,
+    "earnings_cards": 0,
+    "options_radars": 0,
+    "options_setups": 0
+}
+
+def load_earnings_state():
+    now_ny = datetime.now(NY_TZ)
+    today_ny_str = now_ny.strftime("%Y-%m-%d")
+    today_utc_str = datetime.now(UTC_TZ).strftime("%Y-%m-%d")
+
+    state = {
+        "stock_session_date": today_ny_str,
+        "crypto_session_date": today_utc_str,
+        "premarket_tickers": {},
+        "regular_tickers": {},
+        "afterhours_tickers": {},
+        "crypto_tickers": {},
+        "holiday_announced_date": None,
+        "seen_news_fingerprints": [],
+        "stats_today": dict(DEFAULT_METRICS),
+        "stats_lifetime": dict(DEFAULT_METRICS)
+    }
+
+    if os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r") as f:
+                saved = json.load(f)
+
+                # Lifetime stats ALWAYS accumulate and never reset
+                if isinstance(saved.get("stats_lifetime"), dict):
+                    for k in DEFAULT_METRICS:
+                        state["stats_lifetime"][k] = int(saved["stats_lifetime"].get(k, 0))
+
+                # Today stats persist during the same day, auto-reset on a new day
+                if saved.get("stock_session_date") == today_ny_str:
+                    state["premarket_tickers"] = saved.get("premarket_tickers", {})
+                    state["regular_tickers"] = saved.get("regular_tickers", {})
+                    state["afterhours_tickers"] = saved.get("afterhours_tickers", {})
+                    state["holiday_announced_date"] = saved.get("holiday_announced_date")
+                    if isinstance(saved.get("stats_today"), dict):
+                        for k in DEFAULT_METRICS:
+                            state["stats_today"][k] = int(saved["stats_today"].get(k, 0))
+
+                if saved.get("crypto_session_date") == today_utc_str:
+                    state["crypto_tickers"] = saved.get("crypto_tickers", {})
+                state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or []
+                if "persistent_analytics" in saved:
+                    state["persistent_analytics"] = saved["persistent_analytics"]
+        except Exception:
+            pass
+    return state
+
+def save_earnings_state(state):
+    try:
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f, indent=2)
+    except Exception:
+        pass
 
 def safe_post_webhook(url, payload, max_retries=3):
     if not url:
@@ -351,7 +419,7 @@ def format_scorecard_entry(idx, item):
         f"• **EPS Result:** {item['eps_line']}\n"
     )
 
-def dispatch_discord_earnings_embed(title, description, entries_text, color=3447003, footer_text=None):
+def dispatch_discord_earnings_embed(title, description, entries_text, state, color=3447003, footer_text=None):
     footer = footer_text or f"Looney • Daily 6:00 AM Earnings Radar"
     payload = {
         "username": BOT_NAME,
@@ -363,13 +431,17 @@ def dispatch_discord_earnings_embed(title, description, entries_text, color=3447
             "footer": {"text": footer}
         }]
     }
-    safe_post_webhook(DISCORD_EARNINGS_WEBHOOK_URL, payload)
+    success = safe_post_webhook(DISCORD_EARNINGS_WEBHOOK_URL, payload)
+    if success:
+        # Increment Corporate Earnings Cards Metrics in State
+        state["stats_today"]["earnings_cards"] += 1
+        state["stats_lifetime"]["earnings_cards"] += 1
     time.sleep(1.0)
 
 # ====================================================================
 # UNIVERSAL PAGINATION DISPATCHER (100% of data delivered in batches)
 # ====================================================================
-def dispatch_paginated_category(items, base_title, base_description, color, category_tag, is_scorecard=False):
+def dispatch_paginated_category(items, base_title, base_description, color, category_tag, state, is_scorecard=False):
     if not items:
         return
 
@@ -398,6 +470,7 @@ def dispatch_paginated_category(items, base_title, base_description, color, cate
             title=title,
             description=desc,
             entries_text=chunk_txt,
+            state=state,
             color=color,
             footer_text=footer
         )
@@ -410,6 +483,8 @@ def run_earnings_daily():
     today = now_ny.date()
     today_str = now_ny.strftime("%A, %B %d, %Y")
     logging.info(f"Starting Live Multi-Market Earnings Radar for {today_str}...")
+
+    state = load_earnings_state()
 
     prev_dates = [today - timedelta(days=i) for i in (range(1, 4) if today.weekday() == 0 else range(1, 2))]
 
@@ -512,6 +587,7 @@ def run_earnings_daily():
         base_description="*Official results reported in previous session. Ordered by: 🍁 CAD Mega ➔ 🇺🇸 US Mega ➔ 🍁 CAD Mid ➔ 🇺🇸 US Mid.*",
         color=15844367,  # Gold
         category_tag="Earnings Scorecard",
+        state=state,
         is_scorecard=True
     )
 
@@ -521,7 +597,8 @@ def run_earnings_daily():
         base_title=f"🗓️ Watchlist Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS]",
         base_description=f"*Sorted by nearest report date across your personal watchlist as of {today_str}.*",
         color=3066993,  # Green
-        category_tag="Watchlist"
+        category_tag="Watchlist",
+        state=state
     )
 
     # CARD 3A: Canadian Mega-Caps (Next 45 Days — ≥ $200B)
@@ -530,7 +607,8 @@ def run_earnings_daily():
         base_title=f"👑 Canadian Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
         base_description="*Canadian market giants reporting over the next 45 days.*",
         color=15158332,  # Crimson Red
-        category_tag="TSX Mega-Caps"
+        category_tag="TSX Mega-Caps",
+        state=state
     )
 
     # CARD 3B: US Mega-Caps (Next 45 Days — ≥ $200B)
@@ -539,7 +617,8 @@ def run_earnings_daily():
         base_title=f"👑 US Mega-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — ≥ $200B]",
         base_description="*US mega-cap leaders reporting over the next 45 days.*",
         color=10181046,  # Purple
-        category_tag="US Mega-Caps"
+        category_tag="US Mega-Caps",
+        state=state
     )
 
     # CARD 4A: Canadian Mid-Caps (Next 45 Days — $1.5B to $200B)
@@ -548,7 +627,8 @@ def run_earnings_daily():
         base_title=f"🍁 Canadian Mid-Cap Earnings Calendar [NEXT {LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
         base_description="*Canadian institutional & momentum mid-caps reporting in the next 45 days.*",
         color=15158332,  # Crimson Red
-        category_tag="TSX Mid-Caps"
+        category_tag="TSX Mid-Caps",
+        state=state
     )
 
     # CARD 4B: US Mid-Caps (Next 7 Days — $1.5B to $200B)
@@ -557,10 +637,13 @@ def run_earnings_daily():
         base_title=f"📈 US Mid-Cap Earnings Calendar [NEXT {US_MIDCAP_LOOKAHEAD_DAYS} DAYS — $1.5B to $200B]",
         base_description=f"*US institutional & momentum mid-caps reporting over the next {US_MIDCAP_LOOKAHEAD_DAYS} days.*",
         color=3447003,  # Blue
-        category_tag=f"US Mid-Caps ({US_MIDCAP_LOOKAHEAD_DAYS} Days)"
+        category_tag=f"US Mid-Caps ({US_MIDCAP_LOOKAHEAD_DAYS} Days)",
+        state=state
     )
 
-    logging.info("Earnings Intelligence flow completed successfully.")
+    # Save state memory so git push commits the newest earnings count
+    save_earnings_state(state)
+    logging.info(f"Earnings Intelligence flow completed successfully. Dispatched Today: {state['stats_today']['earnings_cards']} | Lifetime: {state['stats_lifetime']['earnings_cards']}")
 
 if __name__ == "__main__":
     run_earnings_daily()
