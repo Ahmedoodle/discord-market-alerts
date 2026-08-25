@@ -147,12 +147,11 @@ def load_persistent_analytics():
             pass
 
     if state and isinstance(state, dict):
-        # 1. Load existing historical news count directly from 4k-7k fingerprints database
+        # Load existing historical news count directly from fingerprints database
         seen_news = state.get("seen_news_fingerprints", [])
         if seen_news and isinstance(seen_news, list):
             DIAGNOSTICS_STATE["lifetime_auto_news"] = len(seen_news)
 
-        # 2. Load persistent analytics counters
         pa = state.get("persistent_analytics", {})
         for k in [
             "lifetime_total_messages", "lifetime_community_chat", "lifetime_bot_commands",
@@ -167,7 +166,7 @@ def load_persistent_analytics():
 load_persistent_analytics()
 
 def save_persistent_analytics_bg():
-    """Saves updated persistent statistics locally and commits back to GitHub."""
+    """Saves updated persistent statistics locally, pulls latest news count, and commits back to GitHub."""
     try:
         state = {}
         file_sha = None
@@ -180,6 +179,11 @@ def save_persistent_analytics_bg():
                     file_sha = r_json.get("sha")
                     content_raw = base64.b64decode(r_json.get("content", "")).decode("utf-8")
                     state = json.loads(content_raw)
+                    
+                    # 30-Minute Cycle: Re-read newest news fingerprints added by main.py
+                    latest_news = state.get("seen_news_fingerprints", [])
+                    if latest_news and isinstance(latest_news, list):
+                        DIAGNOSTICS_STATE["lifetime_auto_news"] = len(latest_news)
             except Exception:
                 pass
 
@@ -187,6 +191,9 @@ def save_persistent_analytics_bg():
             try:
                 with open(STATE_FILE, "r") as f:
                     state = json.load(f)
+                latest_news = state.get("seen_news_fingerprints", [])
+                if latest_news and isinstance(latest_news, list):
+                    DIAGNOSTICS_STATE["lifetime_auto_news"] = len(latest_news)
             except Exception:
                 state = {}
 
@@ -2389,3 +2396,4 @@ if __name__ == "__main__":
                 BOT_STATE["status"] = "CRASHED"
                 print(f"❌ Connection error: {e}. Retrying in 15s...", flush=True)
                 time.sleep(15)
+--- E
