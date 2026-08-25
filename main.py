@@ -9,6 +9,8 @@ from datetime import datetime, timedelta, date, time as dtime
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import yfinance as yf
 import pandas as pd
 from curl_cffi import requests as cureq
@@ -16,15 +18,14 @@ from curl_cffi import requests as cureq
 # ====================================================================
 # ENVIRONMENT VARIABLES & WEBHOOKS
 # ====================================================================
-DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL") or None
 DISCORD_PRICE_WEBHOOK_URL = os.getenv(
-    "DISCORD_PRICE_WEBHOOK_URL",
-    "https://discord.com/api/webhooks/1539395404502671440/HCuVM2hd2t7OV8r1DaLk46iTNz3xgD1Li_Mdt05RAU7m3W2ZTYLIaYKrQyMti81axOxV"
-)
+    "DISCORD_PRICE_WEBHOOK_URL"
+) or "https://discord.com/api/webhooks/1539395404502671440/HCuVM2hd2t7OV8r1DaLk46iTNz3xgD1Li_Mdt05RAU7m3W2ZTYLIaYKrQyMti81axOxV"
+
 DISCORD_OPTIONS_WEBHOOK_URL = os.getenv(
-    "DISCORD_OPTIONS_WEBHOOK_URL",
-    "https://discord.com/api/webhooks/1540124383618666507/8OZ0nG5SznAaguH8-bd4V6-CN1VMqNKCXEfXhjIZrjxIZhyFudPs8UFZinkxqp6qdI6a"
-)
+    "DISCORD_OPTIONS_WEBHOOK_URL"
+) or "https://discord.com/api/webhooks/1540124383618666507/8OZ0nG5SznAaguH8-bd4V6-CN1VMqNKCXEfXhjIZrjxIZhyFudPs8UFZinkxqp6qdI6a"
 
 BOT_NAME = "Looney"
 BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
@@ -90,27 +91,43 @@ OPTIONS_RADAR_UNIVERSE = [sym for sym in STOCK_ETF_WATCHLIST if not sym.endswith
 # ====================================================================
 # 0. SMART RATE-LIMIT COMPLIANT WEBHOOK DISPATCHER
 # ====================================================================
-def safe_post_webhook(url, payload, max_retries=3):
+def safe_post_webhook(url, payload, max_retries=4):
     if not url:
         return False
     for attempt in range(max_retries):
         try:
-            res = requests.post(url, json=payload, timeout=10)
+            res = requests.post(url, json=payload, timeout=12)
             if res.status_code == 429:
                 try:
-                    retry_after = float(res.json().get("retry_after", 1.5))
+                    retry_after = float(res.json().get("retry_after", 2.0))
                 except Exception:
-                    retry_after = float(res.headers.get("Retry-After", 1.5))
+                    retry_after = float(res.headers.get("Retry-After", 2.0))
                 print(f"⚠️ Discord Webhook 429 Rate Limit. Pausing for {retry_after:.2f}s before retry...")
-                time.sleep(retry_after + 0.2)
+                time.sleep(retry_after + 0.3)
                 continue
             res.raise_for_status()
             return True
         except Exception as e:
             if attempt == max_retries - 1:
                 print(f"❌ Failed to deliver webhook: {e}")
-            time.sleep(1.0)
+            time.sleep(1.5)
     return False
+
+def create_resilient_session():
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=3,
+        backoff_factor=0.5,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"]
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=30, pool_maxsize=30)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    })
+    return session
 
 # ====================================================================
 # 1. INSTITUTIONAL VOLUME PACING ENGINES (EQUITIES & CRYPTO)
@@ -746,7 +763,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
     now_ny = datetime.now(NY_TZ)
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=2y"
-        res = session_http.get(url, timeout=6)
+        res = session_http.get(url, timeout=7)
         if res.status_code != 200:
             return None
 
@@ -916,7 +933,9 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         return None
 
 def dispatch_top100_options_radar(session_http):
-    if not DISCORD_OPTIONS_WEBHOOK_URL:
+    webhook_url = DISCORD_OPTIONS_WEBHOOK_URL
+    if not webhook_url:
+        print("⚠️ Options webhook URL is missing. Skipping radar.")
         return
 
     now_ny = datetime.now(NY_TZ)
@@ -924,18 +943,22 @@ def dispatch_top100_options_radar(session_http):
     print(f"\nScanning {len(OPTIONS_RADAR_UNIVERSE)} Securities for Top 100 Options Radar ({time_str})...")
 
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
+    # Using 10 workers for balanced speed and zero-drop connection limits
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(analyze_stock_options_setup, sym, session_http): sym for sym in OPTIONS_RADAR_UNIVERSE}
         for f in concurrent.futures.as_completed(futures):
-            res = f.result()
-            if res:
-                results.append(res)
+            try:
+                res = f.result()
+                if res:
+                    results.append(res)
+            except Exception:
+                pass
 
     results.sort(key=lambda x: x["score"], reverse=True)
     top_100 = results[:100]
 
     if not top_100:
-        print("No options radar data generated.")
+        print("⚠️ No options radar data generated (upstream API returned no valid bars).")
         return
 
     chunk_size = 10
@@ -968,10 +991,10 @@ def dispatch_top100_options_radar(session_http):
                 "footer": {"text": f"Looney Options Intelligence • Part {part_idx} of {total_parts} • Type '#TICKER' in chat for deep-dive Greeks"}
             }]
         }
-        success = safe_post_webhook(DISCORD_OPTIONS_WEBHOOK_URL, payload)
+        success = safe_post_webhook(webhook_url, payload)
         if success:
             print(f"Top 100 Options Radar Part {part_idx}/{total_parts} successfully posted at {time_str}!")
-        time.sleep(1.0)
+        time.sleep(1.2)
 
 # ====================================================================
 # 8. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
@@ -1127,10 +1150,7 @@ def check_market():
     else:
         print(f"US Stock Market Session: {session_badge} (Threshold: ±{threshold_pct}%)\n")
 
-    session_http = requests.Session()
-    session_http.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-    })
+    session_http = create_resilient_session()
 
     price_alerts_to_send = []
     active_watchlist = [(c, "CRYPTO", 2.0, "[CRYPTO]") for c in CRYPTO_WATCHLIST]
@@ -1263,22 +1283,24 @@ def check_market():
             send_discord_news_alert(article)
             time.sleep(1.0)
 
+    # Re-evaluate live time right before running options check
+    now_ny_options = datetime.now(NY_TZ)
     reg_close_time = dtime(13, 0) if is_early_close else dtime(16, 0)
     is_options_market_open = (
         not is_stock_holiday and
-        now_ny.weekday() <= 4 and
-        dtime(9, 32) <= now_ny.time() <= reg_close_time
+        now_ny_options.weekday() <= 4 and
+        dtime(9, 32) <= now_ny_options.time() <= reg_close_time
     )
 
     if is_options_market_open:
         dispatch_top100_options_radar(session_http)
     elif is_stock_holiday:
         print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
-    elif now_ny.weekday() > 4:
+    elif now_ny_options.weekday() > 4:
         print("⏭️ Skipping options radar: Weekend (Market Closed).")
     else:
         close_str = "1:00 PM" if is_early_close else "4:00 PM"
-        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
+        print(f"⏭️ Skipping options radar: Outside live options market hours ({now_ny_options.strftime('%I:%M %p %Z')}). Active Mon-Fri 9:32 AM - {close_str} EST.")
 
     save_alert_state(state)
     print(f"\n=======================================================")
