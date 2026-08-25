@@ -110,6 +110,7 @@ DIAGNOSTICS_STATE = {
     "lifetime_community_chat": 0,
     "lifetime_bot_commands": 0,
     "lifetime_embeds_sent": 0,
+    "lifetime_auto_news": 0,
     "lifetime_auto_price_alerts": 0,
     "lifetime_auto_earnings_cards": 0,
     "lifetime_options_batches": 0,
@@ -126,7 +127,7 @@ DIAGNOSTICS_STATE = {
 }
 
 def load_persistent_analytics():
-    """Loads cumulative lifetime statistics from GitHub or local file on startup."""
+    """Loads cumulative lifetime statistics and existing news fingerprints from GitHub or local file on startup."""
     state = None
     try:
         headers = {"Accept": "application/vnd.github.v3.raw", "User-Agent": "Looney-Market-Terminal"}
@@ -146,6 +147,12 @@ def load_persistent_analytics():
             pass
 
     if state and isinstance(state, dict):
+        # 1. Load existing historical news count directly from 4k-7k fingerprints database
+        seen_news = state.get("seen_news_fingerprints", [])
+        if seen_news and isinstance(seen_news, list):
+            DIAGNOSTICS_STATE["lifetime_auto_news"] = len(seen_news)
+
+        # 2. Load persistent analytics counters
         pa = state.get("persistent_analytics", {})
         for k in [
             "lifetime_total_messages", "lifetime_community_chat", "lifetime_bot_commands",
@@ -191,6 +198,7 @@ def save_persistent_analytics_bg():
             "lifetime_community_chat": DIAGNOSTICS_STATE["lifetime_community_chat"],
             "lifetime_bot_commands": DIAGNOSTICS_STATE["lifetime_bot_commands"],
             "lifetime_embeds_sent": DIAGNOSTICS_STATE["lifetime_embeds_sent"],
+            "lifetime_auto_news": DIAGNOSTICS_STATE["lifetime_auto_news"],
             "lifetime_auto_price_alerts": DIAGNOSTICS_STATE["lifetime_auto_price_alerts"],
             "lifetime_auto_earnings_cards": DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"],
             "lifetime_options_batches": DIAGNOSTICS_STATE["lifetime_options_batches"],
@@ -224,7 +232,7 @@ def save_persistent_analytics_bg():
 
 def periodic_analytics_sync():
     while True:
-        time.sleep(600)  # Sync to GitHub every 10 minutes
+        time.sleep(1800)  # Clean 30-minute sync cycle to GitHub
         save_persistent_analytics_bg()
 
 threading.Thread(target=periodic_analytics_sync, daemon=True).start()
@@ -1918,6 +1926,7 @@ def create_health_diagnostics_embed(bot_instance):
     embed.add_field(name="📊 24-Hour Channel & Community Activity (Midnight EST Reset)", value=daily_stats, inline=False)
     
     auto_stats = (
+        f"• **📰 Breaking News Dispatches:** `{DIAGNOSTICS_STATE['lifetime_auto_news']} Articles 💾`\n"
         f"• **🚨 Automated Price Alerts Fired:** `{DIAGNOSTICS_STATE['lifetime_auto_price_alerts']} Alerts 💾`\n"
         f"• **🗓️ Corporate Earnings Cards Sent:** `{DIAGNOSTICS_STATE['lifetime_auto_earnings_cards']} Cards 💾`\n"
         f"• **🎯 Options Strategy Radars Sent:** `{DIAGNOSTICS_STATE['lifetime_options_batches']} Batches 💾`\n"
@@ -1985,7 +1994,6 @@ async def on_message(message):
             DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
             embed = create_health_diagnostics_embed(bot)
             await message.channel.send(embed=embed)
-            save_persistent_analytics_bg()
             return
 
     # TRIGGER 0B: Global Macro Pulse on `!!macro`, `!macro`, `!econ`, `!fomc`
@@ -2000,7 +2008,6 @@ async def on_message(message):
             DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
             embed = await asyncio.to_thread(fetch_global_macro_pulse)
             await message.channel.send(embed=embed)
-            save_persistent_analytics_bg()
             return
 
     # TRIGGER 0C: 13-Crypto Sequential Paced Scanner on `!crypto` or `!cryptos`
@@ -2019,7 +2026,6 @@ async def on_message(message):
                     DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                     await message.channel.send(embed=embed)
                     await asyncio.sleep(1.0)
-            save_persistent_analytics_bg()
             return
 
     # TRIGGER 1: Head-to-Head Comparison on `!vs TICKER1 TICKER2`
@@ -2040,7 +2046,6 @@ async def on_message(message):
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
                 DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await message.channel.send(embed=embed)
-                save_persistent_analytics_bg()
                 return
 
     # TRIGGER 2: Insider Buying & 13F Ownership on `?TICKER`
@@ -2060,7 +2065,6 @@ async def on_message(message):
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
                 DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await message.channel.send(embed=embed)
-                save_persistent_analytics_bg()
                 return
 
     # TRIGGER 3: Short Squeeze Metrics on `^TICKER`
@@ -2080,7 +2084,6 @@ async def on_message(message):
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
                 DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await message.channel.send(embed=embed)
-                save_persistent_analytics_bg()
                 return
 
     # TRIGGER 4: Institutional Research Radar on `%TICKER`
@@ -2107,7 +2110,6 @@ async def on_message(message):
                     for embed in embeds:
                         await message.channel.send(embed=embed)
                         await asyncio.sleep(0.4)
-                    save_persistent_analytics_bg()
                 except Exception as e:
                     await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
@@ -2131,7 +2133,6 @@ async def on_message(message):
                     DIAGNOSTICS_STATE["embeds_sent_today"] += 1
                     DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                     await message.channel.send(embed=embed)
-                    save_persistent_analytics_bg()
                 except Exception as e:
                     await message.channel.send(f"❌ Options Error: {e}")
                 return
@@ -2162,7 +2163,6 @@ async def on_message(message):
                     DIAGNOSTICS_STATE["embeds_sent_today"] += 1
                     DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                     await message.channel.send(embed=embed)
-                    save_persistent_analytics_bg()
                 except Exception as e:
                     await message.channel.send(f"❌ Snapshot Error: {e}")
                 return
@@ -2191,7 +2191,6 @@ async def crypto_command(ctx):
                 DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await ctx.send(embed=embed)
                 await asyncio.sleep(1.0)
-        save_persistent_analytics_bg()
 
 @bot.command(name="health", aliases=["status", "ping"])
 async def health_command(ctx):
@@ -2205,7 +2204,6 @@ async def health_command(ctx):
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         embed = create_health_diagnostics_embed(bot)
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="macro", aliases=["econ", "fomc"])
 async def macro_command(ctx):
@@ -2219,7 +2217,6 @@ async def macro_command(ctx):
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         embed = await asyncio.to_thread(fetch_global_macro_pulse)
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="vs")
 async def vs_command(ctx, sym1: str, sym2: str):
@@ -2236,7 +2233,6 @@ async def vs_command(ctx, sym1: str, sym2: str):
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="insider")
 async def insider_command(ctx, ticker: str):
@@ -2253,7 +2249,6 @@ async def insider_command(ctx, ticker: str):
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="short")
 async def short_command(ctx, ticker: str):
@@ -2270,7 +2265,6 @@ async def short_command(ctx, ticker: str):
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="price", aliases=["p", "four", "check"])
 async def price_command(ctx, ticker: str):
@@ -2288,7 +2282,6 @@ async def price_command(ctx, ticker: str):
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="opt", aliases=["options", "play"])
 async def options_command(ctx, ticker: str):
@@ -2306,7 +2299,6 @@ async def options_command(ctx, ticker: str):
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
         DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
-        save_persistent_analytics_bg()
 
 @bot.command(name="analyst", aliases=["research", "targets"])
 async def analyst_command(ctx, ticker: str):
@@ -2326,7 +2318,6 @@ async def analyst_command(ctx, ticker: str):
         for embed in embeds:
             await ctx.send(embed=embed)
             await asyncio.sleep(0.4)
-        save_persistent_analytics_bg()
 
 # -------------------------------------------------------------
 # 11. SMART PRE-FLIGHT GATEWAY HANDSHAKE & RUNNER
