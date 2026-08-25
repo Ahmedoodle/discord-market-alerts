@@ -167,7 +167,7 @@ def load_persistent_analytics():
     if state and isinstance(state, dict):
         today_ny_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
 
-        # 1. Sync Today's automated alert counts from main.py
+        # 1. Sync Today's automated alert counts from main.py & earnings.py
         if state.get("stock_session_date") == today_ny_str and isinstance(state.get("stats_today"), dict):
             st = state["stats_today"]
             DIAGNOSTICS_STATE["today_auto_news"] = int(st.get("news_dispatches", 0))
@@ -182,11 +182,10 @@ def load_persistent_analytics():
             DIAGNOSTICS_STATE["today_options_batches"] = 0
             DIAGNOSTICS_STATE["today_options_setups"] = 0
 
-        # 2. Sync Lifetime automated alert counts from main.py
+        # 2. Sync Lifetime automated alert counts from stats_lifetime
         if isinstance(state.get("stats_lifetime"), dict):
             sl = state["stats_lifetime"]
-            news_count = max(int(sl.get("news_dispatches", 0)), len(state.get("seen_news_fingerprints", [])))
-            DIAGNOSTICS_STATE["lifetime_auto_news"] = news_count
+            DIAGNOSTICS_STATE["lifetime_auto_news"] = int(sl.get("news_dispatches", 0))
             DIAGNOSTICS_STATE["lifetime_auto_price_alerts"] = int(sl.get("price_fires", 0))
             DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"] = int(sl.get("earnings_cards", 0))
             DIAGNOSTICS_STATE["lifetime_options_batches"] = int(sl.get("options_radars", 0))
@@ -194,9 +193,9 @@ def load_persistent_analytics():
         else:
             seen_news = state.get("seen_news_fingerprints", [])
             if seen_news and isinstance(seen_news, list):
-                DIAGNOSTICS_STATE["lifetime_auto_news"] = max(DIAGNOSTICS_STATE["lifetime_auto_news"], len(seen_news))
+                DIAGNOSTICS_STATE["lifetime_auto_news"] = len(seen_news)
 
-        # 3. Sync Bot Commands Lifetime Stats
+        # 3. Sync Bot Commands Lifetime Stats from persistent_analytics
         pa = state.get("persistent_analytics", {})
         for k in [
             "lifetime_total_messages", "lifetime_community_chat", "lifetime_bot_commands",
