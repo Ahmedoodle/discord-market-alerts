@@ -1048,50 +1048,61 @@ def dispatch_top100_options_radar(session_http, state):
         state["stats_lifetime"]["options_radars"] += 1
 
 # ====================================================================
-# 8. DATA EXTRACTION ENGINE (Real-Time Extended Hours & Full Liquidity)
+# 8. DATA EXTRACTION ENGINE (Exact Pure Extended Hours Calculations)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
 
     try:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1m&range=1d&includePrePost=true"
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1m&range=2d&includePrePost=true"
         res = session_http.get(url, timeout=5)
         if res.status_code == 200:
             result = res.json().get("chart", {}).get("result", [{}])[0]
             meta = result.get("meta", {})
-            reg_price = meta.get("regularMarketPrice")
-            prev_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
-            pre_price = meta.get("preMarketPrice")
-            post_price = meta.get("postMarketPrice")
+            indicators = result.get("indicators", {}).get("quote", [{}])[0]
+            
+            raw_closes = indicators.get("close", []) or []
+            valid_closes = [float(c) for c in raw_closes if c is not None and c > 0]
+            
+            # The latest actual live print right now (including post/pre-market trades)
+            live_price = valid_closes[-1] if valid_closes else (meta.get("postMarketPrice") or meta.get("preMarketPrice") or meta.get("regularMarketPrice"))
+            
+            reg_market_close = meta.get("regularMarketPrice")  # Official 4:00 PM regular close
+            prev_day_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
+            
+            if session_type == "AFTER_HOURS":
+                # Pure After-Hours Move = (Live Post-Market Price - Today's 4:00 PM Close)
+                if live_price is not None and reg_market_close is not None and float(reg_market_close) > 0:
+                    current_price = float(live_price)
+                    baseline_price = float(reg_market_close)
 
-            if session_type == "PRE_MARKET":
-                current_price = float(pre_price) if pre_price else (float(reg_price) if reg_price else None)
-                baseline_price = float(prev_close) if prev_close else None
-
-            elif session_type == "AFTER_HOURS":
-                # If there is an active after-hours print different from regular close, track after-hours move
-                if post_price and reg_price and float(post_price) != float(reg_price):
-                    current_price = float(post_price)
-                    baseline_price = float(reg_price)
-                else:
-                    # Otherwise, show the day's real total market change vs yesterday's close
-                    current_price = float(post_price) if post_price else (float(reg_price) if reg_price else None)
-                    baseline_price = float(prev_close) if prev_close else None
+            elif session_type == "PRE_MARKET":
+                # Pure Pre-Market Move = (Live Pre-Market Price - Yesterday's Close)
+                if live_price is not None and prev_day_close is not None and float(prev_day_close) > 0:
+                    current_price = float(live_price)
+                    baseline_price = float(prev_day_close)
 
             else:  # REGULAR / CRYPTO
-                current_price = float(reg_price) if reg_price else None
-                baseline_price = float(prev_close) if prev_close else None
+                curr = meta.get("regularMarketPrice") or (valid_closes[-1] if valid_closes else None)
+                base = prev_day_close or meta.get("chartPreviousClose")
+                if curr is not None and base is not None and float(base) > 0:
+                    current_price = float(curr)
+                    baseline_price = float(base)
     except Exception:
         pass
 
-    # Resilient Fallback: yfinance FastInfo
+    # Resilient fallback if chart API was unreachable
     if current_price is None or baseline_price is None:
         try:
             ticker = yf.Ticker(ticker_symbol, session=session_http)
             fi = ticker.fast_info
-            current_price = float(fi.last_price) if fi.last_price is not None else current_price
-            baseline_price = float(fi.previous_close) if fi.previous_close is not None else baseline_price
+            if session_type == "AFTER_HOURS":
+                current_price = float(fi.last_price) if fi.last_price is not None else None
+                baseline_price = float(fi.last_price) if fi.last_price is not None else None
+            else:
+                current_price = float(fi.last_price) if fi.last_price is not None else None
+                baseline_price = float(fi.previous_close) if fi.previous_close is not None else None
         except Exception:
             pass
 
