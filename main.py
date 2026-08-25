@@ -382,12 +382,34 @@ def load_alert_state():
                 if saved.get("crypto_session_date") == today_utc_str:
                     state["crypto_tickers"] = saved.get("crypto_tickers", {})
                 state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or []
+                if "persistent_analytics" in saved:
+                    state["persistent_analytics"] = saved["persistent_analytics"]
         except Exception:
             pass
     return state
 
 def save_alert_state(state):
     try:
+        # Non-destructive merge: read latest disk state first so other processes are never overwritten
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r") as f:
+                    disk_saved = json.load(f)
+                    if isinstance(disk_saved.get("persistent_analytics"), dict):
+                        state["persistent_analytics"] = disk_saved["persistent_analytics"]
+                    if isinstance(disk_saved.get("stats_today"), dict):
+                        state["stats_today"]["earnings_cards"] = max(
+                            state["stats_today"].get("earnings_cards", 0),
+                            int(disk_saved["stats_today"].get("earnings_cards", 0))
+                        )
+                    if isinstance(disk_saved.get("stats_lifetime"), dict):
+                        state["stats_lifetime"]["earnings_cards"] = max(
+                            state["stats_lifetime"].get("earnings_cards", 0),
+                            int(disk_saved["stats_lifetime"].get("earnings_cards", 0))
+                        )
+            except Exception:
+                pass
+
         with open(STATE_FILE, "w") as f:
             json.dump(state, f, indent=2)
     except Exception:
