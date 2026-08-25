@@ -16,16 +16,25 @@ import pandas as pd
 from curl_cffi import requests as cureq
 
 # ====================================================================
-# ENVIRONMENT VARIABLES & WEBHOOKS
+# ENVIRONMENT VARIABLES & WEBHOOKS (SANITIZED & FALLBACK RESILIENT)
 # ====================================================================
-DISCORD_NEWS_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL") or None
-DISCORD_PRICE_WEBHOOK_URL = os.getenv(
-    "DISCORD_PRICE_WEBHOOK_URL"
-) or "https://discord.com/api/webhooks/1539395404502671440/HCuVM2hd2t7OV8r1DaLk46iTNz3xgD1Li_Mdt05RAU7m3W2ZTYLIaYKrQyMti81axOxV"
+def _clean_url(url_val):
+    if not url_val:
+        return None
+    cleaned = str(url_val).strip().strip('"').strip("'")
+    return cleaned if cleaned.startswith("http") else None
 
-DISCORD_OPTIONS_WEBHOOK_URL = os.getenv(
-    "DISCORD_OPTIONS_WEBHOOK_URL"
-) or "https://discord.com/api/webhooks/1540124383618666507/8OZ0nG5SznAaguH8-bd4V6-CN1VMqNKCXEfXhjIZrjxIZhyFudPs8UFZinkxqp6qdI6a"
+DISCORD_NEWS_WEBHOOK_URL = _clean_url(os.getenv("DISCORD_WEBHOOK_URL"))
+
+DISCORD_PRICE_WEBHOOK_URL = (
+    _clean_url(os.getenv("DISCORD_PRICE_WEBHOOK_URL"))
+    or "https://discord.com/api/webhooks/1539395404502671440/HCuVM2hd2t7OV8r1DaLk46iTNz3xgD1Li_Mdt05RAU7m3W2ZTYLIaYKrQyMti81axOxV"
+)
+
+DISCORD_OPTIONS_WEBHOOK_URL = (
+    _clean_url(os.getenv("DISCORD_OPTIONS_WEBHOOK_URL"))
+    or "https://discord.com/api/webhooks/1540124383618666507/8OZ0nG5SznAaguH8-bd4V6-CN1VMqNKCXEfXhjIZrjxIZhyFudPs8UFZinkxqp6qdI6a"
+)
 
 BOT_NAME = "Looney"
 BOT_AVATAR_URL = "https://cdn.discordapp.com/attachments/1536082016184045750/1539077205437714442/IMG_6630.jpg?ex=6a8500d8&is=6a83af58&hm=f46d7b936827c9651de6bafe607af3e23c40009ee9799431f622886c85c78013&"
@@ -89,14 +98,20 @@ KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BN
 OPTIONS_RADAR_UNIVERSE = [sym for sym in STOCK_ETF_WATCHLIST if not sym.endswith("=F")]
 
 # ====================================================================
-# 0. SMART RATE-LIMIT COMPLIANT WEBHOOK DISPATCHER
+# 0. SMART RATE-LIMIT COMPLIANT & 404-RESILIENT DISPATCHER
 # ====================================================================
-def safe_post_webhook(url, payload, max_retries=4):
+def safe_post_webhook(url, payload, max_retries=3, fallback_url=None):
     if not url:
-        return False
+        if fallback_url:
+            url = fallback_url
+        else:
+            return False
+
     for attempt in range(max_retries):
         try:
             res = requests.post(url, json=payload, timeout=12)
+            if res.status_code == 200 or res.status_code == 204:
+                return True
             if res.status_code == 429:
                 try:
                     retry_after = float(res.json().get("retry_after", 2.0))
@@ -105,12 +120,18 @@ def safe_post_webhook(url, payload, max_retries=4):
                 print(f"⚠️ Discord Webhook 429 Rate Limit. Pausing for {retry_after:.2f}s before retry...")
                 time.sleep(retry_after + 0.3)
                 continue
+            if res.status_code == 404:
+                print(f"⚠️ Webhook returned 404 Not Found (Invalid or deleted Webhook URL: {url[:35]}...).")
+                if fallback_url and url != fallback_url:
+                    print(f"🔄 Routing to Fallback Webhook: {fallback_url[:35]}...")
+                    return safe_post_webhook(fallback_url, payload, max_retries=2, fallback_url=None)
+                return False
             res.raise_for_status()
             return True
         except Exception as e:
             if attempt == max_retries - 1:
                 print(f"❌ Failed to deliver webhook: {e}")
-            time.sleep(1.5)
+            time.sleep(1.0)
     return False
 
 def create_resilient_session():
@@ -121,7 +142,7 @@ def create_resilient_session():
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET"]
     )
-    adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=30, pool_maxsize=30)
+    adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=25, pool_maxsize=25)
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     session.headers.update({
@@ -753,7 +774,7 @@ def send_discord_news_alert(article):
             "footer": {"text": f"{BOT_NAME} • 24/7 Breaking News Channel"}
         }]
     }
-    safe_post_webhook(DISCORD_NEWS_WEBHOOK_URL, payload)
+    safe_post_webhook(DISCORD_NEWS_WEBHOOK_URL, payload, fallback_url=DISCORD_PRICE_WEBHOOK_URL)
 
 # ====================================================================
 # 7. 30-MINUTE OPTIONS STRATEGY RADAR (TOP 100 PAGINATED)
@@ -933,9 +954,9 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
         return None
 
 def dispatch_top100_options_radar(session_http):
-    webhook_url = DISCORD_OPTIONS_WEBHOOK_URL
+    webhook_url = DISCORD_OPTIONS_WEBHOOK_URL or DISCORD_PRICE_WEBHOOK_URL
     if not webhook_url:
-        print("⚠️ Options webhook URL is missing. Skipping radar.")
+        print("⚠️ No valid options or price webhook configured. Skipping options radar.")
         return
 
     now_ny = datetime.now(NY_TZ)
@@ -943,7 +964,6 @@ def dispatch_top100_options_radar(session_http):
     print(f"\nScanning {len(OPTIONS_RADAR_UNIVERSE)} Securities for Top 100 Options Radar ({time_str})...")
 
     results = []
-    # Using 10 workers for balanced speed and zero-drop connection limits
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(analyze_stock_options_setup, sym, session_http): sym for sym in OPTIONS_RADAR_UNIVERSE}
         for f in concurrent.futures.as_completed(futures):
@@ -991,7 +1011,7 @@ def dispatch_top100_options_radar(session_http):
                 "footer": {"text": f"Looney Options Intelligence • Part {part_idx} of {total_parts} • Type '#TICKER' in chat for deep-dive Greeks"}
             }]
         }
-        success = safe_post_webhook(webhook_url, payload)
+        success = safe_post_webhook(webhook_url, payload, fallback_url=DISCORD_PRICE_WEBHOOK_URL)
         if success:
             print(f"Top 100 Options Radar Part {part_idx}/{total_parts} successfully posted at {time_str}!")
         time.sleep(1.2)
