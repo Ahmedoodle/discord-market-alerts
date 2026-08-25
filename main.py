@@ -331,8 +331,16 @@ def normalize_title(title_text):
     return re.sub(r'[^a-zA-Z0-9]', '', title_text or '').lower()
 
 # ====================================================================
-# 3. STATE MEMORY
+# 3. STATE MEMORY WITH DAILY & LIFETIME METRICS
 # ====================================================================
+DEFAULT_METRICS = {
+    "news_dispatches": 0,
+    "price_fires": 0,
+    "earnings_cards": 0,
+    "options_radars": 0,
+    "options_setups": 0
+}
+
 def load_alert_state():
     now_ny = datetime.now(NY_TZ)
     today_ny_str = now_ny.strftime("%Y-%m-%d")
@@ -346,18 +354,31 @@ def load_alert_state():
         "afterhours_tickers": {},
         "crypto_tickers": {},
         "holiday_announced_date": None,
-        "seen_news_fingerprints": []
+        "seen_news_fingerprints": [],
+        "stats_today": dict(DEFAULT_METRICS),
+        "stats_lifetime": dict(DEFAULT_METRICS)
     }
 
     if os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
                 saved = json.load(f)
+                
+                # Lifetime stats ALWAYS accumulate and never reset
+                if isinstance(saved.get("stats_lifetime"), dict):
+                    for k in DEFAULT_METRICS:
+                        state["stats_lifetime"][k] = int(saved["stats_lifetime"].get(k, 0))
+
+                # Today stats persist during the same day, auto-reset on a new day
                 if saved.get("stock_session_date") == today_ny_str:
                     state["premarket_tickers"] = saved.get("premarket_tickers", {})
                     state["regular_tickers"] = saved.get("regular_tickers", {})
                     state["afterhours_tickers"] = saved.get("afterhours_tickers", {})
                     state["holiday_announced_date"] = saved.get("holiday_announced_date")
+                    if isinstance(saved.get("stats_today"), dict):
+                        for k in DEFAULT_METRICS:
+                            state["stats_today"][k] = int(saved["stats_today"].get(k, 0))
+
                 if saved.get("crypto_session_date") == today_utc_str:
                     state["crypto_tickers"] = saved.get("crypto_tickers", {})
                 state["seen_news_fingerprints"] = saved.get("seen_news_fingerprints") or []
@@ -953,7 +974,7 @@ def analyze_stock_options_setup(ticker_symbol, session_http):
     except Exception:
         return None
 
-def dispatch_top100_options_radar(session_http):
+def dispatch_top100_options_radar(session_http, state):
     webhook_url = DISCORD_OPTIONS_WEBHOOK_URL or DISCORD_PRICE_WEBHOOK_URL
     if not webhook_url:
         print("⚠️ No valid options or price webhook configured. Skipping options radar.")
@@ -981,9 +1002,14 @@ def dispatch_top100_options_radar(session_http):
         print("⚠️ No options radar data generated (upstream API returned no valid bars).")
         return
 
+    # Increment setup statistics
+    state["stats_today"]["options_setups"] += len(top_100)
+    state["stats_lifetime"]["options_setups"] += len(top_100)
+
     chunk_size = 10
     chunks = [top_100[i:i + chunk_size] for i in range(0, len(top_100), chunk_size)]
     total_parts = len(chunks)
+    dispatched_any = False
 
     for part_idx, chunk in enumerate(chunks, 1):
         start_num = (part_idx - 1) * chunk_size + 1
@@ -1013,8 +1039,13 @@ def dispatch_top100_options_radar(session_http):
         }
         success = safe_post_webhook(webhook_url, payload, fallback_url=DISCORD_PRICE_WEBHOOK_URL)
         if success:
+            dispatched_any = True
             print(f"Top 100 Options Radar Part {part_idx}/{total_parts} successfully posted at {time_str}!")
         time.sleep(1.2)
+
+    if dispatched_any:
+        state["stats_today"]["options_radars"] += 1
+        state["stats_lifetime"]["options_radars"] += 1
 
 # ====================================================================
 # 8. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
@@ -1295,12 +1326,18 @@ def check_market():
                 history_trail=alert["history_trail"],
                 metrics=alert["metrics"]
             )
+            # Increment price fire metrics
+            state["stats_today"]["price_fires"] += 1
+            state["stats_lifetime"]["price_fires"] += 1
             time.sleep(1.0)
 
     if new_articles:
         print(f"\nSending ALL {len(new_articles)} fresh headline alert(s) to NEWS CHANNEL...")
         for article in new_articles:
             send_discord_news_alert(article)
+            # Increment news dispatch metrics
+            state["stats_today"]["news_dispatches"] += 1
+            state["stats_lifetime"]["news_dispatches"] += 1
             time.sleep(1.0)
 
     # Re-evaluate live time right before running options check
@@ -1313,7 +1350,7 @@ def check_market():
     )
 
     if is_options_market_open:
-        dispatch_top100_options_radar(session_http)
+        dispatch_top100_options_radar(session_http, state)
     elif is_stock_holiday:
         print("⏭️ Skipping options radar: US Stock Market is CLOSED for Holiday.")
     elif now_ny_options.weekday() > 4:
