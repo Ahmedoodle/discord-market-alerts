@@ -1048,13 +1048,12 @@ def dispatch_top100_options_radar(session_http, state):
         state["stats_lifetime"]["options_radars"] += 1
 
 # ====================================================================
-# 8. DATA EXTRACTION ENGINE (Real-Time Pre/Post Market + Fallbacks)
+# 8. DATA EXTRACTION ENGINE (Real-Time Extended Hours & Full Liquidity)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
 
-    # 1. Primary: Direct Yahoo Chart API with extended hours enabled
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1m&range=1d&includePrePost=true"
         res = session_http.get(url, timeout=5)
@@ -1069,16 +1068,24 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             if session_type == "PRE_MARKET":
                 current_price = float(pre_price) if pre_price else (float(reg_price) if reg_price else None)
                 baseline_price = float(prev_close) if prev_close else None
+
             elif session_type == "AFTER_HOURS":
-                current_price = float(post_price) if post_price else (float(reg_price) if reg_price else None)
-                baseline_price = float(reg_price) if reg_price else (float(prev_close) if prev_close else None)
+                # If there is an active after-hours print different from regular close, track after-hours move
+                if post_price and reg_price and float(post_price) != float(reg_price):
+                    current_price = float(post_price)
+                    baseline_price = float(reg_price)
+                else:
+                    # Otherwise, show the day's real total market change vs yesterday's close
+                    current_price = float(post_price) if post_price else (float(reg_price) if reg_price else None)
+                    baseline_price = float(prev_close) if prev_close else None
+
             else:  # REGULAR / CRYPTO
                 current_price = float(reg_price) if reg_price else None
                 baseline_price = float(prev_close) if prev_close else None
     except Exception:
         pass
 
-    # 2. Resilient Fallback: yfinance FastInfo
+    # Resilient Fallback: yfinance FastInfo
     if current_price is None or baseline_price is None:
         try:
             ticker = yf.Ticker(ticker_symbol, session=session_http)
