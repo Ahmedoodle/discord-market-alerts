@@ -105,7 +105,14 @@ DIAGNOSTICS_STATE = {
     "cmd_macro_today": 0,
     "cmd_health_today": 0,
 
-    # Permanent Lifetime Counters (Synced to alerts_state.json)
+    # Daily Automated Activity (Synced from main.py stats_today)
+    "today_auto_news": 0,
+    "today_auto_price_alerts": 0,
+    "today_auto_earnings_cards": 0,
+    "today_options_batches": 0,
+    "today_options_setups": 0,
+
+    # Permanent Lifetime Counters (Synced from main.py stats_lifetime & alerts_state.json)
     "lifetime_total_messages": 0,
     "lifetime_community_chat": 0,
     "lifetime_bot_commands": 0,
@@ -127,7 +134,7 @@ DIAGNOSTICS_STATE = {
 }
 
 def load_persistent_analytics():
-    """Loads cumulative lifetime statistics and existing news fingerprints from GitHub or local file on startup."""
+    """Loads cumulative lifetime statistics and daily metrics from GitHub or local file."""
     state = None
     try:
         headers = {"Accept": "application/vnd.github.v3.raw", "User-Agent": "Looney-Market-Terminal"}
@@ -158,18 +165,44 @@ def load_persistent_analytics():
             pass
 
     if state and isinstance(state, dict):
-        # Load existing historical news count directly from fingerprints database
-        seen_news = state.get("seen_news_fingerprints", [])
-        if seen_news and isinstance(seen_news, list):
-            DIAGNOSTICS_STATE["lifetime_auto_news"] = len(seen_news)
+        today_ny_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
 
+        # 1. Sync Today's automated alert counts from main.py
+        if state.get("stock_session_date") == today_ny_str and isinstance(state.get("stats_today"), dict):
+            st = state["stats_today"]
+            DIAGNOSTICS_STATE["today_auto_news"] = int(st.get("news_dispatches", 0))
+            DIAGNOSTICS_STATE["today_auto_price_alerts"] = int(st.get("price_fires", 0))
+            DIAGNOSTICS_STATE["today_auto_earnings_cards"] = int(st.get("earnings_cards", 0))
+            DIAGNOSTICS_STATE["today_options_batches"] = int(st.get("options_radars", 0))
+            DIAGNOSTICS_STATE["today_options_setups"] = int(st.get("options_setups", 0))
+        else:
+            DIAGNOSTICS_STATE["today_auto_news"] = 0
+            DIAGNOSTICS_STATE["today_auto_price_alerts"] = 0
+            DIAGNOSTICS_STATE["today_auto_earnings_cards"] = 0
+            DIAGNOSTICS_STATE["today_options_batches"] = 0
+            DIAGNOSTICS_STATE["today_options_setups"] = 0
+
+        # 2. Sync Lifetime automated alert counts from main.py
+        if isinstance(state.get("stats_lifetime"), dict):
+            sl = state["stats_lifetime"]
+            news_count = max(int(sl.get("news_dispatches", 0)), len(state.get("seen_news_fingerprints", [])))
+            DIAGNOSTICS_STATE["lifetime_auto_news"] = news_count
+            DIAGNOSTICS_STATE["lifetime_auto_price_alerts"] = int(sl.get("price_fires", 0))
+            DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"] = int(sl.get("earnings_cards", 0))
+            DIAGNOSTICS_STATE["lifetime_options_batches"] = int(sl.get("options_radars", 0))
+            DIAGNOSTICS_STATE["lifetime_options_setups"] = int(sl.get("options_setups", 0))
+        else:
+            seen_news = state.get("seen_news_fingerprints", [])
+            if seen_news and isinstance(seen_news, list):
+                DIAGNOSTICS_STATE["lifetime_auto_news"] = max(DIAGNOSTICS_STATE["lifetime_auto_news"], len(seen_news))
+
+        # 3. Sync Bot Commands Lifetime Stats
         pa = state.get("persistent_analytics", {})
         for k in [
             "lifetime_total_messages", "lifetime_community_chat", "lifetime_bot_commands",
-            "lifetime_embeds_sent", "lifetime_auto_price_alerts", "lifetime_auto_earnings_cards",
-            "lifetime_options_batches", "lifetime_options_setups", "lifetime_cmd_price",
-            "lifetime_cmd_options", "lifetime_cmd_analyst", "lifetime_cmd_insider",
-            "lifetime_cmd_short", "lifetime_cmd_vs", "lifetime_cmd_macro", "lifetime_cmd_health"
+            "lifetime_embeds_sent", "lifetime_cmd_price", "lifetime_cmd_options",
+            "lifetime_cmd_analyst", "lifetime_cmd_insider", "lifetime_cmd_short",
+            "lifetime_cmd_vs", "lifetime_cmd_macro", "lifetime_cmd_health"
         ]:
             if k in pa and isinstance(pa[k], (int, float)):
                 DIAGNOSTICS_STATE[k] = int(pa[k])
@@ -177,7 +210,7 @@ def load_persistent_analytics():
 load_persistent_analytics()
 
 def save_persistent_analytics_bg():
-    """Saves updated persistent statistics locally, pulls latest news count, and commits back to GitHub."""
+    """Saves updated persistent statistics locally and commits back to GitHub while preserving main.py metrics."""
     try:
         state = {}
         file_sha = None
@@ -190,11 +223,6 @@ def save_persistent_analytics_bg():
                     file_sha = r_json.get("sha")
                     content_raw = base64.b64decode(r_json.get("content", "")).decode("utf-8")
                     state = json.loads(content_raw)
-                    
-                    # 30-Minute Cycle: Re-read newest news fingerprints added by main.py
-                    latest_news = state.get("seen_news_fingerprints", [])
-                    if latest_news and isinstance(latest_news, list):
-                        DIAGNOSTICS_STATE["lifetime_auto_news"] = len(latest_news)
             except Exception:
                 pass
 
@@ -202,25 +230,18 @@ def save_persistent_analytics_bg():
             try:
                 with open(STATE_FILE, "r") as f:
                     state = json.load(f)
-                latest_news = state.get("seen_news_fingerprints", [])
-                if latest_news and isinstance(latest_news, list):
-                    DIAGNOSTICS_STATE["lifetime_auto_news"] = len(latest_news)
             except Exception:
                 state = {}
 
         if not isinstance(state, dict):
             state = {}
 
+        # Save bot interactive statistics cleanly
         state["persistent_analytics"] = {
             "lifetime_total_messages": DIAGNOSTICS_STATE["lifetime_total_messages"],
             "lifetime_community_chat": DIAGNOSTICS_STATE["lifetime_community_chat"],
             "lifetime_bot_commands": DIAGNOSTICS_STATE["lifetime_bot_commands"],
             "lifetime_embeds_sent": DIAGNOSTICS_STATE["lifetime_embeds_sent"],
-            "lifetime_auto_news": DIAGNOSTICS_STATE["lifetime_auto_news"],
-            "lifetime_auto_price_alerts": DIAGNOSTICS_STATE["lifetime_auto_price_alerts"],
-            "lifetime_auto_earnings_cards": DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"],
-            "lifetime_options_batches": DIAGNOSTICS_STATE["lifetime_options_batches"],
-            "lifetime_options_setups": DIAGNOSTICS_STATE["lifetime_options_setups"],
             "lifetime_cmd_price": DIAGNOSTICS_STATE["lifetime_cmd_price"],
             "lifetime_cmd_options": DIAGNOSTICS_STATE["lifetime_cmd_options"],
             "lifetime_cmd_analyst": DIAGNOSTICS_STATE["lifetime_cmd_analyst"],
@@ -276,6 +297,11 @@ def check_daily_reset():
         DIAGNOSTICS_STATE["cmd_vs_today"] = 0
         DIAGNOSTICS_STATE["cmd_macro_today"] = 0
         DIAGNOSTICS_STATE["cmd_health_today"] = 0
+        DIAGNOSTICS_STATE["today_auto_news"] = 0
+        DIAGNOSTICS_STATE["today_auto_price_alerts"] = 0
+        DIAGNOSTICS_STATE["today_auto_earnings_cards"] = 0
+        DIAGNOSTICS_STATE["today_options_batches"] = 0
+        DIAGNOSTICS_STATE["today_options_setups"] = 0
 
 def format_uptime_duration(start_dt):
     delta = datetime.now(UTC_TZ) - start_dt
@@ -1447,91 +1473,90 @@ def fetch_sec_edgar_form4_trades(ticker_symbol):
 
                 target_xml_url = urljoin(dir_url, form4_xml_rel)
                 xml_res = http_session.get(target_xml_url, headers=sec_headers, timeout=4)
-                if xml_res.status_code != 200 or b"<ownershipDocument" not in xml_res.content: continue
+                if xml_res.status_code == 200 and b"<ownershipDocument" in xml_res.content:
+                    form_root = ET.fromstring(xml_res.content)
 
-                form_root = ET.fromstring(xml_res.content)
+                    # Strict issuer check
+                    issuer_sym = form_root.findtext(".//issuer/issuerTradingSymbol") or form_root.findtext(".//issuerTradingSymbol")
+                    if issuer_sym and issuer_sym.upper().strip() != sym: continue
 
-                # Strict issuer check
-                issuer_sym = form_root.findtext(".//issuer/issuerTradingSymbol") or form_root.findtext(".//issuerTradingSymbol")
-                if issuer_sym and issuer_sym.upper().strip() != sym: continue
+                    owner_name = form_root.findtext(".//rptOwnerName") or "Insider"
+                    officer_title = form_root.findtext(".//officerTitle") or ""
+                    is_dir = form_root.findtext(".//isDirector")
+                    is_ten = form_root.findtext(".//isTenPercentOwner")
 
-                owner_name = form_root.findtext(".//rptOwnerName") or "Insider"
-                officer_title = form_root.findtext(".//officerTitle") or ""
-                is_dir = form_root.findtext(".//isDirector")
-                is_ten = form_root.findtext(".//isTenPercentOwner")
+                    role_label = officer_title
+                    if not role_label:
+                        if is_dir in ["1", "true", "True"]: role_label = "Director"
+                        elif is_ten in ["1", "true", "True"]: role_label = "10% Owner"
+                        else: role_label = "Insider"
 
-                role_label = officer_title
-                if not role_label:
-                    if is_dir in ["1", "true", "True"]: role_label = "Director"
-                    elif is_ten in ["1", "true", "True"]: role_label = "10% Owner"
-                    else: role_label = "Insider"
+                    role_tag = f" ({role_label[:14]})"
 
-                role_tag = f" ({role_label[:14]})"
+                    # Table I Common stock
+                    for tx in form_root.findall(".//nonDerivativeTransaction"):
+                        shares_str = tx.findtext(".//transactionShares/value")
+                        price_str = tx.findtext(".//transactionPricePerShare/value")
+                        acq_disp = tx.findtext(".//transactionAcquiredDisposedCode/value")
+                        tx_code = tx.findtext(".//transactionCoding/transactionCode")
+                        tx_date = tx.findtext(".//transactionDate/value") or "Recent"
 
-                # Table I Common stock
-                for tx in form_root.findall(".//nonDerivativeTransaction"):
-                    shares_str = tx.findtext(".//transactionShares/value")
-                    price_str = tx.findtext(".//transactionPricePerShare/value")
-                    acq_disp = tx.findtext(".//transactionAcquiredDisposedCode/value")
-                    tx_code = tx.findtext(".//transactionCoding/transactionCode")
-                    tx_date = tx.findtext(".//transactionDate/value") or "Recent"
+                        if not shares_str: continue
 
-                    if not shares_str: continue
+                        shares = float(shares_str)
+                        price_per_share = float(price_str) if price_str and float(price_str) > 0 else 0.0
+                        total_val = shares * price_per_share
+                        sh_fmt = format_large_number(int(shares)).replace("$", "")
 
-                    shares = float(shares_str)
-                    price_per_share = float(price_str) if price_str and float(price_str) > 0 else 0.0
-                    total_val = shares * price_per_share
-                    sh_fmt = format_large_number(int(shares)).replace("$", "")
+                        if tx_code == "P":
+                            badge = "🟢 BUY (Open Mkt)"
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)}`**)"
+                        elif tx_code == "S":
+                            badge = "🔴 SELL (Open Mkt)"
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)} Proceeds`**)"
+                        elif tx_code == "M":
+                            badge = "⚡ OPTION EXERCISE"
+                            p_str = f" @ `${price_per_share:.2f} strike`" if price_per_share > 0 else ""
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}` • Common Stock Acquisition)"
+                        elif tx_code == "G":
+                            badge = "🎁 GIFT / TRANSFER"
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}` • Bona Fide Gift)"
+                        elif tx_code == "A":
+                            badge = "🎁 EQUITY GRANT"
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}` • Restricted Stock Units)"
+                        elif tx_code == "F":
+                            badge = "🏛️ TAX WITHHOLDING"
+                            p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}` • Tax Settlement)"
+                        else:
+                            is_buy = acq_disp == "A"
+                            badge = "🟢 ACQUIRED" if is_buy else "🔴 DISPOSED"
+                            p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
+                            line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
 
-                    if tx_code == "P":
-                        badge = "🟢 BUY (Open Mkt)"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)}`**)"
-                    elif tx_code == "S":
-                        badge = "🔴 SELL (Open Mkt)"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` @ `${price_per_share:.2f}` on `{tx_date}` ➔ **`{format_large_number(total_val)} Proceeds`**)"
-                    elif tx_code == "M":
-                        badge = "⚡ OPTION EXERCISE"
-                        p_str = f" @ `${price_per_share:.2f} strike`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}` • Common Stock Acquisition)"
-                    elif tx_code == "G":
-                        badge = "🎁 GIFT / TRANSFER"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}` • Bona Fide Gift)"
-                    elif tx_code == "A":
-                        badge = "🎁 EQUITY GRANT"
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs` on `{tx_date}` • Restricted Stock Units)"
-                    elif tx_code == "F":
-                        badge = "🏛️ TAX WITHHOLDING"
-                        p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}` • Tax Settlement)"
-                    else:
-                        is_buy = acq_disp == "A"
-                        badge = "🟢 ACQUIRED" if is_buy else "🔴 DISPOSED"
-                        p_str = f" @ `${price_per_share:.2f}`" if price_per_share > 0 else ""
-                        line = f"• **{badge}** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} shs`{p_str} on `{tx_date}`)"
-
-                    trades.append((tx_date, line))
-
-                # Table II Options
-                for tx in form_root.findall(".//derivativeTransaction"):
-                    shares_str = tx.findtext(".//transactionShares/value")
-                    conv_price_str = tx.findtext(".//conversionOrExercisePrice/value")
-                    price_str = tx.findtext(".//transactionPricePerShare/value")
-                    tx_code = tx.findtext(".//transactionCoding/transactionCode")
-                    tx_date = tx.findtext(".//transactionDate/value") or "Recent"
-
-                    if not shares_str: continue
-
-                    shares = float(shares_str)
-                    strike_val = float(conv_price_str) if conv_price_str and float(conv_price_str) > 0 else (float(price_str) if price_str and float(price_str) > 0 else 0.0)
-                    sh_fmt = format_large_number(int(shares)).replace("$", "")
-                    strike_str = f" @ `${strike_val:.2f} strike`" if strike_val > 0 else ""
-
-                    if tx_code == "M":
-                        line = f"• **⚡ OPTION EXERCISE** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} contracts`{strike_str} on `{tx_date}`)"
                         trades.append((tx_date, line))
-                    elif tx_code == "A":
-                        line = f"• **🎁 OPTION GRANT** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} options`{strike_str} on `{tx_date}`)"
-                        trades.append((tx_date, line))
+
+                    # Table II Options
+                    for tx in form_root.findall(".//derivativeTransaction"):
+                        shares_str = tx.findtext(".//transactionShares/value")
+                        conv_price_str = tx.findtext(".//conversionOrExercisePrice/value")
+                        price_str = tx.findtext(".//transactionPricePerShare/value")
+                        tx_code = tx.findtext(".//transactionCoding/transactionCode")
+                        tx_date = tx.findtext(".//transactionDate/value") or "Recent"
+
+                        if not shares_str: continue
+
+                        shares = float(shares_str)
+                        strike_val = float(conv_price_str) if conv_price_str and float(conv_price_str) > 0 else (float(price_str) if price_str and float(price_str) > 0 else 0.0)
+                        sh_fmt = format_large_number(int(shares)).replace("$", "")
+                        strike_str = f" @ `${strike_val:.2f} strike`" if strike_val > 0 else ""
+
+                        if tx_code == "M":
+                            line = f"• **⚡ OPTION EXERCISE** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} contracts`{strike_str} on `{tx_date}`)"
+                            trades.append((tx_date, line))
+                        elif tx_code == "A":
+                            line = f"• **🎁 OPTION GRANT** by **{owner_name[:16]}{role_tag}** (`{sh_fmt} options`{strike_str} on `{tx_date}`)"
+                            trades.append((tx_date, line))
             except Exception:
                 continue
 
@@ -1910,8 +1935,10 @@ def fetch_global_macro_pulse():
 # -------------------------------------------------------------
 def create_health_diagnostics_embed(bot_instance):
     check_daily_reset()
-    now_ny = datetime.now(NY_TZ)
+    # Pull fresh real-time analytics from GitHub / local file on every !health check
+    load_persistent_analytics()
     
+    now_ny = datetime.now(NY_TZ)
     uptime_str = format_uptime_duration(START_TIME_UTC)
     mem_mb = get_process_memory_mb()
     ping_ms = round(bot_instance.latency * 1000, 1)
@@ -1952,13 +1979,13 @@ def create_health_diagnostics_embed(bot_instance):
     embed.add_field(name="📊 24-Hour Channel & Community Activity (Midnight EST Reset)", value=daily_stats, inline=False)
     
     auto_stats = (
-        f"• **📰 Breaking News Dispatches:** `{DIAGNOSTICS_STATE['lifetime_auto_news']} Articles 💾`\n"
-        f"• **🚨 Automated Price Alerts Fired:** `{DIAGNOSTICS_STATE['lifetime_auto_price_alerts']} Alerts 💾`\n"
-        f"• **🗓️ Corporate Earnings Cards Sent:** `{DIAGNOSTICS_STATE['lifetime_auto_earnings_cards']} Cards 💾`\n"
-        f"• **🎯 Options Strategy Radars Sent:** `{DIAGNOSTICS_STATE['lifetime_options_batches']} Batches 💾`\n"
-        f"• **⚡ Total Quantitative Setups Generated:** `{DIAGNOSTICS_STATE['lifetime_options_setups']} Setups 💾`"
+        f"• **📰 Breaking News Dispatches:** `{DIAGNOSTICS_STATE['today_auto_news']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_auto_news']} Articles 💾`)\n"
+        f"• **🚨 Automated Price Alerts Fired:** `{DIAGNOSTICS_STATE['today_auto_price_alerts']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_auto_price_alerts']} Alerts 💾`)\n"
+        f"• **🗓️ Corporate Earnings Cards Sent:** `{DIAGNOSTICS_STATE['today_auto_earnings_cards']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_auto_earnings_cards']} Cards 💾`)\n"
+        f"• **🎯 Options Strategy Radars Sent:** `{DIAGNOSTICS_STATE['today_options_batches']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_options_batches']} Batches 💾`)\n"
+        f"• **⚡ Total Quantitative Setups Generated:** `{DIAGNOSTICS_STATE['today_options_setups']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_options_setups']} Setups 💾`)"
     )
-    embed.add_field(name="🤖 Automated Alert Engine History", value=auto_stats, inline=False)
+    embed.add_field(name="🤖 Automated Alert Engine History (Today vs. Lifetime)", value=auto_stats, inline=False)
 
     cmd_breakdown = (
         f"• **`!/$` Snapshots:** `{DIAGNOSTICS_STATE['cmd_price_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_price']} Total 💾`) | **`#` Options:** `{DIAGNOSTICS_STATE['cmd_options_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_options']} Total 💾`)\n"
