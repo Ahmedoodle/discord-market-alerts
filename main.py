@@ -1048,42 +1048,45 @@ def dispatch_top100_options_radar(session_http, state):
         state["stats_lifetime"]["options_radars"] += 1
 
 # ====================================================================
-# 8. DATA EXTRACTION ENGINE (3-Layer Fallback & News)
+# 8. DATA EXTRACTION ENGINE (Real-Time Pre/Post Market + Fallbacks)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
 
+    # 1. Primary: Direct Yahoo Chart API with extended hours enabled
     try:
-        ticker = yf.Ticker(ticker_symbol, session=session_http)
-        try:
-            fi = ticker.fast_info
-            current_price = float(fi.last_price) if fi.last_price is not None else None
-            baseline_price = float(fi.previous_close) if fi.previous_close is not None else None
-        except Exception:
-            pass
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1m&range=1d&includePrePost=true"
+        res = session_http.get(url, timeout=5)
+        if res.status_code == 200:
+            result = res.json().get("chart", {}).get("result", [{}])[0]
+            meta = result.get("meta", {})
+            reg_price = meta.get("regularMarketPrice")
+            prev_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
+            pre_price = meta.get("preMarketPrice")
+            post_price = meta.get("postMarketPrice")
 
-        if current_price is None or baseline_price is None:
-            try:
-                hist = ticker.history(period="2d")
-                if 'Close' in hist.columns and len(hist['Close']) >= 2:
-                    baseline_price = float(hist['Close'].iloc[-2])
-                    current_price = float(hist['Close'].iloc[-1])
-                elif 'Close' in hist.columns and len(hist['Close']) == 1:
-                    current_price = float(hist['Close'].iloc[-1])
-            except Exception:
-                pass
-
-        if session_type == "AFTER_HOURS" and current_price is not None:
-            try:
-                hist = ticker.history(period="2d")
-                if 'Close' in hist.columns and len(hist['Close']) >= 1:
-                    baseline_price = float(hist['Close'].iloc[-1])
-            except Exception:
-                pass
-
+            if session_type == "PRE_MARKET":
+                current_price = float(pre_price) if pre_price else (float(reg_price) if reg_price else None)
+                baseline_price = float(prev_close) if prev_close else None
+            elif session_type == "AFTER_HOURS":
+                current_price = float(post_price) if post_price else (float(reg_price) if reg_price else None)
+                baseline_price = float(reg_price) if reg_price else (float(prev_close) if prev_close else None)
+            else:  # REGULAR / CRYPTO
+                current_price = float(reg_price) if reg_price else None
+                baseline_price = float(prev_close) if prev_close else None
     except Exception:
         pass
+
+    # 2. Resilient Fallback: yfinance FastInfo
+    if current_price is None or baseline_price is None:
+        try:
+            ticker = yf.Ticker(ticker_symbol, session=session_http)
+            fi = ticker.fast_info
+            current_price = float(fi.last_price) if fi.last_price is not None else current_price
+            baseline_price = float(fi.previous_close) if fi.previous_close is not None else baseline_price
+        except Exception:
+            pass
 
     return current_price, baseline_price
 
