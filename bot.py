@@ -5,6 +5,7 @@ import math
 import re
 import time
 import json
+import base64
 import concurrent.futures
 import xml.etree.ElementTree as ET
 from urllib.parse import urljoin
@@ -69,14 +70,13 @@ def auto_self_ping():
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
 # -------------------------------------------------------------
-# 2. IN-MEMORY OPERATIONAL DIAGNOSTICS (24H EST RESET)
+# 2. PERSISTENT ANALYTICS & DIAGNOSTICS (GITHUB SYNCED)
 # -------------------------------------------------------------
 BOT_TOKEN = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
 NY_TZ = ZoneInfo("America/New_York")
 UTC_TZ = ZoneInfo("UTC")
 KNOWN_ETFS = {"QQQ", "SPY", "IWM", "DIA", "VOO", "VTI", "GLD", "SLV", "USO", "BNO", "IBIT", "ETHA"}
 
-# Top Curated Cryptocurrency Universe for !crypto / !cryptos
 TOP_CRYPTO_LIST = [
     "BTC-USD", "ETH-USD", "XRP-USD", "BNB-USD", "SOL-USD",
     "LINK-USD", "ADA-USD", "XLM-USD", "DOGE-USD", "SHIB-USD",
@@ -90,7 +90,12 @@ DIAGNOSTICS_STATE = {
     "logins_today": 0,
     "resumes_today": 0,
     "messages_seen_today": 0,
+    "community_chat_today": 0,
+    "bot_commands_today": 0,
     "embeds_sent_today": 0,
+    "unique_users_today": set(),
+    
+    # Daily Command Popularity
     "cmd_price_today": 0,
     "cmd_options_today": 0,
     "cmd_analyst_today": 0,
@@ -99,19 +104,144 @@ DIAGNOSTICS_STATE = {
     "cmd_vs_today": 0,
     "cmd_macro_today": 0,
     "cmd_health_today": 0,
-    "total_lifetime_commands": 0,
-    "total_lifetime_messages": 0
+
+    # Permanent Lifetime Counters (Synced to alerts_state.json)
+    "lifetime_total_messages": 0,
+    "lifetime_community_chat": 0,
+    "lifetime_bot_commands": 0,
+    "lifetime_embeds_sent": 0,
+    "lifetime_auto_price_alerts": 0,
+    "lifetime_auto_earnings_cards": 0,
+    "lifetime_options_batches": 0,
+    "lifetime_options_setups": 0,
+    
+    "lifetime_cmd_price": 0,
+    "lifetime_cmd_options": 0,
+    "lifetime_cmd_analyst": 0,
+    "lifetime_cmd_insider": 0,
+    "lifetime_cmd_short": 0,
+    "lifetime_cmd_vs": 0,
+    "lifetime_cmd_macro": 0,
+    "lifetime_cmd_health": 0
 }
+
+def load_persistent_analytics():
+    """Loads cumulative lifetime statistics from GitHub or local file on startup."""
+    state = None
+    try:
+        headers = {"Accept": "application/vnd.github.v3.raw", "User-Agent": "Looney-Market-Terminal"}
+        if GITHUB_TOKEN:
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+        res = requests.get(GITHUB_API_STATE_URL, headers=headers, timeout=5)
+        if res.status_code == 200:
+            state = res.json()
+    except Exception:
+        pass
+
+    if not state and os.path.exists(STATE_FILE):
+        try:
+            with open(STATE_FILE, "r") as f:
+                state = json.load(f)
+        except Exception:
+            pass
+
+    if state and isinstance(state, dict):
+        pa = state.get("persistent_analytics", {})
+        for k in [
+            "lifetime_total_messages", "lifetime_community_chat", "lifetime_bot_commands",
+            "lifetime_embeds_sent", "lifetime_auto_price_alerts", "lifetime_auto_earnings_cards",
+            "lifetime_options_batches", "lifetime_options_setups", "lifetime_cmd_price",
+            "lifetime_cmd_options", "lifetime_cmd_analyst", "lifetime_cmd_insider",
+            "lifetime_cmd_short", "lifetime_cmd_vs", "lifetime_cmd_macro", "lifetime_cmd_health"
+        ]:
+            if k in pa and isinstance(pa[k], (int, float)):
+                DIAGNOSTICS_STATE[k] = int(pa[k])
+
+load_persistent_analytics()
+
+def save_persistent_analytics_bg():
+    """Saves updated persistent statistics locally and commits back to GitHub."""
+    try:
+        state = {}
+        file_sha = None
+        if GITHUB_TOKEN:
+            try:
+                headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "User-Agent": "Looney-Market-Terminal"}
+                r = requests.get(GITHUB_API_STATE_URL, headers=headers, timeout=5)
+                if r.status_code == 200:
+                    r_json = r.json()
+                    file_sha = r_json.get("sha")
+                    content_raw = base64.b64decode(r_json.get("content", "")).decode("utf-8")
+                    state = json.loads(content_raw)
+            except Exception:
+                pass
+
+        if not state and os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE, "r") as f:
+                    state = json.load(f)
+            except Exception:
+                state = {}
+
+        if not isinstance(state, dict):
+            state = {}
+
+        state["persistent_analytics"] = {
+            "lifetime_total_messages": DIAGNOSTICS_STATE["lifetime_total_messages"],
+            "lifetime_community_chat": DIAGNOSTICS_STATE["lifetime_community_chat"],
+            "lifetime_bot_commands": DIAGNOSTICS_STATE["lifetime_bot_commands"],
+            "lifetime_embeds_sent": DIAGNOSTICS_STATE["lifetime_embeds_sent"],
+            "lifetime_auto_price_alerts": DIAGNOSTICS_STATE["lifetime_auto_price_alerts"],
+            "lifetime_auto_earnings_cards": DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"],
+            "lifetime_options_batches": DIAGNOSTICS_STATE["lifetime_options_batches"],
+            "lifetime_options_setups": DIAGNOSTICS_STATE["lifetime_options_setups"],
+            "lifetime_cmd_price": DIAGNOSTICS_STATE["lifetime_cmd_price"],
+            "lifetime_cmd_options": DIAGNOSTICS_STATE["lifetime_cmd_options"],
+            "lifetime_cmd_analyst": DIAGNOSTICS_STATE["lifetime_cmd_analyst"],
+            "lifetime_cmd_insider": DIAGNOSTICS_STATE["lifetime_cmd_insider"],
+            "lifetime_cmd_short": DIAGNOSTICS_STATE["lifetime_cmd_short"],
+            "lifetime_cmd_vs": DIAGNOSTICS_STATE["lifetime_cmd_vs"],
+            "lifetime_cmd_macro": DIAGNOSTICS_STATE["lifetime_cmd_macro"],
+            "lifetime_cmd_health": DIAGNOSTICS_STATE["lifetime_cmd_health"]
+        }
+
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f, indent=2)
+
+        if GITHUB_TOKEN and file_sha:
+            try:
+                content_b64 = base64.b64encode(json.dumps(state, indent=2).encode("utf-8")).decode("utf-8")
+                payload = {
+                    "message": "📊 Update persistent analytics state [Looney]",
+                    "content": content_b64,
+                    "sha": file_sha
+                }
+                requests.put(GITHUB_API_STATE_URL, json=payload, headers={"Authorization": f"Bearer {GITHUB_TOKEN}"}, timeout=5)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+def periodic_analytics_sync():
+    while True:
+        time.sleep(600)  # Sync to GitHub every 10 minutes
+        save_persistent_analytics_bg()
+
+threading.Thread(target=periodic_analytics_sync, daemon=True).start()
 
 def check_daily_reset():
     """Resets the 24-hour activity counters at 12:00:00 AM EST (Midnight New York time)."""
     today_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
     if DIAGNOSTICS_STATE["current_est_date"] != today_str:
+        save_persistent_analytics_bg()
         DIAGNOSTICS_STATE["current_est_date"] = today_str
         DIAGNOSTICS_STATE["logins_today"] = 0
         DIAGNOSTICS_STATE["resumes_today"] = 0
         DIAGNOSTICS_STATE["messages_seen_today"] = 0
+        DIAGNOSTICS_STATE["community_chat_today"] = 0
+        DIAGNOSTICS_STATE["bot_commands_today"] = 0
         DIAGNOSTICS_STATE["embeds_sent_today"] = 0
+        DIAGNOSTICS_STATE["unique_users_today"].clear()
         DIAGNOSTICS_STATE["cmd_price_today"] = 0
         DIAGNOSTICS_STATE["cmd_options_today"] = 0
         DIAGNOSTICS_STATE["cmd_analyst_today"] = 0
@@ -1206,7 +1336,7 @@ def compare_two_stocks(sym1, sym2):
 
     c_p1, c_p2 = crown(d1['change_pct'], d2['change_pct'])
     c_rsi1, c_rsi2 = crown(d1['rsi_val'], d2['rsi_val'])
-    c_roe1, c_roe2 = crown(d1['roe_val'], d2['roe_val'])
+    c_roe1, c_roe2 = crown(d1['roe_val'], d2['row_val'] if 'row_val' in d2 else d2.get('roe_val'))
     c_m1, c_m2 = crown(d1['margin_val'], d2['margin_val'])
     c_pe1, c_pe2 = crown(d1['pe_val'], d2['pe_val'], higher_is_better=False)
 
@@ -1761,10 +1891,10 @@ def create_health_diagnostics_embed(bot_instance):
     )
     
     server_info = (
-        f"• **Container Uptime:** `{uptime_str}`\n"
+        f"• **Container Uptime:** `{uptime_str}` (Current Deploy)\n"
         f"• **Memory (RAM):** `{mem_mb:.1f} MB / 512 MB`\n"
         f"• **24/7 Keep-Alive Shield:** `Active (10-Min Pulse)`\n"
-        f"• **Render Status:** `Healthy (HTTP 200 OK)`"
+        f"• **Persistent State Engine:** `Synced with GitHub ☁️`"
     )
     embed.add_field(name="⏱️ Server & Process Architecture", value=server_info, inline=False)
     
@@ -1776,21 +1906,33 @@ def create_health_diagnostics_embed(bot_instance):
     )
     embed.add_field(name="⚡ Discord Gateway & Connection Health", value=gateway_info, inline=False)
     
+    unique_users_count = len(DIAGNOSTICS_STATE["unique_users_today"])
     daily_stats = (
-        f"• **Chat Messages Processed:** `{DIAGNOSTICS_STATE['messages_seen_today']}` (Lifetime: `{DIAGNOSTICS_STATE['total_lifetime_messages']}`)\n"
-        f"• **Terminal Cards Dispatched:** `{DIAGNOSTICS_STATE['embeds_sent_today']}`\n"
+        f"• **Total Channel Messages:** `{DIAGNOSTICS_STATE['messages_seen_today']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_total_messages']} 💾`)\n"
+        f"• **💬 Community Chat Messages:** `{DIAGNOSTICS_STATE['community_chat_today']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_community_chat']} 💾`)\n"
+        f"• **⚡ Bot Commands Executed:** `{DIAGNOSTICS_STATE['bot_commands_today']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_bot_commands']} 💾`)\n"
+        f"• **👤 Unique Active Users Today:** `{unique_users_count} Members`\n"
+        f"• **📇 Terminal Cards Dispatched:** `{DIAGNOSTICS_STATE['embeds_sent_today']} Today` (Lifetime: `{DIAGNOSTICS_STATE['lifetime_embeds_sent']} 💾`)\n"
         f"• **Session Reset Window:** `Midnight EST (In {reset_countdown_str})`"
     )
-    embed.add_field(name="📊 24-Hour Daily Volume (Midnight EST Reset)", value=daily_stats, inline=False)
+    embed.add_field(name="📊 24-Hour Channel & Community Activity (Midnight EST Reset)", value=daily_stats, inline=False)
     
-    cmd_breakdown = (
-        f"• **`!/$` Snapshots:** `{DIAGNOSTICS_STATE['cmd_price_today']}` | **`#` Options:** `{DIAGNOSTICS_STATE['cmd_options_today']}`\n"
-        f"• **`%` Radars:** `{DIAGNOSTICS_STATE['cmd_analyst_today']}` | **`?` Insiders:** `{DIAGNOSTICS_STATE['cmd_insider_today']}`\n"
-        f"• **`^` Shorts:** `{DIAGNOSTICS_STATE['cmd_short_today']}` | **`!vs` Battles:** `{DIAGNOSTICS_STATE['cmd_vs_today']}`\n"
-        f"• **`!!macro` Pulses:** `{DIAGNOSTICS_STATE['cmd_macro_today']}` | **`!!health`:** `{DIAGNOSTICS_STATE['cmd_health_today']}`"
+    auto_stats = (
+        f"• **🚨 Automated Price Alerts Fired:** `{DIAGNOSTICS_STATE['lifetime_auto_price_alerts']} Alerts 💾`\n"
+        f"• **🗓️ Corporate Earnings Cards Sent:** `{DIAGNOSTICS_STATE['lifetime_auto_earnings_cards']} Cards 💾`\n"
+        f"• **🎯 Options Strategy Radars Sent:** `{DIAGNOSTICS_STATE['lifetime_options_batches']} Batches 💾`\n"
+        f"• **⚡ Total Quantitative Setups Generated:** `{DIAGNOSTICS_STATE['lifetime_options_setups']} Setups 💾`"
     )
-    embed.add_field(name="🎯 Daily Command Popularity Breakdown", value=cmd_breakdown, inline=False)
-    embed.set_footer(text="Looney Diagnostics • Real-Time Health & Gateway Monitor")
+    embed.add_field(name="🤖 Automated Alert Engine History", value=auto_stats, inline=False)
+
+    cmd_breakdown = (
+        f"• **`!/$` Snapshots:** `{DIAGNOSTICS_STATE['cmd_price_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_price']} Total 💾`) | **`#` Options:** `{DIAGNOSTICS_STATE['cmd_options_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_options']} Total 💾`)\n"
+        f"• **`%` Radars:** `{DIAGNOSTICS_STATE['cmd_analyst_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_analyst']} Total 💾`) | **`?` Insiders:** `{DIAGNOSTICS_STATE['cmd_insider_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_insider']} Total 💾`)\n"
+        f"• **`^` Shorts:** `{DIAGNOSTICS_STATE['cmd_short_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_short']} Total 💾`) | **`!vs` Battles:** `{DIAGNOSTICS_STATE['cmd_vs_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_vs']} Total 💾`)\n"
+        f"• **`!!macro` Pulses:** `{DIAGNOSTICS_STATE['cmd_macro_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_macro']} Total 💾`) | **`!!health`:** `{DIAGNOSTICS_STATE['cmd_health_today']} Today` (`{DIAGNOSTICS_STATE['lifetime_cmd_health']} Total 💾`)"
+    )
+    embed.add_field(name="🎯 Command Popularity Breakdown (Today vs. Lifetime)", value=cmd_breakdown, inline=False)
+    embed.set_footer(text="Looney Diagnostics • Permanent GitHub-Synced State Engine")
     return embed
 
 # -------------------------------------------------------------
@@ -1819,50 +1961,72 @@ async def on_message(message):
         return
 
     check_daily_reset()
+    
+    # 1. Increment total messages & community chat tracking
     DIAGNOSTICS_STATE["messages_seen_today"] += 1
-    DIAGNOSTICS_STATE["total_lifetime_messages"] += 1
+    DIAGNOSTICS_STATE["lifetime_total_messages"] += 1
+    DIAGNOSTICS_STATE["unique_users_today"].add(message.author.id)
 
     content = message.content.strip()
     low_content = content.lower()
 
+    # Determine if message is a command or casual chatter
+    is_command = False
+
     # TRIGGER 0: Health & Diagnostics on `!!health`, `!health`, `!status`, `!ping`
     if low_content in ["!!health", "!health", "!!status", "!status", "!!ping", "!ping"]:
+        is_command = True
         async with message.channel.typing():
             DIAGNOSTICS_STATE["cmd_health_today"] += 1
-            DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+            DIAGNOSTICS_STATE["lifetime_cmd_health"] += 1
+            DIAGNOSTICS_STATE["bot_commands_today"] += 1
+            DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
             DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+            DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
             embed = create_health_diagnostics_embed(bot)
             await message.channel.send(embed=embed)
+            save_persistent_analytics_bg()
             return
 
     # TRIGGER 0B: Global Macro Pulse on `!!macro`, `!macro`, `!econ`, `!fomc`
     if low_content in ["!!macro", "!macro", "!econ", "!fomc", "!!econ"]:
+        is_command = True
         async with message.channel.typing():
             DIAGNOSTICS_STATE["cmd_macro_today"] += 1
-            DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+            DIAGNOSTICS_STATE["lifetime_cmd_macro"] += 1
+            DIAGNOSTICS_STATE["bot_commands_today"] += 1
+            DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
             DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+            DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
             embed = await asyncio.to_thread(fetch_global_macro_pulse)
             await message.channel.send(embed=embed)
+            save_persistent_analytics_bg()
             return
 
     # TRIGGER 0C: 13-Crypto Sequential Paced Scanner on `!crypto` or `!cryptos`
     if low_content in ["!crypto", "!cryptos"]:
+        is_command = True
         async with message.channel.typing():
             for sym in TOP_CRYPTO_LIST:
                 data, err = await asyncio.to_thread(get_on_demand_data, sym)
                 if data and not err:
                     embed = create_market_embed(data)
                     DIAGNOSTICS_STATE["cmd_price_today"] += 1
-                    DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                    DIAGNOSTICS_STATE["lifetime_cmd_price"] += 1
+                    DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                     DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                     await message.channel.send(embed=embed)
                     await asyncio.sleep(1.0)
+            save_persistent_analytics_bg()
             return
 
     # TRIGGER 1: Head-to-Head Comparison on `!vs TICKER1 TICKER2`
     if low_content.startswith("!vs ") or low_content.startswith("vs "):
         parts = content.split()
         if len(parts) >= 3:
+            is_command = True
             s1, s2 = parts[1].upper().replace("$", ""), parts[2].upper().replace("$", "")
             async with message.channel.typing():
                 embed, err = await asyncio.to_thread(compare_two_stocks, s1, s2)
@@ -1870,45 +2034,60 @@ async def on_message(message):
                     await message.channel.send(f"❌ {err}")
                     return
                 DIAGNOSTICS_STATE["cmd_vs_today"] += 1
-                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["lifetime_cmd_vs"] += 1
+                DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await message.channel.send(embed=embed)
+                save_persistent_analytics_bg()
                 return
 
     # TRIGGER 2: Insider Buying & 13F Ownership on `?TICKER`
     if content.startswith("?") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            is_command = True
             async with message.channel.typing():
                 embed, err = await asyncio.to_thread(fetch_insider_and_institutional_data, raw_ticker)
                 if err:
                     await message.channel.send(f"❌ {err}")
                     return
                 DIAGNOSTICS_STATE["cmd_insider_today"] += 1
-                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["lifetime_cmd_insider"] += 1
+                DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await message.channel.send(embed=embed)
+                save_persistent_analytics_bg()
                 return
 
     # TRIGGER 3: Short Squeeze Metrics on `^TICKER`
     if content.startswith("^") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            is_command = True
             async with message.channel.typing():
                 embed, err = await asyncio.to_thread(fetch_short_squeeze_metrics, raw_ticker)
                 if err:
                     await message.channel.send(f"❌ {err}")
                     return
                 DIAGNOSTICS_STATE["cmd_short_today"] += 1
-                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["lifetime_cmd_short"] += 1
+                DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await message.channel.send(embed=embed)
+                save_persistent_analytics_bg()
                 return
 
     # TRIGGER 4: Institutional Research Radar on `%TICKER`
     if content.startswith("%") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            is_command = True
             async with message.channel.typing():
                 try:
                     data, err = await asyncio.to_thread(fetch_institutional_research_radar, raw_ticker)
@@ -1920,11 +2099,15 @@ async def on_message(message):
                         return
                     embeds = create_institutional_radar_embeds(data)
                     DIAGNOSTICS_STATE["cmd_analyst_today"] += 1
-                    DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                    DIAGNOSTICS_STATE["lifetime_cmd_analyst"] += 1
+                    DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                     DIAGNOSTICS_STATE["embeds_sent_today"] += len(embeds)
+                    DIAGNOSTICS_STATE["lifetime_embeds_sent"] += len(embeds)
                     for embed in embeds:
                         await message.channel.send(embed=embed)
                         await asyncio.sleep(0.4)
+                    save_persistent_analytics_bg()
                 except Exception as e:
                     await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
@@ -1933,6 +2116,7 @@ async def on_message(message):
     if content.startswith("#") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
+            is_command = True
             async with message.channel.typing():
                 try:
                     data = await asyncio.to_thread(analyze_stock_options_setup, raw_ticker)
@@ -1941,9 +2125,13 @@ async def on_message(message):
                         return
                     embed = create_deep_dive_options_embed(data)
                     DIAGNOSTICS_STATE["cmd_options_today"] += 1
-                    DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                    DIAGNOSTICS_STATE["lifetime_cmd_options"] += 1
+                    DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                     DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                     await message.channel.send(embed=embed)
+                    save_persistent_analytics_bg()
                 except Exception as e:
                     await message.channel.send(f"❌ Options Error: {e}")
                 return
@@ -1959,6 +2147,7 @@ async def on_message(message):
 
         potential_ticker = raw_cmd.split()[0].upper()
         if potential_ticker and len(potential_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', potential_ticker):
+            is_command = True
             async with message.channel.typing():
                 try:
                     data, err = await asyncio.to_thread(get_on_demand_data, potential_ticker)
@@ -1967,12 +2156,20 @@ async def on_message(message):
                         return
                     embed = create_market_embed(data)
                     DIAGNOSTICS_STATE["cmd_price_today"] += 1
-                    DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                    DIAGNOSTICS_STATE["lifetime_cmd_price"] += 1
+                    DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                     DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                    DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                     await message.channel.send(embed=embed)
+                    save_persistent_analytics_bg()
                 except Exception as e:
                     await message.channel.send(f"❌ Snapshot Error: {e}")
                 return
+
+    if not is_command:
+        DIAGNOSTICS_STATE["community_chat_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_community_chat"] += 1
 
     await bot.process_commands(message)
 
@@ -1987,30 +2184,42 @@ async def crypto_command(ctx):
             if data and not err:
                 embed = create_market_embed(data)
                 DIAGNOSTICS_STATE["cmd_price_today"] += 1
-                DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+                DIAGNOSTICS_STATE["lifetime_cmd_price"] += 1
+                DIAGNOSTICS_STATE["bot_commands_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
                 DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+                DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
                 await ctx.send(embed=embed)
                 await asyncio.sleep(1.0)
+        save_persistent_analytics_bg()
 
 @bot.command(name="health", aliases=["status", "ping"])
 async def health_command(ctx):
     async with ctx.typing():
         check_daily_reset()
         DIAGNOSTICS_STATE["cmd_health_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_health"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         embed = create_health_diagnostics_embed(bot)
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="macro", aliases=["econ", "fomc"])
 async def macro_command(ctx):
     async with ctx.typing():
         check_daily_reset()
         DIAGNOSTICS_STATE["cmd_macro_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_macro"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         embed = await asyncio.to_thread(fetch_global_macro_pulse)
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="vs")
 async def vs_command(ctx, sym1: str, sym2: str):
@@ -2021,9 +2230,13 @@ async def vs_command(ctx, sym1: str, sym2: str):
             await ctx.send(f"❌ {err}")
             return
         DIAGNOSTICS_STATE["cmd_vs_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_vs"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="insider")
 async def insider_command(ctx, ticker: str):
@@ -2034,9 +2247,13 @@ async def insider_command(ctx, ticker: str):
             await ctx.send(f"❌ {err}")
             return
         DIAGNOSTICS_STATE["cmd_insider_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_insider"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="short")
 async def short_command(ctx, ticker: str):
@@ -2047,9 +2264,13 @@ async def short_command(ctx, ticker: str):
             await ctx.send(f"❌ {err}")
             return
         DIAGNOSTICS_STATE["cmd_short_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_short"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="price", aliases=["p", "four", "check"])
 async def price_command(ctx, ticker: str):
@@ -2061,9 +2282,13 @@ async def price_command(ctx, ticker: str):
             return
         embed = create_market_embed(data)
         DIAGNOSTICS_STATE["cmd_price_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_price"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="opt", aliases=["options", "play"])
 async def options_command(ctx, ticker: str):
@@ -2075,9 +2300,13 @@ async def options_command(ctx, ticker: str):
             return
         embed = create_deep_dive_options_embed(data)
         DIAGNOSTICS_STATE["cmd_options_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_options"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += 1
         await ctx.send(embed=embed)
+        save_persistent_analytics_bg()
 
 @bot.command(name="analyst", aliases=["research", "targets"])
 async def analyst_command(ctx, ticker: str):
@@ -2089,11 +2318,15 @@ async def analyst_command(ctx, ticker: str):
             return
         embeds = create_institutional_radar_embeds(data)
         DIAGNOSTICS_STATE["cmd_analyst_today"] += 1
-        DIAGNOSTICS_STATE["total_lifetime_commands"] += 1
+        DIAGNOSTICS_STATE["lifetime_cmd_analyst"] += 1
+        DIAGNOSTICS_STATE["bot_commands_today"] += 1
+        DIAGNOSTICS_STATE["lifetime_bot_commands"] += 1
         DIAGNOSTICS_STATE["embeds_sent_today"] += len(embeds)
+        DIAGNOSTICS_STATE["lifetime_embeds_sent"] += len(embeds)
         for embed in embeds:
             await ctx.send(embed=embed)
             await asyncio.sleep(0.4)
+        save_persistent_analytics_bg()
 
 # -------------------------------------------------------------
 # 11. SMART PRE-FLIGHT GATEWAY HANDSHAKE & RUNNER
