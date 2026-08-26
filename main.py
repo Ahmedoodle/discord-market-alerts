@@ -1075,6 +1075,7 @@ def dispatch_top100_options_radar(session_http, state):
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
+    now_ny = datetime.now(NY_TZ)
 
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker_symbol}?interval=1m&range=2d&includePrePost=true"
@@ -1083,48 +1084,65 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             result = res.json().get("chart", {}).get("result", [{}])[0]
             meta = result.get("meta", {})
             indicators = result.get("indicators", {}).get("quote", [{}])[0]
-            
+            timestamps = result.get("timestamp", []) or []
             raw_closes = indicators.get("close", []) or []
-            valid_closes = [float(c) for c in raw_closes if c is not None and c > 0]
+
+            # Pair timestamps with valid price closes
+            valid_trades = []
+            for i in range(min(len(timestamps), len(raw_closes))):
+                c = raw_closes[i]
+                t = timestamps[i]
+                if c is not None and c > 0 and t is not None:
+                    valid_trades.append((int(t), float(c)))
 
             reg_market_close = meta.get("regularMarketPrice")  # Official regular close
             prev_day_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
-            pre_price = meta.get("preMarketPrice")
-            post_price = meta.get("postMarketPrice")
             
             is_future = ticker_symbol.endswith("=F")
 
             if is_future:
-                curr = meta.get("regularMarketPrice") or (valid_closes[-1] if valid_closes else None)
+                curr = meta.get("regularMarketPrice") or (valid_trades[-1][1] if valid_trades else None)
                 base = prev_day_close or meta.get("chartPreviousClose")
                 if curr is not None and base is not None and float(base) > 0:
                     current_price = float(curr)
                     baseline_price = float(base)
 
             elif session_type == "PRE_MARKET":
-                # Pure Pre-Market Move: Must have an active morning preMarketPrice distinct from close
-                if pre_price is not None and prev_day_close is not None and float(prev_day_close) > 0:
+                # Only consider 1-minute bars executed TODAY since 4:00 AM EST
+                today_4am_ts = int(now_ny.replace(hour=4, minute=0, second=0, microsecond=0).timestamp())
+                morning_trades = [price for (ts, price) in valid_trades if ts >= today_4am_ts]
+
+                pre_price = meta.get("preMarketPrice") or (morning_trades[-1] if morning_trades else None)
+                base_ref = prev_day_close or reg_market_close
+
+                if pre_price is not None and base_ref is not None and float(base_ref) > 0 and (morning_trades or meta.get("preMarketPrice")):
                     current_price = float(pre_price)
-                    baseline_price = float(prev_day_close)
+                    baseline_price = float(base_ref)
                 else:
-                    # No active morning pre-market trades -> perfectly neutral (0.00% change, zero false alerts)
-                    ref_p = float(reg_market_close) if reg_market_close else (float(prev_day_close) if prev_day_close else None)
+                    # No active morning pre-market trades yet today -> perfectly neutral (0.00% change, zero false alerts)
+                    ref_p = float(base_ref) if base_ref else None
                     current_price = ref_p
                     baseline_price = ref_p
 
             elif session_type == "AFTER_HOURS":
-                # Pure After-Hours Move: Must have an active postMarketPrice distinct from today's 4:00 PM close
-                if post_price is not None and reg_market_close is not None and float(reg_market_close) > 0:
+                # Only consider 1-minute bars executed TODAY since 4:00 PM EST
+                today_4pm_ts = int(now_ny.replace(hour=16, minute=0, second=0, microsecond=0).timestamp())
+                evening_trades = [price for (ts, price) in valid_trades if ts >= today_4pm_ts]
+
+                post_price = meta.get("postMarketPrice") or (evening_trades[-1] if evening_trades else None)
+                base_ref = reg_market_close or prev_day_close
+
+                if post_price is not None and base_ref is not None and float(base_ref) > 0 and (evening_trades or meta.get("postMarketPrice")):
                     current_price = float(post_price)
-                    baseline_price = float(reg_market_close)
+                    baseline_price = float(base_ref)
                 else:
                     # No active evening after-hours trades -> perfectly neutral (0.00% change, zero false alerts)
-                    ref_p = float(reg_market_close) if reg_market_close else (float(prev_day_close) if prev_day_close else None)
+                    ref_p = float(base_ref) if base_ref else None
                     current_price = ref_p
                     baseline_price = ref_p
 
             else:  # REGULAR / CRYPTO
-                curr = meta.get("regularMarketPrice") or (valid_closes[-1] if valid_closes else None)
+                curr = meta.get("regularMarketPrice") or (valid_trades[-1][1] if valid_trades else None)
                 base = prev_day_close or meta.get("chartPreviousClose")
                 if curr is not None and base is not None and float(base) > 0:
                     current_price = float(curr)
