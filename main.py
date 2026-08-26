@@ -1086,24 +1086,42 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             
             raw_closes = indicators.get("close", []) or []
             valid_closes = [float(c) for c in raw_closes if c is not None and c > 0]
-            
-            # The latest actual live print right now (including post/pre-market trades)
-            live_price = valid_closes[-1] if valid_closes else (meta.get("postMarketPrice") or meta.get("preMarketPrice") or meta.get("regularMarketPrice"))
-            
-            reg_market_close = meta.get("regularMarketPrice")  # Official 4:00 PM regular close
+
+            reg_market_close = meta.get("regularMarketPrice")  # Official regular close
             prev_day_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
+            pre_price = meta.get("preMarketPrice")
+            post_price = meta.get("postMarketPrice")
             
-            if session_type == "AFTER_HOURS":
-                # Pure After-Hours Move = (Live Post-Market Price - Today's 4:00 PM Close)
-                if live_price is not None and reg_market_close is not None and float(reg_market_close) > 0:
-                    current_price = float(live_price)
-                    baseline_price = float(reg_market_close)
+            is_future = ticker_symbol.endswith("=F")
+
+            if is_future:
+                curr = meta.get("regularMarketPrice") or (valid_closes[-1] if valid_closes else None)
+                base = prev_day_close or meta.get("chartPreviousClose")
+                if curr is not None and base is not None and float(base) > 0:
+                    current_price = float(curr)
+                    baseline_price = float(base)
 
             elif session_type == "PRE_MARKET":
-                # Pure Pre-Market Move = (Live Pre-Market Price - Yesterday's Close)
-                if live_price is not None and prev_day_close is not None and float(prev_day_close) > 0:
-                    current_price = float(live_price)
+                # Pure Pre-Market Move: Must have an active morning preMarketPrice distinct from close
+                if pre_price is not None and prev_day_close is not None and float(prev_day_close) > 0:
+                    current_price = float(pre_price)
                     baseline_price = float(prev_day_close)
+                else:
+                    # No active morning pre-market trades -> perfectly neutral (0.00% change, zero false alerts)
+                    ref_p = float(reg_market_close) if reg_market_close else (float(prev_day_close) if prev_day_close else None)
+                    current_price = ref_p
+                    baseline_price = ref_p
+
+            elif session_type == "AFTER_HOURS":
+                # Pure After-Hours Move: Must have an active postMarketPrice distinct from today's 4:00 PM close
+                if post_price is not None and reg_market_close is not None and float(reg_market_close) > 0:
+                    current_price = float(post_price)
+                    baseline_price = float(reg_market_close)
+                else:
+                    # No active evening after-hours trades -> perfectly neutral (0.00% change, zero false alerts)
+                    ref_p = float(reg_market_close) if reg_market_close else (float(prev_day_close) if prev_day_close else None)
+                    current_price = ref_p
+                    baseline_price = ref_p
 
             else:  # REGULAR / CRYPTO
                 curr = meta.get("regularMarketPrice") or (valid_closes[-1] if valid_closes else None)
@@ -1119,7 +1137,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
         try:
             ticker = yf.Ticker(ticker_symbol, session=session_http)
             fi = ticker.fast_info
-            if session_type == "AFTER_HOURS":
+            if session_type in ["AFTER_HOURS", "PRE_MARKET"]:
                 current_price = float(fi.last_price) if fi.last_price is not None else None
                 baseline_price = float(fi.last_price) if fi.last_price is not None else None
             else:
