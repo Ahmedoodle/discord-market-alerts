@@ -134,13 +134,20 @@ DIAGNOSTICS_STATE = {
 }
 
 def load_persistent_analytics():
-    """Loads cumulative lifetime statistics and daily metrics from GitHub or local file."""
+    """Loads cumulative lifetime statistics and daily metrics from GitHub or local file with cache busting."""
     state = None
     try:
-        headers = {"Accept": "application/vnd.github.v3.raw", "User-Agent": "Looney-Market-Terminal"}
+        ts_ms = int(time.time() * 1000)
+        url = f"{GITHUB_API_STATE_URL}?_={ts_ms}"
+        headers = {
+            "Accept": "application/vnd.github.v3.raw",
+            "User-Agent": "Looney-Market-Terminal",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache"
+        }
         if GITHUB_TOKEN:
             headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-        res = requests.get(GITHUB_API_STATE_URL, headers=headers, timeout=5)
+        res = requests.get(url, headers=headers, timeout=5)
         if res.status_code == 200:
             try:
                 state = res.json()
@@ -172,7 +179,7 @@ def load_persistent_analytics():
             st = state["stats_today"]
             DIAGNOSTICS_STATE["today_auto_news"] = int(st.get("news_dispatches", 0))
             DIAGNOSTICS_STATE["today_auto_price_alerts"] = int(st.get("price_fires", 0))
-            DIAGNOSTICS_STATE["today_auto_earnings_cards"] = int(st.get("earnings_cards", 0))
+            DIAGNOSTICS_STATE["today_auto_earnings_cards"] = max(DIAGNOSTICS_STATE["today_auto_earnings_cards"], int(st.get("earnings_cards", 0)))
             DIAGNOSTICS_STATE["today_options_batches"] = int(st.get("options_radars", 0))
             DIAGNOSTICS_STATE["today_options_setups"] = int(st.get("options_setups", 0))
         else:
@@ -187,7 +194,7 @@ def load_persistent_analytics():
             sl = state["stats_lifetime"]
             DIAGNOSTICS_STATE["lifetime_auto_news"] = int(sl.get("news_dispatches", 0))
             DIAGNOSTICS_STATE["lifetime_auto_price_alerts"] = int(sl.get("price_fires", 0))
-            DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"] = int(sl.get("earnings_cards", 0))
+            DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"] = max(DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"], int(sl.get("earnings_cards", 0)))
             DIAGNOSTICS_STATE["lifetime_options_batches"] = int(sl.get("options_radars", 0))
             DIAGNOSTICS_STATE["lifetime_options_setups"] = int(sl.get("options_setups", 0))
         else:
@@ -210,14 +217,21 @@ def load_persistent_analytics():
 load_persistent_analytics()
 
 def save_persistent_analytics_bg():
-    """Saves updated persistent statistics locally and commits back to GitHub while preserving main.py & earnings.py metrics."""
+    """Saves updated persistent statistics locally and commits back to GitHub with non-destructive merge protection."""
     try:
         state = {}
         file_sha = None
         if GITHUB_TOKEN:
             try:
-                headers = {"Authorization": f"Bearer {GITHUB_TOKEN}", "User-Agent": "Looney-Market-Terminal"}
-                r = requests.get(GITHUB_API_STATE_URL, headers=headers, timeout=5)
+                ts_ms = int(time.time() * 1000)
+                url = f"{GITHUB_API_STATE_URL}?_={ts_ms}"
+                headers = {
+                    "Authorization": f"Bearer {GITHUB_TOKEN}",
+                    "User-Agent": "Looney-Market-Terminal",
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache"
+                }
+                r = requests.get(url, headers=headers, timeout=5)
                 if r.status_code == 200:
                     r_json = r.json()
                     file_sha = r_json.get("sha")
@@ -235,6 +249,36 @@ def save_persistent_analytics_bg():
 
         if not isinstance(state, dict):
             state = {}
+
+        # Non-destructive merge: Protect stats_today from decrease
+        if isinstance(state.get("stats_today"), dict):
+            state["stats_today"]["earnings_cards"] = max(
+                int(state["stats_today"].get("earnings_cards", 0)),
+                DIAGNOSTICS_STATE["today_auto_earnings_cards"]
+            )
+            state["stats_today"]["news_dispatches"] = max(
+                int(state["stats_today"].get("news_dispatches", 0)),
+                DIAGNOSTICS_STATE["today_auto_news"]
+            )
+            state["stats_today"]["price_fires"] = max(
+                int(state["stats_today"].get("price_fires", 0)),
+                DIAGNOSTICS_STATE["today_auto_price_alerts"]
+            )
+
+        # Non-destructive merge: Protect stats_lifetime from decrease
+        if isinstance(state.get("stats_lifetime"), dict):
+            state["stats_lifetime"]["earnings_cards"] = max(
+                int(state["stats_lifetime"].get("earnings_cards", 0)),
+                DIAGNOSTICS_STATE["lifetime_auto_earnings_cards"]
+            )
+            state["stats_lifetime"]["news_dispatches"] = max(
+                int(state["stats_lifetime"].get("news_dispatches", 0)),
+                DIAGNOSTICS_STATE["lifetime_auto_news"]
+            )
+            state["stats_lifetime"]["price_fires"] = max(
+                int(state["stats_lifetime"].get("price_fires", 0)),
+                DIAGNOSTICS_STATE["lifetime_auto_price_alerts"]
+            )
 
         # Save bot interactive statistics cleanly without touching stats_today or stats_lifetime
         state["persistent_analytics"] = {
@@ -415,14 +459,18 @@ def get_crypto_volume_pacing_factor(now_utc):
 def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
     state = None
     try:
+        ts_ms = int(time.time() * 1000)
+        url = f"{GITHUB_API_STATE_URL}?_={ts_ms}"
         headers = {
             "Accept": "application/vnd.github.v3.raw",
-            "User-Agent": "Looney-Market-Terminal"
+            "User-Agent": "Looney-Market-Terminal",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache"
         }
         if GITHUB_TOKEN:
             headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
-        res = http_session.get(GITHUB_API_STATE_URL, headers=headers, timeout=4)
+        res = http_session.get(url, headers=headers, timeout=4)
         if res.status_code == 200:
             state = res.json()
     except Exception:
