@@ -1087,7 +1087,6 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             timestamps = result.get("timestamp", []) or []
             raw_closes = indicators.get("close", []) or []
 
-            # Pair timestamps with valid price closes
             valid_trades = []
             for i in range(min(len(timestamps), len(raw_closes))):
                 c = raw_closes[i]
@@ -1095,7 +1094,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
                 if c is not None and c > 0 and t is not None:
                     valid_trades.append((int(t), float(c)))
 
-            reg_market_close = meta.get("regularMarketPrice")  # Official regular close
+            reg_market_close = meta.get("regularMarketPrice")  # Official regular 4:00 PM close
             prev_day_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
             
             is_future = ticker_symbol.endswith("=F")
@@ -1113,14 +1112,15 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
                 morning_trades = [price for (ts, price) in valid_trades if ts >= today_4am_ts]
 
                 pre_price = meta.get("preMarketPrice") or (morning_trades[-1] if morning_trades else None)
-                base_ref = prev_day_close or reg_market_close
+                # Baseline in pre-market is STRICTLY yesterday's official 4:00 PM close
+                yesterday_close = reg_market_close or prev_day_close
 
-                if pre_price is not None and base_ref is not None and float(base_ref) > 0 and (morning_trades or meta.get("preMarketPrice")):
+                if pre_price is not None and yesterday_close is not None and float(yesterday_close) > 0 and (morning_trades or meta.get("preMarketPrice")):
                     current_price = float(pre_price)
-                    baseline_price = float(base_ref)
+                    baseline_price = float(yesterday_close)
                 else:
                     # No active morning pre-market trades yet today -> perfectly neutral (0.00% change, zero false alerts)
-                    ref_p = float(base_ref) if base_ref else None
+                    ref_p = float(yesterday_close) if yesterday_close else None
                     current_price = ref_p
                     baseline_price = ref_p
 
