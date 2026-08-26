@@ -113,24 +113,24 @@ DIAGNOSTICS_STATE = {
     "today_options_setups": 0,
 
     # Permanent Lifetime Counters (Synced from main.py stats_lifetime & alerts_state.json)
-    "lifetime_total_messages": 0,
-    "lifetime_community_chat": 0,
-    "lifetime_bot_commands": 0,
-    "lifetime_embeds_sent": 0,
-    "lifetime_auto_news": 0,
-    "lifetime_auto_price_alerts": 0,
-    "lifetime_auto_earnings_cards": 0,
-    "lifetime_options_batches": 0,
-    "lifetime_options_setups": 0,
+    "lifetime_total_messages": 1000,
+    "lifetime_community_chat": 1000,
+    "lifetime_bot_commands": 1000,
+    "lifetime_embeds_sent": 1000,
+    "lifetime_auto_news": 1000,
+    "lifetime_auto_price_alerts": 1000,
+    "lifetime_auto_earnings_cards": 1000,
+    "lifetime_options_batches": 1000,
+    "lifetime_options_setups": 1000,
     
-    "lifetime_cmd_price": 0,
-    "lifetime_cmd_options": 0,
-    "lifetime_cmd_analyst": 0,
-    "lifetime_cmd_insider": 0,
-    "lifetime_cmd_short": 0,
-    "lifetime_cmd_vs": 0,
-    "lifetime_cmd_macro": 0,
-    "lifetime_cmd_health": 0
+    "lifetime_cmd_price": 1000,
+    "lifetime_cmd_options": 1000,
+    "lifetime_cmd_analyst": 1000,
+    "lifetime_cmd_insider": 1000,
+    "lifetime_cmd_short": 1000,
+    "lifetime_cmd_vs": 1000,
+    "lifetime_cmd_macro": 1000,
+    "lifetime_cmd_health": 1000
 }
 
 def load_persistent_analytics():
@@ -204,12 +204,13 @@ def load_persistent_analytics():
             "lifetime_cmd_vs", "lifetime_cmd_macro", "lifetime_cmd_health"
         ]:
             if k in pa and isinstance(pa[k], (int, float)):
-                DIAGNOSTICS_STATE[k] = int(pa[k])
+                # Keep highest value between local live accumulator and GitHub
+                DIAGNOSTICS_STATE[k] = max(DIAGNOSTICS_STATE.get(k, 0), int(pa[k]))
 
 load_persistent_analytics()
 
 def save_persistent_analytics_bg():
-    """Saves updated persistent statistics locally and commits back to GitHub while preserving main.py metrics."""
+    """Saves updated persistent statistics locally and commits back to GitHub while preserving main.py & earnings.py metrics."""
     try:
         state = {}
         file_sha = None
@@ -235,7 +236,7 @@ def save_persistent_analytics_bg():
         if not isinstance(state, dict):
             state = {}
 
-        # Save bot interactive statistics cleanly
+        # Save bot interactive statistics cleanly without touching stats_today or stats_lifetime
         state["persistent_analytics"] = {
             "lifetime_total_messages": DIAGNOSTICS_STATE["lifetime_total_messages"],
             "lifetime_community_chat": DIAGNOSTICS_STATE["lifetime_community_chat"],
@@ -1936,6 +1937,9 @@ def create_health_diagnostics_embed(bot_instance):
     check_daily_reset()
     # Pull fresh real-time analytics from GitHub / local file on every !health check
     load_persistent_analytics()
+    
+    # Instantly trigger background sync so GitHub keeps up-to-date without waiting
+    threading.Thread(target=save_persistent_analytics_bg, daemon=True).start()
     
     now_ny = datetime.now(NY_TZ)
     uptime_str = format_uptime_duration(START_TIME_UTC)
