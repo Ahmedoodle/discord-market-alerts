@@ -1,4 +1,5 @@
 import os
+import gc
 import threading
 import asyncio
 import math
@@ -68,6 +69,18 @@ def auto_self_ping():
         time.sleep(600)  # Pings every 10 minutes to prevent Render free-tier sleep
 
 threading.Thread(target=auto_self_ping, daemon=True).start()
+
+# --- BACKGROUND GARBAGE COLLECTION & RAM SWEEPER ---
+def background_memory_sweeper():
+    """Runs every 10 minutes to clear unreferenced memory and keep RAM pinned low."""
+    while True:
+        time.sleep(600)
+        try:
+            gc.collect()
+        except Exception:
+            pass
+
+threading.Thread(target=background_memory_sweeper, daemon=True).start()
 
 # -------------------------------------------------------------
 # 2. PERSISTENT ANALYTICS & DIAGNOSTICS (GITHUB SYNCED)
@@ -346,6 +359,7 @@ def check_daily_reset():
         DIAGNOSTICS_STATE["today_auto_earnings_cards"] = 0
         DIAGNOSTICS_STATE["today_options_batches"] = 0
         DIAGNOSTICS_STATE["today_options_setups"] = 0
+        gc.collect()
 
 def format_uptime_duration(start_dt):
     delta = datetime.now(UTC_TZ) - start_dt
@@ -360,6 +374,18 @@ def format_uptime_duration(start_dt):
     return " ".join(parts)
 
 def get_process_memory_mb():
+    """Returns actual real-time physical resident memory (RSS in MB) directly from Linux procfs."""
+    try:
+        # On Linux (Render), read live current RSS directly from proc status
+        if os.path.exists("/proc/self/status"):
+            with open("/proc/self/status", "r") as f:
+                for line in f:
+                    if line.startswith("VmRSS:"):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            return float(parts[1]) / 1024.0  # Convert KB to MB
+    except Exception:
+        pass
     try:
         import resource
         return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
