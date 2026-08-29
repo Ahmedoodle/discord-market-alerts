@@ -71,7 +71,7 @@ def auto_self_ping():
                 requests.get(target, timeout=10)
         except Exception:
             pass
-        time.sleep(600)  # Pings every 10 minutes to prevent Render free-tier sleep
+        time.sleep(180)  # Pings every 3 minutes to guarantee Render never enters idle sleep
 
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
@@ -342,7 +342,7 @@ def check_daily_reset():
     """Resets daily counters at 12:00:00 AM EST, pushes state to GitHub, and triggers a clean Render rebuild."""
     today_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
     if DIAGNOSTICS_STATE["current_est_date"] != today_str:
-        print(f"🌙 Midnight EST reached. Saving final daily state to GitHub...", flush=True)
+        print(f"🌙 Midnight EST reached ({today_str}). Saving final daily state to GitHub...", flush=True)
         save_persistent_analytics_bg()
         
         DIAGNOSTICS_STATE["current_est_date"] = today_str
@@ -375,6 +375,18 @@ def check_daily_reset():
                 requests.post(RENDER_DEPLOY_HOOK_URL, timeout=10)
             except Exception as e:
                 print(f"⚠️ Deploy hook notice: {e}", flush=True)
+
+def midnight_clock_watchdog():
+    """Autonomous clock watchdog: checks every 15 seconds so midnight triggers on the exact second even without chat."""
+    time.sleep(10)
+    while True:
+        try:
+            check_daily_reset()
+        except Exception:
+            pass
+        time.sleep(15)
+
+threading.Thread(target=midnight_clock_watchdog, daemon=True).start()
 
 def format_uptime_duration(start_dt):
     delta = datetime.now(UTC_TZ) - start_dt
@@ -1395,10 +1407,14 @@ def analyze_stock_options_setup(ticker_symbol):
                 strategy_name = "Long Call (Outright Bullish Momentum)"
                 strike_short = round((current_price + (atr_14 * 0.5)) / strike_step) * strike_step
                 prem_short = round(max(0.15, atr_14 * 0.9), 2)
+                be_short = strike_short + prem_short
+
                 strike_long = round((current_price - (atr_14 * 0.3)) / strike_step) * strike_step
                 prem_long = round(max(0.25, atr_14 * 2.1), 2)
-                play_7_14 = f"Buy ${strike_short:.2f} Call @ ~${prem_short:.2f} | Break-Even: `${strike_short + prem_short:.2f}`"
-                play_30_45 = f"Buy ${strike_long:.2f} Call @ ~${prem_long:.2f} | Break-Even: `${strike_long + prem_long:.2f}`"
+                be_long = strike_long + prem_long
+
+                play_7_14 = f"Buy ${strike_short:.2f} Call @ ~${prem_short:.2f} | Break-Even: `${be_short:.2f}`"
+                play_30_45 = f"Buy ${strike_long:.2f} Call @ ~${prem_long:.2f} | Break-Even: `${be_long:.2f}`"
                 defensive_play = f"Bull Call Debit Spread: Buy ${strike_long:.2f} C / Sell ${strike_long + (strike_step*2):.2f} C"
             else:
                 strategy_name = "Bull Put Credit Spread (Neutral to Bullish Income)"
@@ -1504,7 +1520,7 @@ def compare_two_stocks(sym1, sym2):
         f"• **RSI (14D):** `{d2['rsi_val']:.1f}`{c_rsi2}\n"
         f"• **ROE:** `{d2['roe_val']:.1f}%`{c_roe2 if d2['roe_val'] else ''}\n"
         f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m2 if d2['margin_val'] else ''}\n"
-        f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe2 if d2['pe_val'] else ''}"
+        f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe1 if d2['pe_val'] else ''}"
     )
 
     embed.add_field(name=f"🔵 {sym1}", value=col1, inline=True)
@@ -2046,7 +2062,7 @@ def create_health_diagnostics_embed(bot_instance):
     server_info = (
         f"• **Container Uptime:** `{uptime_str}` (Current Deploy)\n"
         f"• **Memory (RAM):** `{mem_mb:.1f} MB / 512 MB`\n"
-        f"• **24/7 Keep-Alive Shield:** `Active (10-Min Pulse)`\n"
+        f"• **24/7 Keep-Alive Shield:** `Active (3-Min Pulse)`\n"
         f"• **Persistent State Engine:** `Synced with GitHub ☁️`"
     )
     embed.add_field(name="⏱️ Server & Process Architecture", value=server_info, inline=False)
