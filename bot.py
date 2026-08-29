@@ -25,6 +25,11 @@ from curl_cffi import requests as cureq
 # 1. 24/7 KEEP-ALIVE SERVER (RENDER HEALTH SHIELD)
 # -------------------------------------------------------------
 RENDER_URL = os.getenv("RENDER_EXTERNAL_URL", "https://discord-market-alerts.onrender.com").rstrip("/")
+RENDER_DEPLOY_HOOK_URL = os.getenv(
+    "RENDER_DEPLOY_HOOK_URL",
+    "https://api.render.com/deploy/srv-da5hti0jo6nc73ck6r70?key=gT5WoTJdhGQ"
+).strip()
+
 BOT_STATE = {"status": "STARTING"}
 STATE_FILE = "alerts_state.json"
 GITHUB_API_STATE_URL = "https://api.github.com/repos/Ahmedoodle/discord-market-alerts/contents/alerts_state.json"
@@ -334,10 +339,12 @@ def periodic_analytics_sync():
 threading.Thread(target=periodic_analytics_sync, daemon=True).start()
 
 def check_daily_reset():
-    """Resets the 24-hour activity counters at 12:00:00 AM EST (Midnight New York time)."""
+    """Resets daily counters at 12:00:00 AM EST, pushes state to GitHub, and triggers a clean Render rebuild."""
     today_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
     if DIAGNOSTICS_STATE["current_est_date"] != today_str:
+        print(f"🌙 Midnight EST reached. Saving final daily state to GitHub...", flush=True)
         save_persistent_analytics_bg()
+        
         DIAGNOSTICS_STATE["current_est_date"] = today_str
         DIAGNOSTICS_STATE["logins_today"] = 0
         DIAGNOSTICS_STATE["resumes_today"] = 0
@@ -360,6 +367,14 @@ def check_daily_reset():
         DIAGNOSTICS_STATE["today_options_batches"] = 0
         DIAGNOSTICS_STATE["today_options_setups"] = 0
         gc.collect()
+
+        # Trigger automatic fresh Render redeployment for clean RAM & cache
+        if RENDER_DEPLOY_HOOK_URL:
+            try:
+                print(f"🚀 Triggering Midnight Render Deploy Hook for clean container restart...", flush=True)
+                requests.post(RENDER_DEPLOY_HOOK_URL, timeout=10)
+            except Exception as e:
+                print(f"⚠️ Deploy hook notice: {e}", flush=True)
 
 def format_uptime_duration(start_dt):
     delta = datetime.now(UTC_TZ) - start_dt
