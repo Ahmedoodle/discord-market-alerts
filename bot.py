@@ -59,7 +59,6 @@ def run_http_server():
     server = HTTPServer(("0.0.0.0", port), RenderHealthHandler)
     server.serve_forever()
 
-# Starts immediately on Line 1 so Render health checks get 200 OK instantly
 threading.Thread(target=run_http_server, daemon=True).start()
 
 def auto_self_ping():
@@ -71,13 +70,11 @@ def auto_self_ping():
                 requests.get(target, timeout=10)
         except Exception:
             pass
-        time.sleep(180)  # Pings every 3 minutes to guarantee Render never enters idle sleep
+        time.sleep(180)
 
 threading.Thread(target=auto_self_ping, daemon=True).start()
 
-# --- BACKGROUND GARBAGE COLLECTION & RAM SWEEPER ---
 def background_memory_sweeper():
-    """Runs every 10 minutes to clear unreferenced memory and keep RAM pinned low."""
     while True:
         time.sleep(600)
         try:
@@ -113,7 +110,6 @@ DIAGNOSTICS_STATE = {
     "embeds_sent_today": 0,
     "unique_users_today": set(),
     
-    # Daily Command Popularity
     "cmd_price_today": 0,
     "cmd_options_today": 0,
     "cmd_analyst_today": 0,
@@ -123,14 +119,12 @@ DIAGNOSTICS_STATE = {
     "cmd_macro_today": 0,
     "cmd_health_today": 0,
 
-    # Daily Automated Activity (Synced from main.py stats_today)
     "today_auto_news": 0,
     "today_auto_price_alerts": 0,
     "today_auto_earnings_cards": 0,
     "today_options_batches": 0,
     "today_options_setups": 0,
 
-    # Permanent Lifetime Counters (Synced from main.py stats_lifetime & alerts_state.json)
     "lifetime_total_messages": 1000,
     "lifetime_community_chat": 1000,
     "lifetime_bot_commands": 1000,
@@ -152,7 +146,6 @@ DIAGNOSTICS_STATE = {
 }
 
 def load_persistent_analytics():
-    """Loads cumulative lifetime statistics and daily metrics from GitHub or local file with cache busting."""
     state = None
     try:
         ts_ms = int(time.time() * 1000)
@@ -174,7 +167,6 @@ def load_persistent_analytics():
     except Exception:
         pass
 
-    # Universal Base64 decoder if GitHub returned standard API JSON envelope
     if isinstance(state, dict) and "content" in state and state.get("encoding") == "base64":
         try:
             content_raw = base64.b64decode(state["content"]).decode("utf-8")
@@ -192,7 +184,6 @@ def load_persistent_analytics():
     if state and isinstance(state, dict):
         today_ny_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
 
-        # 1. Sync Today's automated alert counts from main.py & earnings.py
         if state.get("stock_session_date") == today_ny_str and isinstance(state.get("stats_today"), dict):
             st = state["stats_today"]
             DIAGNOSTICS_STATE["today_auto_news"] = int(st.get("news_dispatches", 0))
@@ -207,7 +198,6 @@ def load_persistent_analytics():
             DIAGNOSTICS_STATE["today_options_batches"] = 0
             DIAGNOSTICS_STATE["today_options_setups"] = 0
 
-        # 2. Sync Lifetime automated alert counts from stats_lifetime
         if isinstance(state.get("stats_lifetime"), dict):
             sl = state["stats_lifetime"]
             DIAGNOSTICS_STATE["lifetime_auto_news"] = int(sl.get("news_dispatches", 0))
@@ -220,7 +210,6 @@ def load_persistent_analytics():
             if seen_news and isinstance(seen_news, list):
                 DIAGNOSTICS_STATE["lifetime_auto_news"] = len(seen_news)
 
-        # 3. Sync Bot Commands Lifetime Stats from persistent_analytics
         pa = state.get("persistent_analytics", {})
         for k in [
             "lifetime_total_messages", "lifetime_community_chat", "lifetime_bot_commands",
@@ -229,13 +218,11 @@ def load_persistent_analytics():
             "lifetime_cmd_vs", "lifetime_cmd_macro", "lifetime_cmd_health"
         ]:
             if k in pa and isinstance(pa[k], (int, float)):
-                # Keep highest value between local live accumulator and GitHub
                 DIAGNOSTICS_STATE[k] = max(DIAGNOSTICS_STATE.get(k, 0), int(pa[k]))
 
 load_persistent_analytics()
 
 def save_persistent_analytics_bg():
-    """Saves updated persistent statistics locally and commits back to GitHub with non-destructive merge protection."""
     try:
         state = {}
         file_sha = None
@@ -268,7 +255,6 @@ def save_persistent_analytics_bg():
         if not isinstance(state, dict):
             state = {}
 
-        # Non-destructive merge: Protect stats_today from decrease
         if isinstance(state.get("stats_today"), dict):
             state["stats_today"]["earnings_cards"] = max(
                 int(state["stats_today"].get("earnings_cards", 0)),
@@ -283,7 +269,6 @@ def save_persistent_analytics_bg():
                 DIAGNOSTICS_STATE["today_auto_price_alerts"]
             )
 
-        # Non-destructive merge: Protect stats_lifetime from decrease
         if isinstance(state.get("stats_lifetime"), dict):
             state["stats_lifetime"]["earnings_cards"] = max(
                 int(state["stats_lifetime"].get("earnings_cards", 0)),
@@ -298,7 +283,6 @@ def save_persistent_analytics_bg():
                 DIAGNOSTICS_STATE["lifetime_auto_price_alerts"]
             )
 
-        # Save bot interactive statistics cleanly without touching stats_today or stats_lifetime
         state["persistent_analytics"] = {
             "lifetime_total_messages": DIAGNOSTICS_STATE["lifetime_total_messages"],
             "lifetime_community_chat": DIAGNOSTICS_STATE["lifetime_community_chat"],
@@ -333,13 +317,12 @@ def save_persistent_analytics_bg():
 
 def periodic_analytics_sync():
     while True:
-        time.sleep(1800)  # Clean 30-minute sync cycle to GitHub
+        time.sleep(1800)
         save_persistent_analytics_bg()
 
 threading.Thread(target=periodic_analytics_sync, daemon=True).start()
 
 def check_daily_reset():
-    """Resets daily counters at 12:00:00 AM EST, pushes state to GitHub, and triggers a clean Render rebuild."""
     today_str = datetime.now(NY_TZ).strftime("%Y-%m-%d")
     if DIAGNOSTICS_STATE["current_est_date"] != today_str:
         print(f"🌙 Midnight EST reached ({today_str}). Saving final daily state to GitHub...", flush=True)
@@ -368,7 +351,6 @@ def check_daily_reset():
         DIAGNOSTICS_STATE["today_options_setups"] = 0
         gc.collect()
 
-        # Trigger automatic fresh Render redeployment for clean RAM & cache
         if RENDER_DEPLOY_HOOK_URL:
             try:
                 print(f"🚀 Triggering Midnight Render Deploy Hook for clean container restart...", flush=True)
@@ -377,7 +359,6 @@ def check_daily_reset():
                 print(f"⚠️ Deploy hook notice: {e}", flush=True)
 
 def midnight_clock_watchdog():
-    """Autonomous clock watchdog: checks every 15 seconds so midnight triggers on the exact second even without chat."""
     time.sleep(10)
     while True:
         try:
@@ -401,16 +382,14 @@ def format_uptime_duration(start_dt):
     return " ".join(parts)
 
 def get_process_memory_mb():
-    """Returns actual real-time physical resident memory (RSS in MB) directly from Linux procfs."""
     try:
-        # On Linux (Render), read live current RSS directly from proc status
         if os.path.exists("/proc/self/status"):
             with open("/proc/self/status", "r") as f:
                 for line in f:
                     if line.startswith("VmRSS:"):
                         parts = line.split()
                         if len(parts) >= 2:
-                            return float(parts[1]) / 1024.0  # Convert KB to MB
+                            return float(parts[1]) / 1024.0
     except Exception:
         pass
     try:
@@ -461,7 +440,6 @@ nasdaq_short_session.headers.update({
 YAHOO_AUTH_CACHE = {"crumb": None, "session": None, "expiry": 0}
 
 def get_authenticated_yahoo_session():
-    """Fetches and caches a valid Yahoo cookie + crumb using Chrome TLS impersonation."""
     now = time.time()
     if YAHOO_AUTH_CACHE["crumb"] and YAHOO_AUTH_CACHE["session"] and now < YAHOO_AUTH_CACHE["expiry"]:
         return YAHOO_AUTH_CACHE["session"], YAHOO_AUTH_CACHE["crumb"]
@@ -474,7 +452,7 @@ def get_authenticated_yahoo_session():
             crumb = c_res.text.strip()
             YAHOO_AUTH_CACHE["crumb"] = crumb
             YAHOO_AUTH_CACHE["session"] = s
-            YAHOO_AUTH_CACHE["expiry"] = now + 1800  # Cache for 30 minutes
+            YAHOO_AUTH_CACHE["expiry"] = now + 1800
             return s, crumb
     except Exception:
         pass
@@ -488,7 +466,6 @@ def format_large_number(num):
     elif num >= 1e3: return f"${num / 1e3:.1f}K"
     return str(int(num))
 
-# --- INTRADAY VOLUME PACING (EQUITIES & CRYPTO) ---
 def get_intraday_volume_pacing_factor(now_ny):
     if now_ny.weekday() > 4:
         return 1.0
@@ -508,7 +485,6 @@ def get_crypto_volume_pacing_factor(now_utc):
     effective_mins = max(15, mins_elapsed)
     return min(1.0, max(0.01, effective_mins / 1440.0))
 
-# --- DYNAMIC GITHUB STATE FETCHER (OFFICIAL GITHUB REST API) ---
 def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
     state = None
     try:
@@ -529,7 +505,6 @@ def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
     except Exception:
         pass
 
-    # Universal Base64 decoder if GitHub returned wrapped envelope
     if isinstance(state, dict) and "content" in state and state.get("encoding") == "base64":
         try:
             content_raw = base64.b64decode(state["content"]).decode("utf-8")
@@ -537,7 +512,6 @@ def get_saved_today_path(ticker_symbol, change_pct, is_crypto):
         except Exception:
             pass
 
-    # Local fallback if network query failed
     if not state and os.path.exists(STATE_FILE):
         try:
             with open(STATE_FILE, "r") as f:
@@ -703,10 +677,6 @@ def parse_finviz_number_str(val_str):
         return None
 
 def fetch_official_nasdaq_short_interest(ticker_symbol):
-    """
-    Official NASDAQ Exchange API for bi-monthly regulatory short interest.
-    Provides accurate settlement short interest volume and days to cover for all US equities.
-    """
     sym = ticker_symbol.upper().replace(".TO", "").replace(".V", "").strip()
     data_dict = {}
     try:
@@ -728,10 +698,6 @@ def fetch_official_nasdaq_short_interest(ticker_symbol):
     return data_dict
 
 def fetch_finviz_security_fundamentals(ticker_symbol):
-    """
-    Direct Cloud-Immune Finviz Browser TLS Parser.
-    Extracts Short Float %, Short Ratio, Float, and Ownership.
-    """
     res_dict = {}
     try:
         sym = ticker_symbol.upper().replace(".TO", "").replace(".V", "").strip()
@@ -800,9 +766,12 @@ def get_on_demand_data(ticker_symbol):
 
         current_price = meta.get("regularMarketPrice") or closes[-1]
         
-        # Real-time baseline strictly aligned with Yahoo Finance 24h ticker
-        prev_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose") or (closes[-2] if len(closes) >= 2 else current_price)
-        change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
+        # Crypto: directly grab official Yahoo 24h change percent. Equities: use regular calculation
+        if is_crypto and meta.get("regularMarketChangePercent") is not None:
+            change_pct = float(meta.get("regularMarketChangePercent"))
+        else:
+            prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
+            change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
 
         # Retrieve Today's Path via Official GitHub API (0.0s updates)
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
@@ -1804,7 +1773,6 @@ def fetch_insider_and_institutional_data(ticker_symbol):
                             raw_trades.append(f"• **{badge}** by **{insider_name}** (`{shares} shs` • {clean_act})")
             except Exception: pass
 
-        # Guarantee Discord 1024-Character Embed Field Limit
         trades_lines = []
         curr_len = 0
         for t_line in raw_trades[:10]:
@@ -1881,30 +1849,18 @@ def fetch_short_squeeze_metrics(ticker_symbol):
         try: c_name = str(t_obj.info.get("shortName") or t_obj.info.get("longName") or sym)
         except Exception: pass
 
-        # 1. Primary Source: Official NASDAQ Exchange Regulatory Short Data
         nasdaq_short = fetch_official_nasdaq_short_interest(sym)
-
-        # 2. Secondary Source: Finviz Cloud Engine
         fz_data = fetch_finviz_security_fundamentals(sym)
 
-        # 3. Fallback Source: Yahoo Info
         k_info = {}
         try: k_info = t_obj.info or {}
         except Exception: pass
 
-        # Float Extraction
         float_shares = fz_data.get("shs_float") or k_info.get("floatShares") or getattr(t_obj.fast_info, "shares", None)
-        
-        # Real Shares Shorted
         shares_short = nasdaq_short.get("shares_short") or (float_shares * (fz_data["short_float_pct"] / 100.0) if float_shares and fz_data.get("short_float_pct") else None) or k_info.get("sharesShort")
-        
-        # Days to Cover (Short Ratio)
         short_ratio = nasdaq_short.get("short_ratio") or fz_data.get("short_ratio") or k_info.get("shortRatio")
-        
         shares_prior = k_info.get("sharesShortPriorMonth")
 
-        # PURE MANUAL MATHEMATICAL CALCULATION of Short % of Float:
-        # Short % of Float = (Total Shares Shorted / Tradable Float) * 100
         short_pct_float = None
         if shares_short is not None and float_shares and float_shares > 0:
             short_pct_float = (float(shares_short) / float(float_shares)) * 100.0
@@ -1981,15 +1937,12 @@ def fetch_global_macro_pulse():
     try:
         def get_mini_quote(sym):
             try:
-                # Use range=1d so chartPreviousClose reflects official yesterday's close (or 24h for crypto)
                 res = http_session.get(f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1d", timeout=4)
                 if res.status_code == 200:
                     data = res.json()["chart"]["result"][0]
                     meta = data.get("meta", {})
-                    
                     p = meta.get("regularMarketPrice", 0.0)
                     prev = meta.get("chartPreviousClose") or meta.get("previousClose") or p
-                    
                     chg = (((p - prev) / prev) * 100) if prev and prev > 0 else 0.0
                     return sym, p, chg
             except Exception: pass
@@ -2038,10 +1991,7 @@ def fetch_global_macro_pulse():
 # -------------------------------------------------------------
 def create_health_diagnostics_embed(bot_instance):
     check_daily_reset()
-    # Pull fresh real-time analytics from GitHub / local file on every !health check
     load_persistent_analytics()
-    
-    # Instantly trigger background sync so GitHub keeps up-to-date without waiting
     threading.Thread(target=save_persistent_analytics_bg, daemon=True).start()
     
     now_ny = datetime.now(NY_TZ)
@@ -2130,7 +2080,6 @@ async def on_message(message):
 
     check_daily_reset()
     
-    # 1. Increment total messages & community chat tracking
     DIAGNOSTICS_STATE["messages_seen_today"] += 1
     DIAGNOSTICS_STATE["lifetime_total_messages"] += 1
     DIAGNOSTICS_STATE["unique_users_today"].add(message.author.id)
@@ -2138,10 +2087,8 @@ async def on_message(message):
     content = message.content.strip()
     low_content = content.lower()
 
-    # Determine if message is a command or casual chatter
     is_command = False
 
-    # TRIGGER 0: Health & Diagnostics on `!!health`, `!health`, `!status`, `!ping`
     if low_content in ["!!health", "!health", "!!status", "!status", "!!ping", "!ping"]:
         is_command = True
         async with message.channel.typing():
@@ -2155,7 +2102,6 @@ async def on_message(message):
             await message.channel.send(embed=embed)
             return
 
-    # TRIGGER 0B: Global Macro Pulse on `!!macro`, `!macro`, `!econ`, `!fomc`
     if low_content in ["!!macro", "!macro", "!econ", "!fomc", "!!econ"]:
         is_command = True
         async with message.channel.typing():
@@ -2169,7 +2115,6 @@ async def on_message(message):
             await message.channel.send(embed=embed)
             return
 
-    # TRIGGER 0C: 13-Crypto Sequential Paced Scanner on `!crypto` or `!cryptos`
     if low_content in ["!crypto", "!cryptos"]:
         is_command = True
         async with message.channel.typing():
@@ -2187,7 +2132,6 @@ async def on_message(message):
                     await asyncio.sleep(1.0)
             return
 
-    # TRIGGER 1: Head-to-Head Comparison on `!vs TICKER1 TICKER2`
     if low_content.startswith("!vs ") or low_content.startswith("vs "):
         parts = content.split()
         if len(parts) >= 3:
@@ -2207,7 +2151,6 @@ async def on_message(message):
                 await message.channel.send(embed=embed)
                 return
 
-    # TRIGGER 2: Insider Buying & 13F Ownership on `?TICKER`
     if content.startswith("?") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -2226,7 +2169,6 @@ async def on_message(message):
                 await message.channel.send(embed=embed)
                 return
 
-    # TRIGGER 3: Short Squeeze Metrics on `^TICKER`
     if content.startswith("^") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -2245,7 +2187,6 @@ async def on_message(message):
                 await message.channel.send(embed=embed)
                 return
 
-    # TRIGGER 4: Institutional Research Radar on `%TICKER`
     if content.startswith("%") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -2273,7 +2214,6 @@ async def on_message(message):
                     await message.channel.send(f"❌ Error generating research radar for `{raw_ticker}`: {e}")
                 return
 
-    # TRIGGER 5: Options Deep-Dive on `#TICKER`
     if content.startswith("#") and len(content) >= 2:
         raw_ticker = content[1:].split()[0].upper().replace("$", "")
         if len(raw_ticker) <= 12 and re.match(r'^[A-Z0-9=\-\.]+$', raw_ticker):
@@ -2296,7 +2236,6 @@ async def on_message(message):
                     await message.channel.send(f"❌ Options Error: {e}")
                 return
 
-    # TRIGGER 6: Technicals Snapshot on `!TICKER` or `$TICKER`
     if content.startswith("!") or content.startswith("$"):
         raw_cmd = content[1:].strip()
         first_word = raw_cmd.split()[0].lower() if raw_cmd else ""
@@ -2482,10 +2421,6 @@ async def analyst_command(ctx, ticker: str):
 # 11. SMART PRE-FLIGHT GATEWAY HANDSHAKE & RUNNER
 # -------------------------------------------------------------
 def smart_gateway_preflight(token):
-    """
-    Checks Discord Gateway status before calling bot.run().
-    If rate limited, sleeps for the exact retry_after countdown sent by Discord.
-    """
     url = "https://discord.com/api/v10/gateway/bot"
     headers = {"Authorization": f"Bot {token}"}
 
@@ -2532,7 +2467,6 @@ if __name__ == "__main__":
         print(f"🚀 Starting Looney Bot on Render...", flush=True)
         while True:
             try:
-                # Pre-flight check ensures we never hammer Discord if rate limited
                 smart_gateway_preflight(BOT_TOKEN)
                 BOT_STATE["status"] = "CONNECTING"
                 bot.run(BOT_TOKEN)
