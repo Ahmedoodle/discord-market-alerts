@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 106.13,
+      "history": [
+        "+2.41%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -14612,18 +14619,30 @@
     "link_https://stocktwits.com/news-articles/markets/cryptocurrency/bitcoin-buyers-profit-bull-market/cZYwZRHRJri?.tsrc=rss",
     "title_bitcoinbuyersstepbackinasrealizedcapgains46billionisabullmarketfinallyhere_2026-08-30",
     "link_https://www.fool.com/investing/2026/08/30/prediction-ai-unprecedented-once-decade-buy/?.tsrc=rss",
-    "title_predictionifartificialintelligenceaileadstounprecedentedeconomicgrowththese2sp500stocksareonceinadecadebuyingopportunitiesrightnow_2026-08-30"
+    "title_predictionifartificialintelligenceaileadstounprecedentedeconomicgrowththese2sp500stocksareonceinadecadebuyingopportunitiesrightnow_2026-08-30",
+    "link_https://finance.yahoo.com/m/5851be5e-4456-36df-acc2-e391c82c51f8/dow-jones-futures-due-amid.html",
+    "title_dowjonesfuturesdueamidbullishbearishmarketsignalswhattodonow_2026-08-30",
+    "link_https://finance.yahoo.com/technology/articles/sayrose-introduces-era-aesthetic-technology-124500002.html",
+    "title_sayroseintroducesaneweraofaesthetictechnologygiftsatifa2026_2026-08-30",
+    "link_https://finance.yahoo.com/m/c820e3b1-9a39-3fb5-abc2-a73333e8ebc8/broadcom-or-amd%3F-here%27s-why.html",
+    "title_broadcomoramdhereswhythemarketispricingthesameaiboomsodifferentlyacross2chipstocks_2026-08-30",
+    "link_https://finance.yahoo.com/m/00b9b740-86be-3281-b6c0-cce730f346f5/hock-tan-guided-broadcom-past.html",
+    "title_hocktanguidedbroadcompast100billionofairevenuein2027thestockis25offitshigh_2026-08-30",
+    "link_https://finance.yahoo.com/m/cf8defbd-ae2f-37de-8976-0f2637163ee9/i%27ve-been-writing-about.html",
+    "title_ivebeenwritingaboutdisneystockfor30yearshereswhymyconvictionhasneverbeenhigher_2026-08-30",
+    "link_https://finance.yahoo.com/technology/ai/articles/microsoft-made-24-1-billion-031442842.html?.tsrc=rss",
+    "title_microsoftmade241billionfromopenaiin2026investorsstillcantseeonecrucialnumber_2026-08-28"
   ],
   "stats_today": {
-    "news_dispatches": 22,
-    "price_fires": 0,
+    "news_dispatches": 27,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 13706,
-    "price_fires": 1498,
+    "news_dispatches": 13711,
+    "price_fires": 1499,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
