@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "ETH-USD": {
+      "last_price": 2513.59,
+      "history": [
+        "+2.56%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -14678,18 +14685,28 @@
     "link_https://www.fool.com/investing/2026/08/30/bull-markets-rise-bear-markets-fall-heres-how-i/?.tsrc=rss",
     "title_bullmarketsrisebearmarketsfallhereshowiuseeachtobuildwealth_2026-08-30",
     "link_https://finance.yahoo.com/technology/articles/elon-musk-says-spacex-offer-133109598.html?.tsrc=rss",
-    "title_elonmusksaysspacexwillofferstarlinkathalfpriceforpeoplelivingnearstarbaselouisiana_2026-08-30"
+    "title_elonmusksaysspacexwillofferstarlinkathalfpriceforpeoplelivingnearstarbaselouisiana_2026-08-30",
+    "link_https://finance.yahoo.com/m/c897904f-4b9f-3b2e-8e48-a7b4eead0aff/cathie-wood-buys-%2453-million.html",
+    "title_cathiewoodbuys53millionofpopularsemiconductorstock_2026-08-30",
+    "link_https://finance.yahoo.com/m/95a2d5ce-13bc-3dbb-8904-da4c2a2f2f79/chelsea-beat-brighton-in.html",
+    "title_chelseabeatbrightoninsevengoalthrillerleedsholdbrentford_2026-08-30",
+    "link_https://finance.yahoo.com/m/b06001f2-7068-3126-b356-2f78336ee4fa/john-james%2C-gop-governor.html",
+    "title_johnjamesgopgovernorcandidatesaystariffscantbeborneofthebacksofmichiganders_2026-08-30",
+    "link_https://finance.yahoo.com/m/289b2431-7d6a-374f-988f-3f875309c633/the-stock-market-is-repeating.html",
+    "title_thestockmarketisrepeatingapatternnotseensince2000hereswhathistorysayscomesnext_2026-08-30",
+    "link_https://finance.yahoo.com/technology/articles/teslas-500-semi-einride-order-151529733.html",
+    "title_teslas500semieinrideorderfinallygetsatimeline75approximatelythisyearceosays_2026-08-30"
   ],
   "stats_today": {
-    "news_dispatches": 28,
-    "price_fires": 0,
+    "news_dispatches": 32,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 13712,
-    "price_fires": 1498,
+    "news_dispatches": 13716,
+    "price_fires": 1499,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
