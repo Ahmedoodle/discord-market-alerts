@@ -4,7 +4,20 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3656,
+      "history": [
+        "-2.20%"
+      ]
+    },
+    "SOL-USD": {
+      "last_price": 102.02,
+      "history": [
+        "-3.41%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -14764,18 +14777,42 @@
     "link_https://www.fool.com/investing/2026/08/30/is-amazons-this-the-single-best-reason-to-buy-the/?.tsrc=rss",
     "title_isthisthesinglebestreasontobuyamazonstockrightnow_2026-08-30",
     "link_https://www.fool.com/investing/2026/08/30/hock-tan-guided-broadcom-past-usd100-billion-of-ai-revenue-in-2027-the-stock-is-25-off-its-high/?.tsrc=rss",
-    "title_hocktanguidedbroadcompast100billionofairevenuein2027thestockis25offitshigh_2026-08-30"
+    "title_hocktanguidedbroadcompast100billionofairevenuein2027thestockis25offitshigh_2026-08-30",
+    "link_https://finance.yahoo.com/m/7de95f7d-b1f3-325c-8047-b8b68d80d7c1/2-dow-jones-stocks-down-over.html",
+    "title_2dowjonesstocksdownover20idbuyonthedip_2026-08-30",
+    "link_https://finance.yahoo.com/m/757ba7da-10c6-3d4c-a3bc-c81effc0d954/about-15-people-missing-after.html",
+    "title_about15peoplemissingaftergrandcanyonflashflood_2026-08-30",
+    "link_https://finance.yahoo.com/m/20692bbd-fd67-3a08-9ea7-8a236b0aa495/jim-cramer-reveals-his-20%25.html",
+    "title_jimcramerrevealshis20ruleforwinningstocks_2026-08-30",
+    "link_https://finance.yahoo.com/m/ba02333f-2e77-3d13-b533-e566acc2bcec/one-dead%2C-14-injured-in.html",
+    "title_onedead14injuredinchicagomassshootingatparkgathering_2026-08-30",
+    "link_https://finance.yahoo.com/m/ca4a66ce-4028-3f0d-a4bd-99bf875cdd92/ripple-is-now-brokering-wall.html",
+    "title_rippleisnowbrokeringwallstreetequitieswheredoesxrpfit_2026-08-30",
+    "link_https://finance.yahoo.com/m/75d36802-4d7c-363b-bd02-ddcfbc0c41b1/c3.ai-vs.-intuit%3A-which.html",
+    "title_c3aivsintuitwhichsoftwarestockisabetterinvestmentin2026asbothhovernear52weeklows_2026-08-30",
+    "link_https://finance.yahoo.com/m/665e7c47-8391-3d07-a8c2-f1011809961c/interest-rates%2C-jobs-data-and.html",
+    "title_interestratesjobsdataandotherkeythingstowatchthisweek_2026-08-30",
+    "link_https://finance.yahoo.com/markets/options/articles/options-market-predicting-spike-first-135800318.html",
+    "title_istheoptionsmarketpredictingaspikeinfirstmajesticsilverstock_2026-08-28",
+    "link_https://finance.yahoo.com/markets/stocks/articles/first-majestic-silver-tsx-ag-081641054.html",
+    "title_firstmajesticsilvertsxagstocklooksfullypricedascashflowjumps_2026-08-27",
+    "link_https://finance.yahoo.com/m/b412842f-66d6-31e1-ab83-15e97b17af58/could-a-chinese-blacklist-be.html",
+    "title_couldachineseblacklistbebullishforrareearthstocks_2026-08-29",
+    "link_https://finance.yahoo.com/markets/stocks/articles/usa-rare-earth-usar-stock-210629673.html",
+    "title_usarareearthusarstocklooksfairlyvaluedwithrisksstillinview_2026-08-28",
+    "link_https://www.thestreet.com/crypto/markets/billionaire-hedge-fund-manager-bets-on-ex-bitcoin-miners?.tsrc=rss",
+    "title_billionairehedgefundmanagerbetsonexbitcoinminers_2026-08-30"
   ],
   "stats_today": {
-    "news_dispatches": 33,
-    "price_fires": 0,
+    "news_dispatches": 40,
+    "price_fires": 2,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 13717,
-    "price_fires": 1498,
+    "news_dispatches": 13724,
+    "price_fires": 1500,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
