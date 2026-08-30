@@ -795,12 +795,14 @@ def get_on_demand_data(ticker_symbol):
         lows = [b[2] for b in valid_bars]
         volumes = [b[3] for b in valid_bars]
 
-        current_price = meta.get("regularMarketPrice") or closes[-1]
-        prev_close = meta.get("regularMarketPreviousClose") or meta.get("previousClose") or closes[-2]
-        change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
-
         quote_type = meta.get("instrumentType", "EQUITY")
         is_crypto = (quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
+
+        current_price = meta.get("regularMarketPrice") or closes[-1]
+        
+        # Real-time baseline strictly aligned with Yahoo Finance 24h ticker
+        prev_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose") or (closes[-2] if len(closes) >= 2 else current_price)
+        change_pct = (((current_price - prev_close) / prev_close) * 100) if prev_close and prev_close > 0 else 0.0
 
         # Retrieve Today's Path via Official GitHub API (0.0s updates)
         path_trail_str = get_saved_today_path(ticker_symbol, change_pct, is_crypto)
@@ -1407,14 +1409,10 @@ def analyze_stock_options_setup(ticker_symbol):
                 strategy_name = "Long Call (Outright Bullish Momentum)"
                 strike_short = round((current_price + (atr_14 * 0.5)) / strike_step) * strike_step
                 prem_short = round(max(0.15, atr_14 * 0.9), 2)
-                be_short = strike_short + prem_short
-
                 strike_long = round((current_price - (atr_14 * 0.3)) / strike_step) * strike_step
                 prem_long = round(max(0.25, atr_14 * 2.1), 2)
-                be_long = strike_long + prem_long
-
-                play_7_14 = f"Buy ${strike_short:.2f} Call @ ~${prem_short:.2f} | Break-Even: `${be_short:.2f}`"
-                play_30_45 = f"Buy ${strike_long:.2f} Call @ ~${prem_long:.2f} | Break-Even: `${be_long:.2f}`"
+                play_7_14 = f"Buy ${strike_short:.2f} Call @ ~${prem_short:.2f} | Break-Even: `${strike_short + prem_short:.2f}`"
+                play_30_45 = f"Buy ${strike_long:.2f} Call @ ~${prem_long:.2f} | Break-Even: `${strike_long + prem_long:.2f}`"
                 defensive_play = f"Bull Call Debit Spread: Buy ${strike_long:.2f} C / Sell ${strike_long + (strike_step*2):.2f} C"
             else:
                 strategy_name = "Bull Put Credit Spread (Neutral to Bullish Income)"
@@ -1520,7 +1518,7 @@ def compare_two_stocks(sym1, sym2):
         f"• **RSI (14D):** `{d2['rsi_val']:.1f}`{c_rsi2}\n"
         f"• **ROE:** `{d2['roe_val']:.1f}%`{c_roe2 if d2['roe_val'] else ''}\n"
         f"• **Net Margin:** `{d2['margin_val']:.1f}%`{c_m2 if d2['margin_val'] else ''}\n"
-        f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe1 if d2['pe_val'] else ''}"
+        f"• **P/E Ratio:** `{d2['pe_val']:.1f}x`{c_pe2 if d2['pe_val'] else ''}"
     )
 
     embed.add_field(name=f"🔵 {sym1}", value=col1, inline=True)
