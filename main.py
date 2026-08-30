@@ -1070,11 +1070,12 @@ def dispatch_top100_options_radar(session_http, state):
         state["stats_lifetime"]["options_radars"] += 1
 
 # ====================================================================
-# 8. DATA EXTRACTION ENGINE (Exact Pure Extended Hours Calculations)
+# 8. DATA EXTRACTION ENGINE (Exact Pure Extended Hours & Crypto Calculations)
 # ====================================================================
 def get_extended_stock_data(ticker_symbol, session_type, session_http):
     current_price = None
     baseline_price = None
+    official_change_pct = None
     now_ny = datetime.now(NY_TZ)
 
     try:
@@ -1097,9 +1098,20 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             reg_market_close = meta.get("regularMarketPrice")  # Official regular 4:00 PM close
             prev_day_close = meta.get("chartPreviousClose") or meta.get("previousClose") or meta.get("regularMarketPreviousClose")
             
+            quote_type = meta.get("instrumentType", "EQUITY")
+            is_crypto = (session_type == "CRYPTO" or quote_type == "CRYPTOCURRENCY" or "-USD" in ticker_symbol)
             is_future = ticker_symbol.endswith("=F")
 
-            if is_future:
+            if is_crypto:
+                curr = meta.get("regularMarketPrice") or (valid_trades[-1][1] if valid_trades else None)
+                base = prev_day_close or meta.get("chartPreviousClose")
+                if curr is not None:
+                    current_price = float(curr)
+                    baseline_price = float(base) if base is not None and float(base) > 0 else current_price
+                if meta.get("regularMarketChangePercent") is not None:
+                    official_change_pct = float(meta.get("regularMarketChangePercent"))
+
+            elif is_future:
                 curr = meta.get("regularMarketPrice") or (valid_trades[-1][1] if valid_trades else None)
                 base = prev_day_close or meta.get("chartPreviousClose")
                 if curr is not None and base is not None and float(base) > 0:
@@ -1141,7 +1153,7 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
                     current_price = ref_p
                     baseline_price = ref_p
 
-            else:  # REGULAR / CRYPTO
+            else:  # REGULAR
                 curr = meta.get("regularMarketPrice") or (valid_trades[-1][1] if valid_trades else None)
                 base = prev_day_close or meta.get("chartPreviousClose")
                 if curr is not None and base is not None and float(base) > 0:
@@ -1158,13 +1170,16 @@ def get_extended_stock_data(ticker_symbol, session_type, session_http):
             if session_type in ["AFTER_HOURS", "PRE_MARKET"]:
                 current_price = float(fi.last_price) if fi.last_price is not None else None
                 baseline_price = float(fi.last_price) if fi.last_price is not None else None
+            elif session_type == "CRYPTO":
+                current_price = float(fi.last_price) if fi.last_price is not None else None
+                baseline_price = float(fi.previous_close) if fi.previous_close is not None else current_price
             else:
                 current_price = float(fi.last_price) if fi.last_price is not None else None
                 baseline_price = float(fi.previous_close) if fi.previous_close is not None else None
         except Exception:
             pass
 
-    return current_price, baseline_price
+    return current_price, baseline_price, official_change_pct
 
 def fetch_ticker_news_search(symbol, session):
     news_items = []
@@ -1291,10 +1306,14 @@ def check_market():
 
     for ticker_symbol, s_type, req_threshold, badge in active_watchlist:
         try:
-            current_price, baseline_price = get_extended_stock_data(ticker_symbol, s_type, session_http)
+            current_price, baseline_price, official_change_pct = get_extended_stock_data(ticker_symbol, s_type, session_http)
 
             if current_price is not None and baseline_price is not None and baseline_price > 0:
-                change_pct = ((current_price - baseline_price) / baseline_price) * 100
+                # Crypto uses official Yahoo 24h regularMarketChangePercent; equities use session baseline calculation
+                if s_type == "CRYPTO" and official_change_pct is not None:
+                    change_pct = official_change_pct
+                else:
+                    change_pct = ((current_price - baseline_price) / baseline_price) * 100
 
                 if s_type == "CRYPTO":
                     tracked_dict = state["crypto_tickers"]
