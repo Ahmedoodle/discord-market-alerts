@@ -33,9 +33,10 @@
       ]
     },
     "SYK": {
-      "last_price": 327.31,
+      "last_price": 332.06,
       "history": [
-        "-1.02%"
+        "-1.02%",
+        "+0.41%"
       ]
     },
     "PLTR": {
@@ -81,15 +82,65 @@
       ]
     },
     "CBRS": {
-      "last_price": 176.61,
+      "last_price": 178.52,
       "history": [
-        "-1.38%"
+        "-1.38%",
+        "-0.31%"
+      ]
+    },
+    "USO": {
+      "last_price": 132.6992,
+      "history": [
+        "+2.31%"
+      ]
+    },
+    "BNO": {
+      "last_price": 52.65,
+      "history": [
+        "+2.27%"
+      ]
+    },
+    "XOM": {
+      "last_price": 158.32,
+      "history": [
+        "+1.03%"
+      ]
+    },
+    "CVX": {
+      "last_price": 204.98,
+      "history": [
+        "+1.55%"
+      ]
+    },
+    "KLAC": {
+      "last_price": 177.3496,
+      "history": [
+        "+1.03%"
+      ]
+    },
+    "FAST": {
+      "last_price": 48.79,
+      "history": [
+        "-1.99%"
+      ]
+    },
+    "INTC": {
+      "last_price": 90.8,
+      "history": [
+        "+1.49%"
       ]
     }
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 102.59,
+      "history": [
+        "-2.05%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -14985,18 +15036,26 @@
     "link_https://finance.yahoo.com/m/84b61924-e3ab-377d-a08a-3094c13a1190/tesla-cybercab-hype-builds%3A.html",
     "title_teslacybercabhypebuildscathiewoodchamathcheermusksaienergypushbutoneanalystcallsthebullcaseabsurd_2026-08-31",
     "link_https://beincrypto.com/bitcoin-hard-fork-september-dashjr-ocean/?.tsrc=rss",
-    "title_bitcoinholdersfaceahardforkonseptember1hereswhatactuallychanges_2026-08-31"
+    "title_bitcoinholdersfaceahardforkonseptember1hereswhatactuallychanges_2026-08-31",
+    "link_https://finance.yahoo.com/m/51c1c0dd-b002-3eaa-9d77-e4c97822baf6/off-white%2C-creative-director.html",
+    "title_offwhitecreativedirectoribkamarapartways_2026-08-31",
+    "link_https://finance.yahoo.com/m/6fd3e939-f4dd-3a2c-a95d-6934cb122b30/prediction%3A-meta-stock.html",
+    "title_predictionmetastockreclaimsitsalltimehighbefore2029_2026-08-31",
+    "link_https://finance.yahoo.com/m/2a504c3b-e98e-3cb0-a156-26c4bb4979b2/5-consumer-stocks-bucked.html",
+    "title_5consumerstocksbuckedaugustgloomwithdoubledigitgainsanffigselabnbdash_2026-08-31",
+    "link_https://finance.yahoo.com/energy/articles/oil-jumps-more-2-us-221149377.html",
+    "title_oilrisesasusiranresumemilitaryattacks_2026-08-31"
   ],
   "stats_today": {
-    "news_dispatches": 16,
-    "price_fires": 14,
+    "news_dispatches": 20,
+    "price_fires": 24,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 13733,
-    "price_fires": 1515,
+    "news_dispatches": 13737,
+    "price_fires": 1525,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
