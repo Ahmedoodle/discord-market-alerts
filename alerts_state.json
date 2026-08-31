@@ -123,9 +123,10 @@
       ]
     },
     "MRNA": {
-      "last_price": 135.0,
+      "last_price": 133.53,
       "history": [
-        "-2.17%"
+        "-2.17%",
+        "-3.23%"
       ]
     },
     "SMCI": {
@@ -321,11 +322,78 @@
       "history": [
         "-1.41%"
       ]
+    },
+    "DHR": {
+      "last_price": 212.31,
+      "history": [
+        "-1.74%"
+      ]
+    },
+    "HON": {
+      "last_price": 215.03,
+      "history": [
+        "-1.10%"
+      ]
+    },
+    "MU": {
+      "last_price": 921.941,
+      "history": [
+        "-1.17%"
+      ]
+    },
+    "NXPI": {
+      "last_price": 225.96,
+      "history": [
+        "+1.06%"
+      ]
+    },
+    "ILMN": {
+      "last_price": 212.91,
+      "history": [
+        "-1.24%"
+      ]
+    },
+    "RBLX": {
+      "last_price": 38.11,
+      "history": [
+        "-1.09%"
+      ]
+    },
+    "CBRS": {
+      "last_price": 177.144,
+      "history": [
+        "-1.08%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 159.38,
+      "history": [
+        "-1.03%"
+      ]
     }
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3656,
+      "history": [
+        "-3.07%"
+      ]
+    },
+    "SOL-USD": {
+      "last_price": 102.9,
+      "history": [
+        "-3.93%"
+      ]
+    },
+    "LINK-USD": {
+      "last_price": 11.28,
+      "history": [
+        "-2.32%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -15721,18 +15789,50 @@
     "link_https://finance.yahoo.com/m/a4f4b13d-dc23-38be-908d-196a185a03b0/michael-saylor%E2%80%99s-strategy.html",
     "title_michaelsaylorsstrategyresumesbitcoinbuyingafter10weekpausemstrstockeyesbestmonthsincenovember2024_2026-08-31",
     "link_https://finance.yahoo.com/m/07920b20-f831-3827-8135-c94152c1cf7b/strategy-buys-%24370m-of.html",
-    "title_strategybuys370mofbitcoininfirstpurchasesincejune_2026-08-31"
+    "title_strategybuys370mofbitcoininfirstpurchasesincejune_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/paragon-advanced-labs-reports-q2-130400993.html",
+    "title_paragonadvancedlabsreportsq22026results_2026-08-31",
+    "link_https://finance.yahoo.com/markets/crypto/articles/strategy-inc-officially-back-bitcoin-130254234.html",
+    "title_strategyincisofficiallybackinthebitcoinbuyingbusiness_2026-08-31",
+    "link_https://finance.yahoo.com/m/3edd1857-b767-345d-9fdc-e1643962b8fa/apple-is-suddenly-an-ai.html",
+    "title_appleissuddenlyanaiinfrastructurestockasopenaibuysmacsbythetensofthousands_2026-08-31",
+    "link_https://finance.yahoo.com/technology/articles/raek-invests-silicon-prairie-holdings-130500051.html",
+    "title_raekinvestsinsiliconprairieholdingsdeepeninglongstandingtechnologypartnership_2026-08-31",
+    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-130412293.html",
+    "title_sectorupdatehealthcare_2026-08-31",
+    "link_https://finance.yahoo.com/m/4f1cb58c-7fd8-37c9-bae6-23dd2a79f3bc/pinterest-falls-4%25-as-cfo.html",
+    "title_pinterestfalls4ascforesignssnapincheshigheralphabetholdsflat_2026-08-31",
+    "link_https://finance.yahoo.com/markets/commodities/articles/blue-jay-gold-starts-drilling-125913562.html",
+    "title_bluejaygoldstartsdrillingatbeckercochranantimonyoccurrenceatitsstellerprojectintheyukon_2026-08-31",
+    "link_https://finance.yahoo.com/m/22ac10f5-e2d6-38ea-9218-d04baf3abf39/qatarenergy-extends-lng.html",
+    "title_qatarenergyextendslngcancellationsintonovemberashormuzdisruptiondragson_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/crowdstrike-launches-tool-automate-ai-130221207.html",
+    "title_crowdstrikelaunchesnewtooltoautomateaisecurityworkflows_2026-08-31",
+    "link_https://finance.yahoo.com/m/0f193d77-26fd-35a4-a4b7-4b01d9e47162/this-little-known-ai-company.html",
+    "title_thislittleknownaicompanyisquietlybuildingforthedatacenterboom_2026-08-31",
+    "link_https://finance.yahoo.com/healthcare/articles/abbott-laboratories-introduces-similac-360-125607629.html",
+    "title_abbottlaboratoriesintroducessimilac360totalcaremadewithwholemilkinus_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/broadcom-strengthens-spring-security-adds-130300999.html",
+    "title_broadcomstrengthensspringsecurityandaddscoverageofjavapythonandnodejsecosystemswithtruesource_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/broadcom-unveils-ai-ready-data-130200241.html",
+    "title_broadcomunveilsaireadydatafoundationsinvmwaretanzuplatformtopowersecureenterpriseaicloud_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/broadcom-delivers-end-end-security-130100050.html",
+    "title_broadcomdeliversendtoendsecurityidentityandobservabilityforagenticai_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/pg-e-downgraded-wells-fargo-130006737.html",
+    "title_pgedowngradedbywellsfargobmoascaliforniawildfirereformfallsshort_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/wise-early-results-show-paychex-130000427.html?.tsrc=rss",
+    "title_wiseatworkearlyresultsshowpaychexaiisreducingpayrollerrorsandimprovingserviceefficiencyatscale_2026-08-31"
   ],
   "stats_today": {
-    "news_dispatches": 229,
-    "price_fires": 78,
+    "news_dispatches": 245,
+    "price_fires": 90,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14051,
-    "price_fires": 1657,
+    "news_dispatches": 14067,
+    "price_fires": 1669,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
