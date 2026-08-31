@@ -227,11 +227,48 @@
       "history": [
         "+1.30%"
       ]
+    },
+    "ACN": {
+      "last_price": 186.66,
+      "history": [
+        "-1.56%"
+      ]
+    },
+    "ADBE": {
+      "last_price": 288.2425,
+      "history": [
+        "-1.12%"
+      ]
+    },
+    "AEP": {
+      "last_price": 121.0,
+      "history": [
+        "-1.07%"
+      ]
+    },
+    "WDAY": {
+      "last_price": 202.25,
+      "history": [
+        "-1.21%"
+      ]
+    },
+    "IREN": {
+      "last_price": 35.8161,
+      "history": [
+        "+1.03%"
+      ]
     }
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 103.71,
+      "history": [
+        "-2.25%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -15441,18 +15478,42 @@
     "link_https://99bitcoins.com/news/altcoins/xrp-news-etf-inflows-fed-pressure/?.tsrc=rss",
     "title_xrpetfdemandholdsfirmasfedpressurebreaksxrppricesupport_2026-08-31",
     "link_https://finance.yahoo.com/markets/stocks/articles/jensen-huang-passes-mark-zuckerberg-104610910.html?.tsrc=rss",
-    "title_jensenhuangpassesmarkzuckerberglarryellisonhereshowmuchnvidiaceoisworth_2026-08-31"
+    "title_jensenhuangpassesmarkzuckerberglarryellisonhereshowmuchnvidiaceoisworth_2026-08-31",
+    "link_https://finance.yahoo.com/markets/article/fed-chairman-kevin-warsh-triggered-a-new-problem-for-stocks-120625754.html",
+    "title_fedchairmankevinwarshtriggeredanewproblemforstocks_2026-08-31",
+    "link_https://finance.yahoo.com/m/cbbcf4c7-08e1-3c2f-ad4c-8620e6345b61/nepal-toll-surges-as-rescuers.html",
+    "title_nepaltollsurgesasrescuersstrugglethroughunimaginabledisaster_2026-08-31",
+    "link_https://finance.yahoo.com/economy/articles/indias-gdp-grows-7-8-103911995.html",
+    "title_indiasapriljuneeconomicgrowthbeatsforecastsat78onsurgeininvestment_2026-08-31",
+    "link_https://finance.yahoo.com/m/5fa8afb8-7a62-303e-84ca-b243e978c0e5/prediction%3A-this-ai.html",
+    "title_predictionthisaiinfrastructurestockwillsoaraftersept3hintitsnotbroadcom_2026-08-31",
+    "link_https://finance.yahoo.com/media-advertising/articles/lg-cns-targets-u-ad-120000052.html",
+    "title_lgcnstargetsusadmarketwithagenticaipoweredmarketingsolution_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/knowbe4-launches-email-collaboration-security-120000256.html",
+    "title_knowbe4launchesemailandcollaborationsecurityprotectionforgoogleworkspace_2026-08-31",
+    "link_https://finance.yahoo.com/media-advertising/articles/full-sail-full-scale-adia-120000426.html",
+    "title_fromfullsailtofullscaleadiamedincassemblesinternsocialmediateam_2026-08-31",
+    "link_https://finance.yahoo.com/energy/articles/one-nuclear-executes-binding-loi-120000985.html",
+    "title_onenuclearexecutesbindingloiforprojectcaymana288gwlouisianaenergyprojectwithcolocateddatacentercampus_2026-08-31",
+    "link_https://99bitcoins.com/news/bitcoin-btc/bitcoin-yen-fed-oil-risks/?.tsrc=rss",
+    "title_bitcoinpricepredictionmacropressuremountsasyenslidesandoilclimbs_2026-08-31",
+    "link_https://finance.yahoo.com/media-advertising/articles/duke-cannon-mountain-dew-launch-120000118.html?.tsrc=rss",
+    "title_dukecannonandmountaindewlaunchnewlimitededitionsummerthemedcollaboration_2026-08-31",
+    "link_https://finance.yahoo.com/technology/ai/articles/crowdstrike-brings-clears-verified-human-115500403.html?.tsrc=rss",
+    "title_crowdstrikebringsclearsverifiedhumanidentityintothefalconplatform_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/kraft-heinz-participate-2026-barclays-120000120.html?.tsrc=rss",
+    "title_kraftheinztoparticipateat2026barclaysglobalconsumerconference_2026-08-31"
   ],
   "stats_today": {
-    "news_dispatches": 140,
-    "price_fires": 47,
+    "news_dispatches": 152,
+    "price_fires": 53,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 13962,
-    "price_fires": 1626,
+    "news_dispatches": 13974,
+    "price_fires": 1632,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
