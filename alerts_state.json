@@ -56,16 +56,18 @@
       ]
     },
     "DDOG": {
-      "last_price": 236.36,
+      "last_price": 233.55,
       "history": [
         "-1.60%",
-        "-0.26%"
+        "-0.26%",
+        "-1.45%"
       ]
     },
     "MRNA": {
-      "last_price": 136.24,
+      "last_price": 134.71,
       "history": [
-        "-1.27%"
+        "-1.27%",
+        "-2.38%"
       ]
     },
     "MSTR": {
@@ -82,9 +84,10 @@
       ]
     },
     "BLSH": {
-      "last_price": 32.51,
+      "last_price": 32.87,
       "history": [
-        "-1.16%"
+        "-1.16%",
+        "-0.06%"
       ]
     },
     "CBRS": {
@@ -296,9 +299,10 @@
       ]
     },
     "ON": {
-      "last_price": 73.6887,
+      "last_price": 72.8,
       "history": [
-        "+1.49%"
+        "+1.49%",
+        "+0.26%"
       ]
     },
     "FTNT": {
@@ -307,11 +311,24 @@
         "+1.81%",
         "+0.48%"
       ]
+    },
+    "ETN": {
+      "last_price": 408.7241,
+      "history": [
+        "+1.48%"
+      ]
     }
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 102.92,
+      "history": [
+        "-2.07%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -15391,18 +15408,26 @@
     "link_https://finance.yahoo.com/m/9398c8e3-c481-3db8-9f23-9c03d0a3d937/iren-stock-faces-3-month.html",
     "title_irenstockfaces3monthlosingstreakafterq4missbutanalystseesbuyingopportunity_2026-08-31",
     "link_https://finance.yahoo.com/markets/stocks/articles/fubon-initiates-spacex-buy-183-094800507.html",
-    "title_fuboninitiatesspacexatbuywith183pricetarget_2026-08-31"
+    "title_fuboninitiatesspacexatbuywith183pricetarget_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/heineken-holding-n-v-reports-100100239.html",
+    "title_heinekenholdingnvreportstransactionsunderitscurrentsharebuybackprogramme_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/firstcash-upsizes-extends-term-unsecured-100000200.html",
+    "title_firstcashupsizesandextendstermofunsecuredbankcreditfacilitysizeofcommittedfacilityincreasedfrom700millionto11billionmaturitydateextendedtoaugust2031_2026-08-31",
+    "link_https://finance.yahoo.com/small-business/articles/oppenheimer-welcomes-joel-berry-ii-100000872.html",
+    "title_oppenheimerwelcomesjoelberryiiandexpandsnorthcarolinaprivateclientteamfocusedonadvisingathletes_2026-08-31",
+    "link_https://finance.yahoo.com/personal-finance/banking/article/best-cd-rates-today-monday-august-31-2026-lock-in-up-to-430-apy-100000028.html",
+    "title_bestcdratestodaymondayaugust312026lockinupto430apy_2026-08-31"
   ],
   "stats_today": {
-    "news_dispatches": 101,
-    "price_fires": 72,
+    "news_dispatches": 105,
+    "price_fires": 78,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 13818,
-    "price_fires": 1573,
+    "news_dispatches": 13822,
+    "price_fires": 1579,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
