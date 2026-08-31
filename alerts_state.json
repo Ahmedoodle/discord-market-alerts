@@ -5,9 +5,10 @@
   "regular_tickers": {},
   "afterhours_tickers": {
     "ADP": {
-      "last_price": 289.9988,
+      "last_price": 286.16,
       "history": [
-        "+1.34%"
+        "+1.34%",
+        "+0.00%"
       ]
     },
     "CHTR": {
@@ -23,9 +24,10 @@
       ]
     },
     "ILMN": {
-      "last_price": 208.071,
+      "last_price": 213.63,
       "history": [
-        "-2.60%"
+        "-2.60%",
+        "+0.00%"
       ]
     },
     "SNDK": {
@@ -33,9 +35,28 @@
       "history": [
         "-1.05%"
       ]
+    },
+    "SPGI": {
+      "last_price": 442.46,
+      "history": [
+        "+1.52%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 138.7077,
+      "history": [
+        "-1.16%"
+      ]
     }
   },
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "ETH-USD": {
+      "last_price": 2466.07,
+      "history": [
+        "+2.04%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -15457,18 +15478,48 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/horizon-robotics-ham-8yo-h1-230034367.html",
     "title_horizonroboticsham8yoh12026earningscallhighlightsrevenuesurges32_2026-08-31",
     "link_https://finance.yahoo.com/technology/articles/mixx-launches-sxc-connector-high-230000637.html",
-    "title_mixxlaunchessxcconnectorforhighradixscaleupandmultipetabitconnectivity_2026-08-31"
+    "title_mixxlaunchessxcconnectorforhighradixscaleupandmultipetabitconnectivity_2026-08-31",
+    "link_https://finance.yahoo.com/m/18d4bc76-9321-3a44-aaad-6f791323bb31/top-seeded-zverev-opens-us.html",
+    "title_topseededzverevopensusopencampaign_2026-08-31",
+    "link_https://finance.yahoo.com/healthcare/articles/rutland-regional-medical-center-earns-232200779.html",
+    "title_rutlandregionalmedicalcenterearnsfourusnewsworldreporthighperformingratings_2026-08-31",
+    "link_https://finance.yahoo.com/m/bc4839e8-fb04-3df7-a690-031f5eba6806/social-security-faces-a-22%25.html",
+    "title_socialsecurityfacesa22cutin2032hereswhatwouldactuallyhappentoyourcheck_2026-08-31",
+    "link_https://finance.yahoo.com/small-business/articles/monterey-county-bank-announces-appointments-203000243.html",
+    "title_correctionmontereycountybank_2026-08-31",
+    "link_https://finance.yahoo.com/healthcare/articles/kazia-therapeutics-limited-announces-oversubscribed-232300992.html",
+    "title_kaziatherapeuticslimitedannouncesoversubscribedclosingofupto120millionpublicoffering_2026-08-31",
+    "link_https://finance.yahoo.com/energy/articles/venezuelan-crude-oil-exports-reportedly-225536349.html",
+    "title_venezuelancrudeoilexportsreportedlyriseinaugastrumplooksforgreatercontrol_2026-08-31",
+    "link_https://finance.yahoo.com/m/ec206f8d-3553-3290-9f0b-f914e059c0e3/dell-stock-could-halve-or.html",
+    "title_dellstockcouldhalveordoublewithinthirteenmonths_2026-08-31",
+    "link_https://finance.yahoo.com/media-advertising/articles/us-regulator-22-states-accuse-230624178.html",
+    "title_usregulator22statesaccuseamazonofmanipulatingadauctionslawsuit_2026-08-31",
+    "link_https://finance.yahoo.com/m/2ac6903a-500b-3d01-bd32-3de6b1281b94/protagonist-wins-fda-approval.html",
+    "title_protagonistwinsfdaapprovalformimryloinrarebloodcancertreatment_2026-08-31",
+    "link_https://finance.yahoo.com/m/bc5dfed6-8b71-3005-8b6d-99746bc03623/stock-market-enjoys-august.html",
+    "title_stockmarketenjoysaugustgainsthankstounusualwinners_2026-08-31",
+    "link_https://finance.yahoo.com/healthcare/articles/thermo-fisher-scientific-tmo-unveils-230701731.html",
+    "title_thermofisherscientifictmounveilsnewtoolsforelectronmicroscopyandisotopeanalysis_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/stryker-syk-stock-looks-bargain-230634972.html",
+    "title_strykersykstocklookslikeabargainnearfairvalue_2026-08-31",
+    "link_https://finance.yahoo.com/m/267aee7d-4556-345c-b00c-ed88902e4634/boeing-resumes-talks-as.html",
+    "title_boeingresumestalksasengineerstrikerisklooms_2026-08-31",
+    "link_https://finance.yahoo.com/markets/crypto/articles/mark-cuban-got-really-disappointed-220031586.html?.tsrc=rss",
+    "title_markcubangotreallydisappointedbyethereumhereswhythesecondlargestcryptofailedtoliveuptotheformersharkshopes_2026-08-31",
+    "link_https://finance.yahoo.com/markets/stocks/articles/lundin-mining-announces-updated-share-230000295.html?.tsrc=rss",
+    "title_lundinminingannouncesupdatedsharecapitalandprovidesupdateonsharebuybacks_2026-08-31"
   ],
   "stats_today": {
-    "news_dispatches": 3,
-    "price_fires": 5,
+    "news_dispatches": 15,
+    "price_fires": 10,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14133,
-    "price_fires": 1755,
+    "news_dispatches": 14145,
+    "price_fires": 1760,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
