@@ -4,7 +4,20 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3941,
+      "history": [
+        "+2.27%"
+      ]
+    },
+    "LINK-USD": {
+      "last_price": 11.498,
+      "history": [
+        "+2.07%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -15450,18 +15463,30 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/mobility-global-mbgl-promising-player-133854452.html?.tsrc=rss",
     "title_mobilityglobalmbglapromisingnewplayerintheautomotivesector_2026-08-31",
     "link_https://finance.yahoo.com/markets/stocks/articles/p-global-spgi-remaining-divisions-133015336.html?.tsrc=rss",
-    "title_spglobalsspgiremainingdivisionsshowcasestrongprofitabilitypostspinout_2026-08-31"
+    "title_spglobalsspgiremainingdivisionsshowcasestrongprofitabilitypostspinout_2026-08-31",
+    "link_https://finance.yahoo.com/m/c68bce9b-4934-3fe1-881f-bc04fd53c8de/amd-vs.-nvidia%3A-spacex-and.html",
+    "title_amdvsnvidiaspacexandteslaceoelonmuskweighsinonhistoppick_2026-09-01",
+    "link_https://finance.yahoo.com/m/0136a733-e72b-33c6-a066-22aa7ebc4954/austrac-opens-aml%2Fctf-probe.html",
+    "title_austracopensamlctfprobeintowesternunionaustralia_2026-09-01",
+    "link_https://finance.yahoo.com/small-business/articles/mid-autumn-festival-long-weekend-054500315.html",
+    "title_midautumnfestivallongweekenddomestictourisminterestdoublesagodarevealstaiwaneseheadforthemountainsandseasgreenislandsearchesincrease45x_2026-09-01",
+    "link_https://finance.yahoo.com/technology/ai/articles/agentic-ai-arrived-workforce-ready-033000160.html",
+    "title_agenticaihasarrivedisyourworkforcereadytoleverageit_2026-08-31",
+    "link_https://finance.yahoo.com/m/182d5e60-646a-3d26-89e1-00847fa44665/tesla-stock-crushes-rivian%2C.html",
+    "title_teslastockcrushesrivianchineseevrivalsinaugustwallstreetseesmoreupsidebeforecybercabevent_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/moderna-mrna-soars-156-august-054454391.html",
+    "title_modernamrnasoars156inaugusthereswhatpropelledtherally_2026-09-01"
   ],
   "stats_today": {
-    "news_dispatches": 6,
-    "price_fires": 0,
+    "news_dispatches": 11,
+    "price_fires": 2,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14130,
-    "price_fires": 1748,
+    "news_dispatches": 14135,
+    "price_fires": 1750,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
