@@ -40,10 +40,11 @@
       ]
     },
     "MELI": {
-      "last_price": 1937.25,
+      "last_price": 1914.94,
       "history": [
         "+1.20%",
-        "+0.05%"
+        "+0.05%",
+        "-1.10%"
       ]
     },
     "CHTR": {
@@ -263,11 +264,12 @@
       ]
     },
     "ON": {
-      "last_price": 73.07,
+      "last_price": 74.09,
       "history": [
         "-1.47%",
         "+0.00%",
-        "-1.38%"
+        "-1.38%",
+        "+0.00%"
       ]
     },
     "RBLX": {
@@ -575,11 +577,30 @@
       "history": [
         "+1.02%"
       ]
+    },
+    "PM": {
+      "last_price": 189.3525,
+      "history": [
+        "+1.10%"
+      ]
+    },
+    "BIIB": {
+      "last_price": 218.99,
+      "history": [
+        "+1.08%"
+      ]
     }
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 11.48,
+      "history": [
+        "+2.13%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -16497,18 +16518,54 @@
     "link_https://finance.yahoo.com/healthcare/articles/plant-virome-diagnostics-outlook-2026-112100828.html?.tsrc=rss",
     "title_plantviromediagnosticsoutlook20262030featuringprofilesofilluminathermofisherscientificandqiagen_2026-09-01",
     "link_https://finance.yahoo.com/small-business/articles/loblaw-invest-approximately-1-2-110400893.html?.tsrc=rss",
-    "title_loblawtoinvestapproximately12billionincapitalexpendituresthroughremainderof2026openingmoreharddiscountstorestohelplowerpricesformorecanadians_2026-09-01"
+    "title_loblawtoinvestapproximately12billionincapitalexpendituresthroughremainderof2026openingmoreharddiscountstorestohelplowerpricesformorecanadians_2026-09-01",
+    "link_https://finance.yahoo.com/energy/articles/energy-transition-today-ai-transforms-113703825.html",
+    "title_energytransitiontodayaitransformssolarenergywith13billioninvestment_2026-09-01",
+    "link_https://finance.yahoo.com/technology/ai/articles/global-5-78-billion-autonomous-113500856.html",
+    "title_global578billionautonomousnavigationmarketinsightsreport2026forecasttoexpandat1799cagrthrough2035_2026-09-01",
+    "link_https://finance.yahoo.com/small-business/articles/gi-partners-acquires-majority-interest-113500223.html",
+    "title_gipartnersacquiresamajorityinterestinotodataholdingsincpartneringwithexistinginvestorrenovocapital_2026-09-01",
+    "link_https://finance.yahoo.com/energy/articles/inplay-oil-corp-confirms-monthly-113000503.html",
+    "title_inplayoilcorpconfirmsmonthlydividendforseptember2026_2026-09-01",
+    "link_https://finance.yahoo.com/energy/articles/buy-3-mutual-funds-powered-112800682.html",
+    "title_buythese3mutualfundspoweredbyenergysectorgains_2026-09-01",
+    "link_https://finance.yahoo.com/m/6083605f-1923-3b86-9227-4cb859594662/dow-futures-fall-240-points.html",
+    "title_dowfuturesfall240pointsasbondyieldsoilpricesrise_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/rosenblatt-securities-adjusts-apple-price-112331910.html",
+    "title_rosenblattsecuritiesadjustsapplepricetargetto303from300maintainsneutralrating_2026-09-01",
+    "link_https://finance.yahoo.com/m/205aaa5c-c418-31c1-9826-487b9a902232/palantir-vs.-intel%3A-choose.html",
+    "title_palantirvsintelchooseonefortherestof2026_2026-09-01",
+    "link_https://finance.yahoo.com/technology/articles/american-tower-apos-coresite-expands-113040441.html",
+    "title_americantowerscoresiteexpandsoraclecloudconnectivitytofourusociregions_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/aramark-participate-upcoming-goldman-sachs-113000245.html",
+    "title_aramarktoparticipateinupcominggoldmansachsconference_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/medtronic-jumps-earnings-beat-raised-113027692.html",
+    "title_medtronicjumpsonearningsbeatandraisedguidance_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/stocks-down-pre-bell-traders-112443552.html",
+    "title_stocksdownprebellastradersweighrenewedusirantensions_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/keurig-dr-pepper-advances-strategic-113000158.html",
+    "title_keurigdrpepperadvancesstrategicprioritiesthroughenhancedpartnershipwithchobani_2026-09-01",
+    "link_https://finance.yahoo.com/small-business/articles/chobani-begins-next-chapter-growth-113000534.html",
+    "title_chobanibeginsitsnextchapterofgrowthwithapproximately12billioninvestmentinallentownpennsylvania_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/stoke-therapeutics-biogen-announce-presentations-113000584.html",
+    "title_stoketherapeuticsandbiogenannouncepresentationsofclinicaldatafromstudiesofzorevunersenaninvestigationalmedicineforthetreatmentofdravetsyndromeatthe16theuropeanepilepsycongresseec_2026-09-01",
+    "link_https://decrypt.co/377010/saylor-urges-msci-to-drop-discriminatory-rule-that-would-delete-strategy?.tsrc=rss",
+    "title_saylorurgesmscitodropdiscriminatoryrulethatwoulddeletestrategy_2026-09-01",
+    "link_https://www.fool.com/investing/2026/09/01/billionaire-stanley-druckenmiller-sell-mu-buy-goog/?.tsrc=rss",
+    "title_billionairestanleydruckenmillerkickedmicrontothecurbinthesecondquarterinfavorofanaisuperstarthatsgained13700sinceitsipo_2026-09-01",
+    "link_https://www.fool.com/investing/2026/09/01/greg-abel-thinks-berkshires-stock-is-cheap-is-he-r/?.tsrc=rss",
+    "title_gregabelthinksberkshiresstockischeapisherightheresthemath_2026-09-01"
   ],
   "stats_today": {
-    "news_dispatches": 230,
-    "price_fires": 144,
+    "news_dispatches": 248,
+    "price_fires": 149,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14354,
-    "price_fires": 1892,
+    "news_dispatches": 14372,
+    "price_fires": 1897,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
