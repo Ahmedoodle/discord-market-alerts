@@ -82,9 +82,10 @@
       ]
     },
     "GLD": {
-      "last_price": 402.7,
+      "last_price": 397.34,
       "history": [
-        "-1.40%"
+        "-1.40%",
+        "-2.71%"
       ]
     },
     "SLV": {
@@ -270,10 +271,11 @@
       ]
     },
     "MNST": {
-      "last_price": 45.92,
+      "last_price": 46.43,
       "history": [
         "+1.06%",
-        "+0.00%"
+        "+0.00%",
+        "+1.11%"
       ]
     },
     "ON": {
@@ -339,9 +341,10 @@
       ]
     },
     "QCOM": {
-      "last_price": 168.36,
+      "last_price": 166.5,
       "history": [
-        "-1.24%"
+        "-1.24%",
+        "-2.33%"
       ]
     },
     "ADI": {
@@ -438,9 +441,10 @@
       ]
     },
     "META": {
-      "last_price": 566.1888,
+      "last_price": 558.6833,
       "history": [
-        "-1.07%"
+        "-1.07%",
+        "-2.39%"
       ]
     },
     "CRM": {
@@ -483,9 +487,10 @@
       ]
     },
     "TTD": {
-      "last_price": 13.5693,
+      "last_price": 13.42,
       "history": [
-        "-1.10%"
+        "-1.10%",
+        "-2.19%"
       ]
     },
     "NQ=F": {
@@ -520,9 +525,10 @@
       ]
     },
     "NXPI": {
-      "last_price": 222.36,
+      "last_price": 219.9,
       "history": [
-        "-1.01%"
+        "-1.01%",
+        "-2.11%"
       ]
     },
     "ETN": {
@@ -563,10 +569,11 @@
       ]
     },
     "FAST": {
-      "last_price": 49.79,
+      "last_price": 49.2354,
       "history": [
         "+2.02%",
-        "+0.97%"
+        "+0.97%",
+        "-0.15%"
       ]
     },
     "ODFL": {
@@ -693,15 +700,17 @@
       ]
     },
     "DHR": {
-      "last_price": 210.9335,
+      "last_price": 215.01,
       "history": [
-        "-1.23%"
+        "-1.23%",
+        "+0.68%"
       ]
     },
     "TMUS": {
-      "last_price": 177.99,
+      "last_price": 181.5,
       "history": [
-        "-1.36%"
+        "-1.36%",
+        "+0.59%"
       ]
     },
     "PYPL": {
@@ -727,11 +736,42 @@
       "history": [
         "-1.01%"
       ]
+    },
+    "ABBV": {
+      "last_price": 259.872,
+      "history": [
+        "+1.35%"
+      ]
+    },
+    "MRK": {
+      "last_price": 149.3401,
+      "history": [
+        "+1.07%"
+      ]
+    },
+    "KO": {
+      "last_price": 89.61,
+      "history": [
+        "+1.06%"
+      ]
+    },
+    "BA": {
+      "last_price": 205.64,
+      "history": [
+        "-1.03%"
+      ]
     }
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 11.417,
+      "history": [
+        "+2.02%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -16959,18 +16999,78 @@
     "link_https://stocktwits.com/news-articles/markets/equity/hood-stock-robinhood-morgan-stanley-overweight-price-target/cZsojzGRJMd?.tsrc=rss",
     "title_hoodstockcapsstrongestrallyinsixmonthsmorganstanleyturnsoverweightonevidenceofgrowthbeyondcrypto_2026-09-01",
     "link_https://finance.yahoo.com/m/f401f36c-09c7-3a7f-b48d-a9af437dc08c/fervo-energy-stock-soars-as.html?.tsrc=rss",
-    "title_fervoenergystocksoarsasbillgatesbackedcompanyscoresdealwithgoogle_2026-09-01"
+    "title_fervoenergystocksoarsasbillgatesbackedcompanyscoresdealwithgoogle_2026-09-01",
+    "link_https://finance.yahoo.com/m/f62cda1f-8dd0-379b-b8bd-08f5bf066c03/trump-said-his-deal-with.html",
+    "title_trumpsaidhisdealwithvenezuelawouldlowergaspriceswillit_2026-09-01",
+    "link_https://finance.yahoo.com/m/f2169a8c-9c35-36f0-b30e-110ce80b264a/us-dairy-foremost-farms-to.html",
+    "title_usdairyforemostfarmstoclosecheeseplant_2026-09-01",
+    "link_https://finance.yahoo.com/economy/policy/article/feds-barr-if-inflation-doesnt-moderate-the-central-bank-should-raise-rates-130701589.html",
+    "title_fedsbarrifinflationdoesntmoderatethecentralbankshouldraiserates_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-equity-futures-125941277.html",
+    "title_exchangetradedfundsequityfutureslowerprebelltuesdayasoilpricesadvance_2026-09-01",
+    "link_https://finance.yahoo.com/energy/articles/icogt-announces-phase-strategic-international-130100822.html",
+    "title_icogtannouncesanewphaseofstrategicinternationalexpansion_2026-09-01",
+    "link_https://finance.yahoo.com/energy/articles/zealand-energy-corp-files-second-130000591.html",
+    "title_newzealandenergycorpfilessecondquarterfinancialstatementsandprovidesoperationalupdate_2026-09-01",
+    "link_https://finance.yahoo.com/technology/ai/articles/deepinfra-humans-partner-power-next-130000366.html",
+    "title_deepinfraandhumanspartnertopowerthenextgenerationofaidevelopment_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/zacks-investment-ideas-feature-highlights-125800574.html",
+    "title_zacksinvestmentideasfeaturehighlightsdellnvidiahewlettpackardsupermicrocomputerandlenovo_2026-09-01",
+    "link_https://finance.yahoo.com/m/0c6d3c81-ab86-308e-b3e8-9ab21175cf22/nvidia-invests-%243.5-billion.html",
+    "title_nvidiainvests35billioninmediatekaichipdeal_2026-09-01",
+    "link_https://finance.yahoo.com/m/66e69ca1-5648-3d60-ac20-ca8d8d1e274b/top-business-leader-says.html",
+    "title_topbusinessleadersaysapplesnextceohasonejobfixsiri_2026-09-01",
+    "link_https://finance.yahoo.com/media-advertising/articles/innovid-expands-nivo-meta-ads-130000752.html",
+    "title_innovidexpandsnivowithmetaadsmcpintegrationtobringconnectedaiworkflowstosocialadvertising_2026-09-01",
+    "link_https://finance.yahoo.com/m/c0a378e7-888c-386f-ae81-3e7995fe05a9/broadcom-has-floundered-for.html",
+    "title_broadcomhasflounderedforseveralmonthsarespectedwallstreetteamexpects80returnsahead_2026-09-01",
+    "link_https://finance.yahoo.com/m/467ddcf8-a8dc-38aa-8d4a-283d336093a2/skip-the-regional-bank.html",
+    "title_skiptheregionalbankbasketthese3dividendstockslookstronger_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/research-reveals-scale-sensitive-data-130000441.html",
+    "title_newresearchrevealsthescaleofsensitivedatamovementoutsidesystemsofrecordinregulatedindustries_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/solace-health-expands-access-healthcare-130100413.html",
+    "title_solacehealthexpandsaccesstohealthcareadvocacythroughwalmartsbettercareservicesplatform_2026-09-01",
+    "link_https://finance.yahoo.com/energy/articles/mitsubishi-eclipse-sportback-ev-named-130100612.html",
+    "title_allnewmitsubishieclipsesportbackevnamed2027greensuvoftheyearbygreencarjournal_2026-09-01",
+    "link_https://finance.yahoo.com/m/4e69ae28-a941-3454-90f6-d3b35c3b7e40/byd-overseas-sales-strategy.html",
+    "title_bydoverseassalesstrategypaysoffteslareportsamixedbagineurope_2026-09-01",
+    "link_https://finance.yahoo.com/technology/articles/innofin-solutions-joins-ascend-partners-130000609.html",
+    "title_innofinsolutionsjoinsascendpartnerstoaccelerateofficeofthecfodigitaltransformation_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/ambient-clinical-analytics-joins-oracles-130000018.html",
+    "title_ambientclinicalanalyticsjoinsoraclespartnerprogram_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/verizon-speak-upcoming-goldman-sachs-130000332.html",
+    "title_verizontospeakatupcominggoldmansachsandcitiinvestorconferences_2026-09-01",
+    "link_https://finance.yahoo.com/technology/articles/reddit-present-goldman-sachs-2026-130000607.html",
+    "title_reddittopresentatthegoldmansachs2026communacopiatechnologyconference_2026-09-01",
+    "link_https://finance.yahoo.com/technology/ai/articles/fortanix-crowdstrike-partner-secure-enterprise-130000100.html",
+    "title_fortanixandcrowdstrikepartnertosecureenterpriseaibyreducingactivethreatsandprotectingproprietarymodelsdatainmemory_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/zacks-investment-ideas-feature-highlights-125400198.html",
+    "title_zacksinvestmentideasfeaturehighlightsdickssportinggoodsoktaandcrowdstrike_2026-09-01",
+    "link_https://finance.yahoo.com/m/f3ac601f-c795-3c29-9fa5-82b51e72d150/cathie-wood%27s-ark-just-bought.html",
+    "title_cathiewoodsarkjustbought76millionofnuclearsupplierbwxtechnologieswhilecontinuingtodumprobloxstockisnuclearpowerarksnextbigaiadjacentbet_2026-09-01",
+    "link_https://finance.yahoo.com/m/85caf31d-2028-3895-8963-b0edbc382c40/sec-demands-proof-investment.html",
+    "title_secdemandsproofinvestmentfirmsholdprivatestartupstock_2026-09-01",
+    "link_https://finance.yahoo.com/technology/articles/wildfire-appoints-mike-grillo-senior-130100548.html?.tsrc=rss",
+    "title_wildfireappointsmikegrilloasseniorvicepresidentofdataandconsumerinsights_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/stryker-introduces-first-kind-fda-130500845.html?.tsrc=rss",
+    "title_strykerintroducesfirstofitskindfdaauthorizedsurgicalapplicationforapplevisionprowithhiparthroscopycaseatnationallyrecognizedacademicmedicalcenter_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/medtronic-raises-full-outlook-following-130907056.html?.tsrc=rss",
+    "title_medtronicraisesfullyearoutlookfollowingfiscalfirstquarterbeat_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/norbert-health-raises-14-million-130100146.html?.tsrc=rss",
+    "title_norberthealthraises14millionseriesatopowerautonomousroboticnursingassistants_2026-09-01",
+    "link_https://finance.yahoo.com/technology/articles/bdo-canada-partners-workday-help-130000292.html?.tsrc=rss",
+    "title_bdocanadapartnerswithworkdaytohelporganizationstransformhrfinanceandplanning_2026-09-01"
   ],
   "stats_today": {
-    "news_dispatches": 370,
-    "price_fires": 202,
+    "news_dispatches": 400,
+    "price_fires": 216,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14494,
-    "price_fires": 1950,
+    "news_dispatches": 14524,
+    "price_fires": 1964,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
