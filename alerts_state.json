@@ -3,9 +3,10 @@
   "crypto_session_date": "2026-09-01",
   "premarket_tickers": {
     "SI=F": {
-      "last_price": 66.96,
+      "last_price": 65.625,
       "history": [
-        "+1.12%"
+        "+1.12%",
+        "-0.90%"
       ]
     },
     "CL=F": {
@@ -271,6 +272,48 @@
       "last_price": 203.62,
       "history": [
         "-1.31%"
+      ]
+    },
+    "CVX": {
+      "last_price": 208.47,
+      "history": [
+        "+1.13%"
+      ]
+    },
+    "TMO": {
+      "last_price": 629.0067,
+      "history": [
+        "+1.93%"
+      ]
+    },
+    "QCOM": {
+      "last_price": 168.36,
+      "history": [
+        "-1.24%"
+      ]
+    },
+    "ADI": {
+      "last_price": 355.25,
+      "history": [
+        "-1.90%"
+      ]
+    },
+    "TEAM": {
+      "last_price": 191.77,
+      "history": [
+        "-1.24%"
+      ]
+    },
+    "ZS": {
+      "last_price": 185.095,
+      "history": [
+        "-1.75%"
+      ]
+    },
+    "BLSH": {
+      "last_price": 33.631,
+      "history": [
+        "-1.17%"
       ]
     }
   },
@@ -15786,18 +15829,28 @@
     "link_https://www.fool.com/investing/2026/09/01/odds-sept-rate-hike-doubled-fed-chair-kevin-warsh/?.tsrc=rss",
     "title_theoddsofaseptemberratehikehavenearlydoubledcourtesyoffedchairkevinwarshhereswhathejustsaid_2026-09-01",
     "link_https://finance.yahoo.com/markets/stocks/articles/apple-2-275-gain-under-074343404.html?.tsrc=rss",
-    "title_apples2275gainundertimcookisatoughactforjohnternustofollow_2026-09-01"
+    "title_apples2275gainundertimcookisatoughactforjohnternustofollow_2026-09-01",
+    "link_https://finance.yahoo.com/technology/articles/verizon-readies-gulf-coast-network-083829515.html",
+    "title_verizonreadiesgulfcoastnetworkaheadofpotentialtropicalstormedouard_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/market-chatter-brookfield-set-600-083714250.html",
+    "title_marketchatterbrookfieldsetfor600millionpayoutthroughhomeservesecuritization_2026-09-01",
+    "link_https://finance.yahoo.com/m/719af511-61ed-3bc6-a640-eabf47463f51/altris-engineering-to.html",
+    "title_altrisengineeringtospearheademaprojectfeedphaseforbcm_2026-09-01",
+    "link_https://finance.yahoo.com/technology/ai/articles/wall-street-banks-push-big-040020954.html",
+    "title_wallstreetbankspushbiglawtocutfeesbecauseofai_2026-09-01",
+    "link_https://finance.yahoo.com/m/0e2dc26f-cffd-3e1a-b93e-15a598e5ce9c/dell%2C-hpe-stocks-draw-focus.html",
+    "title_dellhpestocksdrawfocusaheadofearningsthisweekandsmcibullsarewatchingclosely_2026-09-01"
   ],
   "stats_today": {
-    "news_dispatches": 41,
-    "price_fires": 51,
+    "news_dispatches": 45,
+    "price_fires": 59,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14165,
-    "price_fires": 1799,
+    "news_dispatches": 14169,
+    "price_fires": 1807,
     "earnings_cards": 1010,
     "options_radars": 1000,
     "options_setups": 1000
