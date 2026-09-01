@@ -1321,9 +1321,10 @@
       ]
     },
     "ATS.TO": {
-      "last_price": 26.18,
+      "last_price": 25.65,
       "history": [
-        "-2.02%"
+        "-2.02%",
+        "-4.00%"
       ]
     },
     "TIH.TO": {
@@ -1547,7 +1548,14 @@
     }
   },
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 100.88,
+      "history": [
+        "-2.65%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -18421,21 +18429,53 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/stocks-making-big-moves-yesterday-165020209.html",
     "title_stocksmakingbigmovesyesterdayjazzpharmaceuticalssaicherbalifeagcoanddeere_2026-09-01",
     "link_https://www.thestreet.com/crypto/markets/ripple-unlocks-1-billion-xrp-heres-what-it-actually-means-for-investors?.tsrc=rss",
-    "title_rippleunlocks1billionxrphereswhatitactuallymeansforinvestors_2026-09-01"
+    "title_rippleunlocks1billionxrphereswhatitactuallymeansforinvestors_2026-09-01",
+    "link_https://finance.yahoo.com/healthcare/articles/acdis-ahima-release-2026-guidelines-170500538.html",
+    "title_acdisandahimarelease2026updatetoguidelinesforachievingacompliantquerypractice_2026-09-01",
+    "link_https://finance.yahoo.com/technology/ai/articles/ey-selects-crowdstrike-power-trust-170500896.html",
+    "title_eyselectscrowdstriketopowerthetrustlayerofeyaivalueblueprints_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/alpha-compute-corp-receives-additional-170400588.html",
+    "title_alphacomputecorpreceivesadditional180dayperiodfromnasdaqtoregaincompliancewithminimumbidpricerequirement_2026-09-01",
+    "link_https://finance.yahoo.com/m/7dfd3681-cbdf-3808-b109-ff9c8b1ba9dd/sofi-drops-4%25%2C-affirm-falls.html",
+    "title_sofidrops4affirmfalls5asyieldshitbalancesheetlendersrobinhoodholdssteady_2026-09-01",
+    "link_https://finance.yahoo.com/m/84974e14-e2b6-3707-b2b5-c05cb5b2a512/apple-rises-3%25-on-john.html",
+    "title_applerises3onjohnternussfirstdayasceoevenwhilethenasdaqskids_2026-09-01",
+    "link_https://finance.yahoo.com/m/64e0661b-b0e4-30a4-99f9-50d678a0b4f6/10-investment-must-reads-for.html",
+    "title_10investmentmustreadsforthisweeksept12026_2026-09-01",
+    "link_https://finance.yahoo.com/m/794ca74f-10ac-315e-860e-887172617394/gulf-coast-refineries-pour.html",
+    "title_gulfcoastrefineriespourcoldwaterontrumps65billionbarrelvenezuelanvictorylap_2026-09-01",
+    "link_https://finance.yahoo.com/m/2ef332ce-6d4b-3e2c-a273-b1044228475e/3-ways-warren-buffett.html",
+    "title_3wayswarrenbuffettutilizespatienceoverprofitwheninvesting_2026-09-01",
+    "link_https://finance.yahoo.com/m/e36c20e8-7bb5-3fb1-a9fd-e2c132182173/i%27ve-been-wrong-about-philip.html",
+    "title_ivebeenwrongaboutphilipmorrisinternationalstockfor5yearshereswhyimfinallychangingmymind_2026-09-01",
+    "link_https://finance.yahoo.com/m/5401a4ec-e1d4-3c31-b16d-293f4c04218c/nvidia-slips-as-ai-circular.html",
+    "title_nvidiaslipsasaicircularfinancingfearsriseamid35billiondealisnvidiaabuynow_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/whats-going-salesforce-stock-160621569.html",
+    "title_whatsgoingonwithsalesforcestock_2026-09-01",
+    "link_https://finance.yahoo.com/m/048bf5f9-4515-3bbd-bdef-4bb1733d8113/what-gen-z-actually-needs-to.html",
+    "title_whatgenzactuallyneedstoearntostoprelyingonparentsin2026_2026-09-01",
+    "link_https://finance.yahoo.com/m/6192635f-8a00-3df7-af9e-f7fa59de5cd9/citi-says-investors-should.html",
+    "title_citisaysinvestorsshouldconsiderbuyingtumblingtechstock_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-decline-us-170929387.html",
+    "title_exchangetradedfundsdeclineasusequitiesfallaftermidday_2026-09-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/tsmcs-269-billion-expansion-puts-170918317.html",
+    "title_tsmcs269billionexpansionputsits677margininfocus_2026-09-01",
+    "link_https://finance.yahoo.com/m/d368f12d-4fc4-3d57-bf49-3ba66672e622/esc-2026%3A-astrazeneca%E2%80%99s-oral.html",
+    "title_esc2026astrazenecasoralrelaxinagonistsucceedsinphaseiitrial_2026-09-01"
   ],
   "stats_today": {
-    "news_dispatches": 543,
-    "price_fires": 368,
+    "news_dispatches": 558,
+    "price_fires": 370,
     "earnings_cards": 10,
-    "options_radars": 5,
-    "options_setups": 500
+    "options_radars": 6,
+    "options_setups": 600
   },
   "stats_lifetime": {
-    "news_dispatches": 14667,
-    "price_fires": 2116,
+    "news_dispatches": 14682,
+    "price_fires": 2118,
     "earnings_cards": 1010,
-    "options_radars": 1005,
-    "options_setups": 1500
+    "options_radars": 1006,
+    "options_setups": 1600
   },
   "persistent_analytics": {
     "lifetime_total_messages": 1330,
