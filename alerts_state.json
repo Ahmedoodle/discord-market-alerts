@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3655,
+      "history": [
+        "+2.37%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -17558,18 +17565,34 @@
     "link_https://www.marketbeat.com/instant-alerts/transcript-alimentation-couche-tard-q1-earnings-call-highlights-2026-09-02/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
     "title_alimentationcouchetardq1earningscallhighlights_2026-09-02",
     "link_https://finance.yahoo.com/markets/stocks/articles/restaurant-brands-international-inc-participate-201500326.html?.tsrc=rss",
-    "title_restaurantbrandsinternationalinctoparticipateinbarclays19thannualglobalconsumerconference_2026-09-02"
+    "title_restaurantbrandsinternationalinctoparticipateinbarclays19thannualglobalconsumerconference_2026-09-02",
+    "link_https://finance.yahoo.com/m/0ae8f267-4993-351f-92e0-991bf44e07db/george-lucas-unveils-art.html",
+    "title_georgelucasunveilsartgalaxyathisnewlamuseum_2026-09-02",
+    "link_https://finance.yahoo.com/energy/articles/premier-energy-plc-bse-pe-010108823.html",
+    "title_premierenergyplcbsepeh12026earningscallhighlightsstrongrenewablegrowthdrives_2026-09-02",
+    "link_https://finance.yahoo.com/m/d2ab29ff-d066-332f-b2c2-f5f401f9a6a2/micron%27s-taiwan-unions-are.html",
+    "title_micronstaiwanunionsareaskingforabonusworth83monthsofpayastrikevotecouldcomethismonth_2026-09-02",
+    "link_https://finance.yahoo.com/m/2f2535b2-21d3-3418-8d4b-017d756bf46a/jim-cramer-explains-palantir%2C.html",
+    "title_jimcramerexplainspalantirsalesforcerebound_2026-09-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/union-pacific-unp-stock-looks-010520377.html",
+    "title_unionpacificunpstocklooksaboutfairlyvaluedtoday_2026-09-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/1-stock-under-50-target-010823412.html",
+    "title_1stockunder50totargetthisweekand2wefindrisky_2026-09-02",
+    "link_https://finance.yahoo.com/m/39eb4e8c-d184-3601-bf44-dd9d4c2217ac/why-sb-energy%E2%80%99s-ipo-valuation.html",
+    "title_whysbenergysipovaluationwillprobablybetoorich_2026-09-02",
+    "link_https://www.barchart.com/story/news/4407679/nat-gas-prices-rise-on-hotter-us-weather-and-expectations-of-smaller-storage?.tsrc=rss",
+    "title_natgaspricesriseonhotterusweatherandexpectationsofsmallerstorage_2026-09-02"
   ],
   "stats_today": {
-    "news_dispatches": 8,
-    "price_fires": 0,
+    "news_dispatches": 14,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14659,
-    "price_fires": 2075,
+    "news_dispatches": 14665,
+    "price_fires": 2076,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
