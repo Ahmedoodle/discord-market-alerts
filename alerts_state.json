@@ -1,41 +1,1376 @@
 {
-  "stock_session_date": "2026-09-04",
-  "crypto_session_date": "2026-09-04",
-  "premarket_tickers": {},
-  "regular_tickers": {},
-  "afterhours_tickers": {},
-  "crypto_tickers": {
-    "BTC-USD": {
-      "last_price": 80943.01,
+  "stock_session_date": "2026-09-01",
+  "crypto_session_date": "2026-09-01",
+  "premarket_tickers": {
+    "SI=F": {
+      "last_price": 65.625,
       "history": [
-        "+4.07%"
+        "+1.12%",
+        "-0.90%"
       ]
     },
-    "ETH-USD": {
-      "last_price": 2509.23,
+    "CL=F": {
+      "last_price": 88.02,
+      "history": [
+        "+1.49%",
+        "+2.64%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 91.76,
+      "history": [
+        "+1.40%"
+      ]
+    },
+    "SYK": {
+      "last_price": 329.8637,
+      "history": [
+        "+1.84%",
+        "+0.37%",
+        "+1.87%"
+      ]
+    },
+    "MDT": {
+      "last_price": 92.73,
+      "history": [
+        "+1.65%",
+        "+2.97%",
+        "+7.67%",
+        "+6.34%",
+        "+4.80%",
+        "+3.35%",
+        "+2.29%"
+      ]
+    },
+    "MELI": {
+      "last_price": 1914.94,
+      "history": [
+        "+1.20%",
+        "+0.05%",
+        "-1.10%"
+      ]
+    },
+    "CHTR": {
+      "last_price": 150.26,
+      "history": [
+        "-1.43%"
+      ]
+    },
+    "ARM": {
+      "last_price": 234.4,
+      "history": [
+        "+1.69%",
+        "-1.04%",
+        "-2.06%",
+        "-3.10%"
+      ]
+    },
+    "MSTR": {
+      "last_price": 128.7,
+      "history": [
+        "-1.43%",
+        "-3.19%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 1513.11,
+      "history": [
+        "-1.58%",
+        "-2.92%",
+        "+0.00%",
+        "-3.42%"
+      ]
+    },
+    "GLD": {
+      "last_price": 397.34,
+      "history": [
+        "-1.40%",
+        "-2.71%"
+      ]
+    },
+    "SLV": {
+      "last_price": 58.77,
+      "history": [
+        "-1.26%",
+        "-2.26%"
+      ]
+    },
+    "USO": {
+      "last_price": 135.94,
+      "history": [
+        "+1.68%"
+      ]
+    },
+    "BNO": {
+      "last_price": 53.84,
+      "history": [
+        "+1.89%"
+      ]
+    },
+    "AMAT": {
+      "last_price": 448.67,
+      "history": [
+        "-1.00%",
+        "-2.12%"
+      ]
+    },
+    "BLK": {
+      "last_price": 1148.06,
+      "history": [
+        "+2.76%",
+        "-0.05%",
+        "+2.20%",
+        "-0.49%",
+        "+2.11%",
+        "-0.65%"
+      ]
+    },
+    "PLTR": {
+      "last_price": 182.3877,
+      "history": [
+        "-1.06%",
+        "-2.14%"
+      ]
+    },
+    "LRCX": {
+      "last_price": 295.1,
+      "history": [
+        "-1.13%",
+        "-2.12%"
+      ]
+    },
+    "MU": {
+      "last_price": 943.0135,
+      "history": [
+        "-1.64%"
+      ]
+    },
+    "GILD": {
+      "last_price": 146.0,
+      "history": [
+        "+1.21%",
+        "-0.23%"
+      ]
+    },
+    "CI": {
+      "last_price": 278.68,
+      "history": [
+        "+1.01%",
+        "-0.20%",
+        "+0.94%"
+      ]
+    },
+    "CRWD": {
+      "last_price": 226.18,
+      "history": [
+        "-1.05%",
+        "-2.09%"
+      ]
+    },
+    "MRVL": {
+      "last_price": 204.2516,
+      "history": [
+        "-1.16%",
+        "-2.27%",
+        "-3.50%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 137.1509,
+      "history": [
+        "-1.17%",
+        "-2.27%"
+      ]
+    },
+    "SMCI": {
+      "last_price": 36.53,
+      "history": [
+        "-1.02%",
+        "-2.01%"
+      ]
+    },
+    "IREN": {
+      "last_price": 36.14,
+      "history": [
+        "-1.44%",
+        "-2.63%"
+      ]
+    },
+    "CBRS": {
+      "last_price": 180.0043,
+      "history": [
+        "-1.18%",
+        "-2.30%"
+      ]
+    },
+    "IBIT": {
+      "last_price": 44.08,
+      "history": [
+        "-1.32%"
+      ]
+    },
+    "ETHA": {
+      "last_price": 18.46,
+      "history": [
+        "-1.39%"
+      ]
+    },
+    "NVDA": {
+      "last_price": 217.92,
+      "history": [
+        "-1.04%",
+        "+0.00%",
+        "-1.30%"
+      ]
+    },
+    "TSLA": {
+      "last_price": 363.66,
+      "history": [
+        "-1.17%"
+      ]
+    },
+    "XOM": {
+      "last_price": 162.8237,
+      "history": [
+        "+1.16%"
+      ]
+    },
+    "AMD": {
+      "last_price": 460.55,
+      "history": [
+        "-1.05%",
+        "-2.16%"
+      ]
+    },
+    "ORCL": {
+      "last_price": 146.9,
+      "history": [
+        "-1.35%",
+        "+0.00%",
+        "-1.49%"
+      ]
+    },
+    "NOW": {
+      "last_price": 143.4745,
+      "history": [
+        "-1.46%",
+        "-3.05%"
+      ]
+    },
+    "COP": {
+      "last_price": 134.0,
+      "history": [
+        "+1.14%"
+      ]
+    },
+    "KLAC": {
+      "last_price": 170.85,
+      "history": [
+        "-1.25%",
+        "-2.62%"
+      ]
+    },
+    "MNST": {
+      "last_price": 46.43,
+      "history": [
+        "+1.06%",
+        "+0.00%",
+        "+1.11%"
+      ]
+    },
+    "ON": {
+      "last_price": 72.29,
+      "history": [
+        "-1.47%",
+        "+0.00%",
+        "-1.38%",
+        "+0.00%",
+        "-1.26%",
+        "-2.43%"
+      ]
+    },
+    "RBLX": {
+      "last_price": 40.31,
+      "history": [
+        "-1.21%",
+        "+0.27%",
+        "-1.16%",
+        "-2.37%"
+      ]
+    },
+    "INTC": {
+      "last_price": 87.36,
+      "history": [
+        "-1.22%",
+        "-2.40%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 160.8085,
+      "history": [
+        "-1.29%",
+        "-2.29%"
+      ]
+    },
+    "RKLB": {
+      "last_price": 62.55,
+      "history": [
+        "-1.10%",
+        "-2.14%"
+      ]
+    },
+    "NBIS": {
+      "last_price": 201.55,
+      "history": [
+        "-1.31%",
+        "-2.31%"
+      ]
+    },
+    "CVX": {
+      "last_price": 208.47,
+      "history": [
+        "+1.13%"
+      ]
+    },
+    "TMO": {
+      "last_price": 612.45,
+      "history": [
+        "+1.93%",
+        "+0.44%",
+        "-0.75%"
+      ]
+    },
+    "QCOM": {
+      "last_price": 166.5,
+      "history": [
+        "-1.24%",
+        "-2.33%"
+      ]
+    },
+    "ADI": {
+      "last_price": 355.25,
+      "history": [
+        "-1.90%"
+      ]
+    },
+    "TEAM": {
+      "last_price": 189.72,
+      "history": [
+        "-1.24%",
+        "-2.29%"
+      ]
+    },
+    "ZS": {
+      "last_price": 184.615,
+      "history": [
+        "-1.75%",
+        "-0.74%",
+        "-2.00%"
+      ]
+    },
+    "BLSH": {
+      "last_price": 32.4,
+      "history": [
+        "-1.17%",
+        "-2.20%",
+        "-0.35%",
+        "-1.56%",
+        "-4.79%"
+      ]
+    },
+    "MSFT": {
+      "last_price": 502.02,
+      "history": [
+        "-1.04%"
+      ]
+    },
+    "AVGO": {
+      "last_price": 365.88,
+      "history": [
+        "-1.20%"
+      ]
+    },
+    "HD": {
+      "last_price": 327.6567,
+      "history": [
+        "-1.11%",
+        "-0.05%"
+      ]
+    },
+    "GS": {
+      "last_price": 1013.98,
+      "history": [
+        "-1.16%"
+      ]
+    },
+    "SNPS": {
+      "last_price": 434.68,
+      "history": [
+        "-1.07%",
+        "-2.18%",
+        "-1.12%"
+      ]
+    },
+    "FTNT": {
+      "last_price": 167.9,
+      "history": [
+        "-4.48%",
+        "-0.56%",
+        "-1.77%"
+      ]
+    },
+    "DDOG": {
+      "last_price": 232.65,
+      "history": [
+        "-1.16%",
+        "+0.00%",
+        "-1.85%"
+      ]
+    },
+    "WDAY": {
+      "last_price": 192.99,
+      "history": [
+        "-1.05%",
+        "-2.26%"
+      ]
+    },
+    "SPCX": {
+      "last_price": 142.25,
+      "history": [
+        "-1.00%"
+      ]
+    },
+    "META": {
+      "last_price": 558.6833,
+      "history": [
+        "-1.07%",
+        "-2.39%"
+      ]
+    },
+    "CRM": {
+      "last_price": 254.76,
+      "history": [
+        "-1.08%"
+      ]
+    },
+    "ADBE": {
+      "last_price": 288.38,
+      "history": [
+        "-1.07%",
+        "+0.00%",
+        "-1.51%"
+      ]
+    },
+    "INTU": {
+      "last_price": 351.09,
+      "history": [
+        "-1.00%",
+        "-2.28%"
+      ]
+    },
+    "CAT": {
+      "last_price": 788.01,
+      "history": [
+        "-1.19%"
+      ]
+    },
+    "PANW": {
+      "last_price": 377.71,
+      "history": [
+        "-1.16%"
+      ]
+    },
+    "MCHP": {
+      "last_price": 72.71,
+      "history": [
+        "-1.01%"
+      ]
+    },
+    "TTD": {
+      "last_price": 13.42,
+      "history": [
+        "-1.10%",
+        "-2.19%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 29191.25,
+      "history": [
+        "-1.09%"
+      ]
+    },
+    "QQQ": {
+      "last_price": 709.48,
+      "history": [
+        "-1.02%"
+      ]
+    },
+    "LIN": {
+      "last_price": 489.43,
+      "history": [
+        "+1.05%",
+        "-0.03%"
+      ]
+    },
+    "IBM": {
+      "last_price": 231.29,
+      "history": [
+        "-1.10%"
+      ]
+    },
+    "TXN": {
+      "last_price": 257.7,
+      "history": [
+        "-1.23%"
+      ]
+    },
+    "NXPI": {
+      "last_price": 219.9,
+      "history": [
+        "-1.01%",
+        "-2.11%"
+      ]
+    },
+    "ETN": {
+      "last_price": 393.82,
+      "history": [
+        "-1.21%",
+        "+0.12%",
+        "-1.00%",
+        "-2.01%"
+      ]
+    },
+    "CDNS": {
+      "last_price": 334.01,
+      "history": [
+        "-1.41%"
+      ]
+    },
+    "ILMN": {
+      "last_price": 213.63,
+      "history": [
+        "-1.53%",
+        "+0.00%",
+        "-1.48%",
+        "+0.00%"
+      ]
+    },
+    "LULU": {
+      "last_price": 118.9987,
+      "history": [
+        "-1.05%"
+      ]
+    },
+    "SPGI": {
+      "last_price": 435.84,
+      "history": [
+        "+1.46%",
+        "+0.00%"
+      ]
+    },
+    "FAST": {
+      "last_price": 49.2354,
+      "history": [
+        "+2.02%",
+        "+0.97%",
+        "-0.15%"
+      ]
+    },
+    "ODFL": {
+      "last_price": 201.75,
+      "history": [
+        "+4.62%",
+        "+0.90%"
+      ]
+    },
+    "AMZN": {
+      "last_price": 256.27,
+      "history": [
+        "-1.35%"
+      ]
+    },
+    "REGN": {
+      "last_price": 809.3042,
+      "history": [
+        "-1.05%",
+        "-2.26%",
+        "+1.28%"
+      ]
+    },
+    "DASH": {
+      "last_price": 229.01,
+      "history": [
+        "-1.24%",
+        "-0.05%",
+        "-1.18%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 2.87,
+      "history": [
+        "-1.09%",
+        "-2.21%"
+      ]
+    },
+    "MO": {
+      "last_price": 69.18,
+      "history": [
+        "+1.02%"
+      ]
+    },
+    "PM": {
+      "last_price": 189.3525,
+      "history": [
+        "+1.10%"
+      ]
+    },
+    "BIIB": {
+      "last_price": 218.99,
+      "history": [
+        "+1.08%"
+      ]
+    },
+    "ABNB": {
+      "last_price": 181.38,
+      "history": [
+        "-1.00%"
+      ]
+    },
+    "LLY": {
+      "last_price": 1171.91,
+      "history": [
+        "+1.31%"
+      ]
+    },
+    "ACN": {
+      "last_price": 187.05,
+      "history": [
+        "-1.43%"
+      ]
+    },
+    "UNP": {
+      "last_price": 301.57,
+      "history": [
+        "+2.18%",
+        "+0.30%"
+      ]
+    },
+    "BSX": {
+      "last_price": 48.83,
+      "history": [
+        "+1.10%"
+      ]
+    },
+    "ADP": {
+      "last_price": 284.215,
+      "history": [
+        "-2.50%",
+        "-0.68%"
+      ]
+    },
+    "DXCM": {
+      "last_price": 91.06,
+      "history": [
+        "-1.15%",
+        "+0.00%"
+      ]
+    },
+    "BKR": {
+      "last_price": 64.5,
+      "history": [
+        "+1.49%"
+      ]
+    },
+    "DLTR": {
+      "last_price": 125.26,
+      "history": [
+        "-1.05%"
+      ]
+    },
+    "GOOGL": {
+      "last_price": 335.7765,
+      "history": [
+        "-1.05%"
+      ]
+    },
+    "JNJ": {
+      "last_price": 268.99,
+      "history": [
+        "+1.18%"
+      ]
+    },
+    "DHR": {
+      "last_price": 215.01,
+      "history": [
+        "-1.23%",
+        "+0.68%"
+      ]
+    },
+    "TMUS": {
+      "last_price": 181.5,
+      "history": [
+        "-1.36%",
+        "+0.59%"
+      ]
+    },
+    "PYPL": {
+      "last_price": 52.1293,
+      "history": [
+        "-1.02%"
+      ]
+    },
+    "CEG": {
+      "last_price": 272.0,
+      "history": [
+        "-1.01%"
+      ]
+    },
+    "ASML": {
+      "last_price": 1676.96,
+      "history": [
+        "-1.12%"
+      ]
+    },
+    "GOOG": {
+      "last_price": 332.0108,
+      "history": [
+        "-1.01%"
+      ]
+    },
+    "ABBV": {
+      "last_price": 259.872,
+      "history": [
+        "+1.35%"
+      ]
+    },
+    "MRK": {
+      "last_price": 149.3401,
+      "history": [
+        "+1.07%"
+      ]
+    },
+    "KO": {
+      "last_price": 89.61,
+      "history": [
+        "+1.06%"
+      ]
+    },
+    "BA": {
+      "last_price": 205.64,
+      "history": [
+        "-1.03%"
+      ]
+    }
+  },
+  "regular_tickers": {
+    "CL=F": {
+      "last_price": 88.22,
+      "history": [
+        "+2.87%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 92.73,
+      "history": [
+        "+2.48%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 2.86,
+      "history": [
+        "-2.56%"
+      ]
+    },
+    "GLD": {
+      "last_price": 398.795,
+      "history": [
+        "-2.47%"
+      ]
+    },
+    "SLV": {
+      "last_price": 58.451,
+      "history": [
+        "-2.61%"
+      ]
+    },
+    "USO": {
+      "last_price": 136.966,
+      "history": [
+        "+5.60%"
+      ]
+    },
+    "BNO": {
+      "last_price": 54.02,
+      "history": [
+        "+4.93%"
+      ]
+    },
+    "MSFT": {
+      "last_price": 498.535,
+      "history": [
+        "-2.92%"
+      ]
+    },
+    "AMZN": {
+      "last_price": 252.59,
+      "history": [
+        "-5.19%"
+      ]
+    },
+    "GOOGL": {
+      "last_price": 334.69,
+      "history": [
+        "-3.43%"
+      ]
+    },
+    "GOOG": {
+      "last_price": 330.944,
+      "history": [
+        "-3.48%"
+      ]
+    },
+    "META": {
+      "last_price": 558.8,
+      "history": [
+        "-3.33%"
+      ]
+    },
+    "TSLA": {
+      "last_price": 356.69,
+      "history": [
+        "+2.28%"
+      ]
+    },
+    "XOM": {
+      "last_price": 163.58,
       "history": [
         "+4.38%"
       ]
     },
-    "XRP-USD": {
-      "last_price": 1.4458,
+    "PG": {
+      "last_price": 146.755,
       "history": [
-        "+5.69%"
+        "+2.07%"
       ]
     },
-    "SOL-USD": {
-      "last_price": 103.65,
+    "ABBV": {
+      "last_price": 260.68,
       "history": [
-        "+2.91%"
+        "+2.04%"
       ]
     },
-    "LINK-USD": {
-      "last_price": 11.894,
+    "NFLX": {
+      "last_price": 80.07,
       "history": [
-        "+5.97%"
+        "-2.02%"
+      ]
+    },
+    "CVX": {
+      "last_price": 209.74,
+      "history": [
+        "+3.90%"
+      ]
+    },
+    "WMT": {
+      "last_price": 105.78,
+      "history": [
+        "+2.61%"
+      ]
+    },
+    "ORCL": {
+      "last_price": 144.41,
+      "history": [
+        "-4.27%"
+      ]
+    },
+    "GE": {
+      "last_price": 335.185,
+      "history": [
+        "-2.16%"
+      ]
+    },
+    "AMAT": {
+      "last_price": 449.65,
+      "history": [
+        "-2.60%"
+      ]
+    },
+    "COP": {
+      "last_price": 134.76,
+      "history": [
+        "+3.38%"
+      ]
+    },
+    "LOW": {
+      "last_price": 203.66,
+      "history": [
+        "-2.11%"
+      ]
+    },
+    "BKNG": {
+      "last_price": 198.105,
+      "history": [
+        "-3.66%"
+      ]
+    },
+    "GS": {
+      "last_price": 1000.44,
+      "history": [
+        "-3.24%"
+      ]
+    },
+    "BLK": {
+      "last_price": 1132.57,
+      "history": [
+        "-2.74%"
+      ]
+    },
+    "BSX": {
+      "last_price": 47.64,
+      "history": [
+        "+4.08%",
+        "-1.37%"
+      ]
+    },
+    "DE": {
+      "last_price": 663.5,
+      "history": [
+        "+5.26%"
+      ]
+    },
+    "AXP": {
+      "last_price": 326.075,
+      "history": [
+        "-2.14%"
+      ]
+    },
+    "LRCX": {
+      "last_price": 294.5,
+      "history": [
+        "-2.45%"
+      ]
+    },
+    "GILD": {
+      "last_price": 149.31,
+      "history": [
+        "+2.49%"
+      ]
+    },
+    "ADI": {
+      "last_price": 353.93,
+      "history": [
+        "-2.17%"
+      ]
+    },
+    "MDT": {
+      "last_price": 92.781,
+      "history": [
+        "+4.32%",
+        "+2.35%"
+      ]
+    },
+    "CVS": {
+      "last_price": 95.52,
+      "history": [
+        "+2.64%"
+      ]
+    },
+    "KLAC": {
+      "last_price": 171.51,
+      "history": [
+        "-2.30%"
+      ]
+    },
+    "SNPS": {
+      "last_price": 430.09,
+      "history": [
+        "-2.83%"
+      ]
+    },
+    "CDNS": {
+      "last_price": 329.605,
+      "history": [
+        "-3.17%"
+      ]
+    },
+    "CRWD": {
+      "last_price": 224.09,
+      "history": [
+        "+4.81%",
+        "+2.61%"
+      ]
+    },
+    "ABNB": {
+      "last_price": 181.37,
+      "history": [
+        "-4.25%"
+      ]
+    },
+    "MAR": {
+      "last_price": 339.38,
+      "history": [
+        "-3.33%"
+      ]
+    },
+    "MRVL": {
+      "last_price": 204.25,
+      "history": [
+        "-5.71%"
+      ]
+    },
+    "CHTR": {
+      "last_price": 148.885,
+      "history": [
+        "-3.08%"
+      ]
+    },
+    "WDAY": {
+      "last_price": 197.22,
+      "history": [
+        "-3.66%"
+      ]
+    },
+    "CEG": {
+      "last_price": 271.175,
+      "history": [
+        "-2.01%"
+      ]
+    },
+    "DASH": {
+      "last_price": 227.595,
+      "history": [
+        "-3.86%"
+      ]
+    },
+    "RBLX": {
+      "last_price": 39.85,
+      "history": [
+        "+3.43%"
+      ]
+    },
+    "IREN": {
+      "last_price": 35.235,
+      "history": [
+        "+3.05%",
+        "-0.61%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 1542.06,
+      "history": [
+        "+3.84%"
+      ]
+    },
+    "INTC": {
+      "last_price": 86.957,
+      "history": [
+        "-2.81%"
+      ]
+    },
+    "NBIS": {
+      "last_price": 195.82,
+      "history": [
+        "-4.18%",
+        "-6.39%"
+      ]
+    },
+    "CNQ.TO": {
+      "last_price": 70.6,
+      "history": [
+        "+3.61%"
+      ]
+    },
+    "SU.TO": {
+      "last_price": 94.51,
+      "history": [
+        "+3.75%"
+      ]
+    },
+    "TRP.TO": {
+      "last_price": 88.25,
+      "history": [
+        "+2.59%"
+      ]
+    },
+    "CVE.TO": {
+      "last_price": 45.22,
+      "history": [
+        "+2.98%"
+      ]
+    },
+    "TOU.TO": {
+      "last_price": 63.85,
+      "history": [
+        "+2.16%"
+      ]
+    },
+    "PPL.TO": {
+      "last_price": 68.38,
+      "history": [
+        "+2.46%"
+      ]
+    },
+    "KEY.TO": {
+      "last_price": 60.91,
+      "history": [
+        "+3.06%"
+      ]
+    },
+    "ABX.TO": {
+      "last_price": 60.71,
+      "history": [
+        "-4.45%"
+      ]
+    },
+    "AEM.TO": {
+      "last_price": 272.5,
+      "history": [
+        "-4.97%"
+      ]
+    },
+    "FNV.TO": {
+      "last_price": 355.595,
+      "history": [
+        "-3.89%"
+      ]
+    },
+    "WPM.TO": {
+      "last_price": 201.69,
+      "history": [
+        "-5.43%"
+      ]
+    },
+    "NTR.TO": {
+      "last_price": 105.3,
+      "history": [
+        "+2.95%"
+      ]
+    },
+    "TECK-B.TO": {
+      "last_price": 93.03,
+      "history": [
+        "-3.53%"
+      ]
+    },
+    "FM.TO": {
+      "last_price": 45.29,
+      "history": [
+        "-5.17%"
+      ]
+    },
+    "K.TO": {
+      "last_price": 41.25,
+      "history": [
+        "-5.15%"
+      ]
+    },
+    "CCO.TO": {
+      "last_price": 134.46,
+      "history": [
+        "-3.34%"
+      ]
+    },
+    "IVN.TO": {
+      "last_price": 11.63,
+      "history": [
+        "-3.88%"
+      ]
+    },
+    "WDO.TO": {
+      "last_price": 31.935,
+      "history": [
+        "-5.52%"
+      ]
+    },
+    "LUN.TO": {
+      "last_price": 35.615,
+      "history": [
+        "-8.30%"
+      ]
+    },
+    "SHOP.TO": {
+      "last_price": 199.5,
+      "history": [
+        "-6.08%"
+      ]
+    },
+    "CP.TO": {
+      "last_price": 128.08,
+      "history": [
+        "-2.07%"
+      ]
+    },
+    "STN.TO": {
+      "last_price": 101.1,
+      "history": [
+        "-2.87%"
+      ]
+    },
+    "MRK": {
+      "last_price": 150.77,
+      "history": [
+        "+2.04%"
+      ]
+    },
+    "AMD": {
+      "last_price": 455.22,
+      "history": [
+        "-2.23%"
+      ]
+    },
+    "QCOM": {
+      "last_price": 163.125,
+      "history": [
+        "-4.31%"
+      ]
+    },
+    "INTU": {
+      "last_price": 349.7,
+      "history": [
+        "-2.67%"
+      ]
+    },
+    "TXN": {
+      "last_price": 254.4,
+      "history": [
+        "-2.50%"
+      ]
+    },
+    "ELV": {
+      "last_price": 401.305,
+      "history": [
+        "+2.23%"
+      ]
+    },
+    "PANW": {
+      "last_price": 371.045,
+      "history": [
+        "-2.90%"
+      ]
+    },
+    "MO": {
+      "last_price": 69.91,
+      "history": [
+        "+2.09%"
+      ]
+    },
+    "NXPI": {
+      "last_price": 218.805,
+      "history": [
+        "-2.14%"
+      ]
+    },
+    "FTNT": {
+      "last_price": 167.25,
+      "history": [
+        "-2.15%"
+      ]
+    },
+    "ZS": {
+      "last_price": 182.3,
+      "history": [
+        "-3.23%"
+      ]
+    },
+    "DLTR": {
+      "last_price": 129.76,
+      "history": [
+        "+2.50%"
+      ]
+    },
+    "SMCI": {
+      "last_price": 35.875,
+      "history": [
+        "-3.25%"
+      ]
+    },
+    "ARM": {
+      "last_price": 229.95,
+      "history": [
+        "-4.94%"
+      ]
+    },
+    "BLSH": {
+      "last_price": 32.7,
+      "history": [
+        "-3.91%"
+      ]
+    },
+    "RKLB": {
+      "last_price": 62.22,
+      "history": [
+        "-3.37%"
+      ]
+    },
+    "ATS.TO": {
+      "last_price": 26.18,
+      "history": [
+        "-2.02%"
+      ]
+    },
+    "TIH.TO": {
+      "last_price": 191.58,
+      "history": [
+        "-4.33%"
+      ]
+    },
+    "BIP-UN.TO": {
+      "last_price": 51.84,
+      "history": [
+        "-2.06%"
+      ]
+    },
+    "CAT": {
+      "last_price": 780.51,
+      "history": [
+        "-2.13%"
+      ]
+    },
+    "ETN": {
+      "last_price": 392.275,
+      "history": [
+        "-2.39%"
+      ]
+    },
+    "MCHP": {
+      "last_price": 70.93,
+      "history": [
+        "-2.74%"
+      ]
+    },
+    "DDOG": {
+      "last_price": 231.13,
+      "history": [
+        "-2.49%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 143.87,
+      "history": [
+        "+4.26%"
+      ]
+    },
+    "CBRS": {
+      "last_price": 174.14,
+      "history": [
+        "-2.76%"
+      ]
+    },
+    "OTEX.TO": {
+      "last_price": 33.88,
+      "history": [
+        "-2.02%"
+      ]
+    },
+    "CAE.TO": {
+      "last_price": 32.855,
+      "history": [
+        "-2.01%"
       ]
     }
   },
+  "afterhours_tickers": {},
+  "crypto_tickers": {},
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -16519,1410 +17854,18 @@
     "link_https://beincrypto.com/arbitrum-price-jumps-robinhood-chain-fees/?.tsrc=rss",
     "title_arbitrumjumps26whilebitcoinandethereumfallrobinhoodisthereason_2026-09-01",
     "link_https://finance.yahoo.com/video/anthropics-35b-cloud-deal-lambda-134500271.html?.tsrc=rss",
-    "title_anthropics35bclouddealwithlambdaaddsnewlayertocircularfinancingconcerns_2026-09-01",
-    "link_https://finance.yahoo.com/healthcare/articles/onward-medical-announce-first-half-053000352.html",
-    "title_onwardmedicaltoannouncefirsthalf2026resultsonseptember92026_2026-09-04",
-    "link_https://finance.yahoo.com/m/7321cd97-a7de-3a65-ad42-c385bc252811/italy%27s-meloni-throws-party.html",
-    "title_italysmelonithrowspartytocelebraterecordinpower_2026-09-04",
-    "link_https://finance.yahoo.com/m/7d17b7c4-3b23-3466-8c1d-8374e912b671/workers-say-ai-makes-them.html",
-    "title_workerssayaimakesthemlookmoreskilledthantheyarestudyfinds_2026-09-04",
-    "link_https://finance.yahoo.com/m/3810c34a-5d7c-34a9-9573-92e059c3747c/s%26p-500%2C-dow-end-best-day-in.html",
-    "title_sp500dowendbestdayinamonthoncalmeryieldsasratehikebetswanespcxvsxynvdatslainfocus_2026-09-03",
-    "link_https://finance.yahoo.com/m/44a491c7-da8e-3b24-996e-18bbab309b55/retired-before-nvidia-made.html",
-    "title_retiredbeforenvidiamadeeveryonerichthese3etfsputthenextwaveinyourirawithoutbettingthenestegg_2026-09-03",
-    "link_https://finance.yahoo.com/m/dd1a70b3-41dc-3453-aaa3-8c7dad56a01f/dell-is-now-up-20%25-in-a.html",
-    "title_dellisnowup20inamonthtakeprofitsorbuymore_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/williams-closes-5-5-billion-030000101.html",
-    "title_williamscloses55billionmomentummidstreamacquisition_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/williams-companies-wmb-strengthens-natural-013156029.html",
-    "title_thewilliamscompanieswmbstrengthensitsnaturalgasgrowthenginewithmomentumdeal_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/net-power-closes-acquisition-123-220458200.html",
-    "title_netpowerclosesacquisitionof123mwpowergenerationrightsfromempowersharesrise_2026-09-03",
-    "link_https://finance.yahoo.com/markets/world-indices/articles/asian-stocks-rally-traders-pare-024214659.html",
-    "title_asianstocksrallyastraderspareratebetsaheadofjobsdata_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/crescent-energy-upbeat-q2-guidance-021635375.html",
-    "title_shouldcrescentenergysupbeatq2andguidanceshiftrequireactionfromcrescentenergycrgyinvestors_2026-09-03",
-    "link_https://finance.yahoo.com/video/9-3-2026-oil-surges-021345437.html",
-    "title_932026oilsurgesonirantensionsyieldsswingtechholdsup_2026-09-03",
-    "link_https://finance.yahoo.com/economy/policy/article/divide-over-yields-fed-officials-see-a-stronger-economy-wall-street-frets-over-oil-prices-and-deficits-193739245.html",
-    "title_divideoveryieldsfedofficialsseeastrongereconomywallstreetfretsoveroilpricesanddeficits_2026-09-03",
-    "link_https://finance.yahoo.com/m/f5f47781-f45e-3e16-93ce-c672c7d215f3/meta-rises-4%25-as-muse-spark.html",
-    "title_metarises4asmusespark13claimsparitywithanthropicandopenai_2026-09-03",
-    "link_https://finance.yahoo.com/m/a69d095b-953f-3bfa-829f-25b203c17c2f/should-investors-ride-the.html",
-    "title_shouldinvestorsridethesilverboomwithaphysicaletflikesivrorthroughsilverminingstockswithslvp_2026-09-03",
-    "link_https://finance.yahoo.com/m/7e7cd538-695c-3677-8607-afc27f62ec3f/basic-materials-roundup%3A.html",
-    "title_basicmaterialsroundupmarkettalk_2026-09-03",
-    "link_https://finance.yahoo.com/m/69739a73-33e6-3e94-8ffb-898941af96ae/abrdn-physical-silver-shares.html",
-    "title_abrdnphysicalsilversharesetfvsisharessilvertrustwhichfundhelpsinvestorsridethecommodityboom_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/kinross-gold-tsx-k-looks-043757733.html",
-    "title_kinrossgoldtsxklookscheapifgoldstrengthkeepssupportingthestory_2026-09-04",
-    "link_https://finance.yahoo.com/markets/commodities/articles/getchell-gold-corp-files-1-020000897.html",
-    "title_getchellgoldcorpfiles1billionnpvpreliminaryeconomicassessmentfondawaycanyongoldprojectnv_2026-09-03",
-    "link_https://finance.yahoo.com/m/40da9f55-212e-378b-bb43-b8ee51352208/gold-rises-on-weaker-u.s..html",
-    "title_goldrisesonweakerusdollar_2026-09-03",
-    "link_https://finance.yahoo.com/markets/commodities/articles/gold-rally-driven-investment-demand-163107026.html",
-    "title_goldrallydrivenbyinvestmentdemandnotjusttreasurymovesaysanalyst_2026-09-03",
-    "link_https://finance.yahoo.com/m/65c46055-6ab0-3147-80e4-dde321ca07d5/his-one-ounce-gold-trade-was.html",
-    "title_hisoneouncegoldtradewasstillopentheirstreateditassoldanyway_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-higher-equity-132019027.html",
-    "title_exchangetradedfundshigherequityfuturesmixedprebellthursdayasmarketsweighoilpricestechearnings_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/openai-declares-agi-era-astra-041130711.html",
-    "title_openaideclaresagierawithastralaunchanthropicsfable51morethandoubleditspredecessorssciencescoremsftandamznbothwinbutonehasaslightedge_2026-09-04",
-    "link_https://finance.yahoo.com/markets/world-indices/articles/asian-benchmarks-mostly-rise-tech-032035804.html",
-    "title_asianbenchmarksmostlyriseaftertechstocksleadrallyonwallstreet_2026-09-03",
-    "link_https://finance.yahoo.com/m/dd97f557-8162-348b-8996-795ae7092089/dow-jones-futures-await-jobs.html",
-    "title_dowjonesfuturesawaitjobsreportafterbullishmarketmoveteslacybercabshittheroad_2026-09-03",
-    "link_https://finance.yahoo.com/m/b12617a7-f63d-319e-bd02-735bd2e0cbfc/this-stock-strategy-printed.html",
-    "title_thisstockstrategyprintedmoneyuntilitjuststoppedworking_2026-09-03",
-    "link_https://finance.yahoo.com/m/f51dd5f5-baae-3745-ba36-72f511027b50/if-i-only-had-%241%2C000-to.html",
-    "title_ifionlyhad1000toinvestrightnowthisistheetfidbuywithoutanyhesitation_2026-09-03",
-    "link_https://finance.yahoo.com/m/cb40876f-bcfc-3c9c-927e-b5fddc08901d/september-is-usually-ugly-for.html",
-    "title_septemberisusuallyuglyforstockswhythisyearisdifferent_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-equity-futures-130827604.html",
-    "title_exchangetradedfundsequityfuturesmixedprebellwednesdayamidescalatingusirantensions_2026-09-02",
-    "link_https://finance.yahoo.com/economy/policy/articles/big-morning-news-jobless-claims-142500064.html",
-    "title_bigmorningfornewsjoblessclaimsfedspeakerstradedeficit_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/pre-market-futures-lower-start-141700686.html",
-    "title_premarketfutureslowertostartseptember_2026-09-01",
-    "link_https://finance.yahoo.com/m/6ed65654-6325-35cf-a11b-d4c5626ad24c/crypto-market-today%2C-sept.-3%3A.html",
-    "title_cryptomarkettodaysept3bitcoinreclaims81000onfedratepausesignals_2026-09-03",
-    "link_https://finance.yahoo.com/m/67e30045-9d30-30fb-8d95-5ad69c8d6134/bitcoin-reclaims-%2480%2C000-amid.html",
-    "title_bitcoinreclaims80000amiddovishfedsignal_2026-09-03",
-    "link_https://finance.yahoo.com/m/d551e22e-24a2-3542-adb6-910fc791470c/crypto-treasury-stocks-rally.html",
-    "title_cryptotreasurystocksrallyasbitcoinfundjumps5strategysurges14bitmineclimbs12_2026-09-03",
-    "link_https://finance.yahoo.com/m/5f27718a-b70b-3c51-bd7a-53cc5873314c/better-consumer-stock-for.html",
-    "title_betterconsumerstockfor2026amazoncomvswaltdisney_2026-09-03",
-    "link_https://finance.yahoo.com/m/094a0c72-a7cf-38e1-98a2-9d19840818ba/microsoft-drops-%24101.9.html",
-    "title_microsoftdrops1019billionsurpriseasaireshapescompany_2026-09-03",
-    "link_https://finance.yahoo.com/m/249a0e56-94dc-38c4-855d-4735473e9da5/the-best-performing-commodity.html",
-    "title_thebestperformingcommodityetfsof2026oilandbroadbasketsleadthepack_2026-09-02",
-    "link_https://finance.yahoo.com/m/2ffca22d-e7ed-31f2-82a7-ef95ed81b083/oil-etfs-are-crushing-oil.html",
-    "title_oiletfsarecrushingoilitselfthankstothefuturescurve_2026-09-03",
-    "link_https://finance.yahoo.com/markets/options/articles/3-inverse-etfs-play-global-130000018.html",
-    "title_3inverseetfstoplayglobalbondselloffs_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/google-energy-project-gives-eos-040016014.html",
-    "title_googlesnewenergyprojectgiveseosenergyakeytechnologyvalidation_2026-09-04",
-    "link_https://finance.yahoo.com/m/ef0ead48-ff82-303d-84b9-ddec48879a35/opinion%3A-tsmc-is-a-better-buy.html",
-    "title_opiniontsmcisabetterbuythananyofthemagnificentsevenstocksrightnow_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-rise-pre-132503315.html",
-    "title_sectorupdateenergystocksriseprebellthursday_2026-09-03",
-    "link_https://finance.yahoo.com/m/d106ef5d-b832-3d00-9b1d-643be37aade0/apple%27s-memory-costs-jump.html",
-    "title_applesmemorycostsjump400iphone18propricemayrise100_2026-09-04",
-    "link_https://finance.yahoo.com/m/169fe1b9-fa9a-35b1-ba03-f9cf54913043/nvidia-vs.-micron%3A-which-is.html",
-    "title_nvidiavsmicronwhichisthebetteraisemiconductorstocktoownforthenext5years_2026-09-04",
-    "link_https://finance.yahoo.com/m/6e000db7-4d56-3458-9db7-ce6177d84323/michael-burry-calls.html",
-    "title_michaelburrycallsnvidiahuggingfacedealanobrainerwallstreetseesnewthreatforopenaiandanthropic_2026-09-04",
-    "link_https://finance.yahoo.com/m/e943e64e-73df-3786-ad0b-e62e0d22ae95/is-rocket-lab-stock-a.html",
-    "title_isrocketlabstockamillionairemaker_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-meta-meta-stock-trading-015118790.html",
-    "title_whymetametastockistradinguptoday_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/crusoe-reportedly-raises-3b-30b-004842708.html",
-    "title_crusoereportedlyraises3bata30bvaluation_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/alcatraz-ai-names-bobby-louissaint-220800464.html",
-    "title_alcatrazainamesbobbylouissaintheadofbusinessdevelopment_2026-09-03",
-    "link_https://finance.yahoo.com/m/b4061797-b3be-3833-8f74-93bf8361b08a/nobody-has-looked-at-the-fund.html",
-    "title_nobodyhaslookedatthefundyour401kpickedforyouat25sohereare3etfsagrownupwouldchooseinstead_2026-09-03",
-    "link_https://finance.yahoo.com/m/3f51dabe-95ca-32b4-b62f-9c87cefb59e8/if-you-invest-%241%2C000-in-the.html",
-    "title_ifyouinvest1000inthevanguardtotalstockmarketetfrightnowhereswhathistorysaysitcouldbeworthin20years_2026-09-02",
-    "link_https://finance.yahoo.com/m/03918b48-4141-3f37-9f6b-bdbeacaa0445/where-will-vti-be-in-2036%3F.html",
-    "title_wherewillvtibein2036hereswhatdecadesofhistorysuggest_2026-09-01",
-    "link_https://finance.yahoo.com/healthcare/articles/lillys-african-mounjaro-push-starts-213520728.html",
-    "title_lillysafricanmounjaropushstartsat125ofquarterlysales_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-edge-higher-194602558.html",
-    "title_sectorupdatehealthcarestocksedgehigherlateafternoon_2026-09-03",
-    "link_https://finance.yahoo.com/m/6a5cfb7b-0a44-32a9-89b3-711ef4b498ec/great-news-for-eli-lilly.html",
-    "title_greatnewsforelilillystockinvestors_2026-09-03",
-    "link_https://finance.yahoo.com/m/c0b49604-8a65-3155-92e7-6d578e36c8ff/dow%2C-s%26p-500%2C-nasdaq-futures.html",
-    "title_dowsp500nasdaqfuturestreadwaterasaugustjobsdataloomstslaluluplcrdostocksinfocus_2026-09-03",
-    "link_https://finance.yahoo.com/m/7b73fe88-df5b-3526-a73a-61f87bad2e07/tsla-stock-slips-overnight-as.html",
-    "title_tslastockslipsovernightassafetyregulatorscrutinizescybercabretailfumesovereventblackout_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/bull-case-kyndryl-holdings-kd-030947656.html",
-    "title_thebullcaseforkyndrylholdingskdcouldchangefollowingexpandedvmwareaialliancewithbroadcom_2026-09-03",
-    "link_https://finance.yahoo.com/m/fcf04ff6-b526-3b96-98e9-b0adcb1b57fb/wall-street-sees-nearly-40%25.html",
-    "title_wallstreetseesnearly40upsideforoneaichipgiant_2026-09-03",
-    "link_https://finance.yahoo.com/m/2e5ea75b-3a0d-364b-bf73-dff58ccfbd97/hock-tan-just-put-a-%24230.html",
-    "title_hocktanjustputa230billionnumberonbroadcoms2028airevenuethatis4timesthisyears_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-sector-stocks-gain-oil-190000500.html",
-    "title_3sectorstockstogainfromasoilratesandjobsshapeseptember_2026-09-03",
-    "link_https://finance.yahoo.com/m/0667f57d-8d0d-381e-8f86-f6e3d12a890d/unitedhealth-stock-recovered.html",
-    "title_unitedhealthstockrecoveredbeforeitsmarginsdid_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/unitedhealth-finally-turning-corner-tough-155000227.html",
-    "title_isunitedhealthfinallyturningthecornerafteratough2025_2026-09-03",
-    "link_https://finance.yahoo.com/m/7047050a-6613-3089-92bb-93124eac0aee/why-copart-stock-ticked-4%25.html",
-    "title_whycopartstockticked4higheronthursday_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jpmorgan-chase-co-jpm-outperforms-214503497.html",
-    "title_jpmorganchasecojpmoutperformsbroadermarketwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/m/cf107247-d8cb-3f92-918f-f3ea0131ba60/what-are-you-actually-buying.html",
-    "title_whatareyouactuallybuyinginpaypalstock_2026-09-03",
-    "link_https://finance.yahoo.com/small-business/articles/hong-leong-bank-unveils-hlb-155300440.html",
-    "title_hongleongbankunveilshlbopusextendedexclusivelybyprivateinvitation_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-fidelity-national-fis-down-153013976.html",
-    "title_whyisfidelitynationalfisdown23sincelastearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/procter-gamble-pg-stock-could-190527487.html",
-    "title_proctergamblepgstockcouldbe25undervaluedoncashflow_2026-09-03",
-    "link_https://finance.yahoo.com/video/theres-no-end-sight-campbells-154222189.html",
-    "title_theresnoendinsightforcampbellsquarterlysalesdeclinesalphaspace_2026-09-03",
-    "link_https://finance.yahoo.com/m/f1b44a92-c982-3d57-8c0e-d3982b52545f/hershey-finance-exec-succeeds.html",
-    "title_hersheyfinanceexecsucceedsretiringcfo_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/chevron-ceo-says-patience-paid-155212140.html",
-    "title_chevronceosayspatiencepaidoffinvenezuela_2026-09-03",
-    "link_https://finance.yahoo.com/m/bf023183-2f86-30a9-88e0-21ed291d5e7a/2-energy-dividend-stocks-with.html",
-    "title_2energydividendstockswithgrowingpayoutsledbyexxonmobil_2026-09-03",
-    "link_https://finance.yahoo.com/m/f0a30e07-dd18-3641-a59f-55f986387dff/exxon%E2%80%99s-dividend-looks-safe.html",
-    "title_exxonsdividendlookssafetodaybutwhatifoilpricestumble_2026-09-03",
-    "link_https://finance.yahoo.com/m/622a84f4-4b9c-3d7b-a02d-874f1442bc02/sam%27s-club-makes-members-an.html",
-    "title_samsclubmakesmembersanoffercostcowontevenconsider_2026-09-03",
-    "link_https://finance.yahoo.com/m/3a24968b-9402-300b-b875-6fd88eb49157/mama%27s-creations-q2-earnings.html",
-    "title_mamascreationsq2earningscallhighlights_2026-09-03",
-    "link_https://finance.yahoo.com/m/a9246b52-d729-3660-9b72-ac7d8f750551/costco-stock-is-priced-for.html",
-    "title_costcostockispricedfortwogoodyearsisthatasafebet_2026-09-03",
-    "link_https://finance.yahoo.com/m/ee76f948-32d0-31d5-bdea-b104d35d1742/nvidia-just-delivered-a.html",
-    "title_nvidiajustdeliveredamassivewarningtoamdandintelstockinvestors_2026-09-03",
-    "link_https://finance.yahoo.com/m/37ca38d5-c136-396f-91fe-6e883f6451b7/should-you-buy-marvell-stock.html",
-    "title_shouldyoubuymarvellstockbecauseitsoperatingmarginkeepswidening_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/amd-amd-stock-may-24-210938296.html",
-    "title_amdamdstockmaybe24undervaluedonsaudiaiexpansion_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/salesforce-may-found-answer-ai-040002075.html",
-    "title_salesforcemayhavefoundananswertotheaidisruptionthreatcantorsays_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/salesforce-announces-quarterly-dividend-221900406.html",
-    "title_salesforceannouncesquarterlydividend_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/abbvie-abbv-blood-cancer-success-012434988.html",
-    "title_abbvieabbvsbloodcancersuccessaddsweighttoitspipelinestory_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/abbvies-etentamig-delivers-74-response-213159336.html",
-    "title_abbviesetentamigdelivers74responserateinpivotalcancertrial_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/j-j-gains-abbvie-posts-212623009.html",
-    "title_jjgainsasabbvieposts74myelomaresponse_2026-09-03",
-    "link_https://finance.yahoo.com/m/9d9032d4-755e-3fd8-bbc2-91e55baf8a2b/retailers-charging-ahead-with.html",
-    "title_retailerschargingaheadwithevstationsdespitepolicypullback_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/mercks-8-4-billion-keytruda-212734101.html",
-    "title_mercks84billionkeytrudafortressgetsa2028warning_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/fresenius-kabi-launches-generic-sugammadex-210000736.html",
-    "title_freseniuskabilaunchesgenericsugammadexinsimplistreadytoadministerprefilledsyringeintheus_2026-09-03",
-    "link_https://finance.yahoo.com/m/f3815e32-2e94-3394-8e34-9a2629d05b12/summit-packs-a-punch-for.html",
-    "title_summitpacksapunchformerckskeytrudabutnoteveryoneissold_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/chevron-cvx-fresh-attention-market-021724481.html",
-    "title_chevroncvxhasfreshattentionbutwhatisthemarketweighing_2026-09-03",
-    "link_https://finance.yahoo.com/m/83581f72-7489-3b42-ae89-1651468e5f0f/why-big-oil-is-wary-of.html",
-    "title_whybigoiliswaryoftrumpsforayintovenezuelasoilpatch_2026-09-03",
-    "link_https://finance.yahoo.com/m/0401f080-83bd-37d5-86f4-011a9f9c98fa/147-year-old-oil-giant-just.html",
-    "title_147yearoldoilgiantjustmadehighstakesbetinvenezuela_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/mastercard-ma-bets-ai-agent-224117923.html",
-    "title_mastercardmabetsonaiagentcommercewithnewstartpathcohort_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/mastercard-ma-stays-resilient-ai-145603430.html",
-    "title_mastercardmastaysresilientwithaiintegrationandpaymentduopoly_2026-09-03",
-    "link_https://finance.yahoo.com/m/31bb0fb7-0c8e-3fca-903b-f8b338c05bbe/dis-is-priced-like-the-best.html",
-    "title_disispricedlikethebestofitsgroupisit_2026-09-03",
-    "link_https://finance.yahoo.com/m/0cd8349c-c399-3883-98d8-83afb0cf9e97/how-far-can-amazon-stock-fall.html",
-    "title_howfarcanamazonstockfallwhenthebusinessisfine_2026-09-03",
-    "link_https://finance.yahoo.com/m/3c2c6f4d-66e1-3b6d-b756-33907de97e3a/netflix%E2%80%99s-acquisition.html",
-    "title_netflixsacquisitionwishlistwhichstreamingtargethasthebestodds_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/untouchable-list-stocks-short-sellers-211932353.html",
-    "title_theuntouchableliststocksthatshortsellerswontdarebetagainst_2026-09-03",
-    "link_https://finance.yahoo.com/m/d9e0eb34-1328-3249-8ea7-95580870473b/mortgage-rates-just-hit-a.html",
-    "title_mortgageratesjusthita1yearhighhereswhatthatmeansforlowesandhomedepotinvestors_2026-09-03",
-    "link_https://finance.yahoo.com/m/29ee42b8-f2fb-317d-af6e-c46183dd3a07/how-gen-z%27s-first-paycheck-in.html",
-    "title_howgenzsfirstpaycheckin2026stacksupagainstthelivingwage_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/bank-america-doubles-down-chewy-212420036.html",
-    "title_bankofamericadoublesdownonchewyafter27stockdrop_2026-09-03",
-    "link_https://finance.yahoo.com/m/76b873dc-91f7-3a03-8346-652a2ec38217/bank-of-america%27s-new-warning.html",
-    "title_bankofamericasnewwarningshouldconcernstockinvestors_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/pepsico-vs-coca-cola-stock-001700359.html",
-    "title_pepsicovscocacolawhichstockhastheedge_2026-09-03",
-    "link_https://finance.yahoo.com/m/9b6f064c-f2d6-329d-a634-9797b731c176/campbell%E2%80%99s-and-other-staples.html",
-    "title_campbellsandotherstaplesstockshavehitaroughpatch_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/brown-forman-q1-earnings-meet-144600348.html",
-    "title_brownformanq1earningsmeetsalesmissontequilabarrelweakness_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/rbc-raised-adobe-target-line-040411681.html",
-    "title_rbcraisedadobestargetbeforeaninlinequarterbecauseitspeersgotmoreexpensive_2026-09-04",
-    "link_https://finance.yahoo.com/m/aa43601a-0380-346c-a89e-310a93505677/adobe-names-anil-chakravarthy.html",
-    "title_adobenamesanilchakravarthyceobutaifearsareimpactingthestock_2026-09-03",
-    "link_https://finance.yahoo.com/m/83294cdb-5a8c-36e7-84c7-70ee9f3f70b4/adbe-stock-dips-over-1%25.html",
-    "title_adbestockdipsover1overnightafternamingnewceoaheadofq3earningsretailwatchescautiously_2026-09-03",
-    "link_https://finance.yahoo.com/m/7566bbdd-1f69-3eb3-bc00-35becb2cc95b/campbell-cuts-dividend%2C-tyson.html",
-    "title_campbellcutsdividendtysonslashesoutlookasfoodstocksgetcrushed_2026-09-03",
-    "link_https://finance.yahoo.com/m/64f3d2c6-7e01-37a5-881d-5c98c8ca51d2/prediction%3A-pepsi-stock-could.html",
-    "title_predictionpepsistockcouldsurprisewallstreetin2027_2026-09-03",
-    "link_https://finance.yahoo.com/m/d6aca2a5-4231-3866-8eb2-b568bd96d21c/why-did-nio%2C-rare%2C-mcd-stocks.html",
-    "title_whydidnioraremcdstocksfallto52weeklows_2026-09-04",
-    "link_https://finance.yahoo.com/m/25d0999d-700d-3575-9542-aef033fed02b/mcdonald%27s-launches-exclusive.html",
-    "title_mcdonaldslaunchesexclusivestatethemedmeal_2026-09-03",
-    "link_https://finance.yahoo.com/small-business/articles/picklemans-adds-industry-veteran-jim-203400437.html",
-    "title_picklemansaddsindustryveteranjimmoreytoexecutiveadvisoryboardtoacceleratescalablegrowth_2026-09-03",
-    "link_https://finance.yahoo.com/m/d9103759-0e8e-37fe-88f5-f7fa1542f9bc/here-are-thursday%E2%80%99s-top-wall.html",
-    "title_herearethursdaystopwallstreetanalystresearchcallsbroadcomdeerecompanydelltechnologiesdevonenergymodernapermianresourcespgethermofisherviperenergyandmore_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/baird-adjusts-price-target-thermo-113611354.html",
-    "title_bairdadjustspricetargetonthermofisherscientificto686from652keepsoutperformrating_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/pacb-cuts-2026-outlook-clinical-175500496.html",
-    "title_pacbcuts2026outlookasclinicaladoptionfacesitscrucialtest_2026-09-02",
-    "link_https://finance.yahoo.com/m/3c08272f-bc32-356a-a445-db4f7e506a98/palantir-stock-posts-best-day.html",
-    "title_palantirstockpostsbestdayinamonthafterexpandedpwcaidealdefyingmichaelburrysbearishbet_2026-09-03",
-    "link_https://finance.yahoo.com/m/d1c1048d-1272-3f0f-ae5c-ffeeec93c9ad/the-business-accenture-now.html",
-    "title_thebusinessaccenturenowmentionsinpassing_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/accenture-acn-rises-higher-market-215001547.html",
-    "title_accentureacnriseshigherthanmarketkeyfacts_2026-09-03",
-    "link_https://finance.yahoo.com/m/71e76e3b-3f3d-3ff6-a6e4-b22a349d8d11/orcl-stock-spikes-on-new-hpe.html",
-    "title_orclstockspikesonnewhpeequipmentdealretailturnsbullishaheadofq1report_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/oracle-orcl-stock-gets-fair-030852432.html",
-    "title_oracleorclstockgetsfairvaluetrimasanalystssplitonaiandcapex_2026-09-03",
-    "link_https://finance.yahoo.com/m/baf1c832-fb7f-3423-bfb3-8f49813f728f/stock-market-today%2C-sept.-3%3A.html",
-    "title_stockmarkettodaysept3hpejumps5raisesfiscaloutlookonrecordaiserverdemand_2026-09-03",
-    "link_https://finance.yahoo.com/m/a1e58efc-7349-3096-8303-d9a8d37397dc/the-market-marked-zm-down..html",
-    "title_themarketmarkedzmdownthenumberspushback_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/alab-stock-down-24-month-173200983.html",
-    "title_alabstockdown24inamonthshouldinvestorsbuythediporwait_2026-09-03",
-    "link_https://finance.yahoo.com/m/5a79903d-e0e7-39f2-8773-8fd5e7708200/do-you-still-own-the-nvidia.html",
-    "title_doyoustillownthenvidiayoubought_2026-09-03",
-    "link_https://finance.yahoo.com/m/a535934e-defb-387d-a483-061da6d1b3d3/what-happens-to-qualcomm.html",
-    "title_whathappenstoqualcommstockifthenewrevenueearnsless_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/ge-vernova-gev-laps-stock-215002028.html",
-    "title_gevernovagevlapsthestockmarkethereswhy_2026-09-03",
-    "link_https://finance.yahoo.com/m/bbb35eee-9e00-33d7-8ee3-6067927bc591/how-long-would-you-wait-for.html",
-    "title_howlongwouldyouwaitforgeaerospacestocktocomeback_2026-09-03",
-    "link_https://finance.yahoo.com/m/fa6f736a-d3f7-332c-9da3-bd2c0d3dd980/should-you-buy-boeing-stock.html",
-    "title_shouldyoubuyboeingstockwhileitstilllosesmoneyonairplanes_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/applied-materials-amat-still-look-230836239.html",
-    "title_canappliedmaterialsamatstilllookcheapaftera237run_2026-09-03",
-    "link_https://finance.yahoo.com/m/2bf7312f-1da5-36d8-88c9-99bc2fc069d5/why-did-applied-materials.html",
-    "title_whydidappliedmaterialsstocknearlytripleonsingledigittrailingrevenuegrowth_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/amat-rides-ai-led-wfe-151900886.html",
-    "title_amatridesonailedwfedemandcanitsustainthemomentum_2026-09-03",
-    "link_https://finance.yahoo.com/m/10428a1a-56d1-3e77-b512-4511565a6148/intuit-stock-still-carries.html",
-    "title_intuitstockstillcarriesthesameswingitjustdelivered_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/intuit-cfo-sandeep-aujla-present-200100775.html",
-    "title_intuitcfosandeepaujlatopresentatthegoldmansachscommunacopiatechnologyconference_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/intuit-host-annual-investor-day-200000716.html",
-    "title_intuittohostannualinvestordayonseptember17_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/dealmaking-3-athletes-unlimited-retreats-222739629.html",
-    "title_thedealmaking3athletesunlimitedretreatsnflkillstheprobowlaitakesovertheusopen_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/ibm-ibm-beats-stock-market-214504988.html",
-    "title_ibmibmbeatsstockmarketupswingwhatinvestorsneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/guidewire-software-hubspot-crowdstrike-servicenow-214318240.html",
-    "title_guidewiresoftwarehubspotcrowdstrikeservicenowanddynatracesharesaresoaringwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/m/2a4e5d96-393b-3e5c-b119-5aeb70842faf/stocks%2C-bonds-rally-after.html",
-    "title_stocksbondsrallyafterdovishfedcomments_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/market-chatter-walt-disney-company-230058750.html",
-    "title_marketchatterwaltdisneycompanysuitoverabclicencereviewshouldbedismissedfccsays_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/texas-instruments-incorporated-txn-benefits-142036141.html",
-    "title_texasinstrumentsincorporatedtxnbenefitsfromaiwithoutbeingpureplayai_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/heavy-machinery-q2-earnings-caterpillar-223118847.html",
-    "title_heavymachineryq2earningscaterpillarnysecatisthebestinthebiz_2026-09-03",
-    "link_https://finance.yahoo.com/m/b1eb006c-3bba-38e3-a75e-6569f0817589/that-dip-in-caterpillar-stock.html",
-    "title_thatdipincaterpillarstocklookstemptingbutdontignorethecatch_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-explains-reason-behind-175242696.html",
-    "title_jimcramerexplainsthereasonbehindcaterpillarscatpostearningspullbacks_2026-09-03",
-    "link_https://finance.yahoo.com/m/202127f3-1483-3d2a-8726-3f578cce8245/ria-referrals%2C-tech-and.html",
-    "title_riareferralstechandservicehowtradepmrbyrobinhoodpitchesadvisors_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/citigroup-sustain-aggressive-capital-return-145100332.html",
-    "title_cancitigroupsustainitsaggressivecapitalreturnstrategy_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/large-u-banks-face-rising-181416964.html",
-    "title_largeusbanksfacerisinggsibbuffersandtighterexcesscapitalgs_2026-09-02",
-    "link_https://finance.yahoo.com/m/349f2915-6a91-3729-ad3f-1c6edf54a785/vz-keeps-climbing.-should-you.html",
-    "title_vzkeepsclimbingshouldyouclimbon_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/comcast-reaches-construction-milestone-latest-131500365.html",
-    "title_comcastreachesconstructionmilestoneinlatestjacksoncountyexpansionbringingxfinityandcomcastbusinessservicestomoremichiganresidentsandbusinesses_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/verizon-shares-rise-23-3-152500569.html",
-    "title_verizonsharesrise233ytdhowshouldyouplaythestock_2026-09-03",
-    "link_https://finance.yahoo.com/m/a1b4cef2-478e-3a43-8d7b-5219ca8dec51/verizon%E2%80%99s-dividend-is-one-of.html",
-    "title_verizonsdividendisoneofthebiggestinthesp500butisitsafe_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/pediatrix-medical-group-md-3-153018040.html",
-    "title_pediatrixmedicalgroupmdup34sincelastearningsreportcanitcontinue_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/danaher-dhr-seen-deftly-navigating-145442960.html",
-    "title_danaherdhrseendeftlynavigatingaiintegration_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/abcam-genedata-collaborate-accelerate-ai-123000124.html",
-    "title_abcamandgenedatacollaboratetoaccelerateaidrivenantibodydevelopmentatglobalscale_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/pmi-u-launches-zyn-clicks-180600568.html",
-    "title_pmiuslauncheszynwhenitclicksanewbrandplatformbuiltaroundthemomenteverythingfallsintoplace_2026-09-03",
-    "link_https://finance.yahoo.com/m/463e7c4c-a81c-3a51-be37-393cd69187c6/no-etfs-required%3A-how-a.html",
-    "title_noetfsrequiredhowa64yearoldbuilta5700monthlypaycheckfromfivedividendstocks_2026-09-02",
-    "link_https://finance.yahoo.com/m/e36c20e8-7bb5-3fb1-a9fd-e2c132182173/i%27ve-been-wrong-about-philip.html",
-    "title_ivebeenwrongaboutphilipmorrisinternationalstockfor5yearshereswhyimfinallychangingmymind_2026-09-01",
-    "link_https://finance.yahoo.com/m/c63ec849-9f78-3cd5-9a0d-5ecabbd05dcb/isrg-stock%3A-the-best-house-on.html",
-    "title_isrgstockthebesthouseontheblockcoststhemost_2026-09-02",
-    "link_https://finance.yahoo.com/m/37e4c745-234b-3c0f-963d-45bda4c343bc/intuitive-surgical%27s-worst.html",
-    "title_intuitivesurgicalsworststretchinyearsisntscaringwallstreethereswhatanalystsarefocusedoninstead_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/seaport-global-initiates-conocophillips-neutral-094352115.html",
-    "title_seaportglobalinitiatesconocophillipsatneutral_2026-09-03",
-    "link_https://finance.yahoo.com/m/82cb7591-b0bc-3f19-a470-f5f17046eb56/why-did-pfe%2C-gtlb%2C-cop-stocks.html",
-    "title_whydidpfegtlbcopstocksjumpto52weekhighstoday_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/why-amgen-amgn-8-6-153006220.html",
-    "title_whyisamgenamgnup86sincelastearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/amgen-amgn-reasonable-rich-cash-221623355.html",
-    "title_isamgenamgnreasonableorrichascashflowimproves_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/tezspire-positive-eoe-phase-3-210918356.html",
-    "title_tezspirespositiveeoephase3resultscouldbeagamechangerforamgenamgn_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/did-lowe-evp-lineup-shelf-002109670.html",
-    "title_didlowesnewevplineupandshelffilingjustquietlyreframethelowinvestmentnarrative_2026-09-03",
-    "link_https://finance.yahoo.com/m/0b35bc67-16e1-3edf-a336-c84b4b5ae851/nvidia-is-now-paying-to-train.html",
-    "title_nvidiaisnowpayingtotrainplumbersandthestockthatshouldbenefitmostjusthita52weeklow_2026-09-03",
-    "link_https://finance.yahoo.com/m/916d1d1a-e7ef-39dc-a27d-c75c08036804/eaton-stock-looks-expensive.html",
-    "title_eatonstocklooksexpensiveuntilyoupricethefactoryramp_2026-09-03",
-    "link_https://finance.yahoo.com/m/3c614d61-f98c-352a-8a5d-c81380ecec3a/brady-corporation-q4-2026.html",
-    "title_bradycorporationq42026earningscallsummary_2026-09-03",
-    "link_https://finance.yahoo.com/m/85a4e4ee-f4e0-3141-9f99-7ebba60c8792/goldman-sachs-resets-dell.html",
-    "title_goldmansachsresetsdellstockpricetargetby60_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/morningstar-moodys-goldman-sachs-lazard-020718461.html",
-    "title_morningstarmoodysgoldmansachslazardandstonexstockstradeupwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/epc-power-announces-sale-flex-232000770.html",
-    "title_epcpowerannouncessaletoflexfor44billion_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/union-pacific-unp-merger-review-210932618.html",
-    "title_unionpacificunpmergerreviewdeadlinewasextendedisthestockstill12belowfairvalue_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/blue-moon-metals-acquiring-land-152142409.html",
-    "title_bluemoonmetalsacquiringlandandwaterrightspackageinnevadafor8millionincashandshares_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/blue-moon-metals-acquire-strategic-132541135.html",
-    "title_bluemoonmetalstoacquirestrategiclandwaterrightsforspringer_2026-09-03",
-    "link_https://finance.yahoo.com/small-business/articles/agoda-reveals-growing-travel-interest-020000349.html",
-    "title_agodarevealsgrowingtravelinterestfor2026silverweekinjapandrivenbyfirstfivedayholidayin11years_2026-09-03",
-    "link_https://finance.yahoo.com/m/ea264adc-e136-3647-b887-96ef4cf08b5c/here%27s-how-many-shares-of.html",
-    "title_hereshowmanysharesofbookingholdingsbkngstockyoudneedfor1000inyearlydividends_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-booking-holdings-bkng-down-153009641.html",
-    "title_whyisbookingholdingsbkngdown36sincelastearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/does-palantir-technologies-pltr-winning-010624105.html",
-    "title_whatdoespalantirtechnologiespltrwinningarmyworkmeanforitsaigrowth_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/palantir-technologies-workiva-elastic-ringcentral-220718501.html",
-    "title_palantirtechnologiesworkivaelasticringcentraland8x8sharesskyrocketwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/m/85862f13-92b3-372c-94ca-0f58f15a674e/cvs-stock-has-left-its-peers.html",
-    "title_cvsstockhasleftitspeersbehindorhasit_2026-09-03",
-    "link_https://finance.yahoo.com/m/2946b318-d78f-3b9a-9bd7-37eb9c6d19d8/should-you-care-that-lockheed.html",
-    "title_shouldyoucarethatlockheedmartinsbuybackeffectisfading_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/pick-best-nuclear-stocks-september-002208867.html",
-    "title_ourpickofthebestnuclearstocksinseptember2026_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/nextera-energy-nee-surpasses-market-214504129.html",
-    "title_nexteraenergyneesurpassesmarketreturnssomefactsworthknowing_2026-09-03",
-    "link_https://finance.yahoo.com/m/97d1023d-18de-3b02-8e49-2e7a871d84bd/better-energy-play%3A-nextera.html",
-    "title_betterenergyplaynexteravsconstellationenergy_2026-09-03",
-    "link_https://finance.yahoo.com/m/a5965bc8-4ec6-37c2-8ef0-76c073890a6b/can-the-%E2%80%98vanguard-effect%E2%80%99.html",
-    "title_canthevanguardeffectextendtowealthmanagement_2026-09-03",
-    "link_https://finance.yahoo.com/video/securitize-trying-tokenize-equity-ownership-183000261.html",
-    "title_securitizeistryingtotokenizeequityownershipinsportsteamshereshow_2026-09-03",
-    "link_https://finance.yahoo.com/m/c72d3ae6-5c6e-3d36-a809-ff736c6fac11/bitcoin-etfs-rebound-as.html",
-    "title_bitcoinetfsreboundasethereumandxrpetfsendwinningstreaks_2026-09-03",
-    "link_https://finance.yahoo.com/m/6e2efdca-9951-3160-8aa1-75720441b8c6/mondelez-international-stock%3A.html",
-    "title_mondelezinternationalstockismdlzunderperformingtheconsumerstaplessector_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/crowdstrike-announces-2026-customer-partner-181300624.html",
-    "title_crowdstrikeannounces2026customerandpartnerawardwinnerstheleaderssecuringthefrontlinesofai_2026-09-02",
-    "link_https://finance.yahoo.com/media-advertising/articles/sour-patch-kids-maynards-chews-130000461.html",
-    "title_newsourpatchkidsandmaynardschewsareheretochallengethecandystatusquo_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/boston-scientific-bsx-stock-declines-220002935.html",
-    "title_bostonscientificbsxstockdeclineswhilemarketimprovessomeinformationforinvestors_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/boston-scientific-bsx-could-23-210931142.html",
-    "title_bostonscientificbsxcouldbe23undervaluedafterrecallsandcyberincident_2026-09-03",
-    "link_https://finance.yahoo.com/video/protolabs-ceo-sees-big-impact-201750043.html",
-    "title_protolabsceoseesbigimpactfromusreshoringdespitepotentialtariffs_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/t-t-bargain-ai-device-211057440.html",
-    "title_isatttabargainonitsnewaidevicepartnership_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/stryker-launches-fda-cleared-apple-173700748.html",
-    "title_strykerlaunchesfdaclearedapplevisionprosurgicalapp_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/medical-devices-supplies-diversified-stocks-213223639.html",
-    "title_medicaldevicessuppliesdiversifiedstocksq2teardownstrykernysesykvstherest_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sofi-wisdomtree-ridgepost-capital-ares-023118737.html",
-    "title_sofiwisdomtreeridgepostcapitalaresandspglobalsharesaresoaringwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/m/3dd3cec3-1235-3ce0-a3d6-c8fdab9a859e/what-are-you-actually-buying.html",
-    "title_whatareyouactuallybuyinginapplieddigitalstock_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/vortex-energy-announces-plans-ground-120000567.html",
-    "title_vortexenergyannouncesplansforgroundgravitysurveyattherobinsonsriversaltproject_2026-09-03",
-    "link_https://finance.yahoo.com/m/58e52470-0975-34b2-a291-1b8ce0ab7497/2-reasons-crispr-therapeutics.html",
-    "title_2reasonscrisprtherapeuticsstockcouldsoarinthefinal4monthsof2026_2026-09-02",
-    "link_https://finance.yahoo.com/m/232ed877-771d-3391-bd52-8cae189d2dd7/how-is-vertex.html",
-    "title_howisvertexpharmaceuticalsstockperformancecomparedtootherbiotechstocks_2026-09-02",
-    "link_https://finance.yahoo.com/m/1d94bbb4-d1f7-32ff-ba12-f5c5d0fe6763/dutch-bros-stock-is-down.html",
-    "title_dutchbrosstockisdownsharplybuthistoryhasawarningfordipbuyers_2026-09-03",
-    "link_https://finance.yahoo.com/m/e28ab9d5-bf77-3403-bd2b-4e27802ae898/is-starbucks-stock.html",
-    "title_isstarbucksstockunderperformingthesp500_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-unpopular-stock-deserves-love-105518816.html",
-    "title_1unpopularstockthatdeservessomeloveand2webrushoff_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/progressive-pgr-outperforms-broader-market-214502948.html",
-    "title_progressivepgroutperformsbroadermarketwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/cb-stock-trades-1-62x-164200289.html",
-    "title_cbstocktradesat162xbookvalueisthevaluationworthit_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/dg-tjx-better-value-stock-154002572.html",
-    "title_dgortjxwhichisthebettervaluestockrightnow_2026-09-03",
-    "link_https://finance.yahoo.com/m/dd5b124c-9bb2-36c2-b861-e077ad6b6a36/is-tjx-companies-stock.html",
-    "title_istjxcompaniesstockunderperformingthesp500_2026-09-02",
-    "link_https://finance.yahoo.com/m/c6bba1c7-8337-3356-8b97-4739ce708113/1-cheap-stock-under-%2410-for.html",
-    "title_1cheapstockunder10foraggressiveinvestorstobuyonthedip_2026-09-01",
-    "link_https://finance.yahoo.com/m/9116ca2c-c2a2-3e3c-b033-8f57e08378ed/%E2%80%98they%E2%80%99re-absolute-hogwash%E2%80%99%3A.html",
-    "title_theyreabsolutehogwashramseyblacklistsamexastockup470in10years_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/credit-card-stocks-q2-review-234318458.html",
-    "title_creditcardstocksq2inreviewamericanexpressnyseaxpvspeers_2026-09-03",
-    "link_https://finance.yahoo.com/m/da84ed45-71f3-3f25-a85d-10c53c37cf64/natalie-wolfsen.html",
-    "title_nataliewolfsen_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/ubs-remains-bullish-deere-despite-193258984.html",
-    "title_ubsremainsbullishondeerededespiteweaknessinfarmequipmentcyclehereswhy_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lam-research-lrcx-rises-higher-214502237.html",
-    "title_lamresearchlrcxriseshigherthanmarketkeyfacts_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lam-research-insider-sold-shares-191317880.html",
-    "title_lamresearchinsidersoldsharesworth17406370accordingtoarecentsecfiling_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/analyst-upgrades-backlog-strength-versus-021520507.html",
-    "title_howanalystupgradesandbacklogstrengthversusfaapenaltiesatboeingbahaschangeditsinvestmentstory_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-ba-hiding-3-1-010701353.html",
-    "title_whatisboeingbahidingwithits31millionfaasafetyfine_2026-09-03",
-    "link_https://finance.yahoo.com/m/aebd03c3-d296-3360-ba00-f04bd2cd6179/boeing%27s-safety-reckoning.html",
-    "title_boeingssafetyreckoningcostitjust31million_2026-09-03",
-    "link_https://finance.yahoo.com/m/904d0477-644e-30f6-a740-cf2b8c502a6d/tech-titan-fell-9%25%3A-bofa-says.html",
-    "title_techtitanfell9bofasaysbuythedip_2026-09-03",
-    "link_https://finance.yahoo.com/m/62102203-26dc-3f48-b7a6-5e66c287219d/zscaler-makes-bid-to-join-the.html",
-    "title_zscalermakesbidtojointheranksofaiwinners_2026-09-03",
-    "link_https://finance.yahoo.com/m/d9c2646b-8dd5-347c-9a43-31ea5fb1a105/why-palo-alto-networks-stock.html",
-    "title_whypaloaltonetworksstockjumped15inaugustbeforefallingthisweek_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/just-happened-netlist-nlst-050836609.html",
-    "title_whatjusthappenedwithnetlistnlst_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/egain-egan-q4-earnings-revenues-214002994.html",
-    "title_egaineganq4earningsandrevenuesbeatestimates_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-match-group-mtch-11-153020683.html",
-    "title_whyismatchgroupmtchup112sincelastearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/m/addd3a4a-6537-3cfb-8592-1abe4f619635/3-of-wall-street%E2%80%99s-safest.html",
-    "title_3ofwallstreetssafesthighyielddividendstockswithover25yearincreasestreaks_2026-09-03",
-    "link_https://finance.yahoo.com/m/20db6744-9a73-35fb-847f-7230cb8cd506/is-this-pullback-in-vertiv.html",
-    "title_isthispullbackinvertivstockaglitchorawarning_2026-09-03",
-    "link_https://finance.yahoo.com/m/a42a4b87-aacd-320d-88e2-a4f450a565c2/vertiv-stock-keeps-cooling.html",
-    "title_vertivstockkeepscoolingoffoneanalystsaysa100rallyiscoming_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/why-veeva-systems-veev-winning-043839675.html",
-    "title_whyisveevasystemsveevwinningbiginaiforbiopharma_2026-09-04",
-    "link_https://finance.yahoo.com/healthcare/articles/2026-complement-inhibitors-market-analysis-111700039.html",
-    "title_2026complementinhibitorsmarketanalysisreport2ndeditionfeaturingamgencslbehringinnoventbiologicsnovartisregeneronrochesanofitakedaucb_2026-09-02",
-    "link_https://finance.yahoo.com/m/ab71821b-75de-3e09-84fd-64c8838ab2be/regeneron-pharmaceuticals.html",
-    "title_regeneronpharmaceuticalsstockisregnoutperformingthehealthcaresector_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/why-gilead-gild-13-6-153013197.html",
-    "title_whyisgileadgildup136sincelastearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/m/2aa389a5-96e4-3f19-876e-43e601c74be5/is-gilead-sciences-stock.html",
-    "title_isgileadsciencesstockoutperformingthesp500_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/bixlenvo-unlock-growth-gileads-hiv-183200573.html",
-    "title_canbixlenvounlocknewgrowthforgileadshivbusiness_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/chubb-cb-stock-could-48-030857531.html",
-    "title_chubbcbstockcouldbe48belowfairvalueonequityreturns_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/chubb-cb-outpaces-stock-market-214503122.html",
-    "title_chubbcboutpacesstockmarketgainswhatyoushouldknow_2026-09-03",
-    "link_https://finance.yahoo.com/m/6f1cd781-49b0-390e-b4cd-daf0c2b09341/4-reasons-to-buy-medtronic.html",
-    "title_4reasonstobuymedtronicstockliketheresnotomorrow_2026-09-03",
-    "link_https://finance.yahoo.com/m/87646246-dcde-39f8-b65f-c47153d0c35a/is-johnson-%26-johnson-stock.html",
-    "title_isjohnsonjohnsonstockpricedformoregrowththanithasguided_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/cvs-health-reports-availability-updated-190617688.html",
-    "title_cvshealthreportsavailabilityofupdatedcovid19vaccines_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/updated-covid-19-vaccines-available-180000613.html",
-    "title_updatedcovid19vaccinesavailableatcvspharmacyandminuteclinicacrosstheus_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/buy-texas-instruments-stock-despite-123400905.html",
-    "title_shouldyoubuytexasinstrumentsstockdespiteitspremiumvaluation_2026-09-03",
-    "link_https://finance.yahoo.com/m/95c3972a-941c-35e9-85cf-265052ea90a9/is-analog-devices-stock.html",
-    "title_isanalogdevicesstockoutperformingthenasdaq_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/analog-devices-participate-j-p-140100614.html",
-    "title_analogdevicestoparticipateinthejpmorganusallstarsconference_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/bull-case-cigna-group-ci-221642179.html",
-    "title_thebullcaseforcignagroupcicouldchangefollowingitsnewconnectedbenefitsplatformlaunch_2026-09-02",
-    "link_https://finance.yahoo.com/m/71778a9b-9cd0-3497-a0df-4f1c48554c5c/us-just-took-down-a.html",
-    "title_usjusttookdowna20yearoldrussianlinkedcybercrimeoperationcrowdstrikehelpsdisruptsalitybotnetbehindyearsofattacks_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/five-below-apos-q2-beat-174711232.html",
-    "title_fivebelowsq2beatshowscontinuedmomentumoppenheimersays_2026-09-03",
-    "link_https://finance.yahoo.com/m/ddc6935a-d5ae-31e7-8137-f4c479f7e66b/retailer%27s-turnaround-%27defies.html",
-    "title_retailersturnarounddefiesbeliefattemptstoretakeentryonq2results_2026-09-03",
-    "link_https://finance.yahoo.com/m/f937a4f4-81c3-38c7-b659-feabe966065a/synopsys%27-core-engine-grew.html",
-    "title_synopsyscoreenginegrewfarslowerthanitsrevenue_2026-09-03",
-    "link_https://finance.yahoo.com/m/d9e71999-2fca-3f32-b283-26c21340d723/how-is-cadence-design.html",
-    "title_howiscadencedesignsystemsstockperformancecomparedtootherapplicationsoftwarestocks_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/cadence-anirudh-devgan-present-goldman-201500773.html",
-    "title_cadencesanirudhdevgantopresentatgoldmansachscommunacopiatechnologyconference_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/charles-schwab-schw-stock-looks-021524795.html",
-    "title_charlesschwabschwstocklooksfullypricedaftera99run_2026-09-03",
-    "link_https://finance.yahoo.com/markets/crypto/articles/does-schwab-crypto-expansion-tighter-010641284.html",
-    "title_doesschwabscryptoexpansionandtighterriskcontrolschangethebullcaseforcharlesschwabschw_2026-09-03",
-    "link_https://finance.yahoo.com/m/909555f0-6761-3dc8-acb8-dd96d678d7fd/schwab-imposes-stricter.html",
-    "title_schwabimposesstricterlimitsontaxawarelongshortaccounts_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/kla-klac-could-26-undervalued-043856810.html",
-    "title_klaklaccouldbe26undervaluedafteritsrecentpullback_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/teradyne-stock-plunges-15-month-173400698.html",
-    "title_teradynestockplunges15inamonthshouldyoubuythedip_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-explains-why-recommends-171946329.html",
-    "title_jimcramerexplainswhyherecommendsbuyingklaklacstockinsmalldoses_2026-09-03",
-    "link_https://finance.yahoo.com/m/4738fb85-ceda-3d1a-8a6f-11587984b0b6/altria-group-stock%3A-is-mo.html",
-    "title_altriagroupstockismounderperformingtheconsumerdefensivesector_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/altria-group-mo-challenges-fda-015246498.html",
-    "title_altriagroupmochallengesfdareviewsystemassmokefreestrategytakescenterstage_2026-09-02",
-    "link_https://finance.yahoo.com/m/b5a67265-b1be-3e47-9c1c-a90c740c41bc/from-high-dividend-growth-to.html",
-    "title_fromhighdividendgrowthtohighyieldthese3stocksjustboosteddividendpayouts_2026-09-02",
-    "link_https://finance.yahoo.com/m/0e2ccd1b-cc2e-3402-aeb5-562108fed2b1/is-synopsys-stock.html",
-    "title_issynopsysstockunderperformingthenasdaq_2026-09-03",
-    "link_https://finance.yahoo.com/m/240f1e3c-1915-3a06-98ab-ce5b6a8cd8bf/marvell-technology-knows.html",
-    "title_marvelltechnologyknowssynopsysisahugethreat_2026-09-03",
-    "link_https://finance.yahoo.com/m/b2b5062e-0802-3aa5-93d3-16eb9bd35f1f/airbnb-vs.-spotify.html",
-    "title_airbnbvsspotifytechnologywhichconsumerstockisabetterbuyin2026_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/airbnb-inc-abnb-just-overtook-133502861.html",
-    "title_airbnbincabnbjustovertookthe20daymovingaverage_2026-09-03",
-    "link_https://finance.yahoo.com/m/409f10d7-6cf2-3b36-93fd-fa230e9a694a/is-airbnb-stock-outperforming.html",
-    "title_isairbnbstockoutperformingthenasdaq_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/atlanticus-holdings-intercontinental-exchange-paypal-015918125.html",
-    "title_atlanticusholdingsintercontinentalexchangeandpaypalsharesskyrocketwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sector-financial-stocks-advance-premarket-132401211.html",
-    "title_sectorupdatefinancialstocksadvancepremarketthursday_2026-09-03",
-    "link_https://finance.yahoo.com/markets/commodities/articles/intercontinental-exchange-reports-14-rise-130949474.html",
-    "title_intercontinentalexchangereports14riseinaugustaveragedailyvolume_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-paypal-pypl-down-7-021421162.html",
-    "title_whypaypalpyplisdown76afterdeepjobcutsandcostsavingpush_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/paypal-holdings-pypl-india-job-012607075.html",
-    "title_paypalholdingspyplsindiajobcutshighlightabroaderstrategicreset_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/waste-management-wm-exceeds-market-221501351.html",
-    "title_wastemanagementwmexceedsmarketreturnssomefactstoconsider_2026-09-03",
-    "link_https://finance.yahoo.com/m/2d284165-88b5-3ad7-8a6d-420eb802c2c3/is-waste-management-stock.html",
-    "title_iswastemanagementstockunderperformingthedow_2026-09-03",
-    "link_https://finance.yahoo.com/m/35fdaf18-a648-3d87-a9c9-81fed6df04cb/ai-can%E2%80%99t-ground-this-airline.html",
-    "title_aicantgroundthisairlinesoftwarestockclearingtherunwayfor40upside_2026-09-03",
-    "link_https://finance.yahoo.com/small-business/articles/hozpitality-group-announces-women-leadership-225200044.html",
-    "title_hozpitalitygroupannounceswomenleadershipforum2026inlosangelesbringingtogetherinfluentialleadersfromhospitalitytraveltourismsportsaviationandentertainment_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-small-cap-stock-exciting-103118923.html",
-    "title_1smallcapstockwithexcitingpotentialand2weturndown_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/does-marvell-mrvl-signal-patience-002103876.html",
-    "title_doesmarvellmrvlsignalpatienceorurgencywithitsaidatacentertimelineandbuybacks_2026-09-03",
-    "link_https://finance.yahoo.com/m/9bcad065-bd2e-3b24-9d9d-400a43a7d3fa/chipmaker-ambarella-posts.html",
-    "title_chipmakerambarellapostsmixedfiscalq2earningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/nxp-semiconductors-nxpi-laps-stock-221502766.html",
-    "title_nxpsemiconductorsnxpilapsthestockmarkethereswhy_2026-09-02",
-    "link_https://finance.yahoo.com/m/69e167ee-86c3-32dc-ac3f-057c4beb38ac/2-monster-stocks-to-hold-for.html",
-    "title_2monsterstockstoholdforthenext10years_2026-09-02",
-    "link_https://finance.yahoo.com/m/3ac33e43-a736-35a0-9694-2020625a4ed7/netflix%2C-mercadolibre%2C-and.html",
-    "title_netflixmercadolibreandteslaareallunderperformingthesp500heresthe1stockidbuyinseptember_2026-09-02",
-    "link_https://finance.yahoo.com/m/cd799c7f-d236-30b9-a4bf-0317c2deb22a/my-3-favorite-growth-stocks.html",
-    "title_my3favoritegrowthstockstobuyrightnow_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/paccar-pcar-laps-stock-market-220002184.html",
-    "title_paccarpcarlapsthestockmarkethereswhy_2026-09-03",
-    "link_https://finance.yahoo.com/m/3107339e-8615-3f3a-8add-f668ebbeaede/can-cat-stock-compound-its.html",
-    "title_cancatstockcompounditswayhigher_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-love-oreilly-orly-162318833.html",
-    "title_3reasonsweloveoreillyorly_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/q2-earnings-highlights-oreilly-nasdaq-123623078.html",
-    "title_q2earningshighlightsoreillynasdaqorlyvstherestoftheautopartsretailerstocks_2026-09-02",
-    "link_https://finance.yahoo.com/media-advertising/articles/vodafone-uk-launches-android-powered-075552932.html",
-    "title_vodafoneuklaunchesnewandroidpoweredboxcombingmultiplestreaminggamingplatforms_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-stock-under-50-target-010823412.html",
-    "title_1stockunder50totargetthisweekand2wefindrisky_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/roper-technologies-present-citi-technology-123000560.html",
-    "title_ropertechnologiestopresentatcititechnologyconference_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/roper-technologies-present-goldman-sachs-123000513.html",
-    "title_ropertechnologiestopresentatgoldmansachstechnologyconference_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/illumia-names-sean-bruton-chief-140000501.html",
-    "title_illumianamesseanbrutonaschiefinformationsecurityofficer_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/t-mobile-us-says-jessica-203533955.html",
-    "title_tmobileussaysjessicauhlnamedcfodesignatetosucceedpeterosvaldikinfebruary_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/t-mobile-announces-planned-chief-200500539.html",
-    "title_tmobileannouncesplannedchieffinancialofficertransition_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-fans-monster-mnst-163918647.html",
-    "title_3reasonswerefansofmonstermnst_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jefferies-adjusts-price-target-monster-113629232.html",
-    "title_jefferiesadjustspricetargetonmonsterbeverageto54from108maintainsbuyrating_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lululemon-lulu-q2-earnings-top-212002227.html",
-    "title_lululemonluluq2earningstopestimates_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/g-iii-apparel-group-giii-121001920.html",
-    "title_giiiapparelgroupgiiiq2earningssurpassestimates_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lululemon-athletica-inc-lulu-q2-050145222.html",
-    "title_lululemonathleticaincluluq22026earningscallhighlightsrevenuedeclines4as_2026-09-04",
-    "link_https://finance.yahoo.com/m/d97bb905-9fe2-3cfe-aec1-67513afc4d28/lululemon-stock-drops-18%25-to.html",
-    "title_lululemonstockdrops18to8yearlowafterthirdguidancecut_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/microchip-marelli-introduce-open-standard-130408088.html",
-    "title_microchipmarelliintroduceopenstandarddisplayconnectivityproductforsoftwaredefinedvehicles_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/marelli-microchip-pioneer-open-standard-123300566.html",
-    "title_marelliandmicrochippioneeropenstandarddisplayconnectivitysolutionforsoftwaredefinedvehicles_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/q2-earnings-highs-lows-dexcom-192718915.html",
-    "title_q2earningshighsandlowsdexcomnasdaqdxcmvstherestofthepatientmonitoringstocks_2026-09-03",
-    "link_https://finance.yahoo.com/m/e2c4c464-8c2e-3977-85ec-39370855bc5e/revisiting-stock-picks.html",
-    "title_revisitingstockpicksdexcombristolmyerssquibbquantaservices_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-dxcm-explosive-upside-141820552.html",
-    "title_3reasonsdxcmhasexplosiveupsidepotential_2026-09-01",
-    "link_https://finance.yahoo.com/m/b41b2966-2f44-3fb5-a77a-08d8d832d1ba/keurig-dr-pepper-to-sell.html",
-    "title_keurigdrpeppertosellstakeandfactorytochobani_2026-09-02",
-    "link_https://finance.yahoo.com/m/eeffbbdd-6ba4-327b-8ee2-319f9867d941/soda-giant-makes-another.html",
-    "title_sodagiantmakesanotherwarehousechangecuts105jobs_2026-09-01",
-    "link_https://finance.yahoo.com/m/d5269e3d-3be0-3a45-a647-33867b0fb375/keurig-dr-pepper-is-selling.html",
-    "title_keurigdrpepperissellingitschobanistakewhythatsgoodnewsforthestock_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lamb-weston-kraft-heinz-darling-023918636.html",
-    "title_lambwestonkraftheinzdarlingingredientsthemarzetticompanyandpilgrimspridesharesplummetwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/m/fb6c9119-e7cb-3d71-84d7-f92ca3be9dd3/campbell%27s-promises-new.html",
-    "title_campbellspromisesnewmarketingapproach_2026-09-03",
-    "link_https://finance.yahoo.com/m/b275b682-3505-39b0-87c0-83defc4a62b7/stock-market-today%2C-sept.-3%3A.html",
-    "title_stockmarkettodaysept3campbellsstockslumpsonweakerprofitandsalesmiss_2026-09-03",
-    "link_https://finance.yahoo.com/m/3810db30-5021-36a6-ac56-8db909d0b590/what-off-price-retailers-are.html",
-    "title_whatoffpriceretailersaresayingabouttariffrefunds_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/old-dominion-unveils-solid-ltl-180100730.html",
-    "title_olddominionunveilssolidltlunitperformanceforaugust_2026-09-03",
-    "link_https://finance.yahoo.com/m/ec1acfac-ff37-301e-b649-53e8484a1497/j.b.-hunt%2C-other-freight.html",
-    "title_jbhuntotherfreightstocksslidingasdieselpricessurgetowardrecordhigh_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/old-dominion-august-good-ok-133250496.html",
-    "title_olddominionsaugustsomegoodsomeok_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/maximize-retirement-portfolio-top-ranked-131001154.html",
-    "title_howtomaximizeyourretirementportfoliowiththesetoprankeddividendstocks_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/exelon-exc-below-fair-value-161322055.html",
-    "title_isexelonexcbelowfairvalueafteritsfinanceleadershipreshuffle_2026-09-02",
-    "link_https://finance.yahoo.com/energy/articles/exelon-exc-signaling-leadership-changes-030730674.html",
-    "title_whatisexelonexcsignalingwithleadershipchangesandillinoisgridapproval_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/stocks-making-big-moves-yesterday-170823716.html",
-    "title_stocksmakingbigmovesyesterdaymyriadgeneticsgreenbriertidewaterstrategyandcharter_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/charter-chtr-stock-still-looks-001912973.html",
-    "title_charterchtrstockstilllooksundervaluedafterits82fiveyearfall_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/idexx-idxx-down-7-8-153015551.html",
-    "title_idexxidxxdown78sincelastearningsreportcanitrebound_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/stoke-therapeutics-biogen-present-long-233000592.html",
-    "title_stoketherapeuticsandbiogenpresentlongtermclinicaldatathatsupportthediseasemodifyingpotentialofzorevunersenaninvestigationalmedicineforthetreatmentofdravetsyndromeatthe16theuropeanepilepsycongresseec_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/piper-sander-adjusts-biogen-price-113612384.html",
-    "title_pipersanderadjustsbiogenpricetargetto245from225maintainsoverweightrating_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/billionaire-peter-thiel-fund-betting-191836321.html",
-    "title_billionairepeterthielsfundisbettingonthegridbehindai2energystockpicks_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/fastenal-fast-stock-outpacing-industrial-134004567.html",
-    "title_isfastenalfaststockoutpacingitsindustrialproductspeersthisyear_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-industrials-stocks-long-term-234823060.html",
-    "title_3industrialsstocksforlongterminvestors_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/tucker-medical-selects-ge-healthcare-082000666.html",
-    "title_tuckermedicalselectsgehealthcaremritechnologytoadvancepersonalizedpreventivecareinsingapore_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/ge-healthcare-gehc-stock-looks-021202359.html",
-    "title_gehealthcaregehcstocklooksreasonableonearningsyetweakonmarketread_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/gehc-wins-ce-mark-photonova-145400733.html",
-    "title_gehcwinscemarkforphotonovaspectraexpandsinternationalreach_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-copart-cprt-stock-trading-202318555.html",
-    "title_whycopartcprtstockistradinguptoday_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/copart-shares-rise-jpmorgan-upgrade-194424583.html",
-    "title_copartsharesriseafterjpmorganupgrade_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/verisk-analytics-launches-us-data-094649016.html",
-    "title_veriskanalyticslaunchesnewusdatacenterexposuredatabase_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/amid-ai-boom-verisk-launches-073000995.html",
-    "title_amidaiboomverisklaunchesnewviewofusdatacenterexposurehelpinginsurersassessgrowingconcentrationsofrisk_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-mid-cap-stock-watchlist-224423307.html",
-    "title_1midcapstockonourwatchlistand2weavoid_2026-09-02",
-    "link_https://finance.yahoo.com/m/aa0cf7d1-f52a-3793-a6d3-5a27c458e4b3/why-did-snow%2C-dell%2C-team.html",
-    "title_whydidsnowdellteamstockssurgeto52weekhighstoday_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/commvault-asana-atlassian-cloudflare-twilio-213518219.html",
-    "title_commvaultasanaatlassiancloudflareandtwiliostockstradeupwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/atlassian-stock-surges-85-3-143700769.html",
-    "title_atlassianstocksurges85in3monthstimetoholdorbookprofits_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/zscaler-zs-issued-guidance-undervaluation-050908910.html",
-    "title_zscalerzsissuednewguidanceistheundervaluationcasestillcompelling_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/zscaler-inc-zs-q4-2026-050157017.html",
-    "title_zscalerinczsq42026earningscallhighlightsrecordoperatingmarginandaccelerating_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/datadog-amplitude-zscaler-docusign-salesforce-215918732.html",
-    "title_datadogamplitudezscalerdocusignandsalesforcesharesskyrocketwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/datadog-stock-rises-5-snowflakes-134507620.html",
-    "title_datadogstockrises5onsnowflakes37growth_2026-09-03",
-    "link_https://finance.yahoo.com/m/1d21b019-9bea-3d24-8857-48b385aae641/datadog-shares-rise-following.html",
-    "title_datadogsharesrisefollowingsnowflakequarterlyresults_2026-09-03",
-    "link_https://finance.yahoo.com/m/3e7854b9-d33e-3f06-a194-9d402ffad559/nano-nuclear-advances-kronos.html",
-    "title_nanonuclearadvanceskronosheliumcirculatortodetaileddesignphase_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/dti-vs-bkr-stock-value-154002631.html",
-    "title_dtivsbkrwhichstockshouldvalueinvestorsbuynow_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-wix-com-wix-34-153027737.html",
-    "title_whyiswixcomwixup343sincelastearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/real-estate/articles/apartments-com-releases-multifamily-rent-201000388.html",
-    "title_apartmentscomreleasesmultifamilyrentgrowthreportforaugust2026_2026-09-02",
-    "link_https://finance.yahoo.com/video/skyworks-chair-while-cycle-ends-214100651.html",
-    "title_skyworkschairitwillbeawhilebeforethiscycleends_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/wells-fargo-adjusts-price-target-111424227.html",
-    "title_wellsfargoadjustspricetargetononsemiconductorto95from110maintainsoverweightrating_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/q2-earnings-roundup-onsemi-nasdaq-215623494.html",
-    "title_q2earningsrounduponseminasdaqonandtherestoftheanalogsemiconductorssegment_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/10x-genomics-rallies-84-3-175100530.html",
-    "title_10xgenomicsrallies84in3monthsistheremoreupsideahead_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-high-flying-stocks-keep-210023920.html",
-    "title_3highflyingstockswekeepoffourradar_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/why-crispr-therapeutics-crsp-7-153005351.html",
-    "title_whyiscrisprtherapeuticscrspup71sincelastearningsreport_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/ollie-apos-bargain-outlet-cuts-155629333.html",
-    "title_olliesbargainoutletcutssalesoutlookassecondquarterrevenuemissesviews_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/dollar-tree-dltr-stock-could-121133138.html",
-    "title_dollartreedltrstockcouldbe29undervaluedafterraisedoutlook_2026-09-02",
-    "link_https://finance.yahoo.com/m/01da6902-ccd5-32c6-9ea1-79d4a3ed99d1/dollar-stores-benefit-as.html",
-    "title_dollarstoresbenefitasshoppersremainunderpressure_2026-09-02",
-    "link_https://finance.yahoo.com/technology/articles/nvidia-sold-every-arm-share-193830193.html",
-    "title_nvidiasoldeveryarmsharebutitsveracpustillusesarmisthatreallyacontradiction_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/arms-agi-cpu-push-unlock-174400028.html",
-    "title_canarmsagicpupushunlock15binrevenuesbyfy31_2026-09-03",
-    "link_https://finance.yahoo.com/m/bf062749-6fa5-3dba-9809-bdbf79a595f6/arm-vs.-sandisk%3A-comparing.html",
-    "title_armvssandiskcomparingsteadyhistoricalrevenuegenerationagainstrapidsequentialrevenueexpansion_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-cash-heavy-stock-long-133518857.html",
-    "title_1cashheavystockforlongterminvestorsand2facingheadwinds_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/winners-losers-q2-workday-nasdaq-214823060.html",
-    "title_winnersandlosersofq2workdaynasdaqwdayvstherestofthefinanceandhrsoftwarestocks_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/workday-wday-wins-big-state-210815725.html",
-    "title_workdaywdaywinsbigstategovernmentgolivesasaitoolsspread_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sands-capital-select-growth-fund-140621125.html",
-    "title_sandscapitalselectgrowthfundsolddoordashsdashinq2_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/walmart-enters-bigger-food-delivery-135016896.html",
-    "title_walmartentersabiggerfooddeliveryfightwhydoordashandubereatsshouldworry_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/makes-doordash-dash-attractive-bet-131538404.html",
-    "title_whatmakesdoordashdashanattractivebetamidaidisruptionconcerns_2026-09-03",
-    "link_https://finance.yahoo.com/m/052ba1fc-d123-3775-9dd8-56a27840016d/a-roblox-director-sells.html",
-    "title_arobloxdirectorsells16666sharesaftera67oneyeardeclineinstockprice_2026-09-03",
-    "link_https://finance.yahoo.com/economy/articles/roblox-creators-added-752-million-160000116.html",
-    "title_robloxcreatorsadded752milliontotheuseconomyin2025a69increasefrom2024_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/intel-intc-outperforms-broader-market-214504078.html",
-    "title_intelintcoutperformsbroadermarketwhatyouneedtoknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-5-billion-intel-bet-213940172.html",
-    "title_nvidias5billionintelbetwasworth30billionbyjuneisthepartnershipstillmispriced_2026-09-03",
-    "link_https://finance.yahoo.com/m/c018e695-1d13-3b44-82e1-d5ee88316967/investor-who-went-30-years.html",
-    "title_investorwhowent30yearswithoutalossjustbet125milliononbitcoin_2026-09-03",
-    "link_https://finance.yahoo.com/m/7f31bebd-522e-31ba-bff3-e0b60a90c139/data-center-stocks-rally-with.html",
-    "title_datacenterstocksrallywithbitcoincipherminingjumps12terawulfsurges8irenrises4_2026-09-03",
-    "link_https://finance.yahoo.com/m/1b29eba0-5f7d-35ff-b8d8-34013c740636/sam-altman-sees.html",
-    "title_samaltmanseesunsustainablesillinessinaicomputespendingthesearethestockstradersarewatching_2026-09-03",
-    "link_https://finance.yahoo.com/m/0bf9ce96-b465-3767-a14c-4107c8992b3e/how-much-upside-can-app.html",
-    "title_howmuchupsidecanappstocksgrowthdeliver_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/trade-desks-jbps-become-next-151000743.html",
-    "title_canthetradedesksjbpsbecomeitsnextmajorgrowthengine_2026-09-03",
-    "link_https://finance.yahoo.com/m/446e0d3b-8fa4-336a-8565-09cb39713253/applovin%E2%80%99s-algorithmic-moat.html",
-    "title_applovinsalgorithmicmoatisvulnerablesaysinvestorwhy19bquarterlyrevenueisntenoughtojustifyabuy_2026-09-03",
-    "link_https://finance.yahoo.com/markets/crypto/articles/crypto-stocks-jump-bitcoin-rises-212150439.html",
-    "title_cryptostocksjumpafterbitcoinrises5_2026-09-03",
-    "link_https://finance.yahoo.com/m/33df011b-b3bf-341e-8ec2-149e2238bc43/coinbase%2C-circle%2C.html",
-    "title_coinbasecirclemicrostrategystockssurgeoncryptorebound_2026-09-03",
-    "link_https://finance.yahoo.com/m/9f9f13f3-5e67-330b-94b8-bab2b61902b4/robinhood-stock-is-surging..html",
-    "title_robinhoodstockissurgingthesewallstreetanalystssaytheyregrowingmorebullish_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/peter-thiel-fund-disclosed-59-185030291.html",
-    "title_peterthielsfunddisclosed59millioninthisbeatendownpowerstock_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/3-top-ai-stocks-revenue-161835070.html",
-    "title_3topaistockswithrevenuegrowthover26_2026-09-03",
-    "link_https://finance.yahoo.com/m/5d50425a-2d07-3fed-b630-185d181cbdfc/nvidia%E2%80%99s-mediatek-bet-shows.html",
-    "title_nvidiasmediatekbetshowshowitplanstodefenditsaimoat_2026-09-01",
-    "link_https://finance.yahoo.com/m/e2a1bcc6-d383-3410-b94c-410d42a79af6/cerebras-plans-165-mw-finland.html",
-    "title_cerebrasplans165mwfinlandaidatacenterwithfirst50mwunderconstruction_2026-09-01",
-    "link_https://finance.yahoo.com/m/eca7d1f1-5015-3c04-b94e-5c08f3578e45/hpe-cannot-build-ai-servers.html",
-    "title_hpecannotbuildaiserversfastenoughisthestockstillcheap_2026-09-03",
-    "link_https://finance.yahoo.com/m/88e2cdd2-c567-3c2c-b6b6-7882845a1265/rklb-and-fly-investors%2C-take.html",
-    "title_rklbandflyinvestorstakenoteplanetlabsflagsspacexridesharecrunchassmalleroperatorsseekalternatives_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/rocket-lab-rklb-getting-fresh-031039379.html",
-    "title_rocketlabrklbisgettingfreshattentionwhatisthemarketweighing_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/spacex-nasdaqgs-spcx-stock-sees-043849625.html",
-    "title_spacexnasdaqgsspcxstockseesmodestfairvalueliftasanalystsdebateaiandstarlink_2026-09-04",
-    "link_https://finance.yahoo.com/technology/ai/articles/spacex-ai-thesis-getting-stronger-035734310.html",
-    "title_spacexsaithesisisgettingstrongerbutthecapexriskismassive_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/does-sandisk-sndk-losing-nand-230917506.html",
-    "title_whatdoessandisksndklosingnandsharetochinameannow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/bullish-eps-revisions-back-ibkr-222200710.html",
-    "title_bullishepsrevisionsbackibkrsndkandroku_2026-09-03",
-    "link_https://finance.yahoo.com/m/2a986040-ed64-3a51-b39f-1a26aa487ba6/china-is-grabbing-memory.html",
-    "title_chinaisgrabbingmemorymarketsharethisstockcouldbeabigloser_2026-09-03",
-    "link_https://finance.yahoo.com/m/46bae9dc-eca0-3b38-af84-04a59aa0686a/micron%2C-sandisk-lag-tech.html",
-    "title_micronsandisklagtechrallyaschinagrabsmemorymarketshare_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/gary-black-warns-tesla-risks-183128245.html",
-    "title_garyblackwarnsteslarisksfallingbehindintheselfdrivingraceunsupervisedautonomyisbecomingtablestakes_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/asml-asml-stock-sinks-market-214503776.html",
-    "title_asmlasmlstocksinksasmarketgainswhatyoushouldknow_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/market-chatter-asml-japan-expand-161050133.html",
-    "title_marketchatterasmljapantoexpandworkforceto700from500by2030_2026-09-03",
-    "link_https://finance.yahoo.com/m/e709f426-7f63-315a-8e6f-f0d9bccd1a00/why-nebius-group-should-find.html",
-    "title_whynebiusgroupshouldfindaflooratcurrentlevels_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/nebius-group-2-top-ai-141221092.html",
-    "title_nebiusgroupand2topaistockstowatch_2026-09-03",
-    "link_https://finance.yahoo.com/markets/article/your-grocery-bill-could-rise-even-faster-next-year--heres-why-134148018.html?.tsrc=rss",
-    "title_yourgrocerybillcouldriseevenfasternextyearhereswhy_2026-09-02",
-    "link_https://finance.yahoo.com/markets/article/us-strikes-on-iran-push-brent-oil-toward-95-per-barrel-183648011.html?.tsrc=rss",
-    "title_usstrikesoniranpushbrentoiltoward95perbarrel_2026-09-01",
-    "link_https://beincrypto.com/bitcoin-ethereum-polymarket-2026-price-odds/?.tsrc=rss",
-    "title_bitcoinandethereumhitmultimonthhighsbuttraderscap2026upsidebets_2026-09-04",
-    "link_https://beincrypto.com/bitcoin-82000-fidelity-bear-market-unsure/?.tsrc=rss",
-    "title_bitcoinhits82000andfidelitysaysitsunsureifthebearmarketisover_2026-09-04",
-    "link_https://www.fool.com/coverage/stock-market-today/2026/09/03/stock-market-midday-sept-3-stocks-rally-as-treasury-yields-fall-broadcom-falls-despite-earnings-beat/?.tsrc=rss",
-    "title_stockmarketmiddaysept3stocksrallyastreasuryyieldsfallbroadcomfallsdespiteearningsbeat_2026-09-03",
-    "link_https://finance.yahoo.com/markets/commodities/articles/lake-victoria-gold-reports-high-161602054.html?.tsrc=rss",
-    "title_lakevictoriagoldreportshighgradegoldinterceptsatimweloasitadvancesmetallurgicaltesting_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/why-is-xrp-up-today/?.tsrc=rss",
-    "title_whyisxrpuptoday_2026-09-03",
-    "link_https://www.thestreet.com/crypto/markets/if-you-invested-1000-in-xrp-when-trump-took-office-heres-what-youd-have-today?.tsrc=rss",
-    "title_ifyouinvested1000inxrpwhentrumptookofficehereswhatyoudhavetoday_2026-09-03",
-    "link_https://finance.yahoo.com/markets/articles/exchange-traded-funds-rise-us-170817464.html?.tsrc=rss",
-    "title_exchangetradedfundsriseasusequitiesadvanceaftermidday_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-decline-us-170929387.html?.tsrc=rss",
-    "title_exchangetradedfundsdeclineasusequitiesfallaftermidday_2026-09-01",
-    "link_https://finance.yahoo.com/personal-finance/investing/article/silver-price-today-thursday-september-3-2026-silver-prices-rise-following-short-lived-airstrikes-111653911.html?.tsrc=rss",
-    "title_silverpricetodaythursdayseptember32026silverpricesrisefollowingshortlivedairstrikes_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/03/campbells-slides-9-on-36-dividend-cut-general-mills-falls-4-kraft-heinz-drops-3/?.tsrc=rss",
-    "title_campbellsslides9on36dividendcutgeneralmillsfalls4kraftheinzdrops3_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/03/planet-labs-sinks-8-despite-new-defense-contract-intuitive-machines-pulls-back-ast-spacemobile-sits-out-broad-market-rally/?.tsrc=rss",
-    "title_planetlabssinks8despitenewdefensecontractintuitivemachinespullsbackastspacemobilesitsoutbroadmarketrally_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/williams-completes-acquisition-momentum-midstream-201500823.html?.tsrc=rss",
-    "title_williamscompletesacquisitionofmomentummidstream_2026-09-03",
-    "link_https://www.barchart.com/story/news/4431444/adequate-us-nat-gas-storage-pressures-prices?.tsrc=rss",
-    "title_adequateusnatgasstoragepressuresprices_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/aevex-expands-facilities-florida-virginia-203000278.html?.tsrc=rss",
-    "title_aevexexpandswithnewfacilitiesinfloridaandvirginiatosupportgrowthandstrengthencustomercollaboration_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/u-venezuela-oil-deal-threatens-000000778.html?.tsrc=rss",
-    "title_usvenezuelaoildealthreatenschinasoilbackedloans_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/ishares-bitcoin-trust-ibit-best-etf-buy-right-now/?.tsrc=rss",
-    "title_ithinkisharesbitcointrustibitisthebestbitcoinetftobuyrightnow_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/market-chatter-crusoe-raises-over-235307430.html?.tsrc=rss",
-    "title_marketchattercrusoeraisesover3billionat30billionvaluation_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/dan-ives-says-m-missing-220219429.html?.tsrc=rss",
-    "title_danivessaysmaisthemissingpieceforappleinaiarmsracenewceojohnternuscouldfinallyshakeuptimcooksplaybook_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/amazon-com-amzn-riverside-warehouse-230855312.html?.tsrc=rss",
-    "title_whatamazoncomamznsriversidewarehousestrikerevealsaboutlaborriskinitslogisticsmodel_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/amazon-vs-microsoft-1-key-metric-identifies-the-su/?.tsrc=rss",
-    "title_amazonvsmicrosoft1keymetricidentifiesthesuperiorartificialintelligenceaicloudstock_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/amazon-signed-multibillion-dollar-deal-195301832.html?.tsrc=rss",
-    "title_amazonsignedamultibilliondollardealwitha175yearoldglassmakerisfiberthenextaibottleneck_2026-09-03",
-    "link_https://finance.yahoo.com/video/nvidias-jensen-huang-playing-both-203620881.html?.tsrc=rss",
-    "title_nvidiasjensenhuangisplayingbothsidesofaiwithhuggingfacepurchase_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/google-just-won-the-right-to-keep-its-ad-tech-tools-they-live-in-the-one-business-it-has-that-is-shrinking/?.tsrc=rss",
-    "title_googlejustwontherighttokeepitsadtechtoolstheyliveintheonebusinessithasthatisshrinking_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/metas-more-10-billion-data-213240183.html?.tsrc=rss",
-    "title_metasmorethan10billiondatacenterfacestexaspushback_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/berkshire-hathaway-brk-getting-fresh-201337262.html?.tsrc=rss",
-    "title_berkshirehathawaybrkaisgettingfreshattentionwhatisbehindit_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/greg-abel-stocks-2026-berkshire-warren-buffett/?.tsrc=rss",
-    "title_gregabelbought394billionofstocksin6monthsupfromthe71billionberkshirepurchasedayearearlierunderwarrenbuffett_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/03/trump-warned-towns-theyd-end-up-poor-without-data-centers-but-berkshires-ceo-sees-a-revolt-growing/?.tsrc=rss",
-    "title_trumpwarnedtownstheydenduppoorwithoutdatacentersbutberkshiresceoseesarevoltgrowing_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/does-eli-lilly-lly-gain-170600149.html?.tsrc=rss",
-    "title_whatdoeselilillyllygainfromits288billionimmunologydeal_2026-09-03",
-    "link_https://www.thestreet.com/crypto/markets/analysts-rank-bitcoin-above-tesla-in-new-tech-growth-asset-list?.tsrc=rss",
-    "title_analystsrankbitcoinaboveteslainnewtechgrowthassetlist_2026-09-03",
-    "link_https://www.thestreet.com/investing/stocks/gev-ge-vernova-jpmorgan-says-power-permits-and-track-record-decide-ai-funding?.tsrc=rss",
-    "title_jpmorganexecutiverevealswhataiprojectsmustprovetowinfunding_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jpmorgan-scales-back-jane-street-221534326.html?.tsrc=rss",
-    "title_jpmorganscalesbackjanestreetfinancingamidgrowingbondmarketrivalryft_2026-09-02",
-    "link_https://www.electronicpaymentsinternational.com/news/visa-upgrades-a2a-protect/?.tsrc=rss",
-    "title_visaupgradesa2aprotecttostopfraudbeforemoneymoves_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/visa-v-exceeds-market-returns-214504365.html?.tsrc=rss",
-    "title_visavexceedsmarketreturnssomefactstoconsider_2026-09-02",
-    "link_https://beincrypto.com/robinhood-memecoin-credit-card-coding/?.tsrc=rss",
-    "title_robinhoodmemecoinbuyscodedasdigitalmediawillvisaforceachange_2026-09-02",
-    "link_https://finance.yahoo.com/video/chevrons-big-bet-why-7b-134702227.html?.tsrc=rss",
-    "title_chevronsbigbetwhyits7bvenezuelanoilinvestmentmakessense_2026-09-02",
-    "link_https://www.fool.com/investing/2026/09/02/big-oil-vs-midstream-which-side-of-the-barrel-pays/?.tsrc=rss",
-    "title_bigoilvsmidstreamwhichsideofthebarrelpaysbetterrightnow_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/mastercard-start-path-launches-inaugural-131043302.html?.tsrc=rss",
-    "title_mastercardstartpathlaunchesinauguralagenticcommercecohort_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/p-g-webcast-fireside-chat-120000118.html?.tsrc=rss",
-    "title_pgtowebcastfiresidechatfromthebarclaysglobalconsumerstaplesconferenceseptember10_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/procter-gamble-fabric-home-care-140600898.html?.tsrc=rss",
-    "title_proctergamblefabrichomecaretrendsmixedisgrowthahead_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/johnson-johnson-jnj-cheap-louisiana-043659642.html?.tsrc=rss",
-    "title_isjohnsonjohnsonjnjcheapafterthelouisianatalcverdict_2026-09-04",
-    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-advance-wednesday-173822708.html?.tsrc=rss",
-    "title_sectorupdatehealthcarestocksadvancewednesdayafternoon_2026-09-02",
-    "link_https://www.trefis.com/articles/614207/the-gap-between-hd-stock-and-its-own-numbers/2026-09-03?.tsrc=rss",
-    "title_thegapbetweenhdstockanditsownnumbers_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/prediction-costco-could-be-worth-more-than-home/?.tsrc=rss",
-    "title_predictioncostcocouldbeworthmorethanhomedepotandlowescombinedby2030heresthemath_2026-09-03",
-    "link_https://www.thestreet.com/retail/107-year-old-home-depot-rival-earl-may-closing-25-of-its-stores?.tsrc=rss",
-    "title_107yearoldhomedepotrivalclosing25ofitsstores_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/top-analyst-reports-amazon-abbvie-195200595.html?.tsrc=rss",
-    "title_topanalystreportsforamazonabbviealibaba_2026-09-03",
-    "link_https://finance.yahoo.com/m/3227a244-83a5-3806-82be-40cf153910a1/summit-therapeutics-says-it.html?.tsrc=rss",
-    "title_summittherapeuticssaysitisbeatingmerckwithitscancerdrug_2026-09-03",
-    "link_https://www.trefis.com/articles/613937/how-did-merck-stock-beat-the-market-with-slowing-sales/2026-09-02?.tsrc=rss",
-    "title_howdidmerckstockbeatthemarketwithslowingsales_2026-09-02",
-    "link_https://finance.yahoo.com/energy/articles/why-oil-majors-don-t-230000574.html?.tsrc=rss",
-    "title_whyoilmajorsdontwanttobuildnewusrefineries_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/chevrons-ghana-option-big-enough-213559643.html?.tsrc=rss",
-    "title_chevronsghanaoptionisbigenoughtomatterandstillnonbinding_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/worth-investing-netflix-nflx-based-133003619.html?.tsrc=rss",
-    "title_isitworthinvestinginnetflixnflxbasedonwallstreetsbullishviews_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/why-netflix-stock-gained-13-in-august/?.tsrc=rss",
-    "title_whynetflixstockgained13inaugust_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/salesforce-gains-2-75-snowflake-213002762.html?.tsrc=rss",
-    "title_salesforcegains275assnowflakemakesenterpriseaispendinglookreal_2026-09-03",
-    "link_https://beincrypto.com/salesforce-stock-claudeforce-breakout-analysis/?.tsrc=rss",
-    "title_salesforcestockup22inaweekafteranthropicdealbreaking20monthdowntrend_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/docs-gives-regulated-enterprises-governed-130000024.html?.tsrc=rss",
-    "title_sdocsgivesregulatedenterprisesagovernedpathtoaipowereddocumentautomation_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/walmart-jumps-nearly-2-8-212813415.html?.tsrc=rss",
-    "title_walmartjumpsnearly28asjusticedepartmentwidensbeefpricingreview_2026-09-03",
-    "link_https://finance.yahoo.com/small-business/articles/walmart-just-found-delivery-network-154017703.html?.tsrc=rss",
-    "title_walmartjustfoundanewuseforitsdeliverynetwork_2026-09-03",
-    "link_https://www.marketingdive.com/news/pepsico-hands-global-media-to-publicis-amid-transformation-at-cpg-giant/829556/?.tsrc=rss",
-    "title_pepsicohandsglobalmediatopublicisamidtransformationatcpggiant_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/pepsico-pep-faces-ukraine-damage-221549481.html?.tsrc=rss",
-    "title_pepsicopepfacesukrainedamageandsoftdemandisthestockundervalued_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/why-amd-amd-becoming-more-201246264.html?.tsrc=rss",
-    "title_whyisamdamdbecomingmoreimportantinsecureaiinfrastructure_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/cathie-wood-sold-72-8-200905404.html?.tsrc=rss",
-    "title_cathiewoodsoldabout728millionofamdandboughtabout53millionofnvidiawhatchanged_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/03/is-coca-cola-still-an-elite-dividend-stock-heres-what-the-numbers-say/?.tsrc=rss",
-    "title_iscocacolastillanelitedividendstockhereswhatthenumberssay_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/02/want-income-for-life-coca-cola-has-raised-its-div/?.tsrc=rss",
-    "title_wantincomeforlifecocacolahasraiseditsdividendfor64straightyearsandyields24hereswhetheritbelongsinyourportfolio_2026-09-02",
-    "link_https://finance.yahoo.com/technology/articles/global-information-technology-governance-strategy-113600565.html?.tsrc=rss",
-    "title_globalinformationtechnologyitgovernanceandstrategyoutlook20262030featuringprofilesofaccentureibmanddeloitte_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/tmo-stock-could-gain-following-182900842.html?.tsrc=rss",
-    "title_tmostockcouldgainfollowingthelaunchofempadg2detector_2026-09-01",
-    "link_https://investorshub.advfn.com/market-news/article/35526/interdigital-third-disney-injunction-strengthens-european-patent-enforcement-position?.tsrc=rss",
-    "title_interdigitalthirddisneyinjunctionstrengthenseuropeanpatentenforcementposition_2026-09-02",
-    "link_https://247wallst.com/investing/2026/09/03/mcdonalds-is-near-a-52-week-low-is-this-the-contrarian-buy-of-2026/?.tsrc=rss",
-    "title_mcdonaldsisneara52weeklowisthisthecontrarianbuyof2026_2026-09-03",
-    "link_https://finance.yahoo.com/video/ai-demand-exceptional-supply-chain-201052714.html?.tsrc=rss",
-    "title_aidemandisexceptionalbutthesupplychainisnothpeceo_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/super-micro-computer-smci-joins-002225556.html?.tsrc=rss",
-    "title_supermicrocomputersmcijoinsamajorenterpriseaiinfrastructurebuild_2026-09-02",
-    "link_https://www.trefis.com/articles/613959/the-real-risk-inside-cisco-stock-2/2026-09-02?.tsrc=rss",
-    "title_therealriskinsideciscostock_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/qualcomm-backs-ultrahuman-70m-round-170000590.html?.tsrc=rss",
-    "title_qualcommbacksultrahumanin70mroundonbettoturnsmartringsintocomputers_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/4-62-billion-image-signal-133900217.html?.tsrc=rss",
-    "title_462billionimagesignalprocessorsmarketassessment2026featuringprofilesofleadingcompaniessonysamsungelectronicsqualcommandmore_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/qualcomm-qcom-stock-may-undervalued-002416146.html?.tsrc=rss",
-    "title_qualcommqcomstockmaybeundervaluedonits58threeyearrun_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/ge-rides-commercial-engines-unit-180200715.html?.tsrc=rss",
-    "title_geridesoncommercialenginesunitstrengthwilltheuptrendcontinue_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/fund-added-ge-aerospace-ge-145059869.html?.tsrc=rss",
-    "title_thefundaddedgeaerospacegeamidmarketskepticism_2026-09-02",
-    "link_https://finance.yahoo.com/technology/articles/forget-ai-stocks-buy-tech-200000417.html?.tsrc=rss",
-    "title_forgetaistocksbuythistechstocknowforvalueand130upside_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/caterpillar-cat-down-9-1-153010287.html?.tsrc=rss",
-    "title_caterpillarcatdown91sincelastearningsreportcanitrebound_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/ibm-ibm-stock-could-below-190641627.html?.tsrc=rss",
-    "title_ibmibmstockcouldbebelowfairvaluedespitecautiousbroaderchecks_2026-09-03",
-    "link_https://www.barchart.com/story/news/4424897/down-15-in-the-past-2-months-texas-instruments-txn-stock-could-be-due-for-a-comeback?.tsrc=rss",
-    "title_down15inthepast2monthstexasinstrumentstxnstockcouldbedueforacomeback_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/texas-instruments-txn-why-chipmaker-230626229.html?.tsrc=rss",
-    "title_texasinstrumentstxnwhyisthechipmakerbackinthespotlight_2026-09-02",
-    "link_https://www.fool.com/investing/2026/09/02/2-top-dividend-stocks-to-buy-in-september/?.tsrc=rss",
-    "title_2topdividendstockstobuyinseptember_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/comcast-technology-solutions-unveils-next-040000864.html?.tsrc=rss",
-    "title_comcasttechnologysolutionsunveilsnextgenvideoaiapplicationsforbroadcasterscontentandstreamingprovidersandoperators_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/consumer-discretionary-wireless-cable-satellite-150620743.html?.tsrc=rss",
-    "title_consumerdiscretionarywirelesscableandsatellitestocksq2earningsreviewcomcastnasdaqcmcsashines_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/tmdx-stock-worth-buying-growth-180000821.html?.tsrc=rss",
-    "title_istmdxstockworthbuyingasgrowthmeetsrisingmarginpressure_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/honeywell-technologies-announces-participation-upcoming-110000275.html?.tsrc=rss",
-    "title_honeywelltechnologiesannouncesparticipationatupcominginvestorconference_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/global-data-center-access-control-114300370.html?.tsrc=rss",
-    "title_globaldatacenteraccesscontrolmarketoutlook20262030featuringprofilesofciscosystemshoneywellandjohnsoncontrolsmarkettoreach234billionby2030assecurityinvestmentsaccelerate_2026-09-02",
-    "link_https://stocktwits.com/news-articles/markets/equity/honeywell-aerospace-agrees-to-pay-over-2-million-to-settle-cybersecurity-allegations-hona-stock-falls/cZsoHSORJMA?.tsrc=rss",
-    "title_honeywellaerospaceagreestopayover2mtosettlecybersecurityallegationshonastockfalls25_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/union-pacific-unp-stock-looks-010520377.html?.tsrc=rss",
-    "title_unionpacificunpstocklooksaboutfairlyvaluedtoday_2026-09-02",
-    "link_https://www.marketbeat.com/instant-alerts/event-union-pacific-sees-norfolk-southern-merger-closing-by-late-2027-as-stb-review-advances-2026-09-01/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
-    "title_unionpacificseesnorfolksouthernmergerclosingbylate2027asstbreviewadvances_2026-09-01",
-    "link_https://247wallst.com/investing/2026/09/03/servicenow-just-rallied-28-in-a-month-take-profits-or-buy-more/?.tsrc=rss",
-    "title_servicenowjustrallied28inamonthtakeprofitsorbuymore_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/03/palantir-rallies-7-as-pwc-alliance-counters-michael-burry-bear-case-servicenow-climbs-5-salesforce-gains-3/?.tsrc=rss",
-    "title_palantirrallies7aspwcalliancecountersmichaelburrybearcaseservicenowclimbs5salesforcegains3_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/servicenow-now-quietly-becoming-default-211056308.html?.tsrc=rss",
-    "title_isservicenownowquietlybecomingthedefaultaicommerceplatformforenterprisepartners_2026-09-02",
-    "link_https://www.powermag.com/nextera-santee-cooper-point-to-real-dollar-savings-from-ai-deployments/?.tsrc=rss",
-    "title_nexterasanteecooperpointtorealdollarsavingsfromaideployments_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/oati-delivers-ferc-881-compliance-130000708.html?.tsrc=rss",
-    "title_oatideliversferc881complianceandunlockstransmissioncapacityacrossthreeregions_2026-09-03",
-    "link_https://www.trefis.com/articles/613969/amgen-stock-signals-its-confidence-the-market-agrees-2/2026-09-02?.tsrc=rss",
-    "title_amgenstocksignalsitsconfidencethemarketagrees_2026-09-02",
-    "link_https://247wallst.com/investing/2026/09/02/cramer-called-the-september-open-unholy-and-then-named-the-one-stock-he-would-still-buy/?.tsrc=rss",
-    "title_cramercalledtheseptemberopenunholyandthennamedtheonestockhewouldstillbuy_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-love-conocophillips-cop-151623942.html?.tsrc=rss",
-    "title_3reasonsweloveconocophillipscop_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/booking-holdings-bkng-rises-higher-220002817.html?.tsrc=rss",
-    "title_bookingholdingsbkngriseshigherthanmarketkeyfacts_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lyft-ceo-participate-fireside-chat-200500373.html?.tsrc=rss",
-    "title_lyftceotoparticipateinfiresidechatatthegoldmansachscommunacopiatechnologyconference2026_2026-09-03",
-    "link_https://www.foxbusiness.com/economy/goldman-sachs-exec-touts-dallas-really-bright-future-new-campus-takes-shape?.tsrc=rss",
-    "title_goldmansachsexectoutsdallasreallybrightfutureasnewcampustakesshape_2026-09-03",
-    "link_https://finance.yahoo.com/markets/crypto/articles/goldman-sachs-gs-targets-2027-021154107.html?.tsrc=rss",
-    "title_goldmansachsgstargets2027launchforausdstablecoin_2026-09-02",
-    "link_https://www.esgdive.com/news/lowes-bofa-att-nvidia-launch-building-futures-skilled-trades-workforce-training-initiative/829576/?.tsrc=rss",
-    "title_lowesbofaattnvidiamorelaunchworkforcetraininginitiative_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-large-cap-stock-impressive-230823237.html?.tsrc=rss",
-    "title_1largecapstockwithimpressivefundamentalsand2wefindrisky_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/t-increases-4-7-date-150000344.html?.tsrc=rss",
-    "title_attincreases47yeartodatehowtoplaythestock_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/p-global-present-barclays-24th-192000550.html?.tsrc=rss",
-    "title_spglobaltopresentatbarclays24thannualglobalfinancialservicesconferenceonseptember142026_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/p-global-spgi-could-deliver-145100299.html?.tsrc=rss",
-    "title_spglobalspgicoulddelivermidteensepsgrowthfromacheapervaluation_2026-09-03",
-    "link_https://www.barchart.com/story/news/4390277/is-s-p-global-stock-underperforming-the-s-p-500?.tsrc=rss",
-    "title_isspglobalstockunderperformingthesp500_2026-09-01",
-    "link_https://247wallst.com/investing/2026/09/03/blackrock-says-2-1-trillion-gulf-spending-boom-could-reshape-global-capital-flows/?.tsrc=rss",
-    "title_blackrocksays21trilliongulfspendingboomcouldreshapeglobalcapitalflows_2026-09-03",
-    "link_https://www.barchart.com/story/news/4404269/is-blackrock-stock-underperforming-the-dow?.tsrc=rss",
-    "title_isblackrockstockunderperformingthedow_2026-09-02",
-    "link_https://www.benzinga.com/markets/prediction-markets/26/09/61578412/blackrock-ai-boom-phase-1-big-tech?utm_source=yahooFinance&utm_campaign=partner_feed&utm_medium=referral&.tsrc=rss",
-    "title_blackrockaiboomstillinphase1asamazongooglemicrosoftfuelmassivebuildout_2026-09-02",
-    "link_https://www.barchart.com/story/news/4397096/how-is-elevance-healths-stock-performance-compared-to-other-health-providers?.tsrc=rss",
-    "title_howiselevancehealthsstockperformancecomparedtootherhealthproviders_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/elevance-health-elv-soars-investors-141933883.html?.tsrc=rss",
-    "title_elevancehealthelvsoarsasinvestorsgainconfidenceinprofitability_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/rtx-rtx-stock-looks-below-170700919.html?.tsrc=rss",
-    "title_rtxrtxstocklooksbelowfairvalueoncashflownearfairvalueonearnings_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/01/rtxs-289-billion-backlog-explained/?.tsrc=rss",
-    "title_rtxs289billionbacklogexplained_2026-09-01",
-    "link_https://www.barchart.com/story/news/4379928/rtx-corporation-stock-is-rtx-outperforming-the-industrial-sector?.tsrc=rss",
-    "title_rtxcorporationstockisrtxoutperformingtheindustrialsector_2026-09-01",
-    "link_https://www.packaging-gateway.com/news/mondelez-pepsico-pladis-circular-packaging/?.tsrc=rss",
-    "title_mondelzpepsicoandpladisjoinforcesforcircularpackagingtrial_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-sell-mdlz-1-180220399.html?.tsrc=rss",
-    "title_3reasonstosellmdlzand1stocktobuyinstead_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/boston-scientific-bsx-stock-looks-141211628.html?.tsrc=rss",
-    "title_bostonscientificbsxstocklookscheapaftera55slump_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/cyberattack-weak-2026-outlook-weigh-125400551.html?.tsrc=rss",
-    "title_cyberattackweak2026outlookweighonbsxisthestockasell_2026-09-03",
-    "link_https://www.barchart.com/story/news/4396846/is-progressive-stock-underperforming-the-s-p-500?.tsrc=rss",
-    "title_isprogressivestockunderperformingthesp500_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/tjx-companies-homegoods-comp-jumps-152300995.html?.tsrc=rss",
-    "title_tjxcompanieshomegoodscompjumps7canstrongmomentumpersist_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/baird-upgrades-deere-outperform-hopes-214734156.html?.tsrc=rss",
-    "title_bairdupgradesdeeredetooutperformonhopesofrecovery_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/kubty-vs-stock-value-investors-154004246.html?.tsrc=rss",
-    "title_kubtyvsdewhichstockshouldvalueinvestorsbuynow_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-vertex-vrtx-14-4-153012477.html?.tsrc=rss",
-    "title_whyisvertexvrtxup144sincelastearningsreport_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/vertex-vrtx-stock-trades-premium-010720573.html?.tsrc=rss",
-    "title_vertexvrtxstocktradesatapremiumonearningsyetlooksfaironbroaderchecks_2026-09-01",
-    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-rise-tuesday-174146205.html?.tsrc=rss",
-    "title_sectorupdatehealthcarestocksrisetuesdayafternoon_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-bullish-palo-alto-172136342.html?.tsrc=rss",
-    "title_jimcramerisbullishonpaloaltopanwafterearningsreport_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lam-research-lrcx-stock-looks-161612580.html?.tsrc=rss",
-    "title_lamresearchlrcxstocklooksfullypricedafteritsbigrun_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/lam-research-corporation-lrcx-exploring-150706060.html?.tsrc=rss",
-    "title_lamresearchcorporationlrcxisexploringgrowthopportunitiesinthesemiconductorequipmentmarket_2026-09-02",
-    "link_https://finance.yahoo.com/small-business/articles/formerra-receives-2026-eaton-supplier-144500028.html?.tsrc=rss",
-    "title_formerrareceives2026eatonsupplierexcellenceaward_2026-09-03",
-    "link_https://finance.yahoo.com/small-business/articles/ats-earns-eaton-supplier-excellence-171200770.html?.tsrc=rss",
-    "title_atsearnseatonsupplierexcellenceaward_2026-09-02",
-    "link_https://finance.yahoo.com/technology/articles/eaton-expands-manufacturing-modular-electrical-113000818.html?.tsrc=rss",
-    "title_eatonexpandsmanufacturingformodularelectricalenclosureswith242millioninvestmentinnewarkansasfacilitytosupportthenextgenerationofcriticalinfrastructuredevelopment_2026-09-02",
-    "link_https://www.thestreet.com/retail/starbucks-has-a-new-secret-weapon-for-driving-traffic?.tsrc=rss",
-    "title_starbuckshasanewsecretweaponfordrivingtraffic_2026-09-02",
-    "link_https://www.qsrmagazine.com/story/scooters-has-a-role-to-play-in-the-drive-thru-coffee-rush/?.tsrc=rss",
-    "title_scootershasaroletoplayinthedrivethrucoffeerush_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/unpacking-q2-earnings-adp-nasdaq-221223357.html?.tsrc=rss",
-    "title_unpackingq2earningsadpnasdaqadpinthecontextofotherdatabusinessprocessservicesstocks_2026-09-02",
-    "link_https://finance.yahoo.com/economy/articles/daily-roundup-key-us-economic-185028768.html?.tsrc=rss",
-    "title_dailyroundupofkeyuseconomicdataforsept2_2026-09-02",
-    "link_https://finance.yahoo.com/economy/articles/august-private-sector-hiring-posts-165558126.html?.tsrc=rss",
-    "title_augustprivatesectorhiringpostsslowestgrowthpacesincejanuaryadpsays_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-prefers-lockheed-martin-174643632.html?.tsrc=rss",
-    "title_jimcramerpreferslockheedmartinovergeneraldynamicsasdefensedemandaccelerates_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/lockheed-martin-stock-rises-12-123700641.html?.tsrc=rss",
-    "title_lockheedmartinstockrises126ytdistherestillroomtogrow_2026-09-02",
-    "link_https://www.fool.com/investing/2026/09/02/insurers-are-buying-back-more-stock-as-pricing-sof/?.tsrc=rss",
-    "title_insurersarebuyingbackmorestockaspricingsoftens_2026-09-02",
-    "link_https://www.barchart.com/story/news/4402833/is-chubb-limited-stock-outperforming-the-s-p-500?.tsrc=rss",
-    "title_ischubblimitedstockoutperformingthesp500_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/wall-street-analysts-believe-analog-135502556.html?.tsrc=rss",
-    "title_wallstreetanalystsbelieveanalogdevicesadicouldrally2795heresishowtotrade_2026-09-01",
-    "link_https://www.barchart.com/story/news/4395970/how-is-the-cigna-groups-stock-performance-compared-to-other-healthcare-plans?.tsrc=rss",
-    "title_howisthecignagroupsstockperformancecomparedtootherhealthcareplans_2026-09-02",
-    "link_https://www.barchart.com/story/news/4404794/is-medtronic-stock-underperforming-the-dow?.tsrc=rss",
-    "title_ismedtronicstockunderperformingthedow_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/medtronic-begins-fiscal-2027-beat-152516870.html?.tsrc=rss",
-    "title_medtronicbeginsfiscal2027withabeatandraisevalidatinggrowthaccelerationrbcsays_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/schwab-buy-product-diversification-unlocks-141200291.html?.tsrc=rss",
-    "title_isschwababuyasproductdiversificationunlocksnextgrowthphase_2026-09-02",
-    "link_https://finance.yahoo.com/real-estate/articles/exchangeright-fully-subscribes-63-34-140200802.html?.tsrc=rss",
-    "title_exchangerightfullysubscribes6334millionnetleasedportfolio74dst_2026-09-02",
-    "link_https://finance.yahoo.com/technology/articles/semiconductor-wafer-inspection-equipment-market-114600514.html?.tsrc=rss",
-    "title_semiconductorwaferinspectionequipmentmarketoutlook20252035featuringprofilesofklacorporationappliedmaterialshitachihightechcorporationandmore_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/cadence-design-systems-cdns-falls-215002693.html?.tsrc=rss",
-    "title_cadencedesignsystemscdnsfallsmoresteeplythanbroadermarketwhatinvestorsneedtoknow_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-explains-why-crowdstrike-185416478.html?.tsrc=rss",
-    "title_jimcramerexplainswhycrowdstrikecrwdupendedthetechbearthesis_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/crowdstrike-raises-long-term-growth-180500620.html?.tsrc=rss",
-    "title_crowdstrikeraiseslongtermgrowthtargetsasaiopportunityexpandsoppenheimersays_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/jim-cramer-calls-crowdstrike-crwd-171714906.html?.tsrc=rss",
-    "title_jimcramercallscrowdstrikecrwdacybersecurityheavyhitter_2026-09-03",
-    "link_https://finance.yahoo.com/markets/commodities/articles/intercontinental-exchange-reports-august-2026-123000587.html?.tsrc=rss",
-    "title_intercontinentalexchangereportsaugust2026statistics_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/york-stock-exchange-korea-exchange-113000745.html?.tsrc=rss",
-    "title_thenewyorkstockexchangeandkoreaexchangeagreetomemorandumofunderstandingforbusinesscollaboration_2026-09-03",
-    "link_https://www.barchart.com/story/news/4419255/is-intercontinental-exchange-stock-underperforming-the-dow?.tsrc=rss",
-    "title_isintercontinentalexchangestockunderperformingthedow_2026-09-03",
-    "link_https://finance.yahoo.com/m/183ad4ec-7499-35c5-9f31-212863f205f3/t-mobile-stock-rises-on.html?.tsrc=rss",
-    "title_tmobilestockrisesonreportelliottopposesdeutschetelekommerger_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/50-billion-bid-just-put-212335771.html?.tsrc=rss",
-    "title_a50billionbidjustputpaypalbackinthetakeoverspotlight_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-marriott-mar-down-3-153008648.html?.tsrc=rss",
-    "title_whyismarriottmardown31sincelastearningsreport_2026-09-02",
-    "link_https://finance.yahoo.com/real-estate/articles/pacifica-hotels-signs-franchise-agreement-043000966.html?.tsrc=rss",
-    "title_pacificahotelssignsfranchiseagreementwithmarriottinternationaltoopenwestinhokkaidofuranoresort_2026-09-02",
-    "link_https://www.fool.com/coverage/filings/2026/09/01/warner-bros-discovery-ceo-perrette-sells-usd3-7-million-stock/?.tsrc=rss",
-    "title_warnerbrosdiscoveryceoperrettesells37millionstock_2026-09-01",
-    "link_https://finance.yahoo.com/technology/articles/microchip-marelli-pioneer-open-standard-120000903.html?.tsrc=rss",
-    "title_microchipandmarellipioneeropenstandarddisplayconnectivitysolutionforsoftwaredefinedvehicles_2026-09-03",
-    "link_https://finance.yahoo.com/technology/articles/fortinet-stock-gain-cybersecurity-demand-155400835.html?.tsrc=rss",
-    "title_willfortinetstockgainoncybersecuritydemandandeducationpush_2026-09-01",
-    "link_https://qz.com/keurig-dr-pepper-chobani-stake-pennsylvania-factory-sale-925-million-090126?.tsrc=rss",
-    "title_keurigdrpeppersellschobanistakeandpennsylvaniafactoryfor925m_2026-09-01",
-    "link_https://finance.yahoo.com/markets/article/lululemon-sinks-after-cutting-forecast-as-revenue-declines-210101310.html?.tsrc=rss",
-    "title_lululemonsinksaftercuttingforecastasrevenuedeclines_2026-09-03",
-    "link_https://finance.yahoo.com/video/is-it-the-leggings-why-lululemon-might-have-cut-its-sales-outlook-204151733.html?.tsrc=rss",
-    "title_isittheleggingswhylululemonmighthavecutitssalesoutlook_2026-09-03",
-    "link_https://finance.yahoo.com/video/lululemon-tumbles-14-following-q2-earnings-202835617.html?.tsrc=rss",
-    "title_lululemontumbles14followingq2earnings_2026-09-03",
-    "link_https://finance.yahoo.com/economy/articles/kraft-heinz-ceo-says-customers-154605531.html?.tsrc=rss",
-    "title_kraftheinzceosayscustomersareliterallyrunningoutofmoneybyendofthemonth_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/1-p-500-stock-impressive-183623861.html?.tsrc=rss",
-    "title_1sp500stockwithimpressivefundamentalsand2weavoid_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/charter-communications-chtr-could-50-230812777.html?.tsrc=rss",
-    "title_chartercommunicationschtrcouldbe50undervaluedfollowingitscfotransition_2026-09-01",
-    "link_https://finance.yahoo.com/media-advertising/articles/charter-participate-citi-global-tmt-212000023.html?.tsrc=rss",
-    "title_chartertoparticipateincitiglobaltmtconference_2026-09-01",
-    "link_https://finance.yahoo.com/healthcare/articles/biogen-biib-brings-home-weekly-110629509.html?.tsrc=rss",
-    "title_biogenbiibbringsathomeweeklyalzheimersinjectiontouspatients_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/biogen-biib-stock-could-48-032559262.html?.tsrc=rss",
-    "title_biogenbiibstockcouldbe48belowfairvalueonnewdravetdata_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/ge-healthcare-gehc-latest-scanner-074432439.html?.tsrc=rss",
-    "title_gehealthcaresgehclatestscannerbreakthroughmeetsamixedmarket_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/copart-inc-release-fourth-quarter-143400856.html?.tsrc=rss",
-    "title_copartinctoreleasefourthquarterfiscal2026results_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/verisk-analytics-vrsk-stock-may-052228504.html?.tsrc=rss",
-    "title_veriskanalyticsvrskstockmaybeundervaluedoncashflowovervaluedonearnings_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/verisk-analytics-vrsk-undervalued-catastrophe-030824737.html?.tsrc=rss",
-    "title_isveriskanalyticsvrskundervaluedonitsnewcatastrophelossreport_2026-09-01",
-    "link_https://www.independent.co.uk/tech/electronic-arts-private-sale-video-games-saudi-arabia-kushner-b3028278.html?.tsrc=rss",
-    "title_thesimsvideogamemakereaboughtbysaudiledgroupfor55billionwithjaredkushnershelp_2026-08-05",
-    "link_https://finance.yahoo.com/media-advertising/articles/ea-sports-fc-27-brings-140000227.html?.tsrc=rss",
-    "title_easportsfc27bringsfansclosertotheworldsgamewithnewpartnersleaguesandstadiums_2026-09-02",
-    "link_https://finance.yahoo.com/energy/articles/shells-tri-star-deal-deepens-162900369.html?.tsrc=rss",
-    "title_shellstristardealdeepensitsusfuelretailstrategy_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-moderna-mrna-stock-down-013518610.html?.tsrc=rss",
-    "title_whymodernamrnastockisdowntoday_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/biontech-vs-moderna-which-is-the-better-cancer-vac/?.tsrc=rss",
-    "title_biontechvsmodernawhichisthebettercancervaccinestocktobuynow_2026-09-03",
-    "link_https://finance.yahoo.com/m/e39b985d-94b3-3bdd-b582-7f7afca2302f/moderna%E2%80%99s-cancer-vaccine.html?.tsrc=rss",
-    "title_modernascancervaccinerallysparksraresellratingandprojected44stockdrop_2026-09-03",
-    "link_https://www.thestreet.com/retail/dollar-general-and-dollar-tree-send-message-to-kroger-and-publix?.tsrc=rss",
-    "title_dollargeneralanddollartreesendmessagetokrogerandpublix_2026-09-01",
-    "link_https://www.marketbeat.com/articles/dollar-general-and-dollar-tree-are-recovering-but-not-for-the-same-reason/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
-    "title_dollargeneralanddollartreearerecoveringbutnotforthesamereason_2026-08-31",
-    "link_https://247wallst.com/investing/2026/09/02/cramer-says-this-software-giant-is-fighting-a-takeover-with-a-4-billion-buyback/?.tsrc=rss",
-    "title_cramersaysthissoftwaregiantisfightingatakeoverwitha4billionbuyback_2026-09-02",
-    "link_https://247wallst.com/investing/2026/09/03/hewlett-packard-enterprise-falls-5-as-supply-constraints-overshadow-raised-guidance-super-micro-slips-dell-holds-steady/?.tsrc=rss",
-    "title_hewlettpackardenterprisefalls5assupplyconstraintsovershadowraisedguidancesupermicroslipsdellholdssteady_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/fast-paced-momentum-stock-super-125502604.html?.tsrc=rss",
-    "title_fastpacedmomentumstocksupermicrosmciisstilltradingatabargain_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/why-super-micro-computer-stock-took-off-in-august/?.tsrc=rss",
-    "title_whysupermicrocomputerstocktookoffinaugust_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/01/why-arm-holdings-stock-fell-on-tuesday/?.tsrc=rss",
-    "title_whyarmholdingsstockfellontuesday_2026-09-01",
-    "link_https://stocktwits.com/news-articles/markets/equity/zs-stock-eases-after-hours-zscaler-tops-q4-forecasts-driven-by-ai-powered-security-demand-but-high-value-customer-growth-slows/cZsug0zRJvD?.tsrc=rss",
-    "title_zsstockeasesafterhourszscalertopsq4forecastsdrivenbyaipoweredsecuritydemandbuthighvaluecustomergrowthslows_2026-09-03",
-    "link_https://www.marketbeat.com/instant-alerts/transcript-zscaler-q4-earnings-call-highlights-2026-09-03/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
-    "title_zscalerq4earningscallhighlights_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/03/microsoft-and-meta-signed-multi-decade-nuclear-power-deals-these-3-stocks-supply-that-power/?.tsrc=rss",
-    "title_microsoftandmetasignedmultidecadenuclearpowerdealsthese3stockssupplythatpower_2026-09-03",
-    "link_https://247wallst.com/investing/2026/09/01/roblox-falls-3-as-cathie-woods-ark-keeps-selling-take-two-interactive-barely-budges/?.tsrc=rss",
-    "title_robloxfalls3ascathiewoodsarkkeepssellingtaketwointeractivebarelybudges_2026-09-01",
-    "link_https://blockspace.media/insight/blue-owl-iren-gpu-financing-nvidia-blackwell/?.tsrc=rss",
-    "title_blueowlleads24billionirengpufinancingat9_2026-09-03",
-    "link_https://pitchbook.com/news/articles/iren-obtains-2-4b-private-credit-financing-to-buy-nvidia-chips?.tsrc=rss",
-    "title_irenobtains24bprivatecreditfinancingtobuynvidiachips_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/irens-ai-cloud-revenue-just-210118041.html?.tsrc=rss",
-    "title_irensaicloudrevenuejustjumped687_2026-09-02",
-    "link_https://finance.yahoo.com/video/zeiss-smt-ceo-china-15-231343177.html?.tsrc=rss",
-    "title_zeisssmtceochina15yearsbehindintopchiptools_2026-09-02",
-    "link_https://www.thestreet.com/crypto/markets/saylor-says-strategys-bitcoin-heavy-reserve-capital-surpasses-nearly-all-s-p-500-financial-firms?.tsrc=rss",
-    "title_saylorsaysstrategysbitcoinheavyreservecapitalsurpassesnearlyallsp500financialfirms_2026-09-03",
-    "link_https://finance.yahoo.com/markets/crypto/articles/strategy-mstr-looks-cheap-bitcoin-032741887.html?.tsrc=rss",
-    "title_strategymstrlookscheapasbitcoinbuyingresumeswith4603morecoins_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/upbeat-ai-data-centers-demand-141600641.html?.tsrc=rss",
-    "title_upbeataidatacentersdemandpropelsskhynixmoregrowthahead_2026-09-03",
-    "link_https://stocktwits.com/news-articles/markets/equity/micron-samsung-sk-hynix-suffer-drop-in-dram-market-share-as-china-s-cxmt-pulls-ahead/cZsMpSiRJHy?.tsrc=rss",
-    "title_micronsamsungskhynixsufferdropindrammarketshareaschinascxmtpullsahead_2026-09-03",
-    "link_https://www.barchart.com/story/news/4404951/how-to-play-skhy-stock-as-sk-hynix-looks-to-build-a-new-plant-in-japan?.tsrc=rss",
-    "title_howtoplayskhystockasskhynixlookstobuildanewplantinjapan_2026-09-02",
-    "link_https://finance.yahoo.com/technology/ai/articles/world-thinks-spacex-building-rockets-003500911.html?.tsrc=rss",
-    "title_theworldthinksspacexisbuildingrocketsjamesaltuchersayshesreallybuildingsomethingfarbigger_2026-09-03",
-    "link_https://finance.yahoo.com/video/robots-next-gen-ai-why-153614762.html?.tsrc=rss",
-    "title_robotsarethenextgenofaiwhyetfinvestorsareflockingbacktotech_2026-08-26",
-    "link_https://finance.yahoo.com/markets/stocks/articles/bank-montreal-tsx-bmo-wins-230828877.html?.tsrc=rss",
-    "title_bankofmontrealtsxbmowinsapprovalfor25millionsharerepurchaseprogram_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/cibc-adjusts-price-targets-five-123626041.html?.tsrc=rss",
-    "title_cibcadjustspricetargetsonfivecanadianbanks_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/02/why-the-trade-desk-stock-rallied-today/?.tsrc=rss",
-    "title_whythetradedeskstockralliedtoday_2026-09-02",
-    "link_https://247wallst.com/investing/2026/09/02/magnite-rallies-6-trade-desk-climbs-5-applovin-barely-budges-is-agentic-ad-tech-broadening-out/?.tsrc=rss",
-    "title_magniterallies6tradedeskclimbs5applovinbarelybudgesisagenticadtechbroadeningout_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sandisk-announces-participation-investor-conferences-193000325.html?.tsrc=rss",
-    "title_sandiskannouncesparticipationininvestorconferences_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/asus-expands-ai-infrastructure-ecosystem-154900899.html?.tsrc=rss",
-    "title_asusexpandsaiinfrastructureecosystemfromcloudtoedge_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-founder-backed-growth-stocks-081912988.html?.tsrc=rss",
-    "title_3founderbackedgrowthstockstowatchinseptember2026_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/should-coreweave-and-nebius-group-stock-investors/?.tsrc=rss",
-    "title_shouldcoreweaveandnebiusgroupinvestorsbeworriedaboutcircularfinancinghereswhatthenumberssay_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/nebius-group-ai-data-center-230625246.html?.tsrc=rss",
-    "title_hownebiusgroupsaidatacenterpowersurgecouldreshapenebiusgroupnbisinvestors_2026-09-02",
-    "link_https://finance.yahoo.com/healthcare/articles/chicago-white-sox-cibc-local-153000362.html?.tsrc=rss",
-    "title_chicagowhitesoxcibcandlocalnonprofitsuniteforchildhoodcancerawarenessdayonseptember6_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/media-advisory-cibc-speak-2026-130000002.html?.tsrc=rss",
-    "title_mediaadvisorycibctospeakatthe2026scotiabankfinancialssummit_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/canadian-imperial-bank-commerce-tsx-130605124.html?.tsrc=rss",
-    "title_canadianimperialbankofcommercetsxcmpostsstrongq3andaddsaivoicetoboard_2026-08-29",
-    "link_https://finance.yahoo.com/healthcare/articles/hormone-replacement-therapy-jumps-228-120000329.html?.tsrc=rss",
-    "title_hormonereplacementtherapyusejumps228amongcanadianwomeninpeakworkingyearsmanulifedata_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/manulife-financial-corporation-prices-u-230500537.html?.tsrc=rss",
-    "title_manulifefinancialcorporationpricesuspublicofferingofsubordinatednotes_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/manulife-president-chief-executive-officer-120000596.html?.tsrc=rss",
-    "title_manulifepresidentandchiefexecutiveofficerphilwitheringtontoparticipateinfiresidechatatthescotiabankfinancialssummit_2026-08-31",
-    "link_https://finance.yahoo.com/energy/articles/keyera-lowers-marketing-margin-guidance-203018421.html?.tsrc=rss",
-    "title_keyeralowersmarketingmarginguidanceamidline5disruption_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/keyera-announces-2026-marketing-guidance-200500785.html?.tsrc=rss",
-    "title_keyeraannounces2026marketingguidanceupdateandprovidesoperationalupdate_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/oke-plans-expand-permian-presence-171600897.html?.tsrc=rss",
-    "title_okeplanstoexpandpermianpresencewithbrazosmidlandacquisition_2026-08-31",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sun-life-announces-dividend-rates-210100073.html?.tsrc=rss",
-    "title_sunlifeannouncesdividendratesonclassanoncumulativerateresetpreferredsharesseries10randclassanoncumulativefloatingratepreferredsharesseries11qr_2026-08-31",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sun-life-financial-tsx-slf-061716468.html?.tsrc=rss",
-    "title_sunlifefinancialtsxslfstocklooksfairlyvaluedas108runages_2026-08-28",
-    "link_https://finance.yahoo.com/markets/stocks/articles/sun-life-financial-tsx-slf-043148341.html?.tsrc=rss",
-    "title_whatissunlifefinancialtsxslfbuildingwithitsnewusreinsuranceventure_2026-08-28",
-    "link_https://finance.yahoo.com/energy/articles/suncor-energy-su-8-9-153024699.html?.tsrc=rss",
-    "title_suncorenergysuup89sincelastearningsreportcanitcontinue_2026-09-03",
-    "link_https://www.marketbeat.com/articles/dont-miss-these-3-companies-delivering-strong-guidance-updates/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
-    "title_dontmissthese3companiesdeliveringstrongguidanceupdates_2026-08-31",
-    "link_https://finance.yahoo.com/energy/articles/cenovus-cve-enters-ranks-world-021429265.html?.tsrc=rss",
-    "title_cenovuscveenterstheranksoftheworldslargestoilandgasproducers_2026-08-28",
-    "link_https://finance.yahoo.com/technology/ai/articles/td-bank-group-announces-senior-201800013.html?.tsrc=rss",
-    "title_tdbankgroupannouncesseniorleadershipappointmentstofurtheracceleratestrategy_2026-09-03",
-    "link_https://finance.yahoo.com/media-advertising/articles/r-e-p-e-t-150000724.html?.tsrc=rss",
-    "title_repeatmediaadvisorytdbankgroupexecutivetopresentatthescotiabankfinancialssummit_2026-09-03",
-    "link_https://stocktwits.com/news-articles/markets/equity/sofi-stock-rises-premarket-why-this-analyst-sees-40-upside-from-here/cZsMqoJRJHz?.tsrc=rss",
-    "title_sofistockrisespremarketwhythisanalystsees40upsidefromhere_2026-09-03",
-    "link_https://stocktwits.com/news-articles/markets/equity/hood-stock-rallies-on-wall-street-optimism-retail-sentiment-improves-as-investors-eye-a-bigger-pop/cZsMiuURJHL?.tsrc=rss",
-    "title_hoodstockralliesonwallstreetoptimismretailsentimentimprovesasinvestorseyeabiggerpop_2026-09-02",
-    "link_https://finance.yahoo.com/m/3c8f786a-671c-3fb9-bb03-81fc8be4d3f0/dow-jones-futures-rise-as-oil.html?.tsrc=rss",
-    "title_dowjonesfuturesriseasoilpricesfalldellcredopaloaltoareearningsmovers_2026-09-02",
-    "link_https://finance.yahoo.com/m/9a9cb2cc-5cc2-3185-b14f-c760901d246b/oil-stocks-hit-new-highs.html?.tsrc=rss",
-    "title_oilstockshitnewhighsafterusresumesstrikesinstraitofhormuz_2026-09-01",
-    "link_https://finance.yahoo.com/m/1c044376-fe02-394c-a3d6-e56c1b65d6ba/canadian-oil-stock-edges-into.html?.tsrc=rss",
-    "title_canadianoilstockedgesintobuyzoneafter200earningsgrowth_2026-09-01",
-    "link_https://finance.yahoo.com/healthcare/articles/rbc-insurance-turns-comedy-break-130000437.html?.tsrc=rss",
-    "title_rbcinsuranceturnstocomedytobreakthroughcanadiansavoidanceofinsurancelaunchinglifemomentscampaignwithsecondcityveteranjenniferirwin_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/rbc-announces-rbc-community-solar-120100861.html?.tsrc=rss",
-    "title_rbcannouncesnewrbccommunitysolarprogramthathelpsprovidelongtermrevenuetoparticipatingcommunityorganizationstosupportthelaunchofsolarprojects_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/schneider-electric-enxtpa-su-overvalued-230940035.html?.tsrc=rss",
-    "title_isschneiderelectricenxtpasuovervaluedaftera108fiveyearreturn_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/cenovus-low-cost-downstream-integration-163400278.html?.tsrc=rss",
-    "title_howcenovuslowcostbaseanddownstreamintegrationofferresilience_2026-08-28",
-    "link_https://finance.yahoo.com/markets/stocks/articles/igm-financial-inc-announces-august-231100627.html?.tsrc=rss",
-    "title_igmfinancialincannouncesaugust2026assetsundermanagementadvisementandnetflows_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/teck-resources-tsx-teck-b-021308374.html?.tsrc=rss",
-    "title_teckresourcestsxteckbcouldbe7overvaluedaftermergertermsemerge_2026-09-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/teck-resources-tsx-teck-b-001917349.html?.tsrc=rss",
-    "title_teckresourcestsxteckbstocklooksslightlyovervaluedattodaysprice_2026-09-01",
-    "link_https://finance.yahoo.com/energy/articles/conservation-area-protects-vital-newfoundland-143000730.html?.tsrc=rss",
-    "title_newconservationareaprotectsvitalnewfoundlandwatershed_2026-08-27",
-    "link_https://finance.yahoo.com/markets/stocks/articles/barrick-mining-trading-discount-buy-125400210.html?.tsrc=rss",
-    "title_barrickminingtradingatadiscountshouldyoubuythestocknow_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/purpose-investments-announces-changes-certain-220600925.html?.tsrc=rss",
-    "title_purposeinvestmentsannounceschangestocertaininvestmentfunds_2026-09-03",
-    "link_https://www.kiplinger.com/personal-finance/a-wealth-advisers-guide-to-making-memories?.tsrc=rss",
-    "title_whyyourscrapbookshouldbeasimportantasyourcheckbookawealthadviserstake_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/arc-resources-ltd-announces-redemption-155400766.html?.tsrc=rss",
-    "title_arcresourcesltdannouncesredemptionofalloutstandingseniornotes_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/shell-completes-arc-resources-deal-122400310.html?.tsrc=rss",
-    "title_shellcompletesarcresourcesdealtodrivelongtermgrowth_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/shell-completes-16-5-billion-211713351.html?.tsrc=rss",
-    "title_shellcompletes165billionacquisitionofarcresources_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/btg-goose-mines-q2-output-144800382.html?.tsrc=rss",
-    "title_btggooseminesq2outputhitbyfireare2026targetsontrack_2026-09-03",
-    "link_https://finance.yahoo.com/markets/commodities/articles/3-gold-mining-stocks-own-021505850.html?.tsrc=rss",
-    "title_3goldminingstockstoowninseptember2026_2026-09-02",
-    "link_https://finance.yahoo.com/m/ade3ed86-f98b-31ae-b255-1d6c7760e993/this-sector-is-fertile-ground.html?.tsrc=rss",
-    "title_thissectorisfertilegroundforbuyopportunities_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/why-retain-nutrien-stock-portfolio-120400331.html?.tsrc=rss",
-    "title_whyyoushouldretainnutrienstockinyourportfolionow_2026-09-02",
-    "link_https://finance.yahoo.com/energy/articles/tourmaline-oil-tsx-tou-kicks-121443700.html?.tsrc=rss",
-    "title_tourmalineoiltsxtoukicksoff155millionsharerepurchaseprogram_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/tourmaline-oil-tsx-tou-dividend-221643833.html?.tsrc=rss",
-    "title_tourmalineoiltsxtouafteritsdividenddeclarationandtheundervaluednarrative_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/snowflake-snow-stock-soars-16-222300253.html?.tsrc=rss",
-    "title_snowflakesnowstocksoars16afterq2earningsisitstillabuy_2026-09-03",
-    "link_https://www.trefis.com/articles/613968/get-paid-12-a-year-to-wait-for-intu-stock-to-go-on-sale/2026-09-02?.tsrc=rss",
-    "title_getpaid12ayeartowaitforintustocktogoonsale_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/intuits-turbotax-live-assisted-tax-143300252.html?.tsrc=rss",
-    "title_intuitsturbotaxlivecanassistedtaxsustainthemomentum_2026-09-02",
-    "link_https://finance.yahoo.com/energy/articles/jefferies-launches-nuclear-coverage-55tn-142522107.html?.tsrc=rss",
-    "title_jefferieslaunchesnuclearcoverageon55tncapexoutlookto2100_2026-09-03",
-    "link_https://finance.yahoo.com/energy/articles/energy-fuels-q2-revenues-surge-180000222.html?.tsrc=rss",
-    "title_energyfuelsq2revenuessurge496yyisthisgrowthsustainable_2026-09-02",
-    "link_https://finance.yahoo.com/markets/options/articles/options-traders-betting-big-move-201600518.html?.tsrc=rss",
-    "title_areoptionstradersbettingonabigmoveincamecostock_2026-08-31",
-    "link_https://finance.yahoo.com/markets/stocks/articles/andvari-associates-strategic-investment-martin-141742133.html?.tsrc=rss",
-    "title_andvariassociatesstrategicinvestmentinmartinmariettamaterialsmlm_2026-09-03",
-    "link_https://finance.yahoo.com/m/10d69550-a137-3968-b9fe-ee2e59036a0a/miners-and-more-lead-slew-of.html?.tsrc=rss",
-    "title_minersandmoreleadslewofstockstowatchwiththislineinfocus_2026-09-02",
-    "link_https://finance.yahoo.com/markets/commodities/articles/antamina-set-boost-wheaton-precious-141000660.html?.tsrc=rss",
-    "title_isantaminasettoboostwheatonpreciousmetalsproduction_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/element-29-announces-inclusion-randy-115700789.html?.tsrc=rss",
-    "title_element29announcesinclusionofrandysmallwoodandgeorgebrackasdirectornomineesattheupcomingagm_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/barrick-mining-said-delay-ipo-175101500.html?.tsrc=rss",
-    "title_barrickminingsaidtodelayipoofamericangoldbusinessto2027_2026-09-02",
-    "link_https://www.fool.com/investing/2026/09/02/newmont-stock-jumps-345-in-august-and-golds-rally/?.tsrc=rss",
-    "title_newmontstockjumps345inaugustandgoldsrallycouldtakeithigher_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/canadian-pacific-kansas-city-tsx-010752787.html?.tsrc=rss",
-    "title_canadianpacifickansascitytsxcpsetrecordgraintransportinaugust2026_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/2-restaurant-stocks-worth-investigating-091918469.html?.tsrc=rss",
-    "title_2restaurantstocksworthinvestigatingand1facingchallenges_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/restaurant-brands-international-inc-participate-201500733.html?.tsrc=rss",
-    "title_restaurantbrandsinternationalinctoparticipateinbarclays19thannualglobalconsumerconference_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/wcn-shares-rise-8-6-144500562.html?.tsrc=rss",
-    "title_wcnsharesrise86in3monthshereswhatyoushouldknow_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-wall-street-favorite-stocks-104423968.html?.tsrc=rss",
-    "title_3ofwallstreetsfavoritestockswefindrisky_2026-09-02",
-    "link_https://finance.yahoo.com/real-estate/articles/fluor-joint-venture-reaches-substantial-165400492.html?.tsrc=rss",
-    "title_fluorjointventurereachessubstantialcompletiononchicagotransitauthoritysredandpurplelineproject_2026-07-01",
-    "link_https://finance.yahoo.com/markets/stocks/articles/nextsource-materials-provides-clarification-prior-210100335.html?.tsrc=rss",
-    "title_nextsourcematerialsprovidesclarificationonapriornewsrelease_2026-06-30",
-    "link_https://www.marketbeat.com/instant-alerts/event-alimentation-couche-tard-eyes-record-abka-deal-as-shareholders-back-growth-strategy-2026-09-02/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
-    "title_alimentationcouchetardeyesrecordabkadealasshareholdersbackgrowthstrategy_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/alimentation-couche-tard-inc-announces-210500755.html?.tsrc=rss",
-    "title_alimentationcouchetardincannounceselectionofdirectors_2026-09-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/alimentation-couche-tard-inc-anctf-190032282.html?.tsrc=rss",
-    "title_alimentationcouchetardincanctfq12027earningscallhighlightsstrongepsgrowthand_2026-09-02",
-    "link_https://finance.yahoo.com/markets/commodities/articles/cnis-record-june-grain-volumes-160500784.html?.tsrc=rss",
-    "title_cnisrecordjunegrainvolumessignalstrongexportdemand_2026-07-13",
-    "link_https://finance.yahoo.com/markets/commodities/articles/canadian-railways-transport-record-monthly-150739356.html?.tsrc=rss",
-    "title_canadianrailwaystransportrecordmonthlygraininaugust_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/telus-digital-host-agentforce-industry-104500152.html?.tsrc=rss",
-    "title_telusdigitaltohostagentforceindustrysessionsandexclusiveeventsathotelzettaduringdreamforce2026_2026-09-03",
-    "link_https://finance.yahoo.com/healthcare/articles/telus-mental-health-index-cost-100100835.html?.tsrc=rss",
-    "title_telusmentalhealthindexcostoflivingisthetopmoneyworryfor58percentofusworkersasfinancialanxietyhitsworkplaceproductivity_2026-09-02",
-    "link_https://finance.yahoo.com/real-estate/articles/leyad-completes-major-acquisition-across-204700342.html?.tsrc=rss",
-    "title_leyadcompletesmajoracquisitionacrosstencanadianprovinces_2026-09-03",
-    "link_https://finance.yahoo.com/technology/ai/articles/bell-universit-sherbrooke-advance-quantum-120000767.html?.tsrc=rss",
-    "title_bellanduniversitdesherbrooketoadvancequantumcybersecurityandnextgenerationaiinfrastructureincanada_2026-07-08",
-    "link_https://finance.yahoo.com/media-advertising/articles/bce-participate-upcoming-investor-conferences-130000324.html?.tsrc=rss",
-    "title_bcetoparticipateinupcominginvestorconferences_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/dividend-15-split-corp-ii-130000782.html?.tsrc=rss",
-    "title_dividend15splitcorpiimonthlydividenddeclarationforclassapreferredshare_2026-08-19",
-    "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-bip-outperforming-134003299.html?.tsrc=rss",
-    "title_isbrookfieldinfrastructurepartnersbipoutperformingotherfinancestocksthisyear_2026-08-31",
-    "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-lps-dividend-110829004.html?.tsrc=rss",
-    "title_brookfieldinfrastructurepartnerslpsdividendanalysis_2026-08-31",
-    "link_https://finance.yahoo.com/markets/stocks/articles/rbc-raises-price-target-quebecor-124058306.html?.tsrc=rss",
-    "title_rbcraisespricetargetonquebecorlowerstargetsonfourcanadiantelecoms_2026-07-10",
-    "link_https://finance.yahoo.com/media-advertising/articles/rogers-quebecor-agree-12-sublicensing-204500876.html?.tsrc=rss",
-    "title_rogersandquebecoragreetonew12yearsublicensingdealfornationalnhlgamesinfrench_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/congresswoman-scoops-brookfield-renewables-stock-143156533.html?.tsrc=rss",
-    "title_congresswomanscoopsupbrookfieldrenewablesstocksixtimesinthreedayswhythetradeisdrawingattention_2026-07-11",
-    "link_https://www.fool.com/investing/2026/07/06/prediction-why-buying-brookfield-renewable-instead/?.tsrc=rss",
-    "title_predictionwhybuyingbrookfieldrenewableinsteadofbloomenergycouldsetyouupforlife_2026-07-06",
-    "link_https://finance.yahoo.com/markets/stocks/articles/strong-sell-stocks-july-6th-092000033.html?.tsrc=rss",
-    "title_newstrongsellstocksforjuly6th_2026-07-06",
-    "link_https://finance.yahoo.com/m/91ff945c-5cf9-3eb2-ac15-c22381a5d462/bill-ackman-says-pershing.html",
-    "title_billackmansayspershingsquarehasachieveda20grossannualreturnsinceinceptionandaimstokeepbeatingthatbarcanhisnewlylaunchedfundsliveuptothetrackrecord_2026-09-04",
-    "link_https://finance.yahoo.com/economy/articles/explainer-why-indias-strong-gdp-082216829.html",
-    "title_explainerwhyindiasstronggdpgrowthisraisingeyebrows_2026-09-04",
-    "link_https://finance.yahoo.com/markets/stocks/articles/nidec-announces-disclosure-investigation-report-054500669.html",
-    "title_nidecannouncesdisclosureofinvestigationreportandnidecsactionsinresponsetoit_2026-09-04",
-    "link_https://finance.yahoo.com/technology/ai/articles/mark-zuckerberg-opposes-federal-ai-043718141.html",
-    "title_markzuckerbergopposesfederalaiwatchdogincallwithtrumpreport_2026-09-04",
-    "link_https://finance.yahoo.com/m/9b0ebd8d-f0fc-377c-ba7f-7a5a3bb98556/this-chip-equipment-stock.html",
-    "title_thischipequipmentstockjustraiseditsdividendby269_2026-09-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/zacks-analyst-blog-highlights-palo-124600873.html",
-    "title_thezacksanalystbloghighlightspaloaltonetworkscrowdstrikeandfortinet_2026-09-03",
-    "link_https://finance.yahoo.com/m/c50c09db-f4e8-3904-80e3-af00fb7af9fd/healthcare-stocks-pick-up.html",
-    "title_healthcarestockspickupsteamasinvestorsplayoffenseanddefense_2026-09-03",
-    "link_https://www.fool.com/investing/2026/09/03/if-democrats-win-the-midterms-and-take-back-the-wh/?.tsrc=rss",
-    "title_ifdemocratswinthemidtermsandtakebackthewhitehousewhathappenstobitcoinvanecksaysbitcoininvestorsdontneedtoworry_2026-09-03",
-    "link_https://finance.yahoo.com/markets/crypto/articles/goldman-sachs-bofa-making-major-012845561.html?.tsrc=rss",
-    "title_goldmansachsandbofaaremakingamajorstablecoinbetisitworthwatching_2026-09-02",
-    "link_https://mashable.com/article/ea-sale-closes-shed-700-million-in-costs?.tsrc=rss",
-    "title_eas55bnsaletosaudiledgroupcloses700millionincutsonthehorizon_2026-08-05",
-    "link_https://finance.yahoo.com/markets/stocks/articles/victorias-secret-bellring-brands-highlighted-124600939.html?.tsrc=rss",
-    "title_victoriassecretandbellringbrandshavebeenhighlightedaszacksbullandbearoftheday_2026-07-09"
+    "title_anthropics35bclouddealwithlambdaaddsnewlayertocircularfinancingconcerns_2026-09-01"
   ],
   "stats_today": {
-    "news_dispatches": 15,
-    "price_fires": 5,
+    "news_dispatches": 514,
+    "price_fires": 324,
     "earnings_cards": 10,
-    "options_radars": 0,
-    "options_setups": 0
+    "options_radars": 3,
+    "options_setups": 300
   },
   "stats_lifetime": {
-    "news_dispatches": 14846,
-    "price_fires": 2301,
+    "news_dispatches": 14831,
+    "price_fires": 2296,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
