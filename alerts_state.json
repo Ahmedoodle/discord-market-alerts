@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 11.968,
+      "history": [
+        "+2.32%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -17938,18 +17945,40 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-bip-outperforming-134003299.html?.tsrc=rss",
     "title_isbrookfieldinfrastructurepartnersbipoutperformingotherfinancestocksthisyear_2026-08-31",
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-lps-dividend-110829004.html?.tsrc=rss",
-    "title_brookfieldinfrastructurepartnerslpsdividendanalysis_2026-08-31"
+    "title_brookfieldinfrastructurepartnerslpsdividendanalysis_2026-08-31",
+    "link_https://finance.yahoo.com/m/0bb67c6d-9f64-357b-99a8-5dbcbb8a6c95/saturday-sessions%3A.html",
+    "title_saturdaysessionsimprovementmovementperformsonthebus_2026-09-05",
+    "link_https://finance.yahoo.com/m/f82dcaf6-ceb5-3814-9be7-bdce8e9a8c05/saturday-sessions%3A.html",
+    "title_saturdaysessionsimprovementmovementperformsinthemorning_2026-09-05",
+    "link_https://finance.yahoo.com/m/d7ff53fc-e1b4-34bb-8f10-63bea43d8a15/saturday-sessions%3A.html",
+    "title_saturdaysessionsimprovementmovementperformsido_2026-09-05",
+    "link_https://finance.yahoo.com/m/db4dcf18-0e25-3e4b-9d53-caba4e6c48ae/warren-buffett%27s-successor.html",
+    "title_warrenbuffettssuccessorgregabelspent45billionbuying1stocklastquarterandhespentatleast33billionbuyingmorethisquarter_2026-09-05",
+    "link_https://finance.yahoo.com/m/4aab335d-e9d5-32e5-ac86-b7f20f2a925d/these-2-dividend-giants-yield.html",
+    "title_these2dividendgiantsyieldaround5butthatswherethesimilaritiesend_2026-09-05",
+    "link_https://finance.yahoo.com/m/3a0604e9-4833-3695-b2b8-e34c7b5b0be8/retail-earnings-just-exposed.html",
+    "title_retailearningsjustexposedabiggerdivideintheusconsumereconomy_2026-09-04",
+    "link_https://finance.yahoo.com/markets/stocks/articles/dexcom-dxcm-stock-looks-undervalued-061936913.html",
+    "title_dexcomdxcmstocklooksundervaluedonfairvaluewhileearningslookfair_2026-09-04",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-fans-monster-mnst-163918647.html",
+    "title_3reasonswerefansofmonstermnst_2026-09-03",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jefferies-adjusts-price-target-monster-113629232.html",
+    "title_jefferiesadjustspricetargetonmonsterbeverageto54from108maintainsbuyrating_2026-09-03",
+    "link_https://mashable.com/article/ea-sale-closes-shed-700-million-in-costs?.tsrc=rss",
+    "title_eas55bnsaletosaudiledgroupcloses700millionincutsonthehorizon_2026-08-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/victorias-secret-bellring-brands-highlighted-124600939.html?.tsrc=rss",
+    "title_victoriassecretandbellringbrandshavebeenhighlightedaszacksbullandbearoftheday_2026-07-09"
   ],
   "stats_today": {
-    "news_dispatches": 11,
-    "price_fires": 0,
+    "news_dispatches": 16,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14849,
-    "price_fires": 2299,
+    "news_dispatches": 14854,
+    "price_fires": 2300,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
