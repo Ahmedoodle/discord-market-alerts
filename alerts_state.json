@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 11.936,
+      "history": [
+        "+2.04%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -17940,18 +17947,40 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/restaurant-brands-international-inc-participate-201500733.html?.tsrc=rss",
     "title_restaurantbrandsinternationalinctoparticipateinbarclays19thannualglobalconsumerconference_2026-09-02",
     "link_https://finance.yahoo.com/markets/stocks/articles/rbc-raises-price-target-quebecor-124058306.html?.tsrc=rss",
-    "title_rbcraisespricetargetonquebecorlowerstargetsonfourcanadiantelecoms_2026-07-10"
+    "title_rbcraisespricetargetonquebecorlowerstargetsonfourcanadiantelecoms_2026-07-10",
+    "link_https://finance.yahoo.com/m/6bbcdf6e-0701-3b44-95cd-0760a610795f/stay-far-from-battlefield%2C.html",
+    "title_stayfarfrombattlefieldwarnsjapanesedirectorinvietnamwarfilm_2026-09-05",
+    "link_https://finance.yahoo.com/m/ffe659d9-18ce-3a06-b0dc-f2e4e1a46cc7/kraken-robotics-stock-is-down.html",
+    "title_krakenroboticsstockisdown55isseptemberthemonthtobuythedip_2026-09-05",
+    "link_https://finance.yahoo.com/m/677e8838-407a-3ca5-9bf8-c65b690ca0a3/haaland-keeps-new-look-man.html",
+    "title_haalandkeepsnewlookmancityperfectinpremierleaguebluntspursheld_2026-09-05",
+    "link_https://finance.yahoo.com/m/a7dd997e-4473-3b42-919f-3a68a9525614/anthropic-weighs-lockup.html",
+    "title_anthropicweighslockupperiodslongerthanthestandard180dayshereswhythatmatters_2026-09-05",
+    "link_https://finance.yahoo.com/m/478158d7-be48-3d3a-a04f-6aca61c0b023/rocket-lab%27s-revenue-is.html",
+    "title_rocketlabsrevenueissoaringsowhyisthestocksinking_2026-09-05",
+    "link_https://finance.yahoo.com/m/b929e81f-ce9d-3e03-8018-5f878273a5cb/tesla%27s-ashok-elluswamy-says.html",
+    "title_teslasashokelluswamysaysintelligencenotsensorsarethecoreissueforselfdrivingastslalaunchescybercabwithoutsteeringwheel_2026-09-05",
+    "link_https://finance.yahoo.com/m/d1938e5a-87b6-3d09-8da2-930ca98a99d6/jim-cramer-backs-crwv%3A-%27if.html",
+    "title_jimcramerbackscrwvifyouregoingforneocloudsonlyoneilikeiscoreweave_2026-09-04",
+    "link_https://stocktwits.com/news-articles/markets/cryptocurrency/jordi-visser-bitcoin-crypto-outlook/cZsz0qaRJDr?.tsrc=rss",
+    "title_wallstreetveteranjordivissersayscryptoisntabinarybetitdoesnthavetobeworthamilliontobeworthsomething_2026-09-05",
+    "link_https://www.thestreet.com/retail/tech-brand-used-by-walmart-target-shares-new-retail-crime-issue?.tsrc=rss",
+    "title_walmarttargetandkrogerfacenewretailcrimeissue_2026-09-05",
+    "link_https://mashable.com/article/ea-sale-closes-shed-700-million-in-costs?.tsrc=rss",
+    "title_eas55bnsaletosaudiledgroupcloses700millionincutsonthehorizon_2026-08-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/victorias-secret-bellring-brands-highlighted-124600939.html?.tsrc=rss",
+    "title_victoriassecretandbellringbrandshavebeenhighlightedaszacksbullandbearoftheday_2026-07-09"
   ],
   "stats_today": {
-    "news_dispatches": 10,
-    "price_fires": 0,
+    "news_dispatches": 17,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14848,
-    "price_fires": 2299,
+    "news_dispatches": 14855,
+    "price_fires": 2300,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
