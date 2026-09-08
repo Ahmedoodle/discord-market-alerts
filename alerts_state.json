@@ -35,27 +35,31 @@
       ]
     },
     "MSFT": {
-      "last_price": 461.3758,
+      "last_price": 493.5,
       "history": [
-        "-6.59%"
+        "-6.59%",
+        "-0.09%"
       ]
     },
     "GOOGL": {
-      "last_price": 327.3547,
+      "last_price": 338.3844,
       "history": [
-        "-3.25%"
+        "-3.25%",
+        "+0.01%"
       ]
     },
     "AVGO": {
-      "last_price": 346.851,
+      "last_price": 367.02,
       "history": [
-        "-5.89%"
+        "-5.89%",
+        "-0.42%"
       ]
     },
     "PANW": {
-      "last_price": 327.8934,
+      "last_price": 336.09,
       "history": [
-        "-2.70%"
+        "-2.70%",
+        "-0.26%"
       ]
     },
     "LRCX": {
@@ -65,9 +69,10 @@
       ]
     },
     "ODFL": {
-      "last_price": 188.8951,
+      "last_price": 186.8262,
       "history": [
-        "+1.01%"
+        "+1.01%",
+        "-0.10%"
       ]
     },
     "BLSH": {
@@ -75,9 +80,28 @@
       "history": [
         "-1.94%"
       ]
+    },
+    "NXPI": {
+      "last_price": 208.9695,
+      "history": [
+        "-6.66%"
+      ]
+    },
+    "CTSH": {
+      "last_price": 61.0,
+      "history": [
+        "+1.80%"
+      ]
     }
   },
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 12.492,
+      "history": [
+        "-2.04%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -18083,18 +18107,64 @@
     "link_https://www.fool.com/investing/2026/07/06/prediction-why-buying-brookfield-renewable-instead/?.tsrc=rss",
     "title_predictionwhybuyingbrookfieldrenewableinsteadofbloomenergycouldsetyouupforlife_2026-07-06",
     "link_https://www.fool.com/investing/2026/09/06/forget-ai-stocks-this-sector-play-is-the-real-winn/?.tsrc=rss",
-    "title_forgetaistocksthiscleanpowerplayistherealwinner_2026-09-06"
+    "title_forgetaistocksthiscleanpowerplayistherealwinner_2026-09-06",
+    "link_https://finance.yahoo.com/video/hunter-bidens-laptop-now-own-220000336.html",
+    "title_hunterbidenslaptopnowhasitsownmemecoin_2026-09-08",
+    "link_https://finance.yahoo.com/m/7dda60f0-49b9-3b9c-951d-524bafd3beed/pounding-waves-open-up.html",
+    "title_poundingwavesopenupsinkholeinswankymalibu_2026-09-08",
+    "link_https://finance.yahoo.com/m/cfef4a63-f948-3028-a70b-07cc26a23294/49-year-old-beloved-pizza.html",
+    "title_49yearoldbelovedpizzadiningchainquietlycloseslocations_2026-09-08",
+    "link_https://finance.yahoo.com/m/2d8a3770-a624-36d6-b4cd-553393e5eef5/qqq-vs-qqqm%3A-same-index%2C-same.html",
+    "title_qqqvsqqqmsameindexsamestocksdifferentfeeandthemathsaysoneleavesyouthousandsricher_2026-09-08",
+    "link_https://finance.yahoo.com/m/d6f02ce0-eec4-3306-ac5d-3570217a5bac/s%26p-500%2C-dow-end-lower-as.html",
+    "title_sp500dowendlowerasblowoutjobsreportfansratehikefearswhilechipmakerstrengthaidsnasdaqtslanflxbenvdainfocus_2026-09-04",
+    "link_https://finance.yahoo.com/m/3b8a89c1-9922-33af-addd-6b523f7e2727/apple-is-set-to-reveal-new.html",
+    "title_appleissettorevealnewiphoneswednesdayhereswhatyouneedtoknow_2026-09-08",
+    "link_https://finance.yahoo.com/m/86090bf1-9b67-35b7-a20e-2d4731179bed/here%27s-the-one-storage-stock.html",
+    "title_herestheonestoragestockidbuywith2000_2026-09-08",
+    "link_https://finance.yahoo.com/m/e0685636-4d63-3060-b6cf-3bb6f3b89089/why-crispr-therapeutics-stock.html",
+    "title_whycrisprtherapeuticsstockrockedthemarketlastmonth_2026-09-08",
+    "link_https://finance.yahoo.com/m/5cd93c8d-de7e-3c53-9d82-3278c70f634a/dal-stock-drops%3A-jefferies.html",
+    "title_dalstockdropsjefferiesseespossiblesnagtoincabinexperienceowingtospcxvsatspectrumfight_2026-09-08",
+    "link_https://finance.yahoo.com/m/35e09948-7a9c-3005-8689-490fea664ed7/google-warns-eu-regulations.html",
+    "title_googlewarnseuregulationswillresultinlowersearchquality_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/heres-why-eli-lilly-lly-214508766.html",
+    "title_hereswhyelilillyllyfellmorethanbroadermarket_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/visa-v-falls-more-steeply-214505533.html",
+    "title_visavfallsmoresteeplythanbroadermarketwhatinvestorsneedtoknow_2026-09-08",
+    "link_https://finance.yahoo.com/m/a0d7173c-7000-3df0-ae4d-cb439c27aea9/bank-of-america-is-bullish-on.html",
+    "title_bankofamericaisbullishonskhynixstockasthememorychipmarketstaystight_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/netflix-nflx-suffers-larger-drop-214502324.html",
+    "title_netflixnflxsuffersalargerdropthanthegeneralmarketkeyinsights_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palantir-technologies-inc-pltr-falls-214503368.html",
+    "title_palantirtechnologiesincpltrfallsmoresteeplythanbroadermarketwhatinvestorsneedtoknow_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/micron-mu-falls-more-steeply-214507442.html",
+    "title_micronmufallsmoresteeplythanbroadermarketwhatinvestorsneedtoknow_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/servicetitan-inc-ttan-q2-earnings-213002813.html",
+    "title_servicetitanincttanq2earningsandrevenuessurpassestimates_2026-09-08",
+    "link_https://247wallst.com/investing/etf/2026/09/08/xyld-vs-gpix-vs-ispy-we-compared-3-ways-to-sell-covered-calls-on-the-sp-500-and-the-highest-yield-is-not-the-best-deal/?.tsrc=rss",
+    "title_xyldvsgpixvsispywecompared3waystosellcoveredcallsonthesp500andthehighestyieldisnotthebestdeal_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/johnson-johnson-jnj-sees-more-214508038.html?.tsrc=rss",
+    "title_johnsonjohnsonjnjseesamoresignificantdipthanbroadermarketsomefactstoknow_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/abbvie-abbv-registers-bigger-fall-214506978.html?.tsrc=rss",
+    "title_abbvieabbvregistersabiggerfallthanthemarketimportantfactstonote_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/wells-fargo-wfc-registers-bigger-214503337.html?.tsrc=rss",
+    "title_wellsfargowfcregistersabiggerfallthanthemarketimportantfactstonote_2026-09-08",
+    "link_https://www.fool.com/coverage/charts/2026/09/08/crowdstrike-vs-okta-what-revenue-trends-between-these-cybersecurity-giants-tell-investors/?.tsrc=rss",
+    "title_crowdstrikevsoktawhatrevenuetrendsbetweenthesecybersecuritygiantstellinvestors_2026-09-08",
+    "link_https://finance.yahoo.com/m/40b1e70a-0bd4-38b3-a984-0f9f83c92f81/spacex-stock-can-gain-nearly.html?.tsrc=rss",
+    "title_spacexstockcangainnearly50newbullsays_2026-09-08"
   ],
   "stats_today": {
-    "news_dispatches": 49,
-    "price_fires": 12,
+    "news_dispatches": 68,
+    "price_fires": 20,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14918,
-    "price_fires": 2318,
+    "news_dispatches": 14937,
+    "price_fires": 2326,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
