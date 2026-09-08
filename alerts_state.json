@@ -41,9 +41,10 @@
       ]
     },
     "DLTR": {
-      "last_price": 125.63,
+      "last_price": 124.1,
       "history": [
-        "+1.28%"
+        "+1.28%",
+        "+0.05%"
       ]
     },
     "BLSH": {
@@ -51,9 +52,34 @@
       "history": [
         "-1.94%"
       ]
+    },
+    "GOOGL": {
+      "last_price": 323.0275,
+      "history": [
+        "-4.53%"
+      ]
+    },
+    "QCOM": {
+      "last_price": 175.8914,
+      "history": [
+        "+1.03%"
+      ]
+    },
+    "ILMN": {
+      "last_price": 214.0,
+      "history": [
+        "+1.39%"
+      ]
     }
   },
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 12.518,
+      "history": [
+        "-2.06%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -18053,18 +18079,78 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-bip-outperforming-134003299.html?.tsrc=rss",
     "title_isbrookfieldinfrastructurepartnersbipoutperformingotherfinancestocksthisyear_2026-08-31",
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-lps-dividend-110829004.html?.tsrc=rss",
-    "title_brookfieldinfrastructurepartnerslpsdividendanalysis_2026-08-31"
+    "title_brookfieldinfrastructurepartnerslpsdividendanalysis_2026-08-31",
+    "link_https://finance.yahoo.com/markets/commodities/articles/copper-breakout-gives-ordinary-pennies-205911450.html",
+    "title_copperbreakoutgivesordinarypenniesstunningnewvalue_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/bank-america-spots-reassuring-signal-205753282.html",
+    "title_bankofamericaspotsreassuringsignalforgooglestock_2026-09-08",
+    "link_https://finance.yahoo.com/video/snowflake-ceo-explains-software-companies-205556481.html",
+    "title_snowflakeceoexplainshowsoftwarecompaniescansurviveintheaiera_2026-09-08",
+    "link_https://finance.yahoo.com/markets/commodities/articles/collective-mining-apply-environmental-license-204640141.html",
+    "title_collectiveminingtoapplyforenvironmentallicenseforguayabalesprojectincolombianextyear_2026-09-08",
+    "link_https://finance.yahoo.com/markets/world-indices/articles/asia-stocks-waver-yen-surges-014808105.html",
+    "title_wallstreetdownoilupasinflationmiddleeastworriespersist_2026-09-08",
+    "link_https://finance.yahoo.com/markets/currencies/articles/yen-extends-gains-traders-eye-025125465.html",
+    "title_oilpricesjumpstocksdropasmideastwarflares_2026-09-08",
+    "link_https://finance.yahoo.com/m/61edb329-2f31-3e10-8832-6860b7819ab2/dow-jones-futures%3A-dow-breaks.html",
+    "title_dowjonesfuturesdowbreakssupportbutamdhpearenewbuysappleiphoneeventdue_2026-09-08",
+    "link_https://finance.yahoo.com/m/d6f02ce0-eec4-3306-ac5d-3570217a5bac/s%26p-500%2C-dow-end-lower-as.html",
+    "title_sp500dowendlowerasblowoutjobsreportfansratehikefearswhilechipmakerstrengthaidsnasdaqtslanflxbenvdainfocus_2026-09-04",
+    "link_https://finance.yahoo.com/m/32b544ea-d745-333f-98a2-410826d1f69e/apple-event-expected-to-debut.html",
+    "title_appleeventexpectedtodebutfoldableiphoneandnewceojohnternus_2026-09-08",
+    "link_https://finance.yahoo.com/technology/ai/articles/microsofts-openai-partnership-draws-fresh-204712188.html",
+    "title_microsoftsopenaipartnershipdrawsfreshlegalfire_2026-09-08",
+    "link_https://finance.yahoo.com/m/b276022b-cfc9-3ccb-8248-1129c0f15e30/why-coreweave-stock-soared.html",
+    "title_whycoreweavestocksoared12today_2026-09-08",
+    "link_https://finance.yahoo.com/m/e821c43c-db5a-3a77-9711-435e292021af/what-does-%22reshoring%22.html",
+    "title_whatdoesreshoringactuallymeanforindustrialinvestors_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/spotting-winners-amazon-nasdaq-amzn-205518294.html",
+    "title_spottingwinnersamazonnasdaqamznandonlineretailstocksinq2_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/intel-leads-chip-stocks-rally-204945385.html",
+    "title_intelleadschipstocksrallyasqualcommamdandbroadcomstocksjump_2026-09-08",
+    "link_https://finance.yahoo.com/m/ac1461aa-9716-3893-9587-cbfe47603dff/why-qualcomm-stock-is-up-today.html",
+    "title_whyqualcommstockisuptoday_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/amd-reveals-ai-numbers-sent-204836239.html",
+    "title_amdrevealsainumbersthatsentitsstocksoaring_2026-09-08",
+    "link_https://finance.yahoo.com/media-advertising/articles/dawn-cascade-team-ann-michael-203100056.html",
+    "title_dawnandcascadeteamupwithannmichaelmayetomakegamedaycleanupfastandeasyandgivefansachancetoscoreatriptosuperbowllxi_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/oracle-adobe-earnings-closer-look-205200957.html",
+    "title_oracleandadobeearningsacloserlook_2026-09-08",
+    "link_https://finance.yahoo.com/m/4a55c725-57db-335b-a0da-d718324a7ce2/software-stocks-are-back.-2.html",
+    "title_softwarestocksareback2winners2losersandsalesforce_2026-09-04",
+    "link_https://finance.yahoo.com/markets/stocks/articles/lockheed-martins-missile-segment-could-205129633.html",
+    "title_lockheedmartinsmissilesegmentcouldgrow150by2030_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/lam-research-nearly-triples-stock-125800548.html",
+    "title_lamresearchnearlytriplesinayearisthestockstillworthbuying_2026-09-07",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palantir-stock-leads-august-rally-215855985.html",
+    "title_palantirstockleadsaugustrallynvidiasalesforceandsupermicrojump_2026-09-07",
+    "link_https://finance.yahoo.com/markets/stocks/articles/workday-buy-ai-growth-rises-150000959.html",
+    "title_isworkdayabuyasaigrowthrisesbutvaluationsendsmixedsignals_2026-09-07",
+    "link_https://finance.yahoo.com/m/61fc4577-640e-3a62-a248-174509df6ef5/the-trade-desk-cuts-15%25-of.html",
+    "title_thetradedeskcuts15ofworkforce_2026-09-08",
+    "link_https://finance.yahoo.com/technology/ai/articles/bank-america-sees-asml-stocks-205458524.html",
+    "title_bankofamericaseesasmlstocksnextbigaitrigger_2026-09-08",
+    "link_https://finance.yahoo.com/m/470fc08a-f884-3a4d-8926-3a0ef20d7682/an-ai-chip-machine-so-pricey%2C.html",
+    "title_anaichipmachinesopriceythreerivalshadtosayyes_2026-09-08",
+    "link_https://www.barchart.com/story/news/4492577/is-williams-companies-stock-outperforming-the-dow?.tsrc=rss",
+    "title_iswilliamscompaniesstockoutperformingthedow_2026-09-08",
+    "link_https://decrypt.co/377723/liquid-hack-47m-blockstream-bargains-white-hat?.tsrc=rss",
+    "title_47mstillmissingafterliquidhackasblockstreambargainswithwhitehats_2026-09-08",
+    "link_https://cryptonews.com/news/cme-fedwatch-fomc-september-2026-odds-rate-hike-50/?.tsrc=rss",
+    "title_fomcseptember2026oddsforaratehikesurpass50_2026-09-08",
+    "link_https://finance.yahoo.com/technology/ai/articles/google-blackstone-venture-faces-delays-202510079.html?.tsrc=rss",
+    "title_googleblackstoneventurefacesdelaysatdatacentersites_2026-09-08"
   ],
   "stats_today": {
-    "news_dispatches": 40,
-    "price_fires": 8,
+    "news_dispatches": 63,
+    "price_fires": 13,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14909,
-    "price_fires": 2314,
+    "news_dispatches": 14932,
+    "price_fires": 2319,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
