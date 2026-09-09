@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.4282,
+      "history": [
+        "+2.68%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -17996,18 +18003,44 @@
     "link_https://finance.yahoo.com/media-advertising/articles/media-advisory-tiff-photo-b-141400003.html?.tsrc=rss",
     "title_mediaadvisoryandtiffphotobrollopportunity_2026-09-08",
     "link_https://finance.yahoo.com/markets/stocks/articles/why-gabelli-global-content-connectivity-154610296.html?.tsrc=rss",
-    "title_whygabellisglobalcontentconnectivityfundlikesrogerscommunicationsrci_2026-09-05"
+    "title_whygabellisglobalcontentconnectivityfundlikesrogerscommunicationsrci_2026-09-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/miller-industries-mlr-posts-growth-042437406.html",
+    "title_millerindustriesmlrpostsgrowthbutprofitstelladifferentstory_2026-09-09",
+    "link_https://finance.yahoo.com/markets/world-indices/articles/asian-shares-mixed-brent-crude-041827775.html",
+    "title_asiansharesaremixedasbrentcrudeapproaches100abarrel_2026-09-09",
+    "link_https://finance.yahoo.com/m/60f8c85b-c53b-3ba9-a52e-11fd323f9493/dvlt-stock-rises-as-traders.html",
+    "title_dvltstockrisesastradersbraceforplatformlaunchretailstaysbearishamidgrowingbuzz_2026-09-09",
+    "link_https://finance.yahoo.com/video/titan-minerals-extends-gold-silver-034038885.html",
+    "title_titanmineralsextendsgoldsilvermineralisationatdynasty_2026-09-08",
+    "link_https://finance.yahoo.com/video/krakatoa-resources-zopkhito-drilling-extends-031650638.html",
+    "title_krakatoaresourceszopkhitodrillingextendsgoldantimonypotential_2026-09-08",
+    "link_https://finance.yahoo.com/m/d2822176-ea88-307a-9a89-3f4f6c41fa8b/jensen-huang%27s-ai-capex-pulse.html",
+    "title_jensenhuangsaicapexpulsecheck_2026-09-09",
+    "link_https://finance.yahoo.com/m/b457a925-d397-3242-9e3e-1769b3a0079c/mrvl-stock-keeps-climbing-as.html",
+    "title_mrvlstockkeepsclimbingasceoshrugsoffqualcommamazonthreatwearetheswitzerlandofthisentiremarket_2026-09-08",
+    "link_https://finance.yahoo.com/m/12a3e9bb-eb78-3353-b17e-7f4f20527118/ionq-just-raised-its-2026.html",
+    "title_ionqjustraisedits2026revenueoutlookbyabout60mostoftheraiseisntquantumcomputing_2026-09-08",
+    "link_https://finance.yahoo.com/technology/ai/articles/think41-says-enterprise-ais-real-040300939.html",
+    "title_think41saysenterpriseaisrealbottleneckisntthemodelratheritistheforwarddeployedengineergap_2026-09-09",
+    "link_https://finance.yahoo.com/m/eb5cf3c9-f636-3f8e-b57c-4fa3301a8922/why-did-nke%2C-mcd%2C-stz-stocks.html",
+    "title_whydidnkemcdstzstocksslumpto52weeklowstoday_2026-09-09",
+    "link_https://finance.yahoo.com/healthcare/articles/cleveland-clinic-riken-ibm-team-040000046.html",
+    "title_clevelandclinicrikenandibmteamadvancetofinalsfor2026acmgordonbellprize_2026-09-09",
+    "link_https://finance.yahoo.com/markets/stocks/articles/copart-cprt-reports-earnings-tomorrow-040718214.html",
+    "title_copartcprtreportsearningstomorrowwhattoexpect_2026-09-09",
+    "link_https://www.thedailyupside.com/finance/markets/earnings-outlook-after-a-strong-season-the-bar-is-high/?.tsrc=rss",
+    "title_howmuchlongercanbluechipcompanieskeepuphighperformance_2026-09-08"
   ],
   "stats_today": {
-    "news_dispatches": 6,
-    "price_fires": 0,
+    "news_dispatches": 16,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14875,
-    "price_fires": 2306,
+    "news_dispatches": 14885,
+    "price_fires": 2307,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
