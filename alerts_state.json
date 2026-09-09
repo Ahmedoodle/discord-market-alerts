@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 12.383,
+      "history": [
+        "-2.11%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -18000,18 +18007,30 @@
     "link_https://www.fool.com/investing/2026/07/06/prediction-why-buying-brookfield-renewable-instead/?.tsrc=rss",
     "title_predictionwhybuyingbrookfieldrenewableinsteadofbloomenergycouldsetyouupforlife_2026-07-06",
     "link_https://www.fool.com/investing/2026/09/06/forget-ai-stocks-this-sector-play-is-the-real-winn/?.tsrc=rss",
-    "title_forgetaistocksthiscleanpowerplayistherealwinner_2026-09-06"
+    "title_forgetaistocksthiscleanpowerplayistherealwinner_2026-09-06",
+    "link_https://finance.yahoo.com/m/36cd1ffe-4eb2-3454-9aab-521e7ab6ddea/1-chart-that-destroys-the.html",
+    "title_1chartthatdestroysthenvidiabearthesis_2026-09-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-cable-one-cabo-shares-031918166.html",
+    "title_whycableonecabosharesareplungingtoday_2026-09-08",
+    "link_https://finance.yahoo.com/m/cb2dc4a5-000d-3bf1-8b2b-7612a57f0ad1/louis-navellier%27s-apple-stock.html",
+    "title_louisnavelliersapplestockratingshiftsmassivelyaheadofsurpriseandshineevent_2026-09-08",
+    "link_https://finance.yahoo.com/media-advertising/articles/travel-leisure-co-present-goldman-203000685.html?.tsrc=rss",
+    "title_travelleisurecotopresentatthegoldmansachs33rdannualglobalconsumerandretailconference_2026-09-08",
+    "link_https://finance.yahoo.com/media-advertising/articles/ea-sports-fc-27-brings-140000227.html?.tsrc=rss",
+    "title_easportsfc27bringsfansclosertotheworldsgamewithnewpartnersleaguesandstadiums_2026-09-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/strong-sell-stocks-july-6th-092000033.html?.tsrc=rss",
+    "title_newstrongsellstocksforjuly6th_2026-07-06"
   ],
   "stats_today": {
-    "news_dispatches": 8,
-    "price_fires": 0,
+    "news_dispatches": 11,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14877,
-    "price_fires": 2306,
+    "news_dispatches": 14880,
+    "price_fires": 2307,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
