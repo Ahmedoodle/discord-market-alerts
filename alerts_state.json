@@ -1,851 +1,180 @@
 {
-  "stock_session_date": "2026-09-01",
-  "crypto_session_date": "2026-09-01",
+  "stock_session_date": "2026-09-10",
+  "crypto_session_date": "2026-09-10",
   "premarket_tickers": {
     "SI=F": {
-      "last_price": 65.625,
+      "last_price": 67.155,
       "history": [
-        "+1.12%",
-        "-0.90%"
+        "-1.16%"
       ]
     },
     "CL=F": {
-      "last_price": 88.02,
+      "last_price": 97.54,
       "history": [
-        "+1.49%",
-        "+2.64%"
+        "+1.55%"
       ]
     },
     "BZ=F": {
-      "last_price": 91.76,
+      "last_price": 102.33,
       "history": [
-        "+1.40%"
-      ]
-    },
-    "SYK": {
-      "last_price": 329.8637,
-      "history": [
-        "+1.84%",
-        "+0.37%",
-        "+1.87%"
-      ]
-    },
-    "MDT": {
-      "last_price": 92.73,
-      "history": [
-        "+1.65%",
-        "+2.97%",
-        "+7.67%",
-        "+6.34%",
-        "+4.80%",
-        "+3.35%",
-        "+2.29%"
-      ]
-    },
-    "MELI": {
-      "last_price": 1914.94,
-      "history": [
-        "+1.20%",
-        "+0.05%",
-        "-1.10%"
-      ]
-    },
-    "CHTR": {
-      "last_price": 150.26,
-      "history": [
-        "-1.43%"
-      ]
-    },
-    "ARM": {
-      "last_price": 234.4,
-      "history": [
-        "+1.69%",
-        "-1.04%",
-        "-2.06%",
-        "-3.10%"
-      ]
-    },
-    "MSTR": {
-      "last_price": 128.7,
-      "history": [
-        "-1.43%",
-        "-3.19%"
-      ]
-    },
-    "SNDK": {
-      "last_price": 1513.11,
-      "history": [
-        "-1.58%",
-        "-2.92%",
-        "+0.00%",
-        "-3.42%"
-      ]
-    },
-    "GLD": {
-      "last_price": 397.34,
-      "history": [
-        "-1.40%",
-        "-2.71%"
-      ]
-    },
-    "SLV": {
-      "last_price": 58.77,
-      "history": [
-        "-1.26%",
-        "-2.26%"
-      ]
-    },
-    "USO": {
-      "last_price": 135.94,
-      "history": [
-        "+1.68%"
-      ]
-    },
-    "BNO": {
-      "last_price": 53.84,
-      "history": [
-        "+1.89%"
-      ]
-    },
-    "AMAT": {
-      "last_price": 448.67,
-      "history": [
-        "-1.00%",
-        "-2.12%"
-      ]
-    },
-    "BLK": {
-      "last_price": 1148.06,
-      "history": [
-        "+2.76%",
-        "-0.05%",
-        "+2.20%",
-        "-0.49%",
-        "+2.11%",
-        "-0.65%"
-      ]
-    },
-    "PLTR": {
-      "last_price": 182.3877,
-      "history": [
-        "-1.06%",
-        "-2.14%"
-      ]
-    },
-    "LRCX": {
-      "last_price": 295.1,
-      "history": [
-        "-1.13%",
-        "-2.12%"
-      ]
-    },
-    "MU": {
-      "last_price": 943.0135,
-      "history": [
-        "-1.64%"
-      ]
-    },
-    "GILD": {
-      "last_price": 146.0,
-      "history": [
-        "+1.21%",
-        "-0.23%"
-      ]
-    },
-    "CI": {
-      "last_price": 278.68,
-      "history": [
-        "+1.01%",
-        "-0.20%",
-        "+0.94%"
-      ]
-    },
-    "CRWD": {
-      "last_price": 226.18,
-      "history": [
-        "-1.05%",
-        "-2.09%"
-      ]
-    },
-    "MRVL": {
-      "last_price": 204.2516,
-      "history": [
-        "-1.16%",
-        "-2.27%",
-        "-3.50%"
-      ]
-    },
-    "MRNA": {
-      "last_price": 137.1509,
-      "history": [
-        "-1.17%",
-        "-2.27%"
-      ]
-    },
-    "SMCI": {
-      "last_price": 36.53,
-      "history": [
-        "-1.02%",
-        "-2.01%"
-      ]
-    },
-    "IREN": {
-      "last_price": 36.14,
-      "history": [
-        "-1.44%",
-        "-2.63%"
-      ]
-    },
-    "CBRS": {
-      "last_price": 180.0043,
-      "history": [
-        "-1.18%",
-        "-2.30%"
-      ]
-    },
-    "IBIT": {
-      "last_price": 44.08,
-      "history": [
-        "-1.32%"
-      ]
-    },
-    "ETHA": {
-      "last_price": 18.46,
-      "history": [
-        "-1.39%"
-      ]
-    },
-    "NVDA": {
-      "last_price": 217.92,
-      "history": [
-        "-1.04%",
-        "+0.00%",
-        "-1.30%"
-      ]
-    },
-    "TSLA": {
-      "last_price": 363.66,
-      "history": [
-        "-1.17%"
-      ]
-    },
-    "XOM": {
-      "last_price": 162.8237,
-      "history": [
-        "+1.16%"
-      ]
-    },
-    "AMD": {
-      "last_price": 460.55,
-      "history": [
-        "-1.05%",
-        "-2.16%"
-      ]
-    },
-    "ORCL": {
-      "last_price": 146.9,
-      "history": [
-        "-1.35%",
-        "+0.00%",
-        "-1.49%"
-      ]
-    },
-    "NOW": {
-      "last_price": 143.4745,
-      "history": [
-        "-1.46%",
-        "-3.05%"
-      ]
-    },
-    "COP": {
-      "last_price": 134.0,
-      "history": [
-        "+1.14%"
-      ]
-    },
-    "KLAC": {
-      "last_price": 170.85,
-      "history": [
-        "-1.25%",
-        "-2.62%"
-      ]
-    },
-    "MNST": {
-      "last_price": 46.43,
-      "history": [
-        "+1.06%",
-        "+0.00%",
         "+1.11%"
       ]
     },
-    "ON": {
-      "last_price": 72.29,
+    "NG=F": {
+      "last_price": 2.79,
       "history": [
-        "-1.47%",
-        "+0.00%",
-        "-1.38%",
-        "+0.00%",
-        "-1.26%",
-        "-2.43%"
+        "-1.13%"
       ]
     },
-    "RBLX": {
-      "last_price": 40.31,
-      "history": [
-        "-1.21%",
-        "+0.27%",
-        "-1.16%",
-        "-2.37%"
-      ]
-    },
-    "INTC": {
-      "last_price": 87.36,
-      "history": [
-        "-1.22%",
-        "-2.40%"
-      ]
-    },
-    "SKHY": {
-      "last_price": 160.8085,
-      "history": [
-        "-1.29%",
-        "-2.29%"
-      ]
-    },
-    "RKLB": {
-      "last_price": 62.55,
-      "history": [
-        "-1.10%",
-        "-2.14%"
-      ]
-    },
-    "NBIS": {
-      "last_price": 201.55,
-      "history": [
-        "-1.31%",
-        "-2.31%"
-      ]
-    },
-    "CVX": {
-      "last_price": 208.47,
+    "AAPL": {
+      "last_price": 318.89,
       "history": [
         "+1.13%"
       ]
     },
-    "TMO": {
-      "last_price": 612.45,
+    "XOM": {
+      "last_price": 166.0,
       "history": [
-        "+1.93%",
-        "+0.44%",
-        "-0.75%"
+        "+1.08%"
       ]
     },
-    "QCOM": {
-      "last_price": 166.5,
+    "AMAT": {
+      "last_price": 463.56,
       "history": [
-        "-1.24%",
-        "-2.33%"
-      ]
-    },
-    "ADI": {
-      "last_price": 355.25,
-      "history": [
-        "-1.90%"
-      ]
-    },
-    "TEAM": {
-      "last_price": 189.72,
-      "history": [
-        "-1.24%",
-        "-2.29%"
-      ]
-    },
-    "ZS": {
-      "last_price": 184.615,
-      "history": [
-        "-1.75%",
-        "-0.74%",
-        "-2.00%"
-      ]
-    },
-    "BLSH": {
-      "last_price": 32.4,
-      "history": [
-        "-1.17%",
-        "-2.20%",
-        "-0.35%",
-        "-1.56%",
-        "-4.79%"
-      ]
-    },
-    "MSFT": {
-      "last_price": 502.02,
-      "history": [
-        "-1.04%"
-      ]
-    },
-    "AVGO": {
-      "last_price": 365.88,
-      "history": [
-        "-1.20%"
-      ]
-    },
-    "HD": {
-      "last_price": 327.6567,
-      "history": [
-        "-1.11%",
-        "-0.05%"
-      ]
-    },
-    "GS": {
-      "last_price": 1013.98,
-      "history": [
-        "-1.16%"
-      ]
-    },
-    "SNPS": {
-      "last_price": 434.68,
-      "history": [
-        "-1.07%",
-        "-2.18%",
-        "-1.12%"
-      ]
-    },
-    "FTNT": {
-      "last_price": 167.9,
-      "history": [
-        "-4.48%",
-        "-0.56%",
-        "-1.77%"
-      ]
-    },
-    "DDOG": {
-      "last_price": 232.65,
-      "history": [
-        "-1.16%",
-        "+0.00%",
-        "-1.85%"
-      ]
-    },
-    "WDAY": {
-      "last_price": 192.99,
-      "history": [
-        "-1.05%",
-        "-2.26%"
-      ]
-    },
-    "SPCX": {
-      "last_price": 142.25,
-      "history": [
-        "-1.00%"
-      ]
-    },
-    "META": {
-      "last_price": 558.6833,
-      "history": [
-        "-1.07%",
-        "-2.39%"
-      ]
-    },
-    "CRM": {
-      "last_price": 254.76,
-      "history": [
-        "-1.08%"
-      ]
-    },
-    "ADBE": {
-      "last_price": 288.38,
-      "history": [
-        "-1.07%",
-        "+0.00%",
-        "-1.51%"
-      ]
-    },
-    "INTU": {
-      "last_price": 351.09,
-      "history": [
-        "-1.00%",
-        "-2.28%"
-      ]
-    },
-    "CAT": {
-      "last_price": 788.01,
-      "history": [
-        "-1.19%"
-      ]
-    },
-    "PANW": {
-      "last_price": 377.71,
-      "history": [
-        "-1.16%"
-      ]
-    },
-    "MCHP": {
-      "last_price": 72.71,
-      "history": [
-        "-1.01%"
-      ]
-    },
-    "TTD": {
-      "last_price": 13.42,
-      "history": [
-        "-1.10%",
-        "-2.19%"
-      ]
-    },
-    "NQ=F": {
-      "last_price": 29191.25,
-      "history": [
-        "-1.09%"
-      ]
-    },
-    "QQQ": {
-      "last_price": 709.48,
-      "history": [
-        "-1.02%"
-      ]
-    },
-    "LIN": {
-      "last_price": 489.43,
-      "history": [
-        "+1.05%",
-        "-0.03%"
-      ]
-    },
-    "IBM": {
-      "last_price": 231.29,
-      "history": [
-        "-1.10%"
-      ]
-    },
-    "TXN": {
-      "last_price": 257.7,
-      "history": [
-        "-1.23%"
-      ]
-    },
-    "NXPI": {
-      "last_price": 219.9,
-      "history": [
-        "-1.01%",
-        "-2.11%"
-      ]
-    },
-    "ETN": {
-      "last_price": 393.82,
-      "history": [
-        "-1.21%",
-        "+0.12%",
-        "-1.00%",
-        "-2.01%"
-      ]
-    },
-    "CDNS": {
-      "last_price": 334.01,
-      "history": [
-        "-1.41%"
-      ]
-    },
-    "ILMN": {
-      "last_price": 213.63,
-      "history": [
-        "-1.53%",
-        "+0.00%",
-        "-1.48%",
-        "+0.00%"
-      ]
-    },
-    "LULU": {
-      "last_price": 118.9987,
-      "history": [
-        "-1.05%"
-      ]
-    },
-    "SPGI": {
-      "last_price": 435.84,
-      "history": [
-        "+1.46%",
-        "+0.00%"
-      ]
-    },
-    "FAST": {
-      "last_price": 49.2354,
-      "history": [
-        "+2.02%",
-        "+0.97%",
-        "-0.15%"
-      ]
-    },
-    "ODFL": {
-      "last_price": 201.75,
-      "history": [
-        "+4.62%",
-        "+0.90%"
-      ]
-    },
-    "AMZN": {
-      "last_price": 256.27,
-      "history": [
-        "-1.35%"
-      ]
-    },
-    "REGN": {
-      "last_price": 809.3042,
-      "history": [
-        "-1.05%",
-        "-2.26%",
-        "+1.28%"
-      ]
-    },
-    "DASH": {
-      "last_price": 229.01,
-      "history": [
-        "-1.24%",
-        "-0.05%",
-        "-1.18%"
-      ]
-    },
-    "NG=F": {
-      "last_price": 2.87,
-      "history": [
-        "-1.09%",
-        "-2.21%"
-      ]
-    },
-    "MO": {
-      "last_price": 69.18,
-      "history": [
-        "+1.02%"
-      ]
-    },
-    "PM": {
-      "last_price": 185.71,
-      "history": [
-        "+1.10%",
-        "+0.00%"
-      ]
-    },
-    "BIIB": {
-      "last_price": 210.0,
-      "history": [
-        "+1.08%",
-        "-0.35%"
-      ]
-    },
-    "ABNB": {
-      "last_price": 181.38,
-      "history": [
-        "-1.00%"
-      ]
-    },
-    "LLY": {
-      "last_price": 1171.91,
-      "history": [
-        "+1.31%"
-      ]
-    },
-    "ACN": {
-      "last_price": 187.05,
-      "history": [
-        "-1.43%"
-      ]
-    },
-    "UNP": {
-      "last_price": 301.57,
-      "history": [
-        "+2.18%",
-        "+0.30%"
+        "-1.13%"
       ]
     },
     "BSX": {
-      "last_price": 48.83,
+      "last_price": 45.64,
       "history": [
-        "+1.10%"
-      ]
-    },
-    "ADP": {
-      "last_price": 284.215,
-      "history": [
-        "-2.50%",
-        "-0.68%"
-      ]
-    },
-    "DXCM": {
-      "last_price": 91.06,
-      "history": [
-        "-1.15%",
-        "+0.00%"
-      ]
-    },
-    "BKR": {
-      "last_price": 64.5,
-      "history": [
-        "+1.49%"
-      ]
-    },
-    "DLTR": {
-      "last_price": 125.26,
-      "history": [
-        "-1.05%"
-      ]
-    },
-    "GOOGL": {
-      "last_price": 335.7765,
-      "history": [
-        "-1.05%"
-      ]
-    },
-    "JNJ": {
-      "last_price": 268.99,
-      "history": [
-        "+1.18%"
-      ]
-    },
-    "DHR": {
-      "last_price": 215.01,
-      "history": [
-        "-1.23%",
-        "+0.68%"
-      ]
-    },
-    "TMUS": {
-      "last_price": 181.5,
-      "history": [
-        "-1.36%",
-        "+0.59%"
-      ]
-    },
-    "PYPL": {
-      "last_price": 52.1293,
-      "history": [
-        "-1.02%"
-      ]
-    },
-    "CEG": {
-      "last_price": 272.0,
-      "history": [
-        "-1.01%"
-      ]
-    },
-    "ASML": {
-      "last_price": 1676.96,
-      "history": [
-        "-1.12%"
-      ]
-    },
-    "GOOG": {
-      "last_price": 332.0108,
-      "history": [
-        "-1.01%"
-      ]
-    },
-    "ABBV": {
-      "last_price": 259.872,
-      "history": [
-        "+1.35%"
-      ]
-    },
-    "MRK": {
-      "last_price": 149.3401,
-      "history": [
-        "+1.07%"
-      ]
-    },
-    "KO": {
-      "last_price": 89.61,
-      "history": [
-        "+1.06%"
-      ]
-    },
-    "BA": {
-      "last_price": 205.64,
-      "history": [
-        "-1.03%"
-      ]
-    }
-  },
-  "regular_tickers": {
-    "CL=F": {
-      "last_price": 88.22,
-      "history": [
-        "+2.87%"
-      ]
-    },
-    "BZ=F": {
-      "last_price": 92.73,
-      "history": [
-        "+2.48%"
-      ]
-    },
-    "NG=F": {
-      "last_price": 2.86,
-      "history": [
-        "-2.56%"
-      ]
-    },
-    "GLD": {
-      "last_price": 398.795,
-      "history": [
-        "-2.47%"
-      ]
-    },
-    "SLV": {
-      "last_price": 58.451,
-      "history": [
-        "-2.61%"
-      ]
-    },
-    "BNO": {
-      "last_price": 59.92,
-      "history": [
-        "+1.01%"
-      ]
-    },
-    "SPGI": {
-      "last_price": 423.0,
-      "history": [
-        "+1.11%"
+        "+1.51%"
       ]
     },
     "LRCX": {
-      "last_price": 311.88,
-      "history": [
-        "-1.25%"
-      ]
-    },
-    "MU": {
-      "last_price": 1013.1,
+      "last_price": 311.31,
       "history": [
         "-1.43%"
       ]
     },
-    "KLAC": {
-      "last_price": 180.6,
+    "MU": {
+      "last_price": 1014.8,
       "history": [
         "-1.26%"
       ]
     },
+    "ADI": {
+      "last_price": 355.8242,
+      "history": [
+        "-2.53%"
+      ]
+    },
+    "KLAC": {
+      "last_price": 180.75,
+      "history": [
+        "-1.18%"
+      ]
+    },
     "SNPS": {
-      "last_price": 399.0,
+      "last_price": 398.61,
       "history": [
-        "+1.47%"
+        "+1.37%"
       ]
     },
-    "ARM": {
-      "last_price": 261.468,
+    "PCAR": {
+      "last_price": 123.31,
       "history": [
-        "-1.05%"
+        "+1.17%"
       ]
     },
-    "SNDK": {
-      "last_price": 1743.59,
+    "MRVL": {
+      "last_price": 232.01,
       "history": [
-        "-1.17%"
+        "-1.28%"
+      ]
+    },
+    "AEP": {
+      "last_price": 123.15,
+      "history": [
+        "-1.22%"
+      ]
+    },
+    "CSGP": {
+      "last_price": 29.0505,
+      "history": [
+        "-1.79%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 137.05,
+      "history": [
+        "+1.06%"
+      ]
+    },
+    "SMCI": {
+      "last_price": 38.4312,
+      "history": [
+        "-1.28%"
+      ]
+    },
+    "MSTR": {
+      "last_price": 131.25,
+      "history": [
+        "-1.09%"
+      ]
+    },
+    "IREN": {
+      "last_price": 44.7,
+      "history": [
+        "-1.48%"
+      ]
+    },
+    "INTC": {
+      "last_price": 104.68,
+      "history": [
+        "-1.47%"
+      ]
+    },
+    "CBRS": {
+      "last_price": 193.8,
+      "history": [
+        "-1.22%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 191.72,
+      "history": [
+        "-3.48%"
+      ]
+    },
+    "NBIS": {
+      "last_price": 234.55,
+      "history": [
+        "-2.41%"
       ]
     }
   },
+  "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3765,
+      "history": [
+        "-3.09%"
+      ]
+    },
+    "SOL-USD": {
+      "last_price": 101.02,
+      "history": [
+        "-2.40%"
+      ]
+    },
+    "LINK-USD": {
+      "last_price": 11.787,
+      "history": [
+        "-3.70%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -19063,18 +18392,66 @@
     "link_https://www.fool.com/investing/2026/09/10/this-unstoppable-warren-buffett-etf-would-have-qua/?.tsrc=rss",
     "title_thisunstoppablewarrenbuffettetfwouldhavequadupledyourmoneyoverthelastdecade_2026-09-10",
     "link_https://www.fool.com/investing/2026/09/10/cathie-wood-continues-to-buy-the-dip-on-crypto-her/?.tsrc=rss",
-    "title_cathiewoodcontinuestobuythediponcryptohereare3cryptoinvestmentsthatneedtobeonyourradar_2026-09-10"
+    "title_cathiewoodcontinuestobuythediponcryptohereare3cryptoinvestmentsthatneedtobeonyourradar_2026-09-10",
+    "link_https://finance.yahoo.com/energy/articles/ryanair-ceo-cautions-high-fuel-095451044.html",
+    "title_ryanairceocautionshighfuelcostscouldincreaseairfaresnextyear_2026-09-10",
+    "link_https://finance.yahoo.com/markets/crypto/articles/mastercard-launches-wallet-pay-tools-095344008.html",
+    "title_mastercardlauncheswalletpaytoolstofacilitatepaymentsbetweenwallets_2026-09-10",
+    "link_https://finance.yahoo.com/technology/ai/articles/palantir-fujitsu-renew-partnership-expanded-095031425.html",
+    "title_palantirfujitsurenewpartnershipwithexpandedaideploymentfocus_2026-09-10",
+    "link_https://finance.yahoo.com/m/458bfb03-b2e6-3d42-a9b9-f627e127b35b/%E2%80%98conventional-wisdom-isn%E2%80%99t.html",
+    "title_conventionalwisdomisntwiseramseytellsretireestodumpbondsthenumbersbackhimup_2026-09-10",
+    "link_https://finance.yahoo.com/markets/commodities/articles/west-red-lake-gold-intersects-093000184.html",
+    "title_westredlakegoldintersects1616gtauover15metresand1094gtauover15metresatstarrattolsenadvancingmultiassetstrategyatmadsen_2026-09-10",
+    "link_https://finance.yahoo.com/video/sunda-energy-sintana-energy-ilika-091635309.html",
+    "title_sundaenergysintanaenergyilikaarianaresourcesmpevanssmallcapsnapshot_2026-09-10",
+    "link_https://finance.yahoo.com/m/ab945bae-9fce-3c57-988d-e2aa6b259257/european-ttf-gas-marches.html",
+    "title_europeanttfgasmarcheshigheronlngsupplyfears_2026-09-10",
+    "link_https://finance.yahoo.com/m/d28e0261-fd47-3d6e-abe1-eb715dbb1bea/u.s.-futures-rise-as-markets.html",
+    "title_usfuturesriseasmarketswatchiranconflictoracleandadobeearningsdowjonesspnasdaqwallstreet_2026-09-10",
+    "link_https://finance.yahoo.com/m/ec679c90-387e-3f13-8089-8aa3e4c83fbf/stocks-to-watch-thursday%3A.html",
+    "title_stockstowatchthursdayappleoracletsmc_2026-09-10",
+    "link_https://finance.yahoo.com/m/52256a6e-de3b-3c8c-96d9-5f0df4d1063a/here%27s-where-wall-street.html",
+    "title_hereswherewallstreetanalystsseenvidiassharepricegoing_2026-09-10",
+    "link_https://finance.yahoo.com/m/5a85f2ed-7c69-34cc-a75d-c50b2ad7c11a/understanding-disclosure.html",
+    "title_understandingdisclosuredocuments_2026-09-10",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-palantir-technologies-collaborate-sovereign-093824579.html",
+    "title_nvidiapalantirtechnologiestocollaborateonsovereignaiforcriticalsupplychains_2026-09-10",
+    "link_https://finance.yahoo.com/healthcare/articles/novo-nordisk-apos-semaglutide-injection-093510182.html",
+    "title_novonordiskssemaglutideinjectiongetschineseapprovalformashtreatment_2026-09-10",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-backed-mediatek-sales-soar-090359864.html",
+    "title_nvidiabackedmediatekssalessoar44withaichipmomentum_2026-09-10",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jpmorgan-upgrades-meta-platforms-overweight-092408501.html",
+    "title_jpmorganupgradesmetaplatformstooverweightfromneutraladjustsptto820from640_2026-09-10",
+    "link_https://finance.yahoo.com/markets/stocks/articles/hsbc-adjusts-price-target-eli-093417487.html",
+    "title_hsbcadjustspricetargetonelilillyandcoto940from850keepsreducerating_2026-09-10",
+    "link_https://finance.yahoo.com/technology/ai/articles/market-chatter-anthropic-grants-eu-092427898.html",
+    "title_marketchatteranthropicgrantseucybersecurityagencyaccesstomythosmodel_2026-09-10",
+    "link_https://finance.yahoo.com/economy/policy/articles/china-services-trade-fair-showcases-093300462.html",
+    "title_chinaservicestradefairshowcasesinnovationpromotesopenness_2026-09-10",
+    "link_https://finance.yahoo.com/healthcare/articles/recent-pipeline-progress-boost-bmys-151400368.html",
+    "title_willtherecentpipelineprogressboostbmysportfolioexpansion_2026-09-09",
+    "link_https://finance.yahoo.com/markets/stocks/articles/wells-fargo-upgrades-synopsys-overweight-093158436.html",
+    "title_wellsfargoupgradessynopsystooverweightfromequalweightadjustsptto475from450_2026-09-10",
+    "link_https://finance.yahoo.com/markets/stocks/articles/bernstein-initiates-old-dominion-freight-094210266.html",
+    "title_bernsteininitiatesolddominionfreightlineatmarketperformwith200pricetarget_2026-09-10",
+    "link_https://finance.yahoo.com/markets/stocks/articles/piper-sandler-initiates-intel-neutral-094156767.html",
+    "title_pipersandlerinitiatesintelatneutralwith110pricetarget_2026-09-10",
+    "link_https://www.fool.com/investing/2026/09/10/3-quantum-stocks-just-scored-100-million-in-govern/?.tsrc=rss",
+    "title_3quantumstocksjustscored100millioningovernmentfundingwhichisthebesttobuynow_2026-09-10",
+    "link_https://finance.yahoo.com/technology/ai/articles/meet-data-center-capital-europe-070000633.html?.tsrc=rss",
+    "title_meetthedatacentercapitalofeuropeasgooglejoinsmicrosoftandtiktokinbettingover302billiononfinland_2026-09-10"
   ],
   "stats_today": {
-    "news_dispatches": 40,
-    "price_fires": 30,
+    "news_dispatches": 20,
+    "price_fires": 28,
     "earnings_cards": 10,
-    "options_radars": 3,
-    "options_setups": 300
+    "options_radars": 0,
+    "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14954,
-    "price_fires": 2353,
+    "news_dispatches": 14974,
+    "price_fires": 2381,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
