@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 11.198,
+      "history": [
+        "-2.46%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -18076,18 +18083,36 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/looking-high-growth-dividend-stock-154502399.html?.tsrc=rss",
     "title_areyoulookingforahighgrowthdividendstock_2026-09-07",
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-infrastructure-partners-bip-outperforming-134003299.html?.tsrc=rss",
-    "title_isbrookfieldinfrastructurepartnersbipoutperformingotherfinancestocksthisyear_2026-08-31"
+    "title_isbrookfieldinfrastructurepartnersbipoutperformingotherfinancestocksthisyear_2026-08-31",
+    "link_https://finance.yahoo.com/m/bbf33422-d030-33cc-ba47-29ac8a4794fb/ray-dalio-says-interest-costs.html",
+    "title_raydaliosaysinterestcostsarecrowdingouteverythingelsehereshisthreeyearwarning_2026-09-13",
+    "link_https://finance.yahoo.com/m/1ee6930f-8a76-3f3d-88dc-d4736fd64cc9/i%E2%80%99m-61-years-old-with.html",
+    "title_im61yearsoldwith200000savedforretirementwhatsmygameplan_2026-09-13",
+    "link_https://finance.yahoo.com/m/75964091-0d57-3879-b55e-2c11b3225642/dow-jones-futures-fall%2C-techs.html",
+    "title_dowjonesfuturesfalltechstumbleasanthropicleadscallforaislowdownfedmeetingahead_2026-09-13",
+    "link_https://finance.yahoo.com/markets/articles/exchange-traded-funds-equity-futures-130653743.html",
+    "title_exchangetradedfundsequityfuturesdownprebellwednesdayasbrentcrudeexceeds100abarrel_2026-09-09",
+    "link_https://finance.yahoo.com/markets/stocks/articles/could-project-anaconda-expand-kratos-135700256.html",
+    "title_howcouldprojectanacondaexpandkratosroleinnavalradar_2026-09-11",
+    "link_https://finance.yahoo.com/healthcare/articles/transmedics-appoints-fernando-araujo-chief-200500342.html",
+    "title_transmedicsappointsfernandoaraujoaschieffinancialofficerandreiterates2026financialoutlook_2026-09-10",
+    "link_https://financialpost.com/commodities/energy/suncor-energy-second-quarter-results?.tsrc=rss",
+    "title_suncorceosaysalotofworktodoonpipelinecarbonmou_2026-08-04",
+    "link_https://financialpost.com/fp-finance/banking/cibc-beats-expectations-growth-u-s-business-capital-markets?.tsrc=rss",
+    "title_cibcbeatsexpectationsongrowthinusbusinesscapitalmarkets_2026-08-27",
+    "link_https://www.fool.com/investing/2026/09/10/could-buying-brookfield-renewable-today-set-you-up/?.tsrc=rss",
+    "title_couldbuyingbrookfieldrenewabletodaysetyouupforlife_2026-09-10"
   ],
   "stats_today": {
-    "news_dispatches": 6,
-    "price_fires": 0,
+    "news_dispatches": 9,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 14903,
-    "price_fires": 2313,
+    "news_dispatches": 14906,
+    "price_fires": 2314,
     "earnings_cards": 1010,
     "options_radars": 1003,
     "options_setups": 1300
