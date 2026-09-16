@@ -652,7 +652,26 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "CL=F": {
+      "last_price": 101.87,
+      "history": [
+        "-3.74%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 105.28,
+      "history": [
+        "-3.19%"
+      ]
+    },
+    "DDOG": {
+      "last_price": 234.7,
+      "history": [
+        "+1.69%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "LINK-USD": {
       "last_price": 10.832,
@@ -22454,18 +22473,66 @@
     "link_https://finance.yahoo.com/technology/ai/articles/media-invite-2026-day-2-193000926.html?.tsrc=rss",
     "title_mediainviteallin2026day2withyoshuabengioaidangomezjoellepineaulouisttuandleadersfromgoogledeepmindmastercardopentextrbcandtelus_2026-09-16",
     "link_https://finance.yahoo.com/markets/stocks/articles/sun-life-global-investments-announces-190000564.html?.tsrc=rss",
-    "title_sunlifeglobalinvestmentsannouncesseptember2026cashdistributionsforetfseries_2026-09-16"
+    "title_sunlifeglobalinvestmentsannouncesseptember2026cashdistributionsforetfseries_2026-09-16",
+    "link_https://finance.yahoo.com/markets/commodities/articles/opus-one-gold-reports-final-195221079.html",
+    "title_opusonegoldreportsfinal2026drillresultsfromnoyellpropertyinquebec_2026-09-16",
+    "link_https://finance.yahoo.com/m/2ed5f072-3143-3df4-95b5-dcd2cf2198c1/precious-metals-relinquish.html",
+    "title_preciousmetalsrelinquishgainsfollowingfedrateincrease_2026-09-16",
+    "link_https://finance.yahoo.com/energy/articles/oil-prices-send-fresh-signal-195507134.html",
+    "title_oilpricessendfreshsignalaftersurpriseinventorydata_2026-09-16",
+    "link_https://finance.yahoo.com/markets/options/articles/75-000-retirement-budget-jepq-193021956.html",
+    "title_the75000retirementbudgetthatjepqmaystruggletosupportin10years_2026-09-16",
+    "link_https://finance.yahoo.com/markets/world-indices/articles/asian-markets-nervous-start-ahead-012257597.html",
+    "title_stocksfallasfeddelivershawkishratehike_2026-09-16",
+    "link_https://finance.yahoo.com/technology/ai/articles/jim-cramer-says-ai-slowdown-194523294.html",
+    "title_jimcramersaystheaislowdownisfakedellishisevidence_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/buy-qualcomm-stock-cash-apple-193004157.html",
+    "title_shouldyoubuyqualcommstockforthecashasappleleaves_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/microsoft-leads-p-500-stocks-195912814.html",
+    "title_microsoftleadssp500stocksgoingnowhere_2026-09-16",
+    "link_https://finance.yahoo.com/technology/articles/sector-tech-stocks-mixed-afternoon-195324220.html",
+    "title_sectorupdatetechstocksmixedlateafternoon_2026-09-16",
+    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-edge-lower-194551510.html",
+    "title_sectorupdatehealthcarestocksedgelowerlateafternoon_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/buy-netflix-stock-because-earnings-192143624.html",
+    "title_shouldyoubuynetflixstockbecauseitsearningsoutrunitssales_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-decline-afternoon-195104531.html",
+    "title_sectorupdateconsumerstocksdeclinelateafternoon_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/beta-bionics-shares-rise-bofa-192506552.html",
+    "title_updatebetabionicssharesriseafterbofapricetargetboost150millionofferingpriced_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/goldman-sachs-stock-falls-ceo-195528995.html",
+    "title_goldmansachsstockfallsafterceowarnsofsoftertrading_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/goldman-ceo-warns-higher-costs-184843368.html",
+    "title_goldmanceowarnsofhighercostssoftnessinfixedincome_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/union-pacific-upgraded-buy-ubs-185900505.html",
+    "title_unionpacificupgradedtobuybyubsonstronger2027growthoutlook_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-stock-tumbles-ceo-flags-194256920.html",
+    "title_boeingstocktumblesafterceoflagsproductioncashflowconcerns_2026-09-16",
+    "link_https://finance.yahoo.com/technology/articles/onsemi-launches-embedded-power-platform-195138868.html",
+    "title_onsemilaunchesembeddedpowerplatformwithsubaruasoneofitsfirstpartners_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cathie-wood-sees-hidden-value-192708794.html",
+    "title_cathiewoodseeshiddenvalueinspacexwhileanalystsremaindivided_2026-09-16",
+    "link_https://decrypt.co/378433/fed-hikes-rates-warsh-implies-trump-only-half-right?.tsrc=rss",
+    "title_fedchairimpliestrumpisonlyhalfrightontheeconomyfollowingratehike_2026-09-16",
+    "link_https://finance.yahoo.com/economy/policy/articles/sector-financial-193258163.html?.tsrc=rss",
+    "title_sectorupdatefinancial_2026-09-16",
+    "link_https://www.fool.com/investing/2026/09/16/ethereums-vitalik-buterin-isnt-worried-about-ai-br/?.tsrc=rss",
+    "title_ethereumsvitalikbuterinisntworriedaboutaibreakingcryptohereswhythatsfantasticnewsforcryptoinvestors_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-large-cap-value-funds-193000689.html?.tsrc=rss",
+    "title_3largecapvaluefundstograbonalikelyfedinterestratehike_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/mercadolibre-meli-priced-1-billion-195239968.html?.tsrc=rss",
+    "title_mercadolibremelipriced1billionof585notescangrowthcoverthefundingcost_2026-09-16"
   ],
   "stats_today": {
-    "news_dispatches": 33,
-    "price_fires": 109,
+    "news_dispatches": 54,
+    "price_fires": 112,
     "earnings_cards": 10,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 16189,
-    "price_fires": 3612,
+    "news_dispatches": 16210,
+    "price_fires": 3615,
     "earnings_cards": 1010,
     "options_radars": 1021,
     "options_setups": 3100
