@@ -41,15 +41,17 @@
       ]
     },
     "DXCM": {
-      "last_price": 86.43,
+      "last_price": 87.35,
       "history": [
-        "-1.04%"
+        "-1.04%",
+        "+0.01%"
       ]
     },
     "DDOG": {
-      "last_price": 226.2012,
+      "last_price": 236.8127,
       "history": [
-        "-1.99%"
+        "-1.99%",
+        "+2.61%"
       ]
     },
     "CSGP": {
@@ -59,9 +61,10 @@
       ]
     },
     "ILMN": {
-      "last_price": 232.89,
+      "last_price": 230.0,
       "history": [
-        "+1.73%"
+        "+1.73%",
+        "+0.47%"
       ]
     },
     "NBIS": {
@@ -69,9 +72,34 @@
       "history": [
         "+1.26%"
       ]
+    },
+    "MAR": {
+      "last_price": 340.07,
+      "history": [
+        "+1.52%"
+      ]
+    },
+    "ON": {
+      "last_price": 67.7,
+      "history": [
+        "+1.65%"
+      ]
+    },
+    "BLSH": {
+      "last_price": 32.4904,
+      "history": [
+        "+1.28%"
+      ]
     }
   },
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 98.6,
+      "history": [
+        "+2.20%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -20639,18 +20667,88 @@
     "link_https://finance.yahoo.com/technology/ai/articles/telus-tsx-t-marks-eighth-151243457.html?.tsrc=rss",
     "title_telustsxtmarkseighthstraightyearasacxmleader_2026-09-16",
     "link_https://finance.yahoo.com/technology/ai/articles/telus-digital-named-leader-everest-104500711.html?.tsrc=rss",
-    "title_telusdigitalnamedasaleaderineverestgroupcustomerexperiencemanagementcxmservicespeakmatrixassessmentamericasfortheeighthconsecutiveyear_2026-09-16"
+    "title_telusdigitalnamedasaleaderineverestgroupcustomerexperiencemanagementcxmservicespeakmatrixassessmentamericasfortheeighthconsecutiveyear_2026-09-16",
+    "link_https://finance.yahoo.com/energy/articles/oil-slips-us-stock-build-050411696.html",
+    "title_oilslipsassaudiarabiaoffersmorecrudeviaoman_2026-09-16",
+    "link_https://finance.yahoo.com/economy/policy/articles/us-equity-markets-end-lower-202744544.html",
+    "title_usequitymarketsendlowerafterfederalreserveincreasespolicyrate_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/wall-st-futures-edge-higher-090745072.html",
+    "title_wallstendslowerafterfedhikesinterestratesseesmoretighteningahead_2026-09-16",
+    "link_https://finance.yahoo.com/technology/ai/articles/hedy-adds-apple-private-cloud-204900280.html",
+    "title_hedyaddsappleprivatecloudcomputetoitsaimeetingassistantinios27_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/analyst-sees-intc-stock-hitting-203050055.html",
+    "title_thisanalystseesintcstockhitting200intwoyearsthatsa106upside_2026-09-16",
+    "link_https://finance.yahoo.com/technology/articles/alphabet-gains-carbon-removal-scales-204919774.html",
+    "title_alphabetgainsascarbonremovalscalestenfold_2026-09-16",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-gains-1-4-flexible-204159381.html",
+    "title_nvidiagains14asflexiblepowertargetsaisgridbottleneck_2026-09-16",
+    "link_https://finance.yahoo.com/m/988c5ef4-4baf-34db-9862-d48325e5dbd1/bloom-energy-stock-jumps-on.html",
+    "title_bloomenergystockjumpsonthismeaningfuldatacentercatalyst_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/te-connectivity-declares-quarterly-dividend-203000838.html",
+    "title_teconnectivitydeclaresquarterlydividend_2026-09-16",
+    "link_https://finance.yahoo.com/m/127b3c0b-f974-36dd-8852-5793b5347c93/stock-market-today%3A-nasdaq.html",
+    "title_stockmarkettodaynasdaqendsflatafterratehikeaiplayspacexeyesearlyentrylivecoverage_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/anthropic-ipo-date-investors-know-205000356.html",
+    "title_anthropicipodatewhatinvestorsneedtoknowbeforeitprices_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/broad-based-earnings-growth-picture-204800026.html",
+    "title_abroadbasedearningsgrowthpictureasrevisionsstaypositive_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/microsoft-slips-quarterly-dividend-climbs-205508714.html",
+    "title_microsoftslipsasitsquarterlydividendclimbs8_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/tesla-gains-over-2-cybercab-203412694.html",
+    "title_teslagainsover2ascybercabfacesaseptember30compliancetest_2026-09-16",
+    "link_https://finance.yahoo.com/m/d657761c-bf99-3091-88b4-e770125e96a8/dow-jones-futures%3A-s%26p-500.html",
+    "title_dowjonesfuturessp500fallsafterfedratehikehawkishwarshamdbloomenergyleadstockstowatch_2026-09-16",
+    "link_https://finance.yahoo.com/energy/articles/vitesse-energy-closes-acquisition-ot-203148796.html",
+    "title_vitesseenergyclosesacquisitionotoilassetsindenverjulesburgbasinofcolorado_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/acn-stock-returned-39-billion-202055288.html",
+    "title_acnstockreturned39billiontoshareholderswhydiditunderperform_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/top-stock-reports-cisco-lam-204100028.html",
+    "title_topstockreportsforciscolamresearchthermofisher_2026-09-16",
+    "link_https://finance.yahoo.com/economy/policy/articles/wells-fargo-bank-increases-prime-204500495.html",
+    "title_wellsfargobankincreasesprimerateto700percent_2026-09-16",
+    "link_https://finance.yahoo.com/technology/ai/articles/ibm-falls-over-3-quantum-205344091.html",
+    "title_ibmfallsover3afterquantumfoundrysecures1billion_2026-09-16",
+    "link_https://finance.yahoo.com/markets/crypto/articles/ethereum-vs-solana-wins-wall-202721644.html",
+    "title_ethereumvssolanawhichwinswhenwallstreetmovesstocksonchain_2026-09-16",
+    "link_https://finance.yahoo.com/markets/crypto/articles/ethereum-price-prediction-could-ethereum-202209058.html",
+    "title_ethereumpricepredictionwhatcouldethereumbeworthbeforeq4_2026-09-16",
+    "link_https://finance.yahoo.com/m/8553f5cb-546f-338e-b794-6f7604bfb687/boeing-stock-skids-as-ceo.html",
+    "title_boeingstockskidsasceowarnsoffurther737productiondelays_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/gilead-sciences-insider-sold-shares-203325201.html",
+    "title_gileadsciencesinsidersoldsharesworth432646accordingtoarecentsecfiling_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/dexcom-insider-sold-shares-worth-203705714.html",
+    "title_dexcominsidersoldsharesworth679769accordingtoarecentsecfiling_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/moderna-insider-sold-shares-worth-205201388.html",
+    "title_modernainsidersoldsharesworth11691420accordingtoarecentsecfiling_2026-09-16",
+    "link_https://finance.yahoo.com/markets/commodities/articles/critical-metals-rallies-5-tanbreez-134225589.html",
+    "title_criticalmetalsrallies5ontanbreezrefinerystudyprojectingupto22binannualrevenueusarareearthincheshighermpmaterialsunmoved_2026-09-16",
+    "link_https://finance.yahoo.com/energy/articles/cameco-vs-usa-rare-earth-220502597.html",
+    "title_camecovsusarareearthwhichrenewableenergystockisabetterbuyin2026_2026-09-15",
+    "link_https://finance.yahoo.com/markets/stocks/articles/super-micro-stock-slips-investors-205648878.html",
+    "title_supermicrostockslipsasinvestorslookpastmassivegrowthestimates_2026-09-16",
+    "link_https://finance.yahoo.com/m/fac8607e-a5de-33e4-b49c-84be511ba0c1/intel-stock-rises-on-talk-of.html",
+    "title_intelstockrisesontalkoffabdealwithskhynix_2026-09-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/spacex-stock-faces-tied-elon-205832320.html",
+    "title_spacexstockfacesanewquestiontiedtoelonmusk_2026-09-16",
+    "link_https://finance.yahoo.com/video/investors-expect-crypto-clarity-act-205030947.html?.tsrc=rss",
+    "title_whatinvestorsshouldexpectforcryptoafterclarityactfailstoadvance_2026-09-16",
+    "link_https://app.moby.co/home/research/tools/earningsCalendar/earnings-evolution-petroleum-corporation-q4-2026-earnings-call-summary?utm_source=yahoo_finance&utm_medium=rss&.tsrc=rss",
+    "title_evolutionpetroleumcorporationq42026earningscallsummary_2026-09-16",
+    "link_https://www.fool.com/investing/2026/09/16/forget-nvidia-chips-hugging-face-reason-own-stock/?.tsrc=rss",
+    "title_forgetnvidiaschipshuggingfaceistherealreasontoownthisstocknow_2026-09-16",
+    "link_https://finance.yahoo.com/small-business/articles/scotiabanks-matthew-parker-jones-senior-131500456.html?.tsrc=rss",
+    "title_scotiabanksmatthewparkerjonesseniorvicepresidentinternationalcommercialbankingrecognizedasarecipientofcanadastop40under40award_2026-09-16"
   ],
   "stats_today": {
-    "news_dispatches": 45,
-    "price_fires": 11,
+    "news_dispatches": 76,
+    "price_fires": 18,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 15435,
-    "price_fires": 2788,
+    "news_dispatches": 15466,
+    "price_fires": 2795,
     "earnings_cards": 1010,
     "options_radars": 1006,
     "options_setups": 1600
