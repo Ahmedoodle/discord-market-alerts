@@ -712,7 +712,32 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "SI=F": {
+      "last_price": 67.915,
+      "history": [
+        "+3.18%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 89.35,
+      "history": [
+        "-6.71%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 98.13,
+      "history": [
+        "-2.20%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.154,
+      "history": [
+        "+11.21%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "XRP-USD": {
       "last_price": 1.6026,
@@ -25838,18 +25863,50 @@
     "link_https://finance.yahoo.com/m/f53f8997-356f-3076-8c18-db63401bca6d/analyst-predicts-35%25-upside.html",
     "title_analystpredicts35upsideforsaylorsstrategy_2026-09-22",
     "link_https://finance.yahoo.com/markets/stocks/articles/sandisk-jumps-6-6-2-192348327.html",
-    "title_sandiskjumps66as2400targetpricesaistoragescarcity_2026-09-22"
+    "title_sandiskjumps66as2400targetpricesaistoragescarcity_2026-09-22",
+    "link_https://finance.yahoo.com/m/89f31c42-aeb0-3b33-aefe-0831cd3e9b39/bloom-energy-vs.-plug-power%3A.html",
+    "title_bloomenergyvsplugpowerwhichfuelcellstockisabetterbuyin2026_2026-09-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-autozone-azo-stock-trading-194146568.html",
+    "title_whyautozoneazostockistradinguptoday_2026-09-22",
+    "link_https://finance.yahoo.com/real-estate/articles/accruits-president-steven-holtkamp-elected-194000481.html",
+    "title_accruitspresidentstevenholtkampelectedpresidentofthefederationofexchangeaccommodators_2026-09-22",
+    "link_https://finance.yahoo.com/video/feds-vice-chair-trying-ensure-193723932.html",
+    "title_fedsvicechairistryingtoensurebanksprotectthemselvesfromairisks_2026-09-22",
+    "link_https://finance.yahoo.com/m/256b76d9-a055-3471-893e-36b288958662/apple-takes-aim-at-nvidia%E2%80%99s.html",
+    "title_appletakesaimatnvidiasaieconomicsnewmacshavenocostpertokenhardwarechiefsays_2026-09-22",
+    "link_https://finance.yahoo.com/video/anthropic-vs-openai-competition-heats-193257545.html",
+    "title_anthropicvsopenaicompetitionheatsupwithreleaseofnewaimodels_2026-09-22",
+    "link_https://finance.yahoo.com/m/0ffacb4e-d9f3-3093-88b6-3f17b97827b9/is-uipath-stock-cheap-because.html",
+    "title_isuipathstockcheapbecauseofwhataimightdo_2026-09-22",
+    "link_https://finance.yahoo.com/m/08e4441e-40f2-3e3c-938e-e2aba62d506a/is-regeneron-stock-a-bargain.html",
+    "title_isregeneronstockabargainbelow800_2026-09-22",
+    "link_https://finance.yahoo.com/m/b2c096f5-9157-3a7b-a7ef-1df57a48805d/saudi-arabia-plans-to-compete.html",
+    "title_saudiarabiaplanstocompetewithtesla_2026-09-22",
+    "link_https://finance.yahoo.com/healthcare/articles/roches-enicepatide-shows-weight-loss-193200876.html",
+    "title_rochesenicepatideshowsweightlosshba1cgainsinphaseiistudy_2026-09-22",
+    "link_https://finance.yahoo.com/media-advertising/articles/walmart-pricing-patents-spark-fears-161239305.html",
+    "title_walmartsnewpricingpatentssparkfearsofsurveillancearetheygoingtochargeyouadifferentpriceiftheyknowwhoyouare_2026-09-22",
+    "link_https://finance.yahoo.com/m/ac4565f4-c99d-3f10-9ffb-28a239417411/has-arista-networks-stock.html",
+    "title_hasaristanetworksstockquietlybecomeadifferentbet_2026-09-22",
+    "link_https://finance.yahoo.com/real-estate/articles/building-homes-building-workforces-inside-193000110.html",
+    "title_buildinghomesbuildingworkforcesinsidewellsfargos5mtouracrossfivestates_2026-09-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/meta-muse-drags-down-stocks-181455032.html",
+    "title_metasmusedragsdownstocksthatdependonconsumerinertia_2026-09-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/derailed-ipo-plans-rattle-us-185333226.html",
+    "title_derailedipoplansrattleusmarketaheadofanthropicdebut_2026-09-22",
+    "link_https://decrypt.co/378978/white-hat-hackers-coldcard-exploit-bitcoin-recovery-trust?.tsrc=rss",
+    "title_whitehathackersroutecoldcardexploitbitcoinintorecoverytrust_2026-09-22"
   ],
   "stats_today": {
-    "news_dispatches": 23,
-    "price_fires": 119,
+    "news_dispatches": 36,
+    "price_fires": 123,
     "earnings_cards": 10,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 16808,
-    "price_fires": 4454,
+    "news_dispatches": 16821,
+    "price_fires": 4458,
     "earnings_cards": 1010,
     "options_radars": 1028,
     "options_setups": 3800
