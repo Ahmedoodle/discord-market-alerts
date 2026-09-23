@@ -544,7 +544,44 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "GC=F": {
+      "last_price": 4321.9,
+      "history": [
+        "-1.25%"
+      ]
+    },
+    "SI=F": {
+      "last_price": 64.845,
+      "history": [
+        "-1.65%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 92.51,
+      "history": [
+        "-2.20%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.159,
+      "history": [
+        "+6.54%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2861.2,
+      "history": [
+        "-1.82%"
+      ]
+    },
+    "IDXX": {
+      "last_price": 515.0,
+      "history": [
+        "-1.34%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "BTC-USD": {
       "last_price": 84441.03,
@@ -24008,18 +24045,92 @@
     "link_https://finance.yahoo.com/technology/ai/articles/c-o-r-r-e-173400831.html?.tsrc=rss",
     "title_correctionmastercardcanada_2026-09-21",
     "link_https://finance.yahoo.com/technology/ai/articles/cgi-d-wave-quantum-partner-103000759.html?.tsrc=rss",
-    "title_cgianddwavequantumpartnertoadvanceenterprisequantumadoption_2026-09-23"
+    "title_cgianddwavequantumpartnertoadvanceenterprisequantumadoption_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/doordash-just-dropped-16-month-192912986.html",
+    "title_doordashjustdropped16inamonthisittimetosellorloadup_2026-09-23",
+    "link_https://finance.yahoo.com/markets/currencies/articles/dollar-holds-near-2-month-014317337.html",
+    "title_dollarjumpstoneartwomonthhighonfedoutlookinflationconcern_2026-09-23",
+    "link_https://finance.yahoo.com/energy/articles/oil-prices-mixed-traders-weigh-091600524.html",
+    "title_oilpricesreboundamidpersistentmiddleeastsupplyrisks_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/could-only-buy-hold-1-195000818.html",
+    "title_ificouldonlybuyandhold1etfforthenext20yearshereswhereidinvest_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/metas-muse-ai-agent-sees-193834791.html",
+    "title_metasmuseaiagentseesfastestadoptionsincechatgpttimetobuymetastock_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/42-state-ag-coalition-state-195129692.html",
+    "title_the42stateagcoalitionhowstateattorneysgeneralarebuildingtheagentliabilityframeworkcongresswont_2026-09-23",
+    "link_https://finance.yahoo.com/technology/articles/apple-settlement-over-siri-intelligence-192456220.html",
+    "title_applesettlementoversiriintelligencefeaturesmeanseligibleiphoneownerscanreceiveupto95_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-afternoon-194312684.html",
+    "title_sectorupdatetechstocksfalllateafternoon_2026-09-23",
+    "link_https://finance.yahoo.com/m/85be438c-9628-3e6b-a6e4-3f7644dca512/meta-rallies-into-connect.html",
+    "title_metaralliesintoconnectconferencewhythemuseaiagentissendingsomestockslower_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/alphabet-expands-free-ai-video-193904258.html",
+    "title_alphabetexpandsfreeaivideogenerationtoallusersingooglevids_2026-09-23",
+    "link_https://finance.yahoo.com/m/3b278331-7b18-34cd-b539-956de04ee8c2/%27the-money-will-run-out%27%3A.html",
+    "title_themoneywillrunoutinsidethecaseforanaibubble_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/pypl-showered-owners-cash-stock-193649986.html",
+    "title_pyplshoweredownerswithcashthestockstilllaggedthemarket_2026-09-23",
+    "link_https://finance.yahoo.com/markets/currencies/articles/paid-atm-fee-could-owed-192222036.html",
+    "title_paidanatmfeeyoucouldbeowedpartofa1675msettlement_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/mastercard-fee-model-survive-agentic-192054046.html",
+    "title_canmastercardsfeemodelsurvivetheagenticcommerceitsbuildingfor_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/costcos-membership-fee-boost-run-193601386.html",
+    "title_costcosmembershipfeeboostisabouttorunout_2026-09-23",
+    "link_https://finance.yahoo.com/markets/commodities/articles/nv-gold-identifies-gold-zone-194822734.html",
+    "title_nvgoldidentifiesnewgoldzoneatslumbergoldprojectinnevada_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-retreat-afternoon-194623415.html",
+    "title_sectorupdateconsumerstocksretreatlateafternoon_2026-09-23",
+    "link_https://finance.yahoo.com/media-advertising/articles/disney-raising-streaming-prices-again-183321769.html",
+    "title_disneyisraisingstreamingpricesagainfollowinghikesbynetflixappletvandpeacock_2026-09-23",
+    "link_https://finance.yahoo.com/m/f48787c6-e989-38bd-bcc4-ddcf95b6703d/qualcomm-takes-ai-to-the-edge.html",
+    "title_qualcommtakesaitotheedgewithnewmobilechips_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/verizon-donates-1-million-liberty-194500098.html",
+    "title_verizondonates1milliontolibertysciencecentertochampionpublicaccesstoaiskillingtechnology_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sandisk-stock-amplifying-risk-already-192755961.html",
+    "title_issandiskstockamplifyingariskyoualreadyown_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ba-lands-turkish-airlines-737-193332294.html",
+    "title_balandsturkishairlines737maxdealforupto150jetsitsboeingslargestsingleaisleorderfromthecarrier_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-ba-expensive-korean-air-191604531.html",
+    "title_isboeingbaexpensiveaskoreanairs103jetorderliftsitsbacklog_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-financial-193103338.html",
+    "title_sectorupdatefinancial_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/micron-mu-vs-western-digital-194115071.html",
+    "title_micronmuvswesterndigitalwdcwhichisabetterstocktobuy_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/citi-resets-micron-target-surprise-193441940.html",
+    "title_citiresetsmicrontargetaftersurprise_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/synopsys-taiwan-semiconductor-collaborate-accelerate-194813558.html",
+    "title_synopsystaiwansemiconductorcollaboratetoaccelerateaisystemsinnovation_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/paypal-partners-metas-muse-ai-192710943.html",
+    "title_paypalpartnerswithmetasmuseaiassistant_2026-09-23",
+    "link_https://finance.yahoo.com/healthcare/articles/roche-holding-swx-rop-undervalued-191416807.html",
+    "title_isrocheholdingswxropundervaluedfollowingitsphase3iganephropathywin_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/nebius-group-heads-3-top-191530170.html",
+    "title_nebiusgroupheads3topinsidergrowthstocks_2026-09-23",
+    "link_https://finance.yahoo.com/markets/crypto/articles/strategy-mstr-29-1-resuming-191307157.html",
+    "title_strategymstrisup291afterresumingbitcoinbuysandpreferredstockbuybackswhatschanged_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/rothschild-redburn-starts-iren-neutral-133602466.html",
+    "title_rothschildredburnstartsirenatneutralwith40targetforecasts133billionrevenuebyfiscal2029_2026-09-23",
+    "link_https://decrypt.co/379105/zcash-wall-street-europe-first-etp?.tsrc=rss",
+    "title_zcashswallstreetmomentreacheseuropewithitsfirstetplisting_2026-09-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/apple-slips-20-000-macs-172022585.html?.tsrc=rss",
+    "title_appleslipsas20000macschallengetokenrent_2026-09-23",
+    "link_https://finance.yahoo.com/video/metas-muse-total-game-changer-192805011.html?.tsrc=rss",
+    "title_howmetasmusewasatotalgamechangerfortheainarrative_2026-09-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/charlie-munger-once-called-greg-183010893.html?.tsrc=rss",
+    "title_charliemungeroncecalledgregabelatremendouslearningmachinejustasgoodaswarrenbuffettheresthequalitythatlefthimimpressed_2026-09-23",
+    "link_https://finance.yahoo.com/video/qualcomm-targeting-agentic-ai-2-195058732.html?.tsrc=rss",
+    "title_howqualcommistargetingagenticaiwithits2newsmartphonechips_2026-09-23"
   ],
   "stats_today": {
-    "news_dispatches": 42,
-    "price_fires": 95,
+    "news_dispatches": 72,
+    "price_fires": 101,
     "earnings_cards": 10,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 16026,
-    "price_fires": 3419,
+    "news_dispatches": 16056,
+    "price_fires": 3425,
     "earnings_cards": 1010,
     "options_radars": 1015,
     "options_setups": 2500
