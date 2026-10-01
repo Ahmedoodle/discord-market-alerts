@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "ETH-USD": {
+      "last_price": 2715.22,
+      "history": [
+        "+2.05%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -30684,18 +30691,40 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/tost-stock-gets-doordash-ai-054820385.html",
     "title_toststockgetsadoordashaitestjefferiesbreaksdownwheredashoscouldpressuretoast_2026-10-01",
     "link_https://finance.yahoo.com/markets/stocks/articles/chegg-co-founder-joins-powerlaw-050208530.html",
-    "title_cheggcofounderjoinspowerlawasfirmlaunches86yieldmonthlydividend_2026-10-01"
+    "title_cheggcofounderjoinspowerlawasfirmlaunches86yieldmonthlydividend_2026-10-01",
+    "link_https://finance.yahoo.com/markets/commodities/articles/2026-nanoq-drilling-programme-completed-060000416.html",
+    "title_2026nanoqdrillingprogrammecompletedandinitialpositivemetallurgicaltestworkresults_2026-10-01",
+    "link_https://finance.yahoo.com/markets/commodities/articles/endeavour-silver-eyes-25m-ounces-060210427.html",
+    "title_endeavoursilvereyes25mouncesasterronerakolpaandpitarrillaadvance_2026-10-01",
+    "link_https://finance.yahoo.com/economy/policy/articles/bonds-teeter-us-treasuries-worst-062456693.html",
+    "title_bondsteeterafterustreasuriesworstquartersince1994_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ge-vernovas-ceo-just-delivered-062500426.html",
+    "title_gevernovasceojustdeliveredgreatnewstoshareholders_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/history-says-amd-stocks-1-060101802.html",
+    "title_historysaysamdstocks1trillionmilestoneisntaceiling_2026-10-01",
+    "link_https://finance.yahoo.com/energy/articles/amazon-signs-20-nuclear-power-052003956.html",
+    "title_amazonsigns20yearnuclearpowerdealwithconstellationunlocking3billioninvestmenttofuelaiinducedelectricitydemand_2026-10-01",
+    "link_https://finance.yahoo.com/media-advertising/articles/verizon-fios-customers-lost-access-061900208.html",
+    "title_verizonfioscustomershavelostaccesstostarz_2026-10-01",
+    "link_https://finance.yahoo.com/healthcare/articles/sanofi-regeneron-expand-partnership-deal-060028880.html",
+    "title_sanofiregeneronexpandpartnershipindealworthupto8billion_2026-10-01",
+    "link_https://finance.yahoo.com/markets/commodities/articles/critical-metals-2-top-rare-050957810.html",
+    "title_criticalmetalsand2toprareearthstockstowatch_2026-10-01",
+    "link_https://finance.yahoo.com/markets/commodities/articles/gold-little-changed-6-september-014800503.html?.tsrc=rss",
+    "title_goldrisesafterseptemberslideassofterpcetrimsfedhikebets_2026-09-30",
+    "link_https://finance.yahoo.com/energy/articles/brent-tumbles-96-gulf-oil-051700220.html?.tsrc=rss",
+    "title_brenttumblesto96asgulfoilflowsbounceback_2026-10-01"
   ],
   "stats_today": {
-    "news_dispatches": 18,
-    "price_fires": 0,
+    "news_dispatches": 21,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 18764,
-    "price_fires": 4927,
+    "news_dispatches": 18767,
+    "price_fires": 4928,
     "earnings_cards": 1010,
     "options_radars": 1035,
     "options_setups": 4500
