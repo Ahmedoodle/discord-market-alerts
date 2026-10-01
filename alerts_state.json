@@ -1421,7 +1421,38 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "SI=F": {
+      "last_price": 61.375,
+      "history": [
+        "+2.12%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 93.09,
+      "history": [
+        "+2.95%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 102.4,
+      "history": [
+        "-1.09%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 2.951,
+      "history": [
+        "-2.48%"
+      ]
+    },
+    "PYPL": {
+      "last_price": 53.65,
+      "history": [
+        "+1.11%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "ETH-USD": {
       "last_price": 2715.22,
@@ -34125,18 +34156,54 @@
     "link_https://www.thestreet.com/crypto/markets/treasurys-major-decision-made-this-risk-asset-beat-gold-by-10-to-1?.tsrc=rss",
     "title_treasurysmajordecisionmadethisriskassetbeatgoldby10to1_2026-10-01",
     "link_https://247wallst.com/investing/etf/2026/10/01/bitcoin-doesnt-pay-dividends-so-how-is-this-etf-yielding-25/?.tsrc=rss",
-    "title_bitcoindoesntpaydividendssohowisthisetfyielding25_2026-10-01"
+    "title_bitcoindoesntpaydividendssohowisthisetfyielding25_2026-10-01",
+    "link_https://finance.yahoo.com/markets/commodities/articles/bank-america-5-000-gold-194700901.html",
+    "title_bankofamericas5000goldforecastcomeswithawarning_2026-10-01",
+    "link_https://finance.yahoo.com/markets/commodities/articles/market-one-goldgroup-mining-advances-193300708.html",
+    "title_marketonegoldgroupminingadvancesitsgoldportfolioacrossmexicoandtheus_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/bear-market-coming-history-says-195000949.html",
+    "title_ifabearmarketiscominghistorysaysthemostsuccessfulinvestorsallsharethis1habit_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ai-stock-trading-near-record-194658803.html",
+    "title_thisaistockistradingnearrecordhighsisittoolatetobuy_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-authorizes-record-150-billion-193500267.html",
+    "title_nvidiaauthorizesarecord150billioninstockbuybackstherealprizeiswheretherestofitscashisgoing_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-gain-afternoon-195143826.html",
+    "title_sectorupdatetechstocksgainlateafternoon_2026-10-01",
+    "link_https://finance.yahoo.com/media-advertising/articles/rankings-io-acquires-wildfire-video-195000573.html",
+    "title_rankingsioacquireswildfirevideolaunchesrankingsvideomarketing_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-mixed-afternoon-194429644.html",
+    "title_sectorupdateconsumerstocksmixedlateafternoon_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/marvell-stock-ready-slowdown-ai-193233235.html",
+    "title_ismarvellstockreadyforaslowdowninaidemand_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/oils-energy-stocks-lagging-chevron-183934468.html",
+    "title_areoilsenergystockslaggingchevroncvxthisyear_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ge-aerospace-ge-outperforming-other-183935284.html",
+    "title_isgeaerospacegeoutperformingotheraerospacestocksthisyear_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/case-waiting-hewlett-packard-enterprise-194116984.html",
+    "title_whatisthecaseforwaitingonhewlettpackardenterprisestock_2026-10-01",
+    "link_https://finance.yahoo.com/markets/options/articles/signs-cisco-stock-going-swing-192303035.html",
+    "title_aretheresignsciscostockisgoingtoswingbig_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/retail-wholesale-stocks-lagging-bjs-183934848.html",
+    "title_areretailwholesalestockslaggingbjsrestaurantsbjrithisyear_2026-10-01",
+    "link_https://finance.yahoo.com/energy/articles/amazon-constellation-sign-20-ppa-185507722.html",
+    "title_amazonconstellationsign20yearppatoexpandmarylandnuclearplant_2026-10-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/asml-vs-sk-hynix-revenue-193736909.html",
+    "title_asmlvsskhynixwhatrevenuetrendsrevealtoinvestorsabouttheseartificialintelligencecompanies_2026-10-01",
+    "link_https://finance.yahoo.com/video/apple-join-consumer-ai-agent-182722480.html?.tsrc=rss",
+    "title_shouldapplejointheconsumeraiagentraceandshouldbigtechselfpoliceonai_2026-10-01",
+    "link_https://finance.yahoo.com/m/cff40cb3-a469-32d0-9651-aa361777d6f4/accenture-surges-on-fiscal-q4.html?.tsrc=rss",
+    "title_accenturesurgesonfiscalq4beatoutlookamidaidisruptiondebate_2026-10-01"
   ],
   "stats_today": {
-    "news_dispatches": 703,
-    "price_fires": 330,
+    "news_dispatches": 716,
+    "price_fires": 335,
     "earnings_cards": 10,
     "options_radars": 12,
     "options_setups": 1200
   },
   "stats_lifetime": {
-    "news_dispatches": 19449,
-    "price_fires": 5257,
+    "news_dispatches": 19462,
+    "price_fires": 5262,
     "earnings_cards": 1010,
     "options_radars": 1047,
     "options_setups": 5700
