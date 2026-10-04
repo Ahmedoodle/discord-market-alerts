@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 14.188,
+      "history": [
+        "+2.60%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -36170,18 +36177,34 @@
     "link_https://247wallst.com/investing/cryptocurrency/2026/10/04/what-happens-to-your-bitcoin-when-you-die/?.tsrc=rss",
     "title_whathappenstoyourbitcoinwhenyoudie_2026-10-04",
     "link_https://www.fool.com/investing/2026/10/04/the-bond-markets-warning-is-getting-louder-and-his/?.tsrc=rss",
-    "title_thebondmarketswarningisgettinglouderandhistorysaysinvestorsshouldpayattention_2026-10-04"
+    "title_thebondmarketswarningisgettinglouderandhistorysaysinvestorsshouldpayattention_2026-10-04",
+    "link_https://finance.yahoo.com/economy/policy/articles/fed-chair-kevin-warsh-just-151000504.html",
+    "title_fedchairkevinwarshjustused5wordstodescribethefedsfirstratehikesince2023sayingthefedremovedadoseofaccommodationshouldinvestorsbraceformorehikesthisyear_2026-10-04",
+    "link_https://finance.yahoo.com/energy/articles/everyones-watching-oklo-nuscale-nuclear-145701254.html",
+    "title_everyoneswatchingokloandnuscalefornuclearexposurethiscompanyactuallyfuelsthem_2026-10-04",
+    "link_https://finance.yahoo.com/technology/ai/articles/amazon-spending-another-1-billion-151634754.html",
+    "title_amazonisspendinganother1billiononaidatacentersbutthistimeitsnotbuyingasinglegpu_2026-10-04",
+    "link_https://finance.yahoo.com/markets/crypto/articles/visa-mastercard-stripe-coinbase-commit-150008513.html",
+    "title_visamastercardstripeandcoinbasecommit1billiontonewstablecoinisopenusdachallengetotetherusdcandrlusd_2026-10-04",
+    "link_https://finance.yahoo.com/technology/ai/articles/ai-data-center-delays-raise-150422384.html",
+    "title_aidatacenterdelaysraisenewquestionsfororclbeandapldsaysiofundpowernotdemandisbecomingthebottleneck_2026-10-04",
+    "link_https://finance.yahoo.com/m/d8ba4203-739f-3843-bd0e-711200763427/who%E2%80%99s-rich%2C-anyway%3F.html",
+    "title_whosrichanyway_2026-10-04",
+    "link_https://finance.yahoo.com/markets/stocks/articles/mercadolibre-vs-uber-technologies-stock-151108119.html",
+    "title_mercadolibrevsubertechnologieswhichstockisabetterbuyin2026_2026-10-04",
+    "link_https://decrypt.co/380007/uptober-starts-green-bitcoin-etfs-draw-134-million?.tsrc=rss",
+    "title_uptoberstartsgreenasbitcoinetfsdraw134million_2026-10-04"
   ],
   "stats_today": {
-    "news_dispatches": 90,
-    "price_fires": 0,
+    "news_dispatches": 97,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 20592,
-    "price_fires": 5633,
+    "news_dispatches": 20599,
+    "price_fires": 5634,
     "earnings_cards": 1010,
     "options_radars": 1057,
     "options_setups": 6700
