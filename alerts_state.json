@@ -1,14 +1,39 @@
 {
   "stock_session_date": "2026-10-03",
-  "crypto_session_date": "2026-10-04",
+  "crypto_session_date": "2026-10-03",
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
     "LINK-USD": {
-      "last_price": 14.111,
+      "last_price": 14.076,
       "history": [
-        "+2.31%"
+        "-4.10%",
+        "-2.29%"
+      ]
+    },
+    "BTC-USD": {
+      "last_price": 84688.74,
+      "history": [
+        "-2.24%"
+      ]
+    },
+    "ETH-USD": {
+      "last_price": 2673.98,
+      "history": [
+        "-2.48%"
+      ]
+    },
+    "XRP-USD": {
+      "last_price": 1.4856,
+      "history": [
+        "-2.88%"
+      ]
+    },
+    "SOL-USD": {
+      "last_price": 118.97,
+      "history": [
+        "-3.63%"
       ]
     }
   },
@@ -35825,28 +35850,18 @@
     "link_https://finance.yahoo.com/technology/ai/articles/metas-muse-ai-good-bad-225000015.html",
     "title_metasmuseaigoodorbadforecommerceshopifyandamazonaretakingoppositeapproaches_2026-10-03",
     "link_https://finance.yahoo.com/video/boy-room-made-15-000-110013783.html?.tsrc=rss",
-    "title_boyroommadeabout15000ontiktokbeforeamazonpartnership_2026-10-03",
-    "link_https://finance.yahoo.com/energy/articles/iran-war-showing-adnoc-ai-230000928.html",
-    "title_theiranwarisshowingwhatadnocsaicanreallydo_2026-10-03",
-    "link_https://finance.yahoo.com/healthcare/articles/wall-street-bracing-feds-next-233500762.html",
-    "title_wallstreetisbracingforthefedsnextmoveonratesthese3stockswineitherway_2026-10-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/amp-asx-amp-shares-see-041619067.html",
-    "title_ampasxampsharesseemodestfairvalueliftaftermixedanalystrevisions_2026-10-03",
-    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-why-growth-investors-154501037.html",
-    "title_3reasonswhygrowthinvestorsshouldntoverlookfivebelowfive_2026-10-02",
-    "link_https://finance.yahoo.com/markets/stocks/articles/five-below-five-down-7-143003809.html",
-    "title_fivebelowfivedown78sincelastearningsreportcanitrebound_2026-10-02"
+    "title_boyroommadeabout15000ontiktokbeforeamazonpartnership_2026-10-03"
   ],
   "stats_today": {
-    "news_dispatches": 156,
-    "price_fires": 6,
+    "news_dispatches": 155,
+    "price_fires": 5,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 20482,
-    "price_fires": 5634,
+    "news_dispatches": 20481,
+    "price_fires": 5633,
     "earnings_cards": 1010,
     "options_radars": 1057,
     "options_setups": 6700
