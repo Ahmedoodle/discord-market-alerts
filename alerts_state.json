@@ -1045,18 +1045,20 @@
       ]
     },
     "MNST": {
-      "last_price": 43.68,
+      "last_price": 43.0,
       "history": [
         "-1.52%",
-        "+0.39%"
+        "+0.39%",
+        "-1.17%"
       ]
     },
     "AEP": {
-      "last_price": 118.1,
+      "last_price": 120.5355,
       "history": [
         "+4.92%",
         "+1.55%",
-        "-1.36%"
+        "-1.36%",
+        "+0.67%"
       ]
     },
     "FAST": {
@@ -1100,9 +1102,22 @@
       ]
     },
     "KDP": {
-      "last_price": 31.4,
+      "last_price": 30.89,
       "history": [
-        "+1.65%"
+        "+1.65%",
+        "+0.00%"
+      ]
+    },
+    "CSX": {
+      "last_price": 46.42,
+      "history": [
+        "-2.13%"
+      ]
+    },
+    "GEHC": {
+      "last_price": 64.7,
+      "history": [
+        "-1.58%"
       ]
     }
   },
@@ -39910,18 +39925,50 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-nvda-outperforms-broader-market-204503183.html?.tsrc=rss",
     "title_nvidianvdaoutperformsbroadermarketwhatyouneedtoknow_2026-10-05",
     "link_https://financialpost.com/uncategorized/news-of-the-day-cenovus-and-suncor-deals-student-housing-developments-hidden-market-warnings-better-living-standards-bond-markets-and-more?.tsrc=rss",
-    "title_newsofthedaycenovusandsuncordealsstudenthousingdevelopmentshiddenmarketwarningsbetterlivingstandardsbondmarketsandmore_2026-10-05"
+    "title_newsofthedaycenovusandsuncordealsstudenthousingdevelopmentshiddenmarketwarningsbetterlivingstandardsbondmarketsandmore_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nasdaq-100-hits-record-highs-220932490.html",
+    "title_nasdaq100hitsrecordhighsasinvestorsshrugoffpressurefromsoaringyieldsnvdaspcxcrmltslaqcominfocus_2026-10-05",
+    "link_https://finance.yahoo.com/markets/crypto/articles/invested-1-000-bitcoin-p-221739476.html",
+    "title_ifyouinvested1000inbitcointhesp500orgold10yearsagohereswhichonemadethemostmoney_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/financials-26-30-dia-no-220336471.html",
+    "title_financialsare2630ofdianoonesetthattargetsharepricesdid_2026-10-05",
+    "link_https://finance.yahoo.com/m/6fc2b173-fedf-3487-898a-821e226ba334/tech-stars%E2%80%99-market-cap.html",
+    "title_techstarsmarketcapapproaches25trillion_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/could-disney-end-being-next-221501655.html",
+    "title_coulddisneyendupbeingthenextnike_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jpmorgans-top-stock-picks-could-222430779.html",
+    "title_herearejpmorganstopstockpicksthatcouldbenefitthismidtermelectionshakeup_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/applied-materials-insider-sold-shares-220209248.html",
+    "title_appliedmaterialsinsidersoldsharesworth394807accordingtoarecentsecfiling_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/starbucks-winning-back-customers-win-222139298.html",
+    "title_starbucksiswinningbackcustomerscanitwinbackinvestors_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/1-billion-reason-buy-synopsys-161108882.html",
+    "title_a1billionreasontobuysynopsysstock_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/roper-technologies-looks-more-attractive-222151795.html",
+    "title_ropertechnologieslooksmoreattractiveafteritsvaluationcompression_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/copart-inc-cprt-exceeds-market-211507531.html",
+    "title_copartinccprtexceedsmarketreturnssomefactstoconsider_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-semiconductor-corp-outpaced-stock-205005646.html",
+    "title_whyonsemiconductorcorponoutpacedthestockmarkettoday_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/roblox-rblx-outperforms-broader-market-205002505.html",
+    "title_robloxrblxoutperformsbroadermarketwhatyouneedtoknow_2026-10-05",
+    "link_https://finance.yahoo.com/m/5e796f9a-78e3-3ebe-b617-359ef7e39c01/stocks-to-watch-recap%3A-ptc%2C.html",
+    "title_stockstowatchrecapptcintelnubank_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/rocket-lab-corporation-rklb-stock-211504902.html",
+    "title_rocketlabcorporationrklbstockfallsamidmarketuptickwhatinvestorsneedtoknow_2026-10-05",
+    "link_https://finance.yahoo.com/energy/articles/enbridge-inc-host-webcast-discuss-215400723.html?.tsrc=rss",
+    "title_enbridgeinctohostwebcasttodiscuss2026thirdquarterresultsonnovember6_2026-10-05"
   ],
   "stats_today": {
-    "news_dispatches": 749,
-    "price_fires": 247,
+    "news_dispatches": 758,
+    "price_fires": 252,
     "earnings_cards": 10,
     "options_radars": 11,
     "options_setups": 1100
   },
   "stats_lifetime": {
-    "news_dispatches": 21475,
-    "price_fires": 5885,
+    "news_dispatches": 21484,
+    "price_fires": 5890,
     "earnings_cards": 1010,
     "options_radars": 1068,
     "options_setups": 7800
