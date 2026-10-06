@@ -1,7 +1,32 @@
 {
   "stock_session_date": "2026-10-06",
   "crypto_session_date": "2026-10-06",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "ZS": {
+      "last_price": 204.2,
+      "history": [
+        "+1.19%"
+      ]
+    },
+    "ILMN": {
+      "last_price": 298.0,
+      "history": [
+        "+1.47%"
+      ]
+    },
+    "CEG": {
+      "last_price": 275.75,
+      "history": [
+        "+3.04%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 190.34,
+      "history": [
+        "-2.40%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
@@ -39135,18 +39160,72 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/novavax-nvax-surges-20-1-061300232.html",
     "title_novavaxnvaxsurges201isthisanindicationoffurthergains_2026-10-06",
     "link_https://finance.yahoo.com/markets/world-indices/articles/asian-shares-mixed-wall-street-055325073.html?.tsrc=rss",
-    "title_asiansharesmostlyadvanceafterwallstreetgainsandoilpricesfall_2026-10-06"
+    "title_asiansharesmostlyadvanceafterwallstreetgainsandoilpricesfall_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/anthropic-aiming-biggest-ipo-ever-080701021.html",
+    "title_anthropicisaimingforthebiggestipoeverheresthechipstocktobuybeforeitlists_2026-10-06",
+    "link_https://finance.yahoo.com/markets/live/stock-market-today-tuesday-october-6-dow-sp-500-nasdaq-080526166.html",
+    "title_stockmarkettodaydowsp500nasdaqfuturesclimbafterrecordbreakingrally_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/apple-insider-sold-shares-worth-073358328.html",
+    "title_appleinsidersoldsharesworth15466923accordingtoarecentsecfiling_2026-10-06",
+    "link_https://finance.yahoo.com/energy/articles/market-chatter-google-nears-1-082714667.html",
+    "title_marketchattergooglenears1billionnuclearpowerdealwithconstellation_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/automotive-quantum-computing-market-size-081500111.html",
+    "title_automotivequantumcomputingmarketsizesharetrendsandforecastreport2026to2030automotivequantumcomputingmarketpoisedtoreach081billionby2030_2026-10-06",
+    "link_https://finance.yahoo.com/technology/articles/global-grid-computing-market-report-081300238.html",
+    "title_globalgridcomputingmarketreport2026globalgridcomputingmarketsettoreach1317billionby2030asdemandforsecurehighperformanceinfrastructureaccelerates_2026-10-06",
+    "link_https://finance.yahoo.com/technology/articles/global-change-configuration-management-market-081400401.html",
+    "title_globalchangeandconfigurationmanagementmarketreport2026changeandconfigurationmanagementmarketsettoreach425billionby2030assecurityandautomationdemandaccelerates_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/elon-musks-trump-admin-return-073338140.html",
+    "title_elonmuskstrumpadminreturnputsteslaspacexinfocusanalystsaystslafaceskeytestpredictionmarketweighsin_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/amd-ceo-sees-very-high-072608328.html",
+    "title_amdceoseesveryhighchipdemandurgesaifirmstocooperate_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/strong-buy-stocks-october-6th-064900050.html",
+    "title_newstrongbuystocksforoctober6th_2026-10-06",
+    "link_https://finance.yahoo.com/technology/articles/market-chatter-accenture-contractor-removed-080856101.html",
+    "title_marketchatteraccenturecontractorremovedbyfbioverdatabreach_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-top-ranked-goldman-sachs-065600045.html",
+    "title_3toprankedgoldmansachsmutualfundsforremarkablereturns_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/1-p-500-stock-watchlist-081634736.html",
+    "title_1sp500stockonourwatchlistand2weavoid_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/overlooked-ai-stock-poised-outperform-075500133.html",
+    "title_theoverlookedaistockpoisedtooutperformnvidiaandpalantir_2026-10-06",
+    "link_https://finance.yahoo.com/markets/crypto/articles/token2049-singapore-schedule-puts-institutional-073700966.html",
+    "title_token2049singaporescheduleputsinstitutionaldefionthe2026agenda_2026-10-06",
+    "link_https://finance.yahoo.com/media-advertising/articles/informa-techtarget-announces-winners-first-080000015.html",
+    "title_informatechtargetannounceswinnersofthefirsteverarcherawardsforgtmexcellenceinthemiddleeastandnorthafricamena_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/us-stock-market-today-p-080451305.html",
+    "title_usstockmarkettodaysp500futuresdipascoolingwagestempergrowthhopes_2026-10-06",
+    "link_https://finance.yahoo.com/media-advertising/articles/rise-place-marriott-international-reveals-080000400.html",
+    "title_theriseofplacemarriottinternationalrevealsasiapacificsfutureoffood_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/usa-rare-earth-insider-sold-072413456.html",
+    "title_usarareearthinsidersoldsharesworth1215376accordingtoarecentsecfiling_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/cognizant-selected-sita-deliver-ai-080000486.html",
+    "title_cognizantselectedbysitatodeliverailedglobalfinancetransformationonthecloud_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/intel-bring-back-dividend-now-073602879.html",
+    "title_willintelbringbackitsdividendnowthatitsstockhastripled_2026-10-06",
+    "link_https://finance.yahoo.com/markets/crypto/articles/bitcoin-steadies-85-5k-soaring-070842274.html?.tsrc=rss",
+    "title_bitcoinsteadiesat855kassoaringyieldsoffsetregulatoryhopes_2026-10-06",
+    "link_https://finance.yahoo.com/markets/commodities/articles/gold-holds-near-4-140-012306866.html?.tsrc=rss",
+    "title_goldslipsasdollartreasuryyieldsoffsetfadingfedhikebetsaheadofminutes_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/michael-burry-quoted-1968-book-074259586.html?.tsrc=rss",
+    "title_michaelburryquoteda1968booktoanswernvidianvdathepassageisuncomfortable_2026-10-06",
+    "link_https://finance.yahoo.com/video/ai-firms-face-scrutiny-australia-080308013.html?.tsrc=rss",
+    "title_aifirmsfacescrutinyinaustralia_2026-10-06",
+    "link_https://blockspace.media/short/spacex-reportedly-in-talks-with-tsmc-for-terafab-semiconductor-foundry/?.tsrc=rss",
+    "title_spacexreportedlyintalkswithtsmcforterafabsemiconductorfoundry_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/strong-sell-stocks-october-6th-064000775.html?.tsrc=rss",
+    "title_newstrongsellstocksforoctober6th_2026-10-06"
   ],
   "stats_today": {
-    "news_dispatches": 47,
-    "price_fires": 0,
+    "news_dispatches": 61,
+    "price_fires": 4,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 21586,
-    "price_fires": 5896,
+    "news_dispatches": 21600,
+    "price_fires": 5900,
     "earnings_cards": 1010,
     "options_radars": 1068,
     "options_setups": 7800
