@@ -1107,7 +1107,20 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "SI=F": {
+      "last_price": 61.8,
+      "history": [
+        "+1.53%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.12,
+      "history": [
+        "+1.76%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "LINK-USD": {
       "last_price": 13.858,
@@ -42155,18 +42168,76 @@
     "link_https://finance.yahoo.com/video/why-investors-proverbial-wall-worry-193314909.html?.tsrc=rss",
     "title_whyinvestorsproverbialwallofworryisnomatchforthemarketrally_2026-10-06",
     "link_https://finance.yahoo.com/video/marvell-rides-ai-boom-targets-192654470.html?.tsrc=rss",
-    "title_marvellridestheaiboomtargets90binrevenuebyfiscal2031_2026-10-06"
+    "title_marvellridestheaiboomtargets90binrevenuebyfiscal2031_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/p-500-breaks-record-ahead-195545200.html",
+    "title_sp500breaksrecordaheadofcrucialfedtest_2026-10-06",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-gain-afternoon-194936580.html",
+    "title_sectorupdateenergystocksgainlateafternoon_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/marvell-stock-soars-raising-2028-195651695.html",
+    "title_marvellstocksoarsafterraising2028guidance_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/better-cloud-investment-amazon-nebius-195000264.html",
+    "title_bettercloudinvestmentamazonornebiusgroup_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-constellation-energy-rallied-today-194923415.html",
+    "title_whyconstellationenergyralliedtoday_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-higher-afternoon-195609894.html",
+    "title_sectorupdateconsumerstockshigherlateafternoon_2026-10-06",
+    "link_https://finance.yahoo.com/m/23879019-ae2b-39de-9232-cdfcba882196/stock-market-today%3A-dow.html",
+    "title_stockmarkettodaydowrisesbutseagatedivesonthisaistockelectronicsplayclearentrieslivecoverage_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-rise-afternoon-193852782.html",
+    "title_sectorupdatetechstocksriselateafternoon_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/meta-stocks-stay-flat-muse-194737377.html",
+    "title_metastocksstayflatasmuseopensanenterprisefront_2026-10-06",
+    "link_https://finance.yahoo.com/healthcare/articles/lilly-stock-rises-870-million-194620949.html",
+    "title_lillystockrisesas870milliongatedealaddsonetarget_2026-10-06",
+    "link_https://finance.yahoo.com/technology/articles/tesla-brings-cybercab-europe-first-195407889.html",
+    "title_teslabringscybercabtoeuropeforfirsttime_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-finds-more-stock-194612670.html",
+    "title_jimcramerfindsmorethanastockpricegapbetweenpepsicopepandcocacolako_2026-10-06",
+    "link_https://finance.yahoo.com/healthcare/articles/abbvie-stocks-edge-higher-lymphoma-194433571.html",
+    "title_abbviestocksedgehigheraslymphomatrialcutsprogressionrisk51_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cisco-stock-gains-2-supermicro-195200087.html",
+    "title_ciscostockgains2assupermicroserversenteritsaifactorychannel_2026-10-06",
+    "link_https://finance.yahoo.com/energy/articles/west-100-venezuela-oil-bet-190000189.html",
+    "title_isthewests100yearvenezuelaoilbetabouttobackfire_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/applied-materials-stock-falls-1-194657310.html",
+    "title_appliedmaterialsstockfalls16asgoldmanbetsmarginsstillhaveroom_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ibm-stock-rises-1-sarawak-195045366.html",
+    "title_ibmstockrises1assarawakquantumhubchasespostencryptiondemand_2026-10-06",
+    "link_https://finance.yahoo.com/technology/articles/t-settlement-approved-heres-much-194954213.html",
+    "title_attsettlementapprovedhereshowmuchcustomersget_2026-10-06",
+    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-mixed-afternoon-195138823.html",
+    "title_sectorupdatehealthcarestocksmixedlateafternoon_2026-10-06",
+    "link_https://finance.yahoo.com/healthcare/articles/zenflow-raises-52m-inks-distribution-180000946.html",
+    "title_zenflowraises52minksdistributiondealwithcookmedical_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/palantir-stock-gains-1-5-195006142.html",
+    "title_palantirstockgains15asairgappedaimovesbeyondgovernmentsoftware_2026-10-06",
+    "link_https://finance.yahoo.com/healthcare/articles/starbucks-sued-over-sugar-free-195504858.html",
+    "title_starbuckssuedoversugarfreeproteindrinklabeling_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palo-alto-networks-stock-jumps-194810557.html",
+    "title_paloaltonetworksstockjumps35asaiagentfearbecomesbudgetfuel_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/crowdstrike-stock-jump-over-3-194844423.html",
+    "title_crowdstrikestockjumpover31assoldoutaiconferencetestsdemandquality_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/asml-stock-slips-high-na-195258500.html",
+    "title_asmlstockslipsashighnamaskshiftraisesexecutionstakes_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/intel-stock-slips-tsmc-talks-195112931.html",
+    "title_intelstockslipsastsmctalkscomplicateterafabs14abet_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-financial-stocks-advance-afternoon-194323991.html?.tsrc=rss",
+    "title_sectorupdatefinancialstocksadvancelateafternoon_2026-10-06",
+    "link_https://www.benzinga.com/markets/prediction-markets/26/10/62203648/nvidia-strength-masks-market-pain?utm_source=yahooFinance&utm_campaign=partner_feed&utm_medium=referral&.tsrc=rss",
+    "title_nvidiastrengthismaskingawholelotofpaininthebroadermarketdavidrosenbergsays_2026-10-06",
+    "link_https://qz.com/marvell-investor-day-fiscal-2031-revenue-target-100626?.tsrc=rss",
+    "title_marvellraisesfiscal2031revenuetargetatinvestorday_2026-10-06"
   ],
   "stats_today": {
-    "news_dispatches": 701,
-    "price_fires": 232,
+    "news_dispatches": 728,
+    "price_fires": 234,
     "earnings_cards": 10,
     "options_radars": 12,
     "options_setups": 1200
   },
   "stats_lifetime": {
-    "news_dispatches": 22240,
-    "price_fires": 6128,
+    "news_dispatches": 22267,
+    "price_fires": 6130,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
