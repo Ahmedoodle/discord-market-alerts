@@ -1,7 +1,44 @@
 {
   "stock_session_date": "2026-10-06",
   "crypto_session_date": "2026-10-06",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "CL=F": {
+      "last_price": 88.48,
+      "history": [
+        "-1.06%"
+      ]
+    },
+    "ZS": {
+      "last_price": 203.97,
+      "history": [
+        "+1.08%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 206.3686,
+      "history": [
+        "+1.55%"
+      ]
+    },
+    "CEG": {
+      "last_price": 276.05,
+      "history": [
+        "+3.15%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 190.66,
+      "history": [
+        "-2.24%"
+      ]
+    },
+    "SPCX": {
+      "last_price": 173.2,
+      "history": [
+        "+1.23%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
@@ -39135,18 +39172,38 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/novavax-nvax-surges-20-1-061300232.html",
     "title_novavaxnvaxsurges201isthisanindicationoffurthergains_2026-10-06",
     "link_https://finance.yahoo.com/markets/world-indices/articles/asian-shares-mixed-wall-street-055325073.html?.tsrc=rss",
-    "title_asiansharesmostlyadvanceafterwallstreetgainsandoilpricesfall_2026-10-06"
+    "title_asiansharesmostlyadvanceafterwallstreetgainsandoilpricesfall_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/michael-burry-quoted-1968-book-074259586.html",
+    "title_michaelburryquoteda1968booktoanswernvidianvdathepassageisuncomfortable_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/intel-bring-back-dividend-now-073602879.html",
+    "title_willintelbringbackitsdividendnowthatitsstockhastripled_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/apple-insider-sold-shares-worth-073358328.html",
+    "title_appleinsidersoldsharesworth15466923accordingtoarecentsecfiling_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/elon-musks-trump-admin-return-073338140.html",
+    "title_elonmuskstrumpadminreturnputsteslaspacexinfocusanalystsaystslafaceskeytestpredictionmarketweighsin_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/strong-buy-stocks-october-6th-064900050.html",
+    "title_newstrongbuystocksforoctober6th_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/usa-rare-earth-insider-sold-072413456.html",
+    "title_usarareearthinsidersoldsharesworth1215376accordingtoarecentsecfiling_2026-10-06",
+    "link_https://finance.yahoo.com/markets/commodities/articles/gold-holds-near-4-140-012306866.html?.tsrc=rss",
+    "title_goldslipsasdollartreasuryyieldsoffsetfadingfedhikebetsaheadofminutes_2026-10-05",
+    "link_https://finance.yahoo.com/markets/crypto/articles/bitcoin-steadies-85-5k-soaring-070842274.html?.tsrc=rss",
+    "title_bitcoinsteadiesat855kassoaringyieldsoffsetregulatoryhopes_2026-10-06",
+    "link_https://blockspace.media/short/spacex-reportedly-in-talks-with-tsmc-for-terafab-semiconductor-foundry/?.tsrc=rss",
+    "title_spacexreportedlyintalkswithtsmcforterafabsemiconductorfoundry_2026-10-05",
+    "link_https://finance.yahoo.com/markets/stocks/articles/strong-sell-stocks-october-6th-064000775.html?.tsrc=rss",
+    "title_newstrongsellstocksforoctober6th_2026-10-06"
   ],
   "stats_today": {
-    "news_dispatches": 47,
-    "price_fires": 0,
+    "news_dispatches": 52,
+    "price_fires": 6,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 21586,
-    "price_fires": 5896,
+    "news_dispatches": 21591,
+    "price_fires": 5902,
     "earnings_cards": 1010,
     "options_radars": 1068,
     "options_setups": 7800
