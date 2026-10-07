@@ -1205,7 +1205,32 @@
       ]
     }
   },
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "BTC-USD": {
+      "last_price": 83806.78,
+      "history": [
+        "-2.00%"
+      ]
+    },
+    "ETH-USD": {
+      "last_price": 2611.54,
+      "history": [
+        "-3.33%"
+      ]
+    },
+    "XRP-USD": {
+      "last_price": 1.456,
+      "history": [
+        "-2.73%"
+      ]
+    },
+    "SOL-USD": {
+      "last_price": 117.68,
+      "history": [
+        "-2.10%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -42713,18 +42738,54 @@
     "link_https://finance.yahoo.com/technology/ai/articles/elon-musk-says-no-more-233005564.html?.tsrc=rss",
     "title_elonmusksaysthereisnomoreaiasspacexceobackstrumpsrenamingpushyeswewillmakethatchange_2026-10-06",
     "link_https://investorshub.advfn.com/market-news/article/27827/fortis-tops-first-quarter-earnings-forecasts-as-capital-investment-program-advances?.tsrc=rss",
-    "title_fortistopsfirstquarterearningsforecastsascapitalinvestmentprogramadvances_2026-05-06"
+    "title_fortistopsfirstquarterearningsforecastsascapitalinvestmentprogramadvances_2026-05-06",
+    "link_https://finance.yahoo.com/markets/commodities/articles/gold-holds-gains-oil-flows-013012289.html",
+    "title_goldholdsgainsasoilflowsrecovertreasuryyieldsease_2026-10-06",
+    "link_https://finance.yahoo.com/markets/commodities/articles/australian-gold-stocks-rise-bullion-021753404.html",
+    "title_australiangoldstocksriseasbulliongainsfedhikebetsfade_2026-10-06",
+    "link_https://finance.yahoo.com/m/093fd46b-4843-3bcf-b1bd-ca022bd46a0d/gold-ticks-lower-as-investors.html",
+    "title_goldtickslowerasinvestorsawaitfedmeetingminutes_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/coreweave-ceo-expands-beyond-neocloud-021700321.html",
+    "title_coreweaveceoexpandsbeyondneocloudtosolvea640millionheadache_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-hits-time-high-ai-013502375.html",
+    "title_nvidiahitsanewalltimehighistheaistockabuy_2026-10-06",
+    "link_https://finance.yahoo.com/energy/articles/nuclear-energy-trade-seen-bottom-013354501.html",
+    "title_hasnuclearenergytradeseenitsbottomwhatjanvaneckseesintheconstellationgoogledeal_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nuscale-power-smr-undervalued-google-010951265.html",
+    "title_isnuscalepowersmrundervaluedaftergooglefueledfreshinterestinnrccertifiedsmrs_2026-10-06",
+    "link_https://finance.yahoo.com/m/3762d031-93df-3014-afce-8c8f192ca80b/my-verdict-on-a-robotaxi.html",
+    "title_myverdictonarobotaxiairportriderelaxingbutreallyslow_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/digital-realty-trust-dlr-justify-010901600.html",
+    "title_candigitalrealtytrustdlrjustifyitsvaluationaftertheblackfuelaideal_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palantir-technologies-pltr-expands-sovereign-021011500.html",
+    "title_palantirtechnologiespltrexpandssovereignaipushasvaluationlooksfullypriced_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/marvell-stock-2-us-ai-021243673.html",
+    "title_marvellstockand2usaichipplaysridingdatacenterdemand_2026-10-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nebius-stock-rallies-ai-infrastructure-015955175.html",
+    "title_nebiusstockrallieswithaiinfrastructurepeersevenascoocutsstakeretailmoodimproves_2026-10-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/spacex-spcx-completed-starship-flight-021125632.html",
+    "title_spacexspcxcompletedstarshipflight14tolowearthorbit_2026-10-06",
+    "link_https://finance.yahoo.com/media-advertising/articles/curiositystream-stock-u-entertainment-ip-011031711.html",
+    "title_curiositystreamstockandusentertainmentipshareswithnewailicensingexposure_2026-10-06",
+    "link_https://beincrypto.com/crypto-winning-washington-clarity-act-failure/?.tsrc=rss",
+    "title_cryptoiswinninginwashingtondespiteclarityactfailuresayspolicychief_2026-10-06",
+    "link_https://finance.yahoo.com/markets/crypto/articles/millisecond-floor-solana-dvp-gives-013934434.html?.tsrc=rss",
+    "title_themillisecondfloorsolanadvpgivesinstitutionalsettlementitsfirstopenstandard_2026-10-06",
+    "link_https://www.barchart.com/story/news/4983999/goldman-sachs-falls-20-from-record-high-and-enters-into-bears-market-how-to-play-gs-stock-here?.tsrc=rss",
+    "title_goldmansachsfalls20fromrecordhighandentersintobearsmarkethowtoplaygsstockhere_2026-10-06",
+    "link_https://finance.yahoo.com/energy/articles/top-3-canadian-nuclear-stocks-011033930.html?.tsrc=rss",
+    "title_top3canadiannuclearstockstowatchinoctober2026_2026-10-06"
   ],
   "stats_today": {
-    "news_dispatches": 844,
-    "price_fires": 258,
+    "news_dispatches": 850,
+    "price_fires": 262,
     "earnings_cards": 10,
     "options_radars": 12,
     "options_setups": 1200
   },
   "stats_lifetime": {
-    "news_dispatches": 22383,
-    "price_fires": 6154,
+    "news_dispatches": 22389,
+    "price_fires": 6158,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
