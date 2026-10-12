@@ -604,7 +604,26 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "CL=F": {
+      "last_price": 93.34,
+      "history": [
+        "+1.62%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 106.23,
+      "history": [
+        "+1.44%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.168,
+      "history": [
+        "-1.61%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "XRP-USD": {
       "last_price": 1.3635,
@@ -44436,18 +44455,24 @@
     "link_https://finance.yahoo.com/video/microsoft-just-reclaimed-its-4t-market-cap-thanks-to-its-maia-300-ai-chip-194708647.html?.tsrc=rss",
     "title_microsoftjustreclaimedits4tmarketcapthankstoitsmaia300aichip_2026-10-12",
     "link_https://finance.yahoo.com/video/meta-finally-pushes-into-frontier-ai-with-its-new-muse-wonder-ai-model-193536375.html?.tsrc=rss",
-    "title_metafinallypushesintofrontieraiwithitsnewmusewonderaimodel_2026-10-12"
+    "title_metafinallypushesintofrontieraiwithitsnewmusewonderaimodel_2026-10-12",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-gain-afternoon-195743000.html",
+    "title_sectorupdateenergystocksgainlateafternoon_2026-10-12",
+    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-rise-afternoon-195112535.html",
+    "title_sectorupdatehealthcarestocksriselateafternoon_2026-10-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-mixed-afternoon-195012359.html?.tsrc=rss",
+    "title_sectorupdateconsumerstocksmixedlateafternoon_2026-10-12"
   ],
   "stats_today": {
-    "news_dispatches": 45,
-    "price_fires": 103,
+    "news_dispatches": 48,
+    "price_fires": 106,
     "earnings_cards": 10,
     "options_radars": 2,
     "options_setups": 200
   },
   "stats_lifetime": {
-    "news_dispatches": 23198,
-    "price_fires": 6870,
+    "news_dispatches": 23201,
+    "price_fires": 6873,
     "earnings_cards": 1010,
     "options_radars": 1090,
     "options_setups": 10000
