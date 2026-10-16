@@ -790,7 +790,44 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "CL=F": {
+      "last_price": 98.97,
+      "history": [
+        "+1.02%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 109.56,
+      "history": [
+        "+3.44%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.121,
+      "history": [
+        "-3.55%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 29345.25,
+      "history": [
+        "-2.65%"
+      ]
+    },
+    "ES=F": {
+      "last_price": 7698.25,
+      "history": [
+        "-1.19%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2732.3,
+      "history": [
+        "-1.78%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "XRP-USD": {
       "last_price": 1.3001,
@@ -802,6 +839,12 @@
       "last_price": 103.34,
       "history": [
         "-2.45%"
+      ]
+    },
+    "LINK-USD": {
+      "last_price": 12.254,
+      "history": [
+        "-2.24%"
       ]
     }
   },
@@ -44194,18 +44237,60 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/sun-life-global-investments-announces-190000798.html?.tsrc=rss",
     "title_sunlifeglobalinvestmentsannouncesoctober2026cashdistributionsforetfseries_2026-10-16",
     "link_https://247wallst.com/videos/why-the-next-great-ai-investment-is-natural-gas-stocks-like-kmi-epd-and-enb/?.tsrc=rss",
-    "title_whythenextgreataiinvestmentisnaturalgasstockslikekmiepdandenb_2026-10-16"
+    "title_whythenextgreataiinvestmentisnaturalgasstockslikekmiepdandenb_2026-10-16",
+    "link_https://finance.yahoo.com/energy/articles/oil-edges-down-investors-weigh-010642305.html",
+    "title_oiltouches110abarrelforfirsttimesincemayonmiddleeastrussiasupplyfears_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-afternoon-194906832.html",
+    "title_sectorupdatetechstocksfalllateafternoon_2026-10-16",
+    "link_https://finance.yahoo.com/m/217b2fbe-f5f1-39d8-8e84-c3b2ae2d5101/9-dow-jones-stocks-make.html",
+    "title_9dowjonesstocksmakebullishmovesinadefensivemarketrotation_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/warren-buffetts-berkshire-compounded-19-194300305.html",
+    "title_warrenbuffettsberkshirecompoundedat197ayearbetween1965and2025nearlydoublethesp500s105annualreturncaninvestorsstillapplythatplaybooktoday_2026-10-16",
+    "link_https://finance.yahoo.com/economy/articles/halloween-candy-prices-surge-along-193700088.html",
+    "title_halloweencandypricessurgealongwithotherholidaygrocerycosts_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/aerospace-defense-demand-intact-heading-193028163.html",
+    "title_aerospacedefensedemandintactheadingintoearningsdespitesentimentsoftnessmorganstanleysays_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/applied-materials-stock-fell-21-193922310.html",
+    "title_appliedmaterialsstockfell21in8straightsessionshereswhatits2030targetsmeanforshares_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/philip-morris-just-raised-dividend-194508404.html",
+    "title_philipmorrisjustraiseditsdividend88canitaffordanotherincrease_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/okta-datadog-palantir-technologies-zscaler-195539415.html",
+    "title_oktadatadogpalantirtechnologieszscalerandelasticsharesarefallingwhatyouneedtoknow_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/snowflake-atlassian-bandwidth-five9-palo-193939143.html",
+    "title_snowflakeatlassianbandwidthfive9andpaloaltonetworksstockstradedownwhatyouneedtoknow_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/micron-stock-tumbles-despite-analyst-194225087.html",
+    "title_micronstocktumblesdespiteanalystcallssemiconductorselloffoverblown_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/qualys-digitalocean-twilio-crowdstrike-mongodb-193139491.html",
+    "title_qualysdigitaloceantwiliocrowdstrikeandmongodbsharesarefallingwhatyouneedtoknow_2026-10-16",
+    "link_https://finance.yahoo.com/video/tech-stocks-stumble-as-sell-off-spreads-to-software-194829195.html?.tsrc=rss",
+    "title_techstocksstumbleasselloffspreadstosoftware_2026-10-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-financial-stocks-edge-higher-194139421.html?.tsrc=rss",
+    "title_sectorupdatefinancialstocksedgehigherlateafternoon_2026-10-16",
+    "link_https://www.bankless.com/read/who-pays-for-proof-of-work-pearl-has-an-answer?.tsrc=rss",
+    "title_whopaysforproofofworkpearlhasananswer_2026-10-16",
+    "link_https://247wallst.com/videos/apple-is-now-the-top-performing-magnificent-7-stock-in-2026-heres-why-its-beating-nvidia-tesla-and-amazon/?.tsrc=rss",
+    "title_appleisnowthetopperformingmagnificent7stockin2026hereswhyitsbeatingnvidiateslaandamazon_2026-10-16",
+    "link_https://finance.yahoo.com/video/can-apples-duo-hype-offset-soft-iphone-18-demand-194532749.html?.tsrc=rss",
+    "title_canapplesduohypeoffsetsoftiphone18demand_2026-10-16",
+    "link_https://www.cbsnews.com/news/iphone-duo-pre-order-sales-apple-foldable/?.tsrc=rss",
+    "title_iphoneduoalreadybackordereduntil2027aspreordersalessoar_2026-10-16",
+    "link_https://www.barchart.com/story/news/8097536/ahead-of-ge-aerospace-earnings-here-s-what-barchart-data-says-comes-next-for-ge-stock?.tsrc=rss",
+    "title_aheadofgeaerospaceearningshereswhatbarchartdatasayscomesnextforgestock_2026-10-16",
+    "link_https://finance.yahoo.com/markets/crypto/article/strategy-stock-falls-10-as-michael-saylors-bitcoin-giant-faces-index-level-threat-193944684.html?.tsrc=rss",
+    "title_strategystockfalls10asmichaelsaylorsbitcoingiantfacesindexlevelthreat_2026-10-16",
+    "link_https://247wallst.com/videos/coreweave-nebius-and-neoclouds-sink-as-market-fear-index-closes-in-on-extreme-fear/?.tsrc=rss",
+    "title_coreweavenebiusandneocloudssinkasmarketfearindexclosesinonextremefear_2026-10-16"
   ],
   "stats_today": {
-    "news_dispatches": 27,
-    "price_fires": 133,
+    "news_dispatches": 46,
+    "price_fires": 140,
     "earnings_cards": 10,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 23490,
-    "price_fires": 6944,
+    "news_dispatches": 23509,
+    "price_fires": 6951,
     "earnings_cards": 1010,
     "options_radars": 1083,
     "options_setups": 9300
