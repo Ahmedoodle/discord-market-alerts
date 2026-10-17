@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3031,
+      "history": [
+        "-2.02%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -43270,18 +43277,28 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/rogers-communication-rci-expected-beat-130008544.html?.tsrc=rss",
     "title_rogerscommunicationrciexpectedtobeatearningsestimateswhattoknowaheadofq3release_2026-10-16",
     "link_https://finance.yahoo.com/media-advertising/articles/citytv-announces-dateline-canada-special-140000600.html?.tsrc=rss",
-    "title_citytvannouncesdatelinecanadaspecialfromrogersstudios_2026-10-14"
+    "title_citytvannouncesdatelinecanadaspecialfromrogersstudios_2026-10-14",
+    "link_https://finance.yahoo.com/energy/articles/3-oil-gas-stocks-retail-011033353.html",
+    "title_3oilandgasstocksretailinvestorsarewatchingascruderiskbuilds_2026-10-16",
+    "link_https://finance.yahoo.com/technology/articles/tesla-flying-roadster-wall-street-012501892.html",
+    "title_teslasflyingroadsterhaswallstreettalkingaboutspacexnotcars_2026-10-16",
+    "link_https://finance.yahoo.com/m/de691879-832b-3622-bdec-58d6c6ac3f81/the-most-polite-trucker-in.html",
+    "title_themostpolitetruckerinamericaisadriverless18wheeler_2026-10-16",
+    "link_https://finance.yahoo.com/technology/articles/battery-x-metals-highlights-participation-012000266.html",
+    "title_batteryxmetalshighlightsparticipationatxtakeover2026anelectricvehicleandemergingtechnologyeventheldatteslasgigafactorytexasprovidingexposuretoindustryperspectivesandtechnologydevelopments_2026-10-16",
+    "link_https://finance.yahoo.com/healthcare/articles/3-great-biotech-stocks-watch-011341281.html",
+    "title_3greatbiotechstockstowatchinoctober2026_2026-10-16"
   ],
   "stats_today": {
-    "news_dispatches": 8,
-    "price_fires": 0,
+    "news_dispatches": 12,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 23422,
-    "price_fires": 6674,
+    "news_dispatches": 23426,
+    "price_fires": 6675,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
