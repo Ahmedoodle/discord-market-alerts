@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3064,
+      "history": [
+        "-2.05%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -43264,18 +43271,20 @@
     "link_https://finance.yahoo.com/technology/articles/3-canadian-tech-stocks-trading-201511095.html?.tsrc=rss",
     "title_3canadiantechstockstradingupto71belowfairvalue_2026-10-07",
     "link_https://www.fool.com/coverage/better-buy/2026/10/07/d-wave-quantum-vs-rigetti-computing-which-cutting-edge-quantum-stock-is-a-better-buy-in-2026/?.tsrc=rss",
-    "title_dwavequantumvsrigetticomputingwhichcuttingedgequantumstockisabetterbuyin2026_2026-10-07"
+    "title_dwavequantumvsrigetticomputingwhichcuttingedgequantumstockisabetterbuyin2026_2026-10-07",
+    "link_https://finance.yahoo.com/markets/stocks/articles/stocktwits-defense-watch-rtx-continues-041547455.html",
+    "title_stocktwitsdefensewatchrtxcontinuesdealmomentumondaspalantirlaunchaifirmasaerovironmentstrikefourinternationaldeals_2026-10-17"
   ],
   "stats_today": {
-    "news_dispatches": 10,
-    "price_fires": 0,
+    "news_dispatches": 11,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 23424,
-    "price_fires": 6674,
+    "news_dispatches": 23425,
+    "price_fires": 6675,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
