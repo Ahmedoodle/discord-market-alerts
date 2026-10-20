@@ -135,9 +135,10 @@
       ]
     },
     "CBRS": {
-      "last_price": 118.3,
+      "last_price": 117.11,
       "history": [
-        "-1.96%"
+        "-1.96%",
+        "-2.94%"
       ]
     },
     "SKHY": {
@@ -161,7 +162,14 @@
   },
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "ETH-USD": {
+      "last_price": 2380.08,
+      "history": [
+        "-2.25%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -43583,18 +43591,32 @@
     "link_https://finance.yahoo.com/technology/articles/market-chatter-intel-seeks-fcc-083412365.html",
     "title_marketchatterintelseeksfccwaivertoupdateforeignmadefactoryrobots_2026-10-20",
     "link_https://finance.yahoo.com/markets/stocks/articles/ameren-corp-aee-regulated-utility-145926284.html?.tsrc=rss",
-    "title_amerencorpaeeregulatedutilitymoatoffersattractivelongtermoutlook_2026-10-19"
+    "title_amerencorpaeeregulatedutilitymoatoffersattractivelongtermoutlook_2026-10-19",
+    "link_https://finance.yahoo.com/news/oil-eases-markets-assess-potential-005750414.html",
+    "title_brenthitsfivemonthhighasattacksonshipssaudisitesfuelsupplyworries_2026-10-20",
+    "link_https://finance.yahoo.com/markets/commodities/articles/fortuna-intersects-0-96-g-090000369.html",
+    "title_fortunaintersects096gtgoldover350metersatthelinderomineargentina_2026-10-20",
+    "link_https://finance.yahoo.com/technology/articles/nscale-anthropic-talks-45-billion-192406047.html",
+    "title_nscaleanthropicintalksfor45billioncloudcomputingdeal_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-stock-hasn-t-cheap-090402378.html",
+    "title_nvidiastockhasntbeenthischeapin7yearsonly1explanationmakessense_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/market-chatter-alphabet-apos-waymo-085544768.html",
+    "title_marketchatteralphabetswaymotargetsfleetof20000vehiclesbyendofnextyear_2026-10-20",
+    "link_https://finance.yahoo.com/news/blackrock-canada-announces-october-cash-090000499.html",
+    "title_blackrockcanadaannouncesoctobercashdistributionsfortheisharesetfs_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/market-chatter-micron-taiwan-union-085656445.html",
+    "title_marketchattermicrontaiwanuniontostrikethursdayamidbonusdispute_2026-10-20"
   ],
   "stats_today": {
-    "news_dispatches": 20,
-    "price_fires": 26,
+    "news_dispatches": 27,
+    "price_fires": 28,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 23509,
-    "price_fires": 6724,
+    "news_dispatches": 23516,
+    "price_fires": 6726,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
