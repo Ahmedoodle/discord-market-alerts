@@ -424,12 +424,49 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "SI=F": {
+      "last_price": 57.95,
+      "history": [
+        "+1.71%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 98.13,
+      "history": [
+        "-5.33%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.01,
+      "history": [
+        "-1.57%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2787.7,
+      "history": [
+        "+1.66%"
+      ]
+    },
+    "NFLX": {
+      "last_price": 67.0,
+      "history": [
+        "-2.46%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "LINK-USD": {
       "last_price": 12.11,
       "history": [
         "+2.11%"
+      ]
+    },
+    "XRP-USD": {
+      "last_price": 1.3262,
+      "history": [
+        "+2.05%"
       ]
     }
   },
@@ -43794,18 +43831,108 @@
     "link_https://www.marketbeat.com/articles/these-3-green-stocks-have-a-growth-story-that-goes-far-beyond-washington/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
     "title_these3greenstockshaveagrowthstorythatgoesfarbeyondwashington_2026-10-18",
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-renewable-shareholders-approve-corporate-083044732.html?.tsrc=rss",
-    "title_brookfieldrenewableshareholdersapprovecorporatesimplificationscheme_2026-10-15"
+    "title_brookfieldrenewableshareholdersapprovecorporatesimplificationscheme_2026-10-15",
+    "link_https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-rise-corporate-194800408.html",
+    "title_updateusequityindexesriseascorporateresultshelpliftrisksentiment_2026-10-20",
+    "link_https://finance.yahoo.com/m/f3498525-5b31-3702-9e4b-aa8f358f4086/stock-market-today%3A-dow-pops%2C.html",
+    "title_stockmarkettodaydowpopsoilfallsonusiranhopeshasbrorocketstoyswithanentrylivecoverage_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/risk-hiding-newmont-stocks-strong-192028376.html",
+    "title_isthereariskhidinginnewmontstocksstrongcashflow_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-mixed-afternoon-194226083.html",
+    "title_sectorupdatetechstocksmixedlateafternoon_2026-10-20",
+    "link_https://finance.yahoo.com/markets/crypto/articles/blackrocks-iconic-fund-posts-strongest-193014468.html",
+    "title_blackrocksiconicfundpostsstrongestdayinover12months_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-high-yielding-dividend-stocks-195301057.html",
+    "title_3highyieldingdividendstocksthatinvestorscansafelybuyandholdforyears_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invest-1-000-paypal-pypl-195000569.html",
+    "title_shouldyouinvest1000inpaypalpyplrightnow_2026-10-20",
+    "link_https://finance.yahoo.com/technology/ai/articles/amazon-stockpiles-nvidia-ai-hardware-194615746.html",
+    "title_amazonstockpilesnvidiaaihardwareaheadofpoweravailabilitybusinessinsider_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3m-stocks-rise-5-3-195142376.html",
+    "title_3mstocksrise53with6billionamazonmilestoneanddilutioninfocus_2026-10-20",
+    "link_https://finance.yahoo.com/technology/ai/articles/amazon-350-target-rests-ai-193700460.html",
+    "title_amazons350targetrestsonanaibetbeyondthecloud_2026-10-20",
+    "link_https://finance.yahoo.com/technology/articles/alphabet-apos-google-cloud-says-193809919.html",
+    "title_alphabetsgooglecloudsayslondonregionoutagedisruptedservicesafterpowerevent_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/eli-lilly-stocks-rise-4-193949320.html",
+    "title_elilillystocksrise436asaideliverydealmakesbillionsconditional_2026-10-20",
+    "link_https://finance.yahoo.com/healthcare/articles/rbc-capital-names-top-healthcare-192704925.html",
+    "title_rbccapitalnamestophealthcarestocksassectorupgradedtooverweight_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/tesla-stocks-rise-ahead-323-194534518.html",
+    "title_teslastocksriseaheadofa323milliongrossprofitforecastgap_2026-10-20",
+    "link_https://finance.yahoo.com/technology/ai/articles/broadcom-lands-major-10-cloud-194258548.html",
+    "title_broadcomlandsmajor10yearclouddealwithjapanesetelecomgiant_2026-10-20",
+    "link_https://finance.yahoo.com/healthcare/articles/abbvie-apos-skyrizi-approved-canada-130400723.html",
+    "title_abbviesskyriziapprovedincanadaforpediatricpsoriasis_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/netflix-stocks-drop-ahead-earnings-195354712.html",
+    "title_netflixstocksdropaheadofearningsanda1353billionsaleshurdle_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/article/netflix-stock-falls-ahead-of-quarterly-results-194604951.html",
+    "title_netflixstockfallsaheadofquarterlyresults_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/braze-soars-51-salesforce-agrees-194858587.html",
+    "title_brazesoars51assalesforceagreesto566billionbuyouttodeliverthatwowmoment_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-braze-brze-stock-trading-193350801.html",
+    "title_whybrazebrzestockistradinguptoday_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/walmart-launches-120-walmart-sam-183658840.html",
+    "title_walmartlaunches120walmartandsamsclubbundlewhatyouneedtoknow_2026-10-20",
+    "link_https://finance.yahoo.com/news/pilot-fleet-automa-2026-scaling-163907912.html",
+    "title_frompilottofleetautoma2026onscalingdigitaloffshore_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/bernstein-adjusts-linde-price-target-164415825.html",
+    "title_bernsteinadjustslindepricetargetto562from563_2026-10-19",
+    "link_https://finance.yahoo.com/markets/stocks/articles/bloom-energy-stock-priced-against-211710357.html",
+    "title_isbloomenergystockpricedrightagainstitspeers_2026-10-15",
+    "link_https://finance.yahoo.com/markets/stocks/articles/gave-ibm-stock-edge-over-194300878.html",
+    "title_whatgaveibmstockitsedgeovercognizant_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/texas-instruments-stocks-rise-although-194426635.html",
+    "title_texasinstrumentsstocksrisealthoughwellsfargocutstargetbeforeearnings_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/starbucks-expected-build-us-sales-191300959.html",
+    "title_starbucksexpectedtobuildonussalesmomentumasinvestorseye2027outlook_2026-10-20",
+    "link_https://finance.yahoo.com/technology/articles/u-faa-certifies-boeing-737-193800934.html",
+    "title_usfaacertifiesboeing73710largestmemberof737maxfamily_2026-10-20",
+    "link_https://finance.yahoo.com/news/faa-certifies-boeings-737-max-193730070.html",
+    "title_faacertifiesboeings737max10clearingwayfordeliveries_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/prediction-micron-could-turn-5-193300157.html",
+    "title_predictionmicroncouldturna5000investmentintothisby2030_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/aep-dividend-keeps-growing-utility-194502667.html",
+    "title_aepsdividendkeepsgrowingbutcantheutilityaffordbiggerpayouts_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/buy-5-top-ranked-high-123600857.html",
+    "title_buy5toprankedhighflyingnontechnonaistocksforastrongq4_2026-10-20",
+    "link_https://finance.yahoo.com/economy/articles/burlington-tjx-ross-stores-seen-154657367.html",
+    "title_burlingtontjxrossstoresseenasrelativewinnersasinflationswirlsbofasays_2026-10-19",
+    "link_https://finance.yahoo.com/economy/policy/articles/conference-board-honors-six-ceos-194000364.html",
+    "title_theconferenceboardhonorssixceosat2026distinguishedleadershipawardscelebration_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/worried-tempus-ai-stock-110300751.html",
+    "title_shouldyoubeworriedabouttempusaistock_2026-10-20",
+    "link_https://finance.yahoo.com/healthcare/articles/ai-trade-just-moved-bloodstream-143000460.html",
+    "title_theaitradejustmovedintoyourbloodstreamand4healthcarestocksarewinning_2026-10-19",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invesco-p-500-equal-weight-110448092.html",
+    "title_invescosp500equalweightrspsellsmodernaandptconthursday_2026-10-19",
+    "link_https://finance.yahoo.com/markets/stocks/articles/heres-expect-super-micro-computer-133304652.html",
+    "title_hereswhattoexpectfromsupermicrocomputersnextearningsreport_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/yelp-yelp-stock-know-194950980.html",
+    "title_yelpyelpstockisupwhatyouneedtoknow_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/intel-stocks-rise-jpmorgan-upgrade-200011995.html",
+    "title_intelstocksrisewithjpmorganupgradeandmarginhurdleinfocus_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/live/spacex-earnings-live-updates-133218212.html",
+    "title_spacexearningsliveupdates_2026-10-20",
+    "link_https://decrypt.co/381446/swiss-regulator-first-retail-fund-holds-bitcoin-directly?.tsrc=rss",
+    "title_swissregulatorapprovesfirstretailfundthatholdsbitcoindirectly_2026-10-20",
+    "link_https://finance.yahoo.com/markets/live/stock-market-today-dow-rises-sp-500-nasdaq-climb-as-dip-buying-resumes-165236471.html?.tsrc=rss",
+    "title_stockmarkettodaydowsp500risenasdaqslipsasinvestorsawaitspacexnetflixearnings_2026-10-20",
+    "link_https://finance.yahoo.com/technology/ai/articles/market-chatter-amazon-buying-more-192912711.html?.tsrc=rss",
+    "title_marketchatteramazonisbuyingmorenvidiaaihardwarethanitcanpowerup_2026-10-20",
+    "link_https://www.entrepreneur.com/business-news/walmart-promotes-500-people-every-day-its-chief-people-officer-says-these-traits-help-workers-move-up?.tsrc=rss",
+    "title_walmartpromotes500peopleeverydayitschiefpeopleofficersaysthesetraitshelpworkersmoveup_2026-10-20"
   ],
   "stats_today": {
-    "news_dispatches": 41,
-    "price_fires": 71,
+    "news_dispatches": 72,
+    "price_fires": 77,
     "earnings_cards": 10,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 23496,
-    "price_fires": 6746,
+    "news_dispatches": 23527,
+    "price_fires": 6752,
     "earnings_cards": 1010,
     "options_radars": 1081,
     "options_setups": 9100
