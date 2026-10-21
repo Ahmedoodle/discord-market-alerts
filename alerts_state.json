@@ -111,11 +111,12 @@
       ]
     },
     "SPCX": {
-      "last_price": 161.3729,
+      "last_price": 159.2,
       "history": [
         "+9.16%",
         "+10.70%",
-        "+9.19%"
+        "+9.19%",
+        "+7.72%"
       ]
     },
     "RKLB": {
@@ -153,9 +154,10 @@
       ]
     },
     "NFLX": {
-      "last_price": 64.78,
+      "last_price": 64.13,
       "history": [
-        "-5.69%"
+        "-5.69%",
+        "-6.64%"
       ]
     },
     "WMT": {
@@ -185,9 +187,10 @@
       ]
     },
     "ORCL": {
-      "last_price": 134.01,
+      "last_price": 132.55,
       "history": [
-        "+2.19%"
+        "+2.19%",
+        "+1.08%"
       ]
     },
     "CAT": {
@@ -217,9 +220,10 @@
       ]
     },
     "ISRG": {
-      "last_price": 404.0,
+      "last_price": 410.06,
       "history": [
-        "-7.76%"
+        "-7.76%",
+        "-6.38%"
       ]
     },
     "AMGN": {
@@ -348,15 +352,28 @@
       ]
     },
     "ELV": {
-      "last_price": 448.15,
+      "last_price": 440.01,
       "history": [
-        "+1.81%"
+        "+1.81%",
+        "-0.04%"
       ]
     },
     "VZ": {
       "last_price": 43.9,
       "history": [
         "-1.44%"
+      ]
+    },
+    "PM": {
+      "last_price": 194.95,
+      "history": [
+        "-2.48%"
+      ]
+    },
+    "SPGI": {
+      "last_price": 432.48,
+      "history": [
+        "-1.29%"
       ]
     }
   },
@@ -44164,18 +44181,158 @@
     "link_https://finance.yahoo.com/economy/policy/articles/trump-waives-russia-related-tariffs-094509767.html?.tsrc=rss",
     "title_trumpwaivesrussiarelatedtariffsweeksaftersigningsanctionsbilleasingpressureonputinasoilpricesbiteaheadofmidterms_2026-10-21",
     "link_https://finance.yahoo.com/technology/ai/articles/nvidia-supply-chain-partners-expand-103300877.html?.tsrc=rss",
-    "title_nvidiaandsupplychainpartnersexpandcapacitytoaccelerateaiinfrastructurebuildout_2026-10-21"
+    "title_nvidiaandsupplychainpartnersexpandcapacitytoaccelerateaiinfrastructurebuildout_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invesco-qqq-qqq-bought-nvidia-110342124.html",
+    "title_whatinvescoqqqqqqboughtnvidialeadsonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-buying-costco-cost-oct-110204738.html",
+    "title_etfsarebuyingcostcocostonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/40-etfs-add-kla-corporation-110159744.html",
+    "title_40etfsaddtoklacorporationklaconmonday_2026-10-21",
+    "link_https://finance.yahoo.com/personal-finance/investing/article/silver-price-today-wednesday-october-21-2026-silver-prices-showing-more-resilience-than-gold-111020615.html",
+    "title_silverpricetodaywednesdayoctober212026silverpricesshowingmoreresiliencethangold_2026-10-21",
+    "link_https://finance.yahoo.com/markets/commodities/articles/endurance-expands-imperial-lower-imperial-110000935.html",
+    "title_enduranceexpandsimperialandlowerimperialzoneswith50mstepouts589gptgoldand019sbover52metresmultiplehighgradestructures_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/north-sky-metals-commences-trading-110000183.html",
+    "title_northskymetalscommencestradingonthetsxventureexchangeundersymbolnsky_2026-10-21",
+    "link_https://finance.yahoo.com/markets/options/articles/wisdomtree-wti-crude-oil-3x-110400320.html",
+    "title_wisdomtreewticrudeoil3xdailyshortsecuritiesisinxs2819844387proposedamendmenttotheprincipalamountoftheaffectedsecuritiesmeetingoftheetpsecurityholders_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/state-street-spdr-p-500-110355756.html",
+    "title_statestreetspdrsp500etfspysells395millionofnvidiaonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-wells-fargo-110326555.html",
+    "title_etfsarenetsellersofwellsfargowfconoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-american-express-110256470.html",
+    "title_etfsarenetsellersofamericanexpressaxponoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/investments-stock-market-crashes-1-105000641.html",
+    "title_whatshouldyoudowithyourinvestmentsifthestockmarketcrashesthis1moveiskey_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/state-street-spdr-dow-jones-110436099.html",
+    "title_statestreetspdrdowjonesdiasellsgoldmansachsandcaterpillaronmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ishares-russell-2000-index-fund-110349928.html",
+    "title_whatisharesrussell2000indexfundiwmboughtaxosleadsonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/capital-group-core-equity-cgus-110513470.html",
+    "title_capitalgroupcoreequitycgusaddsnvdaandmsftonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jpmorgan-nasdaq-equity-premium-income-110510452.html",
+    "title_whatjpmorgannasdaqequitypremiumincomejepqboughtspaceexplorationleadsonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invesco-nasdaq-100-etf-qqqm-110454857.html",
+    "title_invesconasdaq100etfqqqmaddsnvidiaandappleonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/news/amazon-recruit-over-300-000-111217351.html",
+    "title_amazontorecruitover300000usworkersforholidayseason_2026-10-21",
+    "link_https://finance.yahoo.com/technology/ai/articles/deepseeks-latest-scores-lower-accounting-111100763.html",
+    "title_deepseekslatestupdatescoresloweronaccountingworkasopenmodelstrailonconsistencydualentrybenchmarkfinds_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ishares-esg-select-screened-p-110450573.html",
+    "title_isharesesgselectscreenedsp500xvvbuys201millionmorenvidiaonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/proshares-ultra-qqq-qld-bought-110433031.html",
+    "title_whatprosharesultraqqqqldboughtnvidialeadsonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/financial-select-sector-spdr-xlf-110404112.html",
+    "title_financialselectsectorspdrxlfsellsberkshireandjpmorganonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-visa-v-110209588.html",
+    "title_etfsarenetsellersofvisavonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/direxion-daily-technology-bull-3x-110421366.html",
+    "title_whatdirexiondailytechnologybull3xteclsoldnvidialeadsonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ishares-russell-top-200-growth-110417597.html",
+    "title_isharesrusselltop200growthiwysellsnvidiaandappleonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-jpmorgan-chase-110212211.html",
+    "title_etfsarenetsellersofjpmorganchasejpmonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/small-business/articles/jpmorganchase-expands-support-atlanta-small-110000560.html",
+    "title_jpmorganchaseexpandssupportforatlantasmallbusinessesthroughhiringcoachinganda10mloantoaccesstocapitalforentrepreneurs_2026-10-21",
+    "link_https://finance.yahoo.com/healthcare/articles/state-street-health-care-spdr-110414633.html",
+    "title_whatstatestreethealthcarespdrxlvboughtelilillyleadsonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-lilly-lly-110320159.html",
+    "title_etfsarenetsellersoflillyllyonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/energy/articles/state-street-energy-spdr-xle-110444973.html",
+    "title_whatstatestreetenergyspdrxleboughtexxonmobilleadsonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-mastercard-ma-110221760.html",
+    "title_etfsarenetsellersofmastercardmaonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/state-street-consumer-discretionary-xly-110457691.html",
+    "title_statestreetconsumerdiscretionaryxlysells457millionofamazononoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-home-depot-110251125.html",
+    "title_etfsarenetsellersofhomedepothdonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/state-street-consumer-staples-spdr-110500347.html",
+    "title_statestreetconsumerstaplesspdrxlpaddswalmartandcostcoonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/state-street-tech-select-spdr-110359928.html",
+    "title_statestreettechselectspdrxlkaddsnvidiaandappleonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ishares-phlx-sox-semiconductor-soxx-110345635.html",
+    "title_isharesphlxsoxsemiconductorsoxxaddsamdandintconoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/capital-group-dividend-value-cgdv-110352519.html",
+    "title_whatcapitalgroupdividendvaluecgdvboughtcomcastleadsonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/healthcare/articles/abbvie-reaches-agreement-pan-canadian-110100037.html",
+    "title_abbviereachesagreementwiththepancanadianpharmaceuticalalliancepcpaforelahereinplatinumresistantovariancancer_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/walmart-wmt-sees-151-4-110128066.html",
+    "title_walmartwmtsees1514millioninnetetfbuyingonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-bank-america-110242233.html",
+    "title_etfsarenetsellersofbankofamericabaconoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invesco-p-500-equal-weight-110430683.html",
+    "title_invescosp500equalweightrspsells11millionofmodernaonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/35-etfs-add-texas-instruments-110136618.html",
+    "title_35etfsaddtotexasinstrumentstxnonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/technology/ai/articles/altera-100g-fpga-based-holoscan-110000622.html",
+    "title_alteras100gfpgabasedholoscansensorbridgesolutionondisplayatnvidiagtcberlin_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-bought-131-5-million-110141041.html",
+    "title_etfsbought1315millionofappliedmaterialsamatonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-provides-accelerated-computing-major-110320375.html",
+    "title_nvidiaprovidesacceleratedcomputingformajortelecomoperatorstoturnnetworksintodistributedintelligenceplatforms_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-oracle-orcl-110309336.html",
+    "title_etfsarenetsellersoforacleorclonmonday_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-bought-121-4-million-110148269.html",
+    "title_etfsbought1214millionofqualcommqcomonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/economy/articles/drive-thru-becoming-splurge-never-110300435.html",
+    "title_thedrivethruisbecomingasplurgelikeneverbefore_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-mcdonalds-mcd-110239487.html",
+    "title_etfsarenetsellersofmcdonaldsmcdonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-caterpillar-cat-110234932.html",
+    "title_etfsarenetsellersofcaterpillarcatonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/philip-morris-international-reports-2026-105900118.html",
+    "title_philipmorrisinternationalreports2026thirdquarterfirstninemonthsresultsandupdates2026fullyearadjusteddilutedepsforecastforcurrencyonly_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/capital-group-growth-cggr-buys-110439478.html",
+    "title_capitalgroupgrowthcggrbuys183millionmoreamazononoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-net-sellers-goldman-sachs-110228260.html",
+    "title_etfsarenetsellersofgoldmansachsgsonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/technology/articles/rtxs-pratt-whitney-canada-introduces-110000114.html",
+    "title_rtxsprattwhitneycanadaintroducescertifiedpt9engine_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-bought-138-6-million-110131257.html",
+    "title_etfsbought1386millionoflamresearchlrcxonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-buying-analog-devices-adi-110145590.html",
+    "title_etfsarebuyinganalogdevicesadionoct19_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invesco-q3-earnings-coming-aum-133000520.html",
+    "title_invescoq3earningscomingupwillaumgrowthdriveresultshigher_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/zacks-analyst-blog-highlights-abercrombie-113600498.html",
+    "title_thezacksanalystbloghighlightsabercrombiefitchcaseysgeneralstoresfivebelowandkohls_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/citizens-sues-ameriprise-accusing-ex-182846877.html",
+    "title_citizenssuesameripriseaccusingexadvisorofbreakingemploymentcontracts_2026-10-19",
+    "link_https://finance.yahoo.com/markets/stocks/articles/marvell-mrvl-sees-116-4-110153612.html",
+    "title_marvellmrvlsees1164millioninnetetfbuyingonoct19_2026-10-21",
+    "link_https://finance.yahoo.com/energy/articles/bloom-energy-vs-vistra-energy-105242872.html",
+    "title_bloomenergyvsvistrawhichenergystockisabetterbuyin2026_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/etfs-bought-250-million-intel-110105211.html",
+    "title_etfsbought250millionofintelintconoct19_2026-10-21",
+    "link_https://finance.yahoo.com/technology/ai/articles/ai-neocloud-elice-ceo-sees-055637642.html",
+    "title_aineocloudeliceceoseessalesdoublingassharesrebound_2026-10-21",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-nebius-stock-rising-pre-104124606.html",
+    "title_whyisnebiusstockrisinginpremarkettrading_2026-10-21",
+    "link_https://www.fool.com/investing/2026/10/21/xrps-5-year-outlook-is-this-cryptocurrency-worth-b/?.tsrc=rss",
+    "title_xrps5yearoutlookisthiscryptocurrencyworthbuyingnow_2026-10-21",
+    "link_https://finance.yahoo.com/video/coreweaves-crash-looks-2008-heres-110000542.html?.tsrc=rss",
+    "title_coreweavescrashlookslike2008hereswhyitisnt_2026-10-21",
+    "link_https://finance.yahoo.com/markets/live/stock-market-today-wednesday-october-21-dow-sp-500-nasdaq-100000105.html?.tsrc=rss",
+    "title_stockmarkettodaysp500nasdaqfuturesriseasearningsrollinspacexstocksurges_2026-10-21",
+    "link_https://finance.yahoo.com/technology/articles/visa-announces-enhanced-capabilities-bring-110000206.html?.tsrc=rss",
+    "title_visaannouncesenhancedcapabilitiesthatcanbringtrustandcontroltothefutureofbusinesspayments_2026-10-21",
+    "link_https://finance.yahoo.com/technology/ai/articles/oracle-ai-agent-studio-industry-110000481.html?.tsrc=rss",
+    "title_oracleaiagentstudioforindustryapplicationshelpsacceleratebusinessoutcomes_2026-10-21",
+    "link_https://finance.yahoo.com/news/rbc-research-reveals-1-5-110100636.html?.tsrc=rss",
+    "title_rbcresearchreveals1in5canadianstudentsarecreditghostswithoutacreditscoreorcredithistory_2026-10-21",
+    "link_https://finance.yahoo.com/markets/world-indices/articles/asian-stocks-rally-tech-firms-025217752.html?.tsrc=rss",
+    "title_musksspacexhelpsfuelstockmarketgains_2026-10-21"
   ],
   "stats_today": {
-    "news_dispatches": 195,
-    "price_fires": 99,
+    "news_dispatches": 260,
+    "price_fires": 106,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 23650,
-    "price_fires": 6774,
+    "news_dispatches": 23715,
+    "price_fires": 6781,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
