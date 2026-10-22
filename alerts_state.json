@@ -784,7 +784,50 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "GC=F": {
+      "last_price": 4041.6,
+      "history": [
+        "-2.61%"
+      ]
+    },
+    "SI=F": {
+      "last_price": 54.71,
+      "history": [
+        "-4.72%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 99.31,
+      "history": [
+        "+2.22%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 113.1,
+      "history": [
+        "+3.93%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 29125.0,
+      "history": [
+        "-2.94%"
+      ]
+    },
+    "ES=F": {
+      "last_price": 7699.75,
+      "history": [
+        "-1.29%"
+      ]
+    },
+    "TTD": {
+      "last_price": 13.02,
+      "history": [
+        "-1.06%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "BTC-USD": {
       "last_price": 81220.29,
@@ -44214,18 +44257,92 @@
     "link_https://www.marketbeat.com/articles/these-3-green-stocks-have-a-growth-story-that-goes-far-beyond-washington/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
     "title_these3greenstockshaveagrowthstorythatgoesfarbeyondwashington_2026-10-18",
     "link_https://finance.yahoo.com/markets/stocks/articles/brookfield-renewable-shareholders-approve-corporate-083044732.html?.tsrc=rss",
-    "title_brookfieldrenewableshareholdersapprovecorporatesimplificationscheme_2026-10-15"
+    "title_brookfieldrenewableshareholdersapprovecorporatesimplificationscheme_2026-10-15",
+    "link_https://finance.yahoo.com/m/24dad137-8bf9-387b-9dad-31e5d21d37ca/silver-futures-fall-to-lowest.html",
+    "title_silverfuturesfalltolowestthisyearasoilpricesfuelinflationrisks_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/costco-turned-1-000-8-194514744.html",
+    "title_costcoturned1000into8018intenyearswhilethesp500delivered3564_2026-10-22",
+    "link_https://finance.yahoo.com/m/a6067e2b-5ce6-3182-915b-58daa8b6d0f9/stock-market-today%3A.html",
+    "title_stockmarkettodaynasdaq100droptops3firstcashsoutherncoppermetaleadsellofflivecoverage_2026-10-22",
+    "link_https://finance.yahoo.com/economy/articles/oil-above-110-sends-fresh-194729360.html",
+    "title_oilabove110sendsfreshwarningtostockmarket_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/meta-stock-falls-despite-wall-195053217.html",
+    "title_metastockfallsdespitewallstreetanalystsraisingpricetargets_2026-10-22",
+    "link_https://finance.yahoo.com/energy/articles/uranium-near-90-pound-heres-195000166.html",
+    "title_uraniumisnear90apoundheresmypredictionforwhatsaheadforthefuel_2026-10-22",
+    "link_https://finance.yahoo.com/technology/ai/articles/vertiv-nvidia-target-10-week-194700699.html",
+    "title_vertivnvidiatarget10weekcutinaipowercoolingsetup_2026-10-22",
+    "link_https://finance.yahoo.com/technology/articles/apples-most-expensive-iphone-sends-194431471.html",
+    "title_applesmostexpensiveiphonesendsunexpectedsignal_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/one-number-makes-home-depot-191930737.html",
+    "title_onenumberthatmakeshomedepotabuy_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ciena-stock-really-expensive-193608990.html",
+    "title_iscienastockreallyexpensive_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-mixed-afternoon-194726150.html",
+    "title_sectorupdateconsumerstocksmixedlateafternoon_2026-10-22",
+    "link_https://finance.yahoo.com/markets/crypto/articles/codecoin-launches-quantum-secured-visa-194300534.html",
+    "title_codecoinlaunchesquantumsecuredvisanetworkpaymentcardatimfannualmeetingsinbangkok_2026-10-22",
+    "link_https://finance.yahoo.com/markets/crypto/articles/intelligent-payments-moneygram-chairman-ceo-192751278.html",
+    "title_intelligentpaymentsmoneygramchairmanceoanthonysoohoolivefrommoney20202026_2026-10-22",
+    "link_https://finance.yahoo.com/markets/crypto/articles/visa-mastercard-bet-ai-crypto-192534652.html",
+    "title_visamastercardbetonaicryptoaheadofearnings_2026-10-22",
+    "link_https://finance.yahoo.com/m/ba4b5c79-3123-3c0f-b5df-d146edf80618/j.p.-morgan-boosts-its.html",
+    "title_jpmorganboostsitslongtermforecastforhow6040portfolioswillperform_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/procter-gamble-pg-pairs-q1-191703986.html",
+    "title_proctergamblepgpairsq1beatwithaifocusandfreshproductrollout_2026-10-22",
+    "link_https://finance.yahoo.com/m/772c0c32-373e-3a07-b642-d34bacd93bad/merrill-unveils-2027-advisor.html",
+    "title_merrillunveils2027advisorcompensationplanthefocusisonmakingmoreloans_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/kroger-spending-5-billion-cut-194527523.html",
+    "title_krogerisspending5billiontocutpriceswalmartandcostcoarethetarget_2026-10-22",
+    "link_https://finance.yahoo.com/healthcare/articles/abbvies-lutikizumab-hits-phase-3-194605051.html",
+    "title_abbvieslutikizumabhitsphase3goal_2026-10-22",
+    "link_https://finance.yahoo.com/healthcare/articles/details-modernas-breakthrough-cancer-vaccine-193313178.html",
+    "title_detailsofmodernasbreakthroughcancervaccinegotleakeditsstockisplunging_2026-10-22",
+    "link_https://finance.yahoo.com/healthcare/articles/moderna-merck-shares-fall-eagerly-192700365.html",
+    "title_modernamercksharesfalloneagerlyanticipatedcancervaccineresults_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/pepsico-renews-us-partnership-taco-193935232.html",
+    "title_pepsicorenewsuspartnershipwithtacobellthrough2036_2026-10-22",
+    "link_https://finance.yahoo.com/technology/ai/articles/meta-ibm-flash-fresh-warning-193827257.html",
+    "title_metaibmflashfreshwarningonaispendingboom_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/union-pacific-posts-record-third-180700183.html",
+    "title_unionpacificpostsrecordthirdquarterrevenueandprofits_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-low-volatility-stocks-skeptical-193353607.html",
+    "title_3lowvolatilitystockswereskepticalof_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-does-sandisk-stocks-high-192817739.html",
+    "title_whydoessandiskstockshighcashyieldgetsolittlecredit_2026-10-22",
+    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-193655372.html",
+    "title_sectorupdatehealthcare_2026-10-22",
+    "link_https://finance.yahoo.com/markets/crypto/articles/avalanche-avax-good-investment-94-193053127.html",
+    "title_isavalancheavaxagoodinvestmentaftera94drop_2026-10-22",
+    "link_https://finance.yahoo.com/m/cfe822c9-0291-3804-a214-b89ed09c874f/how-ross-and-on-holding-can.html",
+    "title_howrossandonholdingcanbuckthatretailfunk_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-192941972.html",
+    "title_sectorupdatetech_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/coreweave-leads-neocloud-selloff-debt-194330333.html",
+    "title_coreweaveleadsneocloudselloffasdebtfearsmount_2026-10-22",
+    "link_https://finance.yahoo.com/m/10868be9-35e9-30a6-887d-80ad6319ad7b/u.s.-stocks-fall-as-tech.html",
+    "title_usstocksfallastechselloffdeepens_2026-10-22",
+    "link_https://finance.yahoo.com/m/f8f6965a-ce94-303e-ae0d-37eb7aa0f34b/still-bullish-into-year-end%3A.html",
+    "title_stillbullishintoyearendthoughtsonthekospibottomingandbrenttopping_2026-10-22",
+    "link_https://decrypt.co/381642/a16z-drops-crypto-widens-bets-ai-frontier-tech?.tsrc=rss",
+    "title_a16zdropscryptofromitsnamewidensbetstoaiandfrontiertech_2026-10-22",
+    "link_https://finance.yahoo.com/markets/article/this-level-headed-tesla-bull-still-expects-5-million-cybercabs-by-2040-193623554.html?.tsrc=rss",
+    "title_thislevelheadedteslabullstillexpects5millioncybercabsby2040_2026-10-22",
+    "link_https://stocktwits.com/news-articles/markets/equity/spacex-tesla-merger-buzz-musk-public-endorsement-could-complicate-deal-talks/cZxwiYoRBD9?.tsrc=rss",
+    "title_clsasaysspacexmergerbuzzovershadowsteslasconcernsbutmuskspublicendorsementcouldreportedlycomplicatedealtalks_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cibc-achieves-top-rating-advisors-193000518.html?.tsrc=rss",
+    "title_cibcachievestopratingbyadvisorsforthe11thyearinthe2026investmentexecutivereportcardonbanks_2026-10-22"
   ],
   "stats_today": {
-    "news_dispatches": 49,
-    "price_fires": 135,
+    "news_dispatches": 77,
+    "price_fires": 142,
     "earnings_cards": 10,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 23517,
-    "price_fires": 6810,
+    "news_dispatches": 23545,
+    "price_fires": 6817,
     "earnings_cards": 1010,
     "options_radars": 1081,
     "options_setups": 9100
