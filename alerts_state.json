@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3163,
+      "history": [
+        "-2.34%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -43368,18 +43375,32 @@
     "link_https://finance.yahoo.com/technology/ai/articles/telus-norton-team-bring-advanced-143000251.html?.tsrc=rss",
     "title_telusandnortonteamuptobringadvancedscamprotectiontocanadiansacrosscallstextsandemailsincludedatnoextracostwithnewmobilitydataplans_2026-10-20",
     "link_https://finance.yahoo.com/markets/stocks/articles/dividend-15-split-corp-monthly-130000705.html?.tsrc=rss",
-    "title_dividend15splitcorpmonthlydividenddeclarationforclassapreferredshare_2026-10-20"
+    "title_dividend15splitcorpmonthlydividenddeclarationforclassapreferredshare_2026-10-20",
+    "link_https://finance.yahoo.com/markets/stocks/articles/asian-shares-slip-sharp-drops-035430006.html",
+    "title_asiansharesslipassharpdropsforaistocksoverwhelmmarketsworldwideandoilpricesjump_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/p-500-best-performers-zero-040300672.html",
+    "title_sp500bestperformerszeromag7stockspast13weeks_2026-10-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/aersale-announces-date-third-quarter-204000226.html",
+    "title_aersaleannouncesdateforthirdquarter2026earningsreleaseconferencecall_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/roper-rop-stock-may-16-231356624.html",
+    "title_roperropstockmaybe16undervaluedoncashflow_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/roper-technologies-inc-rop-q3-210403212.html",
+    "title_ropertechnologiesincropq32026earningscallhighlightsaimomentumbuildsasguidance_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sk-hynix-puts-us-ipo-035426386.html",
+    "title_skhynixputsusipoofchipunitsolidigmonholdafterseoulauthoritiesraiseconcerns_2026-10-22",
+    "link_https://finance.yahoo.com/markets/stocks/articles/coreweave-nebius-stocks-crashing-time-204700637.html",
+    "title_coreweaveandnebiusstocksarecrashingtimetobuythedip_2026-10-22"
   ],
   "stats_today": {
-    "news_dispatches": 10,
-    "price_fires": 0,
+    "news_dispatches": 13,
+    "price_fires": 1,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 23478,
-    "price_fires": 6675,
+    "news_dispatches": 23481,
+    "price_fires": 6676,
     "earnings_cards": 1010,
     "options_radars": 1080,
     "options_setups": 9000
