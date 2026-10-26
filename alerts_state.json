@@ -1124,7 +1124,32 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "CL=F": {
+      "last_price": 101.8,
+      "history": [
+        "-1.42%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 29466.75,
+      "history": [
+        "+1.20%"
+      ]
+    },
+    "MELI": {
+      "last_price": 1592.58,
+      "history": [
+        "-4.56%"
+      ]
+    },
+    "CSGP": {
+      "last_price": 33.33,
+      "history": [
+        "-1.10%"
+      ]
+    }
+  },
   "crypto_tickers": {},
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
@@ -46643,18 +46668,66 @@
     "link_https://finance.yahoo.com/m/fd545871-c609-330b-8cac-45934c83ed02/spacex-isn%E2%80%99t-even-anthropic%E2%80%99s.html?.tsrc=rss",
     "title_spacexisntevenanthropicsbiggestpartnerhereswhoisplusmoreofitsmegadeals_2026-10-26",
     "link_https://www.fool.com/investing/2026/10/26/elon-musk-warns-of-death-and-consolidation-across-the-ai-cloud-industry-is-spacex-really-different/?.tsrc=rss",
-    "title_elonmuskwarnsofdeathandconsolidationacrosstheaicloudindustryisspacexreallydifferent_2026-10-26"
+    "title_elonmuskwarnsofdeathandconsolidationacrosstheaicloudindustryisspacexreallydifferent_2026-10-26",
+    "link_https://finance.yahoo.com/technology/ai/articles/openai-devalues-itself-again-192926104.html",
+    "title_openaidevaluesitselfagain_2026-10-26",
+    "link_https://finance.yahoo.com/m/d365727e-abaa-3b90-8970-c936b40272c4/what%E2%80%99s-moving-markets-today%3F.html",
+    "title_whatsmovingmarketstoday_2026-10-26",
+    "link_https://finance.yahoo.com/markets/articles/retiring-end-2026-4-key-195602856.html",
+    "title_retiringbytheendof20264keyquestionstoaskyourselffirst_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-stocks-rise-1-8-195140188.html",
+    "title_nvidiastocksrise18ascadencebringsmodelsinhouse_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/amazon-stocks-rise-0-63-193216497.html",
+    "title_amazonstocksrise063asanthropicfilinghighlights110billioncommitments_2026-10-26",
+    "link_https://finance.yahoo.com/technology/ai/articles/meta-stock-slips-zuckerberg-seeks-193407859.html",
+    "title_metastockslipsaszuckerbergseeks95billiontofuelaiexpansion_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/paypal-stock-hit-80-193227629.html",
+    "title_canpaypalstockhit80_2026-10-26",
+    "link_https://finance.yahoo.com/healthcare/articles/eli-lilly-stocks-move-higher-195224869.html",
+    "title_elilillystocksmovehigherbeforeglp1mixtest_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/procter-gamble-insider-sold-shares-194837126.html",
+    "title_proctergambleinsidersoldsharesworth5708049accordingtoarecentsecfiling_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/bad-higher-oil-prices-procter-194029315.html",
+    "title_howbadwouldhigheroilpricesbeforproctergamblestock_2026-10-26",
+    "link_https://finance.yahoo.com/healthcare/articles/moderna-sinks-another-8-even-192817771.html",
+    "title_modernasinksanother8evenasleadinvestigatorcallsmelanomavaccinedatatransformational_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-193359439.html",
+    "title_sectorupdateconsumer_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/article/theres-no-secret-sauce-theres-no-shortcut-spacexs-telecom-ambitions-will-take-years-and-cost-hundreds-of-billions-of-dollars-ceos-and-analysts-say-193955155.html",
+    "title_theresnosecretsaucetheresnoshortcutspacexstelecomambitionswilltakeyearsandcosthundredsofbillionsofdollarsceosandanalystssay_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/article/fico-stock-falls-14-after-pulte-pledges-more-action-on-credit-score-competition-194328661.html",
+    "title_ficostockfalls14afterpultepledgesmoreactiononcreditscorecompetition_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/paypal-down-more-80-peak-194544514.html",
+    "title_paypalisdownmorethan80fromitspeakhereswhatoctober27hastoshow_2026-10-26",
+    "link_https://finance.yahoo.com/healthcare/articles/corxel-obesity-drugmaker-public-via-191700301.html",
+    "title_corxelanobesitydrugmakertogopublicviaspacdeal_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/campbell-just-cut-dividend-income-194514643.html",
+    "title_campbellsjustcutitsdividendwhatincomeinvestorsshoulddonow_2026-10-26",
+    "link_https://finance.yahoo.com/m/f81e2d32-4825-39a6-944c-5d09582f8e05/instacart-shares-pop-on.html",
+    "title_instacartsharespoponpotentialacquisition_2026-10-26",
+    "link_https://finance.yahoo.com/m/1ca5e97f-2ae1-37eb-95f9-8a13970dcaf1/doordash-is-in-advanced-talks.html",
+    "title_doordashisinadvancedtalkstoacquiredeliveryrivalinstacart_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/oppenheimer-names-16-buys-p-193527998.html",
+    "title_oppenheimernames16buysassp500rallystalls_2026-10-26",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nebius-stocks-gain-despite-musks-195521767.html",
+    "title_nebiusstocksgaindespitemusksaifundingwarning_2026-10-26",
+    "link_https://www.fool.com/investing/2026/10/26/will-bitcoin-hit-100-000-before-the-end-of-2026/?.tsrc=rss",
+    "title_willbitcoinhit100000beforetheendof2026_2026-10-26",
+    "link_https://247wallst.com/investing/cryptocurrency/2026/10/26/ai-price-prediction-chatgpt-predicts-where-ethereum-chainlink-and-uniswap-could-be-by-the-end-of-2026/?.tsrc=rss",
+    "title_aipricepredictionchatgptpredictswhereethereumchainlinkanduniswapcouldbebytheendof2026_2026-10-26",
+    "link_https://www.thestreet.com/restaurants/bizarre-burger-king-japan-burger-leans-into-growing-trend?.tsrc=rss",
+    "title_burgerkingsnewmenuitemembracestheproteintrend_2026-10-26"
   ],
   "stats_today": {
-    "news_dispatches": 574,
-    "price_fires": 233,
+    "news_dispatches": 597,
+    "price_fires": 237,
     "earnings_cards": 10,
     "options_radars": 13,
     "options_setups": 1300
   },
   "stats_lifetime": {
-    "news_dispatches": 24385,
-    "price_fires": 7089,
+    "news_dispatches": 24408,
+    "price_fires": 7093,
     "earnings_cards": 1010,
     "options_radars": 1093,
     "options_setups": 10300
