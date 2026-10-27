@@ -1,7 +1,50 @@
 {
   "stock_session_date": "2026-10-27",
   "crypto_session_date": "2026-10-27",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "SI=F": {
+      "last_price": 52.89,
+      "history": [
+        "-2.25%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 111.0,
+      "history": [
+        "-4.15%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.043,
+      "history": [
+        "+16.95%"
+      ]
+    },
+    "SLV": {
+      "last_price": 48.09,
+      "history": [
+        "-1.17%"
+      ]
+    },
+    "CDNS": {
+      "last_price": 333.92,
+      "history": [
+        "+3.65%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 196.09,
+      "history": [
+        "-1.39%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 145.0,
+      "history": [
+        "+1.67%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {},
@@ -46320,18 +46363,34 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/cantor-fitzgerald-250-target-says-055516736.html",
     "title_cantorfitzgeralds250targetsaysskhynixsselloffwenttoofar_2026-10-27",
     "link_https://cryptonews.com/news/xrp-eyes-15-as-ripple-wins-final-bank-approval-ahead-of-swell/?.tsrc=rss",
-    "title_xrpeyes15asripplewinsfinalbankapprovalaheadofswell_2026-10-27"
+    "title_xrpeyes15asripplewinsfinalbankapprovalaheadofswell_2026-10-27",
+    "link_https://finance.yahoo.com/energy/articles/european-natural-gas-prices-soar-074320545.html",
+    "title_europeannaturalgaspricessoarwhatitmeansforyourwinterbills_2026-10-27",
+    "link_https://finance.yahoo.com/markets/crypto/articles/bitcoin-eth-holders-could-face-073839049.html",
+    "title_bitcoinandethholderscouldfaceadeeperpullbackansemwarns_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/does-jensen-huang-know-something-075100391.html",
+    "title_doesjensenhuangknowsomethingwallstreetdoesntnvidiasceoseesnosignsofmemorydemandfadingby2029_2026-10-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-picks-3b-stock-metas-074333095.html",
+    "title_nvidiapicksup3bstockinmetasequityofferingwillhelpimprovemuseaiplatform_2026-10-27",
+    "link_https://finance.yahoo.com/m/e9d35ae2-d1ea-3f2c-ba85-2ba5e1cd9f94/nvidia-to-invest-%243-billion.html",
+    "title_nvidiatoinvest3billioninmetasequityofferingastheyexpandaipartnership_2026-10-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/elon-musk-says-robots-more-063041305.html",
+    "title_elonmusksaysrobotswillneedmorememorythaneverythingelseonearththisanalystseesmuchbiggervolumestoryformicronskhynix_2026-10-27",
+    "link_https://finance.yahoo.com/small-business/articles/ai-pitch-deck-generator-investor-073400673.html",
+    "title_aipitchdeckgeneratorwithinvestorupdatesfromconnecteddatapresentationsaiexpandsitsbeautifulaialternativeforfoundersfinanceteamsandventurebackedbusinesses_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/servicenow-now-reports-earnings-tomorrow-072647956.html",
+    "title_servicenownowreportsearningstomorrowwhattoexpect_2026-10-27"
   ],
   "stats_today": {
-    "news_dispatches": 61,
-    "price_fires": 0,
+    "news_dispatches": 67,
+    "price_fires": 7,
     "earnings_cards": 10,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 24711,
-    "price_fires": 7111,
+    "news_dispatches": 24717,
+    "price_fires": 7118,
     "earnings_cards": 1010,
     "options_radars": 1093,
     "options_setups": 10300
