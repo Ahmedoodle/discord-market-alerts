@@ -1512,7 +1512,20 @@
       ]
     }
   },
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "XRP-USD": {
+      "last_price": 1.3273,
+      "history": [
+        "+2.20%"
+      ]
+    },
+    "LINK-USD": {
+      "last_price": 11.571,
+      "history": [
+        "+2.23%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -50754,18 +50767,54 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/visa-shares-fall-weak-2027-204231023.html?.tsrc=rss",
     "title_visasharesfallasweak2027outlookovershadowsfourthquarterearningsbeat_2026-10-27",
     "link_https://www.thestreet.com/retail/comcast-plans-layoffs-as-customer-losses-mount?.tsrc=rss",
-    "title_comcastmakessignificantshiftascustomerlossesmount_2026-10-27"
+    "title_comcastmakessignificantshiftascustomerlossesmount_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/top-3-british-penny-stocks-010848842.html",
+    "title_top3britishpennystockstowatchinoctober2026_2026-10-27",
+    "link_https://finance.yahoo.com/energy/articles/prairiesky-royalty-ltd-prekf-q3-010318009.html",
+    "title_prairieskyroyaltyltdprekfq32026earningscallhighlightsrecordduvernaydrillingand_2026-10-27",
+    "link_https://finance.yahoo.com/m/13771fc0-fc63-30e1-a06c-f7c5f0fd0594/gold-clings-to-gains-above.html",
+    "title_goldclingstogainsabove4000asmarketsawaitfed_2026-10-27",
+    "link_https://finance.yahoo.com/m/cee70c38-e5d4-3fcb-8eaa-3809ec791d41/review-%26-preview%3A-the-ai.html",
+    "title_reviewpreviewtheairollercoaster_2026-10-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/anthropic-held-more-cash-nvidia-003958106.html",
+    "title_anthropicheldmorecashthannvidiaandapplecombinedaheadofipo_2026-10-27",
+    "link_https://finance.yahoo.com/m/616d8b6f-5303-3e97-bab9-3421a36b93b9/sk-hynix-plans-%2475-billion-in.html",
+    "title_skhynixplans75billioninshareholderreturnsafterblockbusterearnings_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/visa-v-q4-earnings-taking-000002871.html",
+    "title_visavq4earningstakingalookatkeymetricsversusestimates_2026-10-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/agoda-becomes-first-travel-platform-010000537.html",
+    "title_agodabecomesfirsttravelplatformregionallytoseamlesslyconnectwithmetasmuse_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-co-ba-q3-2026-010518267.html",
+    "title_boeingcobaq32026earningscallhighlightsrecord745billionbacklogandmultiyear_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/eaton-etn-stock-looks-fairly-010855447.html",
+    "title_eatonetnstocklooksfairlyvalueddespiteits142run_2026-10-27",
+    "link_https://finance.yahoo.com/economy/policy/articles/australia-q3-inflation-quickens-bolstering-012141282.html",
+    "title_australiaq3inflationquickensbolsteringrbaratehikecase_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/pypl-stock-track-reverse-3-012637796.html",
+    "title_pyplstockontracktoreverse3weeksofgainsanalystsaysturnaroundstorywilltaketime_2026-10-27",
+    "link_https://finance.yahoo.com/m/4c72aaa7-3862-3bf6-b288-252d0667a1a6/see-how-anthropic-arrived-at.html",
+    "title_seehowanthropicarrivedatitsmindboggling40trillionmarketopportunity_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/u-stock-futures-flat-fed-012302962.html",
+    "title_usstockfuturesflatwithfedratedecisionmegacaptechearningsontap_2026-10-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sk-hynix-skhy-considering-special-010955395.html",
+    "title_skhynixskhyisconsideringaspecialdividendinthefirsthalfof2026_2026-10-27",
+    "link_https://beincrypto.com/china-ai-bubble-bitcoin-price-scenarios/?.tsrc=rss",
+    "title_willchinasstockmarketcrashhitbitcoinprice_2026-10-27",
+    "link_https://beincrypto.com/bitcoin-quantum-threat-migration-deadline/?.tsrc=rss",
+    "title_bitcoinsquantumthreatisrealthemigrationclockisticking_2026-10-27",
+    "link_https://www.barchart.com/story/news/8483724/a-1-billion-reason-to-consider-buying-the-ibm-stock-dip?.tsrc=rss",
+    "title_a1billionreasontoconsiderbuyingtheibmstockdip_2026-10-27"
   ],
   "stats_today": {
-    "news_dispatches": 1194,
-    "price_fires": 338,
+    "news_dispatches": 1203,
+    "price_fires": 340,
     "earnings_cards": 10,
     "options_radars": 14,
     "options_setups": 1400
   },
   "stats_lifetime": {
-    "news_dispatches": 25844,
-    "price_fires": 7449,
+    "news_dispatches": 25853,
+    "price_fires": 7451,
     "earnings_cards": 1010,
     "options_radars": 1107,
     "options_setups": 11700
