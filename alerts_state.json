@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 11.592,
+      "history": [
+        "+2.18%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -60544,18 +60551,26 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/vertex-pharmaceuticals-vrtx-stock-may-032350910.html?.tsrc=rss",
     "title_vertexpharmaceuticalsvrtxstockmaystillhavevaluefollowinga190run_2026-10-31",
     "link_https://finance.yahoo.com/markets/stocks/articles/2-unstoppable-growth-stocks-id-042000528.html",
-    "title_2unstoppablegrowthstocksidbuywith1000andholdforadecade_2026-11-01"
+    "title_2unstoppablegrowthstocksidbuywith1000andholdforadecade_2026-11-01",
+    "link_https://finance.yahoo.com/energy/articles/3-integrated-oil-majors-whose-041824843.html",
+    "title_3integratedoilmajorswhosecashflowoutlookjustgotclearer_2026-11-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/medtronic-just-retired-55-million-044100611.html",
+    "title_medtronicjustretired55millionshareswithoutspendingcashisthestockabuy_2026-11-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/amzn-q3-deep-dive-cloud-043500791.html",
+    "title_amznq3deepdivecloudsurgeandaiinvestmentsdrivemixedmarketreception_2026-11-01",
+    "link_https://finance.yahoo.com/markets/stocks/articles/lam-research-lrcx-stock-looks-041637403.html",
+    "title_lamresearchlrcxstocklooksstretchedasits312fiveyearruncontinues_2026-11-01"
   ],
   "stats_today": {
-    "news_dispatches": 4,
-    "price_fires": 0,
+    "news_dispatches": 8,
+    "price_fires": 1,
     "earnings_cards": 229,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 30161,
-    "price_fires": 9108,
+    "news_dispatches": 30165,
+    "price_fires": 9109,
     "earnings_cards": 1229,
     "options_radars": 1149,
     "options_setups": 15900
