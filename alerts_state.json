@@ -1,7 +1,236 @@
 {
   "stock_session_date": "2026-11-02",
   "crypto_session_date": "2026-11-02",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "SI=F": {
+      "last_price": 50.555,
+      "history": [
+        "+2.60%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 100.09,
+      "history": [
+        "-3.87%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 109.21,
+      "history": [
+        "-3.72%"
+      ]
+    },
+    "SLV": {
+      "last_price": 45.4,
+      "history": [
+        "+1.79%"
+      ]
+    },
+    "USO": {
+      "last_price": 164.67,
+      "history": [
+        "-2.46%"
+      ]
+    },
+    "BNO": {
+      "last_price": 69.81,
+      "history": [
+        "-2.21%"
+      ]
+    },
+    "IBIT": {
+      "last_price": 44.25,
+      "history": [
+        "+2.05%"
+      ]
+    },
+    "ETHA": {
+      "last_price": 51.61,
+      "history": [
+        "+2.36%"
+      ]
+    },
+    "NVDA": {
+      "last_price": 207.61,
+      "history": [
+        "+1.45%"
+      ]
+    },
+    "GOOGL": {
+      "last_price": 282.88,
+      "history": [
+        "+1.09%"
+      ]
+    },
+    "GOOG": {
+      "last_price": 281.63,
+      "history": [
+        "+1.23%"
+      ]
+    },
+    "AVGO": {
+      "last_price": 331.5,
+      "history": [
+        "+1.66%"
+      ]
+    },
+    "AMD": {
+      "last_price": 515.9,
+      "history": [
+        "+2.20%"
+      ]
+    },
+    "ORCL": {
+      "last_price": 132.75,
+      "history": [
+        "+1.59%"
+      ]
+    },
+    "CAT": {
+      "last_price": 631.09,
+      "history": [
+        "+1.34%"
+      ]
+    },
+    "TXN": {
+      "last_price": 304.06,
+      "history": [
+        "+1.07%"
+      ]
+    },
+    "AMAT": {
+      "last_price": 398.72,
+      "history": [
+        "+2.21%"
+      ]
+    },
+    "PLTR": {
+      "last_price": 187.41,
+      "history": [
+        "+1.79%"
+      ]
+    },
+    "PANW": {
+      "last_price": 370.92,
+      "history": [
+        "+1.38%"
+      ]
+    },
+    "LRCX": {
+      "last_price": 245.0,
+      "history": [
+        "+2.46%"
+      ]
+    },
+    "MU": {
+      "last_price": 908.1,
+      "history": [
+        "+2.64%"
+      ]
+    },
+    "ADI": {
+      "last_price": 422.31,
+      "history": [
+        "+1.25%"
+      ]
+    },
+    "KLAC": {
+      "last_price": 161.0,
+      "history": [
+        "+1.96%"
+      ]
+    },
+    "CRWD": {
+      "last_price": 254.11,
+      "history": [
+        "+1.47%"
+      ]
+    },
+    "NXPI": {
+      "last_price": 262.3,
+      "history": [
+        "+1.04%"
+      ]
+    },
+    "MRVL": {
+      "last_price": 202.1704,
+      "history": [
+        "+2.94%"
+      ]
+    },
+    "SMCI": {
+      "last_price": 33.8,
+      "history": [
+        "+2.58%"
+      ]
+    },
+    "ARM": {
+      "last_price": 211.64,
+      "history": [
+        "+2.75%"
+      ]
+    },
+    "RBLX": {
+      "last_price": 43.58,
+      "history": [
+        "+1.37%"
+      ]
+    },
+    "MSTR": {
+      "last_price": 134.6,
+      "history": [
+        "+3.13%"
+      ]
+    },
+    "IREN": {
+      "last_price": 24.74,
+      "history": [
+        "+3.30%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 1184.2,
+      "history": [
+        "+2.89%"
+      ]
+    },
+    "ASML": {
+      "last_price": 1592.0,
+      "history": [
+        "+1.67%"
+      ]
+    },
+    "CBRS": {
+      "last_price": 111.1,
+      "history": [
+        "+1.76%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 155.8,
+      "history": [
+        "+4.42%"
+      ]
+    },
+    "SPCX": {
+      "last_price": 138.78,
+      "history": [
+        "+3.01%"
+      ]
+    },
+    "RKLB": {
+      "last_price": 56.1,
+      "history": [
+        "+2.50%"
+      ]
+    },
+    "NBIS": {
+      "last_price": 159.03,
+      "history": [
+        "+3.17%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
@@ -61305,18 +61534,54 @@
     "link_https://finance.yahoo.com/energy/articles/kosmos-energy-cuts-debt-more-073900253.html",
     "title_kosmosenergycutsdebtbymorethan500millionasthirdquarterproductionrises_2026-11-02",
     "link_https://finance.yahoo.com/markets/commodities/articles/silver-crown-royalties-signs-definitive-080000447.html",
-    "title_silvercrownroyaltiessignsdefinitiveagreementtoacquireroyaltyonsomagoldselbagrecomplex_2026-11-02"
+    "title_silvercrownroyaltiessignsdefinitiveagreementtoacquireroyaltyonsomagoldselbagrecomplex_2026-11-02",
+    "link_https://finance.yahoo.com/markets/world-indices/articles/european-shares-inch-lower-fitch-083811125.html",
+    "title_europeansharesinchlowerasfitchcutsfrancesoutlook_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/apple-palantir-kick-off-tech-084008274.html",
+    "title_appleandpalantirtokickofftechearningsinanothercrucialweekamdtosettlechipdebateafterintelswarning_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/could-surprise-microsoft-stock-investors-083520195.html",
+    "title_whatcouldsurprisemicrosoftstockinvestorsontheupside_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/stock-portfolio-increasingly-hinges-bond-140300639.html",
+    "title_yourstockportfolioincreasinglyhingesonthebondmarketandthemidtermelections_2026-11-02",
+    "link_https://finance.yahoo.com/healthcare/articles/1-reason-compass-pathways-worth-085000875.html",
+    "title_1reasoncompasspathwaysisworthasecondlookthismonth_2026-11-02",
+    "link_https://finance.yahoo.com/economy/policy/articles/kevin-warsh-offered-warning-inflation-083202298.html",
+    "title_kevinwarshofferedawarningoninflationhereswhathistorysaysiscomingnext_2026-11-02",
+    "link_https://finance.yahoo.com/technology/ai/articles/sunrate-launches-agentic-card-enable-090000074.html",
+    "title_sunratelaunchesagenticcardtoenableaidrivenbusinesspayments_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/dates-could-move-disney-stock-083514794.html",
+    "title_whichdatescouldmovedisneystockmost_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/eli-lillys-forecast-chart-same-083510341.html",
+    "title_whenelilillysforecastandchartsaythesamethingpayattention_2026-11-02",
+    "link_https://finance.yahoo.com/healthcare/articles/number-biggest-risk-intuitive-surgical-083508167.html",
+    "title_isthisnumberthebiggestrisktointuitivesurgicalstock_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/citi-initiates-vusion-buy-sees-082255321.html",
+    "title_citiinitiatesvusionatbuysees84upsideonelectronicshelflabelgrowth_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/dates-matter-most-cisco-stock-083516267.html",
+    "title_thedatesthatmattermostforciscostock_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/kla-stock-jump-40-083513543.html",
+    "title_canklastockjump40_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/t-stock-bulls-not-worried-083518989.html",
+    "title_whatareattstockbullsnotworriedabout_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/michael-burry-fiserv-buyout-math-084842243.html",
+    "title_michaelburrysfiservbuyoutmathhits120reaffirmspaypalasafatpitchamidglobalpaymentsdealbuzz_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/stocktwits-retail-therapy-defensive-bets-082440519.html",
+    "title_stocktwitsretailtherapydefensivebetsextendstreakascrocswingstopcarvanaleadweeklyconsumergains_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/baker-hughes-closes-1-45-083145068.html",
+    "title_bakerhughescloses145billionsaleofwaygatetechnologiestohexagon_2026-11-02",
+    "link_https://www.fool.com/investing/2026/11/02/prediction-nvidia-will-have-an-incredible-november/?.tsrc=rss",
+    "title_predictionnvidiawillhaveanincrediblenovemberthanksto1event_2026-11-02"
   ],
   "stats_today": {
-    "news_dispatches": 49,
-    "price_fires": 0,
+    "news_dispatches": 67,
+    "price_fires": 38,
     "earnings_cards": 229,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 30467,
-    "price_fires": 9111,
+    "news_dispatches": 30485,
+    "price_fires": 9149,
     "earnings_cards": 1229,
     "options_radars": 1149,
     "options_setups": 15900
