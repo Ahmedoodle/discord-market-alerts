@@ -1,6 +1,6 @@
 {
   "stock_session_date": "2026-11-02",
-  "crypto_session_date": "2026-11-02",
+  "crypto_session_date": "2026-11-03",
   "premarket_tickers": {
     "SI=F": {
       "last_price": 50.555,
@@ -1812,17 +1812,28 @@
     }
   },
   "crypto_tickers": {
-    "LINK-USD": {
-      "last_price": 11.135,
+    "BTC-USD": {
+      "last_price": 76575.46,
       "history": [
-        "-2.10%",
-        "-3.66%"
+        "-2.45%"
+      ]
+    },
+    "ETH-USD": {
+      "last_price": 2242.85,
+      "history": [
+        "-2.74%"
       ]
     },
     "SOL-USD": {
-      "last_price": 91.92,
+      "last_price": 91.57,
       "history": [
-        "-2.68%"
+        "-4.03%"
+      ]
+    },
+    "LINK-USD": {
+      "last_price": 11.039,
+      "history": [
+        "-2.64%"
       ]
     }
   },
@@ -65949,18 +65960,26 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/oracle-announces-pricing-20-billion-030900901.html",
     "title_oracleannouncespricingof20billionofcommonstockandseniornotes_2026-11-02",
     "link_https://finance.yahoo.com/markets/stocks/articles/cipher-digital-inc-cifr-q3-030159961.html?.tsrc=rss",
-    "title_cipherdigitalinccifrq32026earningscallhighlights16_2026-11-02"
+    "title_cipherdigitalinccifrq32026earningscallhighlights16_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-stock-2-us-growth-031837097.html",
+    "title_nvidiastockand2usgrowthstocksfacingatreasuryyieldreset_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/alamo-group-alg-q3-earnings-231002320.html",
+    "title_alamogroupalgq3earningsandrevenueslagestimates_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/copart-cprt-stock-looks-cheap-031742574.html",
+    "title_copartcprtstocklookscheapbasedonitsearningsprice_2026-11-02",
+    "link_https://finance.yahoo.com/markets/stocks/articles/17-billion-reason-buy-doordash-213119433.html",
+    "title_a17billionreasontobuydoordashstocknow_2026-11-02"
   ],
   "stats_today": {
-    "news_dispatches": 1096,
-    "price_fires": 446,
+    "news_dispatches": 1098,
+    "price_fires": 450,
     "earnings_cards": 293,
     "options_radars": 13,
     "options_setups": 1300
   },
   "stats_lifetime": {
-    "news_dispatches": 31514,
-    "price_fires": 9557,
+    "news_dispatches": 31516,
+    "price_fires": 9561,
     "earnings_cards": 1293,
     "options_radars": 1162,
     "options_setups": 17200
