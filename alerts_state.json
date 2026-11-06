@@ -724,9 +724,10 @@
       ]
     },
     "NBIS": {
-      "last_price": 125.37,
+      "last_price": 128.09,
       "history": [
-        "-11.41%"
+        "-11.41%",
+        "-9.49%"
       ]
     },
     "RY.TO": {
@@ -937,6 +938,18 @@
       "last_price": 43.89,
       "history": [
         "+2.26%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.013,
+      "history": [
+        "+2.24%"
+      ]
+    },
+    "CB": {
+      "last_price": 366.325,
+      "history": [
+        "-2.10%"
       ]
     }
   },
@@ -66470,21 +66483,79 @@
     "link_https://app.moby.co/home/research/tools/earningsCalendar/earnings-algonquin-power-utilities-corp-q3-2026-earnings-call-summary?utm_source=yahoo_finance&utm_medium=rss&.tsrc=rss",
     "title_algonquinpowerutilitiescorpq32026earningscallsummary_2026-11-06",
     "link_https://app.moby.co/home/research/tools/earningsCalendar/earnings-alpha-metallurgical-resources-inc-q3-2026-earnings-call-summary?utm_source=yahoo_finance&utm_medium=rss&.tsrc=rss",
-    "title_alphametallurgicalresourcesincq32026earningscallsummary_2026-11-06"
+    "title_alphametallurgicalresourcesincq32026earningscallsummary_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/exchange-traded-funds-higher-us-181230703.html",
+    "title_exchangetradedfundshigherasusequitiesadvanceaftermidday_2026-11-06",
+    "link_https://finance.yahoo.com/technology/articles/qualcomm-faces-worst-day-since-181632192.html",
+    "title_qualcommfacesworstdaysince2020aschipscrater_2026-11-06",
+    "link_https://finance.yahoo.com/energy/articles/enterprise-products-gains-24-3-171500090.html",
+    "title_enterpriseproductsgains243inayearshouldyoubuyorexit_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/investor-warns-nvidia-repeating-ciscos-181800315.html",
+    "title_investorwarnsnvidiaisrepeatingciscosfatalmistake_2026-11-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/oracle-falls-4-microsoft-reportedly-181718577.html",
+    "title_oraclefalls4asmicrosoftreportedlywindsdownaicloudcapacitydeal_2026-11-06",
+    "link_https://finance.yahoo.com/technology/articles/amazon-makes-major-alexa-change-182159739.html",
+    "title_amazonmakesamajoralexachangethatcouldreshapeshopping_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/hims-hers-gained-market-dipped-175109989.html",
+    "title_himshersgainedasthemarketdippedhereswhatthenovember9reportmustprove_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/airsculpt-technologies-inc-q3-2026-180604489.html",
+    "title_airsculpttechnologiesincq32026earningscallsummary_2026-11-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/why-visa-v-building-ai-181300147.html",
+    "title_whyisvisavbuildingaishoppingstandardsandsixsingaporehubs_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/average-1-cd-pays-just-181753351.html",
+    "title_theaverage1yearcdpaysjust176thesedividendstockscouldpaymore_2026-11-06",
+    "link_https://finance.yahoo.com/m/06aa7a72-3f3b-3740-ba90-e5a9da6f4d4f/musk-kills-tesla-cybertruck..html",
+    "title_muskkillsteslacybertruckwhyhehadtoshoottheelephant_2026-11-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/cathie-wood-picks-side-ai-181257136.html",
+    "title_cathiewoodpicksasideintheaichipselloff_2026-11-06",
+    "link_https://finance.yahoo.com/m/6bfb687b-0da3-3c61-ae66-05f341e4808c/moderna-hits-five-year-high.html",
+    "title_modernahitsfiveyearhighonsalesbeatbuttherealstoryisstillitscancervaccine_2026-11-06",
+    "link_https://finance.yahoo.com/m/2f1768b9-bb2d-3bba-aa6c-e3e43b14f450/moderna-stock-is-up-700%25-on.html",
+    "title_modernastockisup700oncancervaccinehypeearningsrevealthatcovidstillcounts_2026-11-06",
+    "link_https://finance.yahoo.com/technology/ai/articles/market-chatter-microsoft-conclude-deal-181217241.html",
+    "title_marketchattermicrosofttoconcludedealwithoracleforrentingaicompute_2026-11-06",
+    "link_https://finance.yahoo.com/healthcare/articles/regenxbio-q3-earnings-call-highlights-181501216.html",
+    "title_regenxbioq3earningscallhighlights_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ai-stocks-could-fall-further-181150535.html",
+    "title_aistockscouldfallfurtherdespitesurginggpudemandresearchfirmwarns_2026-11-06",
+    "link_https://finance.yahoo.com/m/13933ac1-ca44-3c66-87e0-08f5c6b276e8/nvidia%2C-intel%2C-tesla%2C-amd%2C.html",
+    "title_nvidiaintelteslaamdcoherentlamresearchmodernaandmorestocksthatexplaintodaysmarket_2026-11-06",
+    "link_https://finance.yahoo.com/m/e1cc3675-f7f1-37df-be78-62a32fbe2487/the-chip-stock-bloodbath-is-a.html",
+    "title_thechipstockbloodbathisacasestudyintherisksofleveragedetfs_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/eaton-convert-record-backlog-stronger-171300757.html",
+    "title_caneatonconvertitsrecordbacklogintostrongerearnings_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/build-5-450-month-tax-181911974.html",
+    "title_howtobuild5450amonthintaxfreedividendincomeinsidearothira_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/charter-communications-earnings-analysis-questions-182406960.html",
+    "title_chartercommunicationsearningsanalysisquestionsansweredandnextcatalysts_2026-11-06",
+    "link_https://finance.yahoo.com/markets/crypto/articles/bitcoin-under-76-000-430m-180124346.html",
+    "title_bitcoinunder76000after430metfoutflowshasitbottomed_2026-11-06",
+    "link_https://finance.yahoo.com/markets/crypto/articles/strive-adds-15-124-btc-175000488.html",
+    "title_striveadds15124btcinoctoberafterreporting509mq3profit_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/moderna-earnings-analysis-questions-answered-182442855.html",
+    "title_modernaearningsanalysisquestionsansweredandnextcatalysts_2026-11-06",
+    "link_https://finance.yahoo.com/markets/crypto/articles/xrp-price-prediction-failed-breakout-130834176.html?.tsrc=rss",
+    "title_xrppricepredictionfailedbreakoutat132setsstagefor13drop_2026-11-06",
+    "link_https://finance.yahoo.com/video/were-rapidly-moving-toward-a-tragedy-why-an-ai-slowdown-could-be-a-good-thing-181553831.html?.tsrc=rss",
+    "title_wererapidlymovingtowardatragedywhyanaislowdowncouldbeagoodthing_2026-11-06",
+    "link_https://app.moby.co/home/research/tools/earningsCalendar/earnings-gogo-inc-q3-2026-earnings-call-summary?utm_source=yahoo_finance&utm_medium=rss&.tsrc=rss",
+    "title_gogoincq32026earningscallsummary_2026-11-06",
+    "link_https://www.fool.com/earnings/call-transcripts/2026/11/06/brookfield-infra-bipc-q3-2026-earnings-call-transcript/?.tsrc=rss",
+    "title_brookfieldinfrabipcq32026earningscalltranscript_2026-11-06"
   ],
   "stats_today": {
-    "news_dispatches": 49,
-    "price_fires": 157,
+    "news_dispatches": 73,
+    "price_fires": 160,
     "earnings_cards": 293,
-    "options_radars": 2,
-    "options_setups": 200
+    "options_radars": 3,
+    "options_setups": 300
   },
   "stats_lifetime": {
-    "news_dispatches": 31588,
-    "price_fires": 9721,
+    "news_dispatches": 31612,
+    "price_fires": 9724,
     "earnings_cards": 1293,
-    "options_radars": 1164,
-    "options_setups": 17400
+    "options_radars": 1165,
+    "options_setups": 17500
   },
   "persistent_analytics": {
     "lifetime_total_messages": 2057,
