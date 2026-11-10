@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "SOL-USD": {
+      "last_price": 85.61,
+      "history": [
+        "-2.03%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -65486,18 +65493,32 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/lightspeed-commerce-tsx-lspd-undervalued-091106673.html?.tsrc=rss",
     "title_islightspeedcommercetsxlspdundervaluedafteritslatestquarterlyresults_2026-11-08",
     "link_https://finance.yahoo.com/markets/stocks/articles/lightspeed-commerce-tsx-lspd-stock-080922467.html?.tsrc=rss",
-    "title_lightspeedcommercetsxlspdstocktradesatadiscounttoitssalesbase_2026-11-08"
+    "title_lightspeedcommercetsxlspdstocktradesatadiscounttoitssalesbase_2026-11-08",
+    "link_https://finance.yahoo.com/markets/stocks/articles/monolithic-power-systems-photronics-shares-030936110.html",
+    "title_monolithicpowersystemsandphotronicssharesskyrocketwhatyouneedtoknow_2026-11-09",
+    "link_https://finance.yahoo.com/markets/stocks/articles/watches-nasdaq-plunge-5-5-020723530.html",
+    "title_hewatchesthenasdaqplunge55at63claimingsocialsecuritytoavoidsellingstockscouldlockinasmallercheckforlife_2026-11-09",
+    "link_https://finance.yahoo.com/m/05e86002-4c3f-3bfd-8c26-ccc94acf7ece/post-midterms-ai-selloff-on.html",
+    "title_postmidtermsaiselloffondatacenterbuildoutconcernsappearsoverdone_2026-11-09",
+    "link_https://finance.yahoo.com/m/a0886aa1-08ad-36d4-a007-802a14ec6b98/democrats-are-wasting-no-time.html",
+    "title_democratsarewastingnotimeinvestigatingcorporateamericasbiggestnames_2026-11-09",
+    "link_https://finance.yahoo.com/technology/ai/articles/anthropics-1-says-expand-data-031400345.html",
+    "title_anthropicss1saysitwillexpanditsdatacenterfootprinthereswhocouldpourtheconcretewirethepowerandcoolthechips_2026-11-09",
+    "link_https://finance.yahoo.com/markets/stocks/articles/analysts-turning-bearish-draftkings-stock-211618091.html",
+    "title_analystsareturningbearishondraftkingsstockhereswhy_2026-11-09",
+    "link_https://finance.yahoo.com/markets/stocks/articles/trade-desk-ttd-soaring-much-032123152.html",
+    "title_thetradedeskttdissoaringthismuchwhatsboostingtherally_2026-11-09"
   ],
   "stats_today": {
-    "news_dispatches": 12,
-    "price_fires": 0,
+    "news_dispatches": 16,
+    "price_fires": 1,
     "earnings_cards": 293,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 31569,
-    "price_fires": 9567,
+    "news_dispatches": 31573,
+    "price_fires": 9568,
     "earnings_cards": 1293,
     "options_radars": 1162,
     "options_setups": 17200
