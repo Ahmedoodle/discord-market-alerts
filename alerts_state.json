@@ -4,7 +4,14 @@
   "premarket_tickers": {},
   "regular_tickers": {},
   "afterhours_tickers": {},
-  "crypto_tickers": {},
+  "crypto_tickers": {
+    "LINK-USD": {
+      "last_price": 10.144,
+      "history": [
+        "-2.04%"
+      ]
+    }
+  },
   "holiday_announced_date": null,
   "seen_news_fingerprints": [
     "https://finance.yahoo.com/m/1d0d31f1-73c3-342e-8317-5183a5bdada5/trump-says-us-scaling-back.html",
@@ -65466,18 +65473,30 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/sell-alert-5-high-profile-203124084.html?.tsrc=rss",
     "title_sellalert5highprofilestocksjustdumpedbytopanalysts_2026-11-08",
     "link_https://finance.yahoo.com/markets/stocks/articles/molson-coors-downgraded-sitime-upgraded-150719956.html?.tsrc=rss",
-    "title_molsoncoorsdowngradedsitimeupgradedwallstreetstopanalystcalls_2026-11-06"
+    "title_molsoncoorsdowngradedsitimeupgradedwallstreetstopanalystcalls_2026-11-06",
+    "link_https://finance.yahoo.com/markets/stocks/articles/spacex-tesla-merge-heres-10-025000181.html",
+    "title_ifspacexandteslamergehereswhata10000investmentinthecombinedcompanycouldbeworthby2030_2026-11-11",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jensen-huang-future-nvidia-hangs-024331993.html",
+    "title_jensenhuangsfutureatnvidiahangsinbalanceasboardweighsfalloutanalystswarnofchallengesahead_2026-11-11",
+    "link_https://finance.yahoo.com/healthcare/articles/jpmorgan-predicted-strong-wegovy-pill-023500249.html",
+    "title_jpmorganpredictedstrongwegovypillsalesandwasrightisnovonordiskstockabuynow_2026-11-11",
+    "link_https://finance.yahoo.com/markets/stocks/articles/aevex-q3-earnings-snapshot-024638451.html?.tsrc=rss",
+    "title_aevexq3earningssnapshot_2026-11-11",
+    "link_https://www.thestreet.com/investing/stocks/michael-burry-surprising-new-take-on-nvidia-stock?.tsrc=rss",
+    "title_michaelburryhasasurprisingnewtakeonnvidiastock_2026-11-11",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-canadian-growth-stocks-own-021817704.html?.tsrc=rss",
+    "title_3canadiangrowthstockstoowninnovember2026_2026-11-11"
   ],
   "stats_today": {
-    "news_dispatches": 12,
-    "price_fires": 0,
+    "news_dispatches": 18,
+    "price_fires": 1,
     "earnings_cards": 293,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 31584,
-    "price_fires": 9571,
+    "news_dispatches": 31590,
+    "price_fires": 9572,
     "earnings_cards": 1293,
     "options_radars": 1162,
     "options_setups": 17200
