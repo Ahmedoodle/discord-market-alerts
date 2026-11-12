@@ -562,7 +562,44 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "GC=F": {
+      "last_price": 3882.5,
+      "history": [
+        "-2.95%"
+      ]
+    },
+    "SI=F": {
+      "last_price": 49.965,
+      "history": [
+        "-3.69%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 88.89,
+      "history": [
+        "+2.73%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 96.02,
+      "history": [
+        "+3.51%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.336,
+      "history": [
+        "+3.76%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2806.9,
+      "history": [
+        "-1.64%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "BTC-USD": {
       "last_price": 71376.67,
@@ -66066,18 +66103,96 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/sell-alert-5-high-profile-203124084.html?.tsrc=rss",
     "title_sellalert5highprofilestocksjustdumpedbytopanalysts_2026-11-08",
     "link_https://finance.yahoo.com/markets/stocks/articles/molson-coors-downgraded-sitime-upgraded-150719956.html?.tsrc=rss",
-    "title_molsoncoorsdowngradedsitimeupgradedwallstreetstopanalystcalls_2026-11-06"
+    "title_molsoncoorsdowngradedsitimeupgradedwallstreetstopanalystcalls_2026-11-06",
+    "link_https://finance.yahoo.com/energy/articles/xop-vs-amlp-midstream-upstream-205002483.html",
+    "title_xopvsamlpisamidstreamorupstreamenergyetfthebetterbuyasoilpricesstayhigh_2026-11-12",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-204237166.html",
+    "title_sectorupdateenergy_2026-11-12",
+    "link_https://finance.yahoo.com/m/a3ae2b72-a9a3-384b-9696-035af217009a/small-caps-are-caught-between.html",
+    "title_smallcapsarecaughtbetweenoilpricesandthefed_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/analyst-sees-huangs-resignation-nvidia-204845141.html",
+    "title_thisanalystseeshuangsresignationasnvidiaceoasaonetimeclearingeventforstockmarket_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-nvda-always-jensen-huang-203922062.html",
+    "title_nvidianvdahasalwaysbeenjensenhuangscompanywhathappenstothestockifthatchanges_2026-11-12",
+    "link_https://finance.yahoo.com/news/us-democratic-senator-wants-assessment-205547416.html",
+    "title_usdemocraticsenatorwantsassessmentofwhethernvidiaistoobigtofail_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-stock-just-got-downgraded-204651427.html",
+    "title_nvidiastockjustgotdowngradedafterjensenhuangsexitshouldyousell_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/buy-hubspot-stock-cash-202717964.html",
+    "title_shouldyoubuyhubspotstockforitscash_2026-11-12",
+    "link_https://finance.yahoo.com/m/37b188cf-c355-340b-a82d-9507f4bf41f2/cerebras-earnings-must-prove.html",
+    "title_cerebrasearningsmustprovethechipmakercanexpandbeyondopenai_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/musk-spacex-tesla-empire-moves-205333382.html",
+    "title_musksspacexteslaempiremovescloserbutchinaandwashingtonloomlarge_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/spacex-tesla-talks-record-merger-202235758.html",
+    "title_spacexandteslatalksonrecordmergeraresaidtoprogress_2026-11-12",
+    "link_https://finance.yahoo.com/healthcare/articles/lilly-breaks-ground-pennsylvanias-lehigh-203000187.html",
+    "title_lillybreaksgroundinpennsylvaniaslehighvalleyona35billionsitetomakenextgenerationobesitymedicinesthelatestof10newussitessince2020_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/dividend-growth-linde-lin-changed-201544872.html",
+    "title_howdividendgrowthatlindelinhaschangeditsinvestmentstory_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/advanced-micro-devices-amd-stock-201601837.html",
+    "title_advancedmicrodevicesamdstockjumpedwhatisdrivingattentiontoday_2026-11-12",
+    "link_https://finance.yahoo.com/technology/ai/articles/adobe-makes-major-change-creators-203700222.html",
+    "title_adobemakesmajorchangecreatorswillnoticeascitiflagshardreset_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/texas-instruments-txn-stock-looks-201546208.html",
+    "title_texasinstrumentstxnstocklooksfullyvaluedafterfreshembeddedainews_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/does-ups-stocks-run-sense-204122875.html",
+    "title_doesupsstocksrunmakeanysensenow_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/driving-fall-planet-labs-stock-203258205.html",
+    "title_whatisdrivingthefallinplanetlabsstock_2026-11-12",
+    "link_https://finance.yahoo.com/markets/article/starbucks-ceo-brian-niccol-focused-being-starbucks-but-leaves-door-open-for-future-restaurant-acquisitions-205018126.html",
+    "title_starbucksceobrianniccolfocusedbeingstarbucksbutleavesdooropenforfuturerestaurantacquisitions_2026-11-12",
+    "link_https://finance.yahoo.com/economy/policy/articles/retirement-america-podcast-explores-blackrock-203000685.html",
+    "title_newretirementinamericapodcastexploreshowblackrockisbringingpensionlikebenefitsto401kplans_2026-11-12",
+    "link_https://finance.yahoo.com/m/f1b11eb7-24e6-3487-a5c2-c09915772ecb/what-the-wealth-industry-is.html",
+    "title_whatthewealthindustryisgettingwrongaboutwomenplusadvisorsonthemove_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-decline-afternoon-204936730.html",
+    "title_sectorupdateconsumerstocksdeclinelateafternoon_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/usa-rare-earth-stock-jump-204102673.html",
+    "title_canusarareearthstockjump10x_2026-11-12",
+    "link_https://finance.yahoo.com/technology/ai/articles/intel-radixark-collaborate-advance-open-203000473.html",
+    "title_intelradixarkcollaboratetoadvanceopenaiinferenceonintelplatforms_2026-11-12",
+    "link_https://finance.yahoo.com/m/ddaab534-469d-3e83-bb20-51620bcd5f6f/after-intel%E2%80%99s-worst-day-on.html",
+    "title_afterintelsworstdayonrecordceolipbutanbuys97millioninstock_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/ge-vernova-sinks-12-vertiv-203526996.html",
+    "title_gevernovasinks12vertivdown12inaweekasdatacenterbacklashhitsaipower_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nuscale-power-stocks-jump-earnings-202101895.html",
+    "title_willnuscalepowerstocksjumpafterearningslast_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nebius-group-earnings-analysis-questions-204801010.html",
+    "title_nebiusgroupearningsanalysisquestionsansweredandnextcatalysts_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-afternoon-204544398.html",
+    "title_sectorupdatetechstocksfalllateafternoon_2026-11-12",
+    "link_https://finance.yahoo.com/m/abd4704d-2e59-3bef-8250-7e95ea2c132c/super-micro-stock-falls-as.html",
+    "title_supermicrostockfallsasdojprobessmugglingallegations_2026-11-12",
+    "link_https://247wallst.com/investing/cryptocurrency/2026/11/12/could-xrp-be-the-next-bitcoin/?.tsrc=rss",
+    "title_couldxrpbethenextbitcoin_2026-11-12",
+    "link_http://videos.coindesk.com/previews/T3qsPd0W?.tsrc=rss",
+    "title_jensenhuangresignsasnvidiaceoamidscandal_2026-11-12",
+    "link_https://www.thestreet.com/crypto/markets/kevin-oleary-reveals-real-reason-behind-cryptos-market-crash?.tsrc=rss",
+    "title_kevinolearyrevealsrealreasonbehindcryptosmarketcrash_2026-11-12",
+    "link_https://finance.yahoo.com/video/how-jensens-exit-will-help-the-us-in-the-ai-race-vs-china-roubini-204733072.html?.tsrc=rss",
+    "title_howjensensexitwillhelptheusintheairacevschinaroubini_2026-11-12",
+    "link_https://finance.yahoo.com/m/f07e5236-306d-3a1c-988b-bfb95c05e8df/it%E2%80%99s-the-end-of-the-ai-trade.html?.tsrc=rss",
+    "title_itstheendoftheaitradeasweknowitwhosfeelingfine_2026-11-12",
+    "link_https://finance.yahoo.com/video/right-now-were-focused-on-being-starbucks-ceo-addresses-chipotle-merger-rumors-203902524.html?.tsrc=rss",
+    "title_rightnowwerefocusedonbeingstarbucksceoaddresseschipotlemergerrumors_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/atlas-energy-solutions-aesi-stock-201454409.html?.tsrc=rss",
+    "title_atlasenergysolutionsaesistockfairvaluefallsasanalystsweighpowergrowthandearningsrisks_2026-11-12",
+    "link_https://finance.yahoo.com/technology/ai/articles/bluwave-ai-closes-8-1m-140000679.html?.tsrc=rss",
+    "title_bluwaveaicloses81mseriesa2toacceleratedeploymentofaiinelectricitygridsandelectrifiedtransport_2026-11-12",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cae-earnings-analysis-questions-answered-205552460.html?.tsrc=rss",
+    "title_caeearningsanalysisquestionsansweredandnextcatalysts_2026-11-12"
   ],
   "stats_today": {
-    "news_dispatches": 34,
-    "price_fires": 98,
+    "news_dispatches": 64,
+    "price_fires": 104,
     "earnings_cards": 293,
     "options_radars": 1,
     "options_setups": 100
   },
   "stats_lifetime": {
-    "news_dispatches": 31615,
-    "price_fires": 9670,
+    "news_dispatches": 31645,
+    "price_fires": 9676,
     "earnings_cards": 1293,
     "options_radars": 1163,
     "options_setups": 17300
