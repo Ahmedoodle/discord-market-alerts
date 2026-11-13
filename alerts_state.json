@@ -642,7 +642,26 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "SI=F": {
+      "last_price": 48.755,
+      "history": [
+        "-2.44%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.235,
+      "history": [
+        "-3.14%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 28086.75,
+      "history": [
+        "-1.05%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "BTC-USD": {
       "last_price": 68640.74,
@@ -68038,18 +68057,84 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/3-canadian-growth-stocks-own-201055368.html?.tsrc=rss",
     "title_3canadiangrowthstockstoowninnovember2026_2026-11-13",
     "link_https://www.fool.com/investing/2026/11/13/why-stantec-stock-soared-on-friday/?.tsrc=rss",
-    "title_whystantecstocksoaredonfriday_2026-11-13"
+    "title_whystantecstocksoaredonfriday_2026-11-13",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-advance-afternoon-204606826.html",
+    "title_sectorupdateenergystocksadvancelateafternoon_2026-11-13",
+    "link_https://finance.yahoo.com/energy/articles/oil-market-positioning-risks-surplus-204458801.html",
+    "title_oilmarketpositioningriskssurplusshippingattacksandspilloverintoratesandequities_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/inside-jim-cramer-charitable-trust-203302856.html",
+    "title_insidejimcramerscharitabletrust5stocksheactuallyowns_2026-11-13",
+    "link_https://finance.yahoo.com/technology/articles/meta-tests-prediction-market-app-203017664.html",
+    "title_metatestspredictionmarketappforemployeeswsjreports_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/microsoft-vs-salesforce-one-software-203940316.html",
+    "title_microsoftvssalesforceonesoftwarestockremainsatoppicktheotherhassomethingtoprovesaysrbc_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-afternoon-202854233.html",
+    "title_sectorupdatetechstocksfalllateafternoon_2026-11-13",
+    "link_https://finance.yahoo.com/news/weekly-gains-hold-despite-friday-204700003.html",
+    "title_weeklygainsholdupdespiteafridayslideaschipsleadandyieldsclimb_2026-11-13",
+    "link_https://finance.yahoo.com/technology/article/nothing-has-changed-why-some-nvidia-stock-bulls-arent-wavering-after-jensen-huang-ouster-204522204.html",
+    "title_nothinghaschangedwhysomenvidiastockbullsarentwaveringafterjensenhuangouster_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/wells-sees-huang-resignation-step-204520290.html",
+    "title_wellsseeshuangresignationasstepclosertoclearingeventfornvidiashares_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-mixed-afternoon-204247882.html",
+    "title_sectorupdateconsumerstocksmixedlateafternoon_2026-11-13",
+    "link_https://finance.yahoo.com/markets/crypto/articles/bitcoin-market-outlook-extreme-fear-205644886.html",
+    "title_bitcoinmarketoutlookextremefearoversoldsignalsandkeysupportlevels_2026-11-13",
+    "link_https://finance.yahoo.com/m/969ba2c7-b205-3700-9f94-d81105d70786/america%27s-greatest.html",
+    "title_americasgreatestopportunitiestheearningsgapthatputteslastockatludicrousspeed_2026-11-13",
+    "link_https://finance.yahoo.com/markets/crypto/articles/jpmorgan-latest-filing-reveals-bigger-204500707.html",
+    "title_jpmorganslatestfilingrevealsabiggerbitcoinfootprint_2026-11-13",
+    "link_https://finance.yahoo.com/healthcare/articles/4-healthcare-dividend-stocks-retirees-204711990.html",
+    "title_4healthcaredividendstocksforretireesoneyieldsover4_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/buy-home-depot-lowes-stock-192700569.html",
+    "title_buyhomedepotorlowesstockaheadofmuchanticipatedq3results_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/coca-cola-insider-sold-shares-202940541.html",
+    "title_cocacolainsidersoldsharesworth1470000accordingtoarecentsecfiling_2026-11-13",
+    "link_https://finance.yahoo.com/technology/ai/articles/jim-cramer-trust-holding-saw-204003074.html",
+    "title_thisjimcramerstrustholdingsawaiassistantusagejump21fold_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/earnings-week-scorecard-beats-rewarded-203315112.html",
+    "title_earningsweekscorecardbeatsrewardedselectivelyasaiinfrastructurenamespullback_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cisco-earnings-analysis-questions-answered-203200917.html",
+    "title_ciscoearningsanalysisquestionsansweredandnextcatalysts_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-did-jim-cramer-trust-204023936.html",
+    "title_whydidthisjimcramerstrustholdingstillmissoninterestincome_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/applied-materials-earnings-analysis-questions-203210736.html",
+    "title_appliedmaterialsearningsanalysisquestionsansweredandnextcatalysts_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/overpaying-datadog-stock-versus-rivals-203137409.html",
+    "title_areyouoverpayingfordatadogstockversusitsrivals_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-booked-165-jet-orders-204042110.html",
+    "title_boeingbooked165jetordershowmuchitmattersforjimcramerstrustholding_2026-11-13",
+    "link_https://finance.yahoo.com/technology/ai/articles/jim-cramer-trust-stock-using-204111425.html",
+    "title_ajimcramerstruststockisusingaitobreaksthedefensesithelpsprotect_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/hims-hers-stocks-drop-earnings-202304131.html",
+    "title_shouldhimshersstocksdropafterearningsworryyou_2026-11-13",
+    "link_https://finance.yahoo.com/technology/ai/articles/why-crowdstrike-crwd-jim-cramer-203814353.html",
+    "title_whycrowdstrikecrwdajimcramerholdingwantsfiddlerai_2026-11-13",
+    "link_https://finance.yahoo.com/technology/ai/articles/x-energy-demonstrates-technology-readiness-202348042.html",
+    "title_xenergydemonstratestechnologyreadinessfundingpotentialwedbushsays_2026-11-13",
+    "link_https://finance.yahoo.com/markets/article/rene-haas-ian-buck-chris-malachowsky-wall-street-zeroes-in-on-potential-nvidia-ceo-successors-204105759.html",
+    "title_renehaasianbuckchrismalachowskywallstreetzeroesinonpotentialnvidiaceosuccessors_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-board-reportedly-approached-arm-203303130.html",
+    "title_nvidiaboardreportedlyapproachedarmceorenehaastosucceedjensenhuangastopexecsthreatentoquitjoinspacexterafab_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/arm-stock-took-hit-because-203134697.html",
+    "title_armstocktookahitbecauseinvestorsfearnvidiamightpoachitsceoisittimetosell_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cerebras-earnings-analysis-questions-answered-203223446.html",
+    "title_cerebrasearningsanalysisquestionsansweredandnextcatalysts_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-financial-stocks-higher-afternoon-205120843.html?.tsrc=rss",
+    "title_sectorupdatefinancialstockshigherlateafternoon_2026-11-13",
+    "link_https://decrypt.co/383266/china-ai-pipeline-nvidia-chips-washington-restricts?.tsrc=rss",
+    "title_chinas32billionaipipelinestillcallsfornvidiachipswashingtonrestricts_2026-11-13"
   ],
   "stats_today": {
-    "news_dispatches": 290,
-    "price_fires": 121,
+    "news_dispatches": 322,
+    "price_fires": 124,
     "earnings_cards": 293,
     "options_radars": 9,
     "options_setups": 900
   },
   "stats_lifetime": {
-    "news_dispatches": 32358,
-    "price_fires": 10041,
+    "news_dispatches": 32390,
+    "price_fires": 10044,
     "earnings_cards": 1293,
     "options_radars": 1176,
     "options_setups": 18600
