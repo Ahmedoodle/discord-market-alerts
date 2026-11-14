@@ -1,6 +1,6 @@
 {
   "stock_session_date": "2026-11-13",
-  "crypto_session_date": "2026-11-13",
+  "crypto_session_date": "2026-11-14",
   "premarket_tickers": {},
   "regular_tickers": {
     "SI=F": {
@@ -725,9 +725,10 @@
       ]
     },
     "ARM": {
-      "last_price": 188.0,
+      "last_price": 186.06,
       "history": [
-        "-1.33%"
+        "-1.33%",
+        "-2.35%"
       ]
     },
     "MSTR": {
@@ -767,15 +768,17 @@
       ]
     },
     "RKLB": {
-      "last_price": 60.5,
+      "last_price": 59.881,
       "history": [
-        "-1.67%"
+        "-1.67%",
+        "-2.68%"
       ]
     },
     "NBIS": {
-      "last_price": 113.81,
+      "last_price": 112.5014,
       "history": [
-        "-1.79%"
+        "-1.79%",
+        "-2.92%"
       ]
     },
     "ETHA": {
@@ -886,38 +889,43 @@
       "history": [
         "-1.12%"
       ]
+    },
+    "CEG": {
+      "last_price": 277.11,
+      "history": [
+        "-1.10%"
+      ]
     }
   },
   "crypto_tickers": {
     "BTC-USD": {
-      "last_price": 68640.74,
+      "last_price": 68307.54,
       "history": [
-        "-4.24%"
+        "-3.85%"
       ]
     },
     "ETH-USD": {
-      "last_price": 1929.28,
+      "last_price": 1932.34,
       "history": [
-        "-3.80%"
-      ]
-    },
-    "SOL-USD": {
-      "last_price": 77.56,
-      "history": [
-        "-2.13%",
-        "-4.65%"
+        "-4.21%"
       ]
     },
     "XRP-USD": {
-      "last_price": 1.0125,
+      "last_price": 1.0105,
       "history": [
-        "-2.11%"
+        "-2.82%"
+      ]
+    },
+    "SOL-USD": {
+      "last_price": 78.23,
+      "history": [
+        "-3.98%"
       ]
     },
     "LINK-USD": {
-      "last_price": 9.791,
+      "last_price": 9.864,
       "history": [
-        "-2.71%"
+        "-2.72%"
       ]
     }
   },
@@ -68638,18 +68646,50 @@
     "link_https://financialpost.com/investing/tsx-stock-upside-already-gaining-this-year/?.tsrc=rss",
     "title_thistsxstockcouldhave22upsideanalystsaysafteralreadygaining29thisyear_2026-11-13",
     "link_https://finance.yahoo.com/markets/stocks/articles/stantec-inc-stn-q3-2026-230401862.html?.tsrc=rss",
-    "title_stantecincstnq32026earningscallhighlightsstrongorganicgrowthandraisedguidance_2026-11-13"
+    "title_stantecincstnq32026earningscallhighlightsstrongorganicgrowthandraisedguidance_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/p-500-dow-nasdaq-end-233729977.html",
+    "title_sp500downasdaqendloweramidnvidiaturmoilbutrecordbestweeksinceaugustspcxnvdaarmazninfocus_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-g-mining-ventures-stock-231325141.html",
+    "title_whygminingventuresstockisup99andwhatsnextafterearningsresults_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/siebert-reports-third-quarter-2026-213000417.html",
+    "title_siebertreportsthirdquarter2026financialresults_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/six-flags-entertainment-fun-stock-091051852.html",
+    "title_sixflagsentertainmentfunstockfairvaluemoveslowerafterfreshanalysttargetcuts_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/six-flags-lost-366-million-190000789.html",
+    "title_sixflagslost366millioninq3itsinsidersjustwentshopping_2026-11-12",
+    "link_https://finance.yahoo.com/m/ba2605ab-963c-3c6b-975c-7b68113e59b6/stocks-to-watch-recap%3A.html",
+    "title_stockstowatchrecapnvidiaamdmicrosoft_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sandisk-stock-fell-back-under-233702166.html",
+    "title_sandiskstockfellbackunder900onfridayidstartwithasmallposition_2026-11-13",
+    "link_https://finance.yahoo.com/m/dd07dfd9-d4d6-36e0-ab81-0c0f47efd273/nvidia-suffers-biggest-weekly.html",
+    "title_nvidiasuffersbiggestweeklymarketcapdeclineonrecord_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/digital-expansion-walmart-wmt-changed-231951520.html",
+    "title_howdigitalexpansionatwalmartwmthaschangeditsinvestmentstory_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/applied-materials-amat-stock-slips-231447868.html",
+    "title_appliedmaterialsamatstockslipsafterrecordq4earningsresults_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-ba-leading-player-global-231234941.html",
+    "title_boeingbaisaleadingplayerintheglobaluavmarket_2026-11-13",
+    "link_https://finance.yahoo.com/economy/policy/articles/canada-ambassador-warns-trump-tariffs-223021546.html",
+    "title_canadasambassadorwarnstrumpstariffsareraisingbusinesscostsuncertaintyincreasesyourcostofcapital_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/advance-auto-parts-vs-airbnb-233202052.html",
+    "title_advanceautopartsvsairbnbisaretailreboundortravelgiantstockthebetterbuyfor2027_2026-11-13",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cerebras-systems-cbrs-stock-jumps-231157278.html",
+    "title_cerebrassystemscbrsstockjumpsasq3resultsrevivevaluationdebate_2026-11-13",
+    "link_https://finance.yahoo.com/m/8d485bc4-69ba-3edf-9d55-d26a0b8df73f/democrats-order-musk-to.html",
+    "title_democratsordermusktopreserverecordsoverukrainestarlinkaccess_2026-11-13",
+    "link_https://finance.yahoo.com/energy/articles/investors-reacting-suncor-energy-tsx-231143079.html?.tsrc=rss",
+    "title_howinvestorsarereactingtosuncorenergytsxsustrongearningsandhigherdividend_2026-11-13"
   ],
   "stats_today": {
-    "news_dispatches": 437,
-    "price_fires": 168,
+    "news_dispatches": 442,
+    "price_fires": 177,
     "earnings_cards": 293,
     "options_radars": 9,
     "options_setups": 900
   },
   "stats_lifetime": {
-    "news_dispatches": 32505,
-    "price_fires": 10088,
+    "news_dispatches": 32510,
+    "price_fires": 10097,
     "earnings_cards": 1293,
     "options_radars": 1176,
     "options_setups": 18600
