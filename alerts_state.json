@@ -1572,7 +1572,38 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "NG=F": {
+      "last_price": 3.186,
+      "history": [
+        "+2.05%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 26908.5,
+      "history": [
+        "-1.38%"
+      ]
+    },
+    "ES=F": {
+      "last_price": 7333.5,
+      "history": [
+        "-1.42%"
+      ]
+    },
+    "YM=F": {
+      "last_price": 50714.0,
+      "history": [
+        "-1.85%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2709.2,
+      "history": [
+        "-1.53%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "XRP-USD": {
       "last_price": 0.9539,
@@ -76484,18 +76515,80 @@
     "link_https://finance.yahoo.com/small-business/articles/cibc-named-one-canadas-top-200500425.html?.tsrc=rss",
     "title_cibcnamedoneofcanadastop100employersfor15thstraightyear_2026-11-17",
     "link_https://finance.yahoo.com/news/sunlife-global-investments-announces-november-200000553.html?.tsrc=rss",
-    "title_sunlifeglobalinvestmentsannouncesnovember2026cashdistributionsforetfseries_2026-11-17"
+    "title_sunlifeglobalinvestmentsannouncesnovember2026cashdistributionsforetfseries_2026-11-17",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-softer-afternoon-204657446.html",
+    "title_sectorupdateenergystockssofterlateafternoon_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-santacruz-silver-mining-stock-202213982.html",
+    "title_whysantacruzsilverminingstockisrocketinghighertoday_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-afternoon-205401412.html",
+    "title_sectorupdatetechstocksfalllateafternoon_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/us-equity-indexes-slump-investors-205101076.html",
+    "title_updateusequityindexesslumpasinvestorslightenupaheadofnvidiasfiscalq3results_2026-11-17",
+    "link_https://finance.yahoo.com/technology/ai/articles/worried-nvidia-3-artificial-intelligence-205002726.html",
+    "title_worriedaboutnvidia3artificialintelligenceaistocksthatmaybesaferbuysrightnow_2026-11-17",
+    "link_https://finance.yahoo.com/markets/article/microsoft-ignite-focuses-on-ai-models-for-specific-tasks-lowering-costs-for-enterprise-203433266.html",
+    "title_microsoftsaipitchatignitecheapermodelsasbusinesstokenspendisgoingthroughtheroof_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/microsoft-next-leg-charging-500-202603986.html",
+    "title_microsoftsnextlegischarging500millionofficeusersmoresaysrbcanalyst_2026-11-17",
+    "link_https://finance.yahoo.com/healthcare/articles/sector-healthcare-stocks-retreat-afternoon-205020750.html",
+    "title_sectorupdatehealthcarestocksretreatlateafternoon_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/home-depot-earnings-analysis-questions-205114963.html",
+    "title_homedepotearningsanalysisquestionsansweredandnextcatalysts_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-decline-afternoon-204309541.html",
+    "title_sectorupdateconsumerstocksdeclinelateafternoon_2026-11-17",
+    "link_https://finance.yahoo.com/small-business/articles/home-depot-incoming-ceo-emphasizes-195938549.html",
+    "title_homedepotsincomingceoemphasizesassociateengagementaskeytobetterservice_2026-11-17",
+    "link_https://finance.yahoo.com/technology/ai/articles/asus-showcases-full-stack-ai-204300656.html",
+    "title_asusshowcasesfullstackaiinfrastructureatsc26featuringintelandamdplatforms_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/correction-bernstein-downgrades-pepsico-underperform-204526383.html",
+    "title_correctionbernsteindowngradespepsicotounderperformfrommarketperformpricetargetis128_2026-11-17",
+    "link_https://finance.yahoo.com/media-advertising/articles/pepsico-expanding-drips-proprietary-syrup-202348411.html",
+    "title_pepsicoexpandingdripswithproprietarysyruplineupandconcentratedbases_2026-11-17",
+    "link_https://finance.yahoo.com/technology/ai/articles/fed-first-close-look-ai-180000354.html",
+    "title_thefedsfirstcloselookattheaibuildoutfinds3trillionofaicommitmentsthatarentonbigtechsbalancesheetasdebt_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/disney-earnings-analysis-questions-answered-205138736.html",
+    "title_disneyearningsanalysisquestionsansweredandnextcatalysts_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-united-natural-foods-rallied-204634382.html",
+    "title_whyunitednaturalfoodsralliedtoday_2026-11-17",
+    "link_https://finance.yahoo.com/economy/policy/articles/government-spends-5-5-billion-203612865.html",
+    "title_thegovernmentspendsabout55billionadaymorethanittakesinthedebthasdoubledin10yearsjaimedimonthisthesituationcouldgetmuchworse_2026-11-17",
+    "link_https://finance.yahoo.com/energy/articles/nextera-energy-vs-vistra-utilities-205002028.html",
+    "title_nexteraenergyvsvistrawhichutilitiesstockisabetterbuyfor2027_2026-11-17",
+    "link_https://finance.yahoo.com/small-business/articles/spanx-said-sale-202516574.html",
+    "title_spanxsaidtobeforsale_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/dear-palo-alto-networks-stock-145046892.html",
+    "title_dearpaloaltonetworksstockfansmarkyourcalendarsfornovember18_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-micron-down-gf-securities-203021210.html",
+    "title_whyismicrondowngfsecuritieswarnsanandglutcouldhitin2027_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/mercadolibre-vs-shopify-comparing-recent-202002376.html",
+    "title_mercadolibrevsshopifycomparingrecentrevenuescaleandgrowthtrajectories_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/muddy-waters-shorts-nvidia-raises-204312743.html",
+    "title_muddywatersshortsnvidiaraisesquestionsaboutpossibleexecutiveconnection_2026-11-17",
+    "link_https://finance.yahoo.com/technology/ai/articles/spacex-off-balance-sheet-debt-203543220.html",
+    "title_spacexoffbalancesheetdebtforaichipshitsthemarketthisweekhereswherethingsgetinteresting_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/prediction-spacex-stock-could-parabolic-202002590.html",
+    "title_predictionspacexstockcouldgoparabolicafteranthropicsipohereswhy_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/4-dates-could-move-stock-202002882.html",
+    "title_4datesthatcouldmovethestockmarketinepicfashionthisweekhereswhatinvestorsneedtoknow_2026-11-17",
+    "link_https://decrypt.co/383466/bitcoin-investors-capitulating-historical-bottom-signal?.tsrc=rss",
+    "title_bitcoininvestorsarecapitulatingthatshistoricallybeenabottomsignal_2026-11-17",
+    "link_https://finance.yahoo.com/video/brothers-baited-ethereum-mev-bots-210000650.html?.tsrc=rss",
+    "title_brotherswhobaitedethereummevbotsfor25millionacquittedofwirefraud_2026-11-17",
+    "link_https://www.tikr.com/blog/berkshires-only-new-stock-owns-aol-and-evernote-is-greg-abel-rewriting-buffetts-playbook?ref=yahoofinance&tlnk=yf-261117-px6whgpq&.tsrc=rss",
+    "title_berkshiresonlynewstockownsaolandevernoteisgregabelrewritingbuffettsplaybook_2026-11-17",
+    "link_https://finance.yahoo.com/video/ibm-deploying-ai-hr-marketing-201400320.html?.tsrc=rss",
+    "title_howibmisdeployingaiforhrandmarketing_2026-11-17"
   ],
   "stats_today": {
-    "news_dispatches": 1059,
-    "price_fires": 397,
+    "news_dispatches": 1086,
+    "price_fires": 402,
     "earnings_cards": 293,
     "options_radars": 14,
     "options_setups": 1400
   },
   "stats_lifetime": {
-    "news_dispatches": 35317,
-    "price_fires": 10941,
+    "news_dispatches": 35344,
+    "price_fires": 10946,
     "earnings_cards": 1293,
     "options_radars": 1204,
     "options_setups": 21400
