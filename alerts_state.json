@@ -1643,10 +1643,11 @@
       ]
     },
     "CDNS": {
-      "last_price": 309.862,
+      "last_price": 305.2129,
       "history": [
         "-1.36%",
-        "+0.14%"
+        "+0.14%",
+        "-1.36%"
       ]
     },
     "SYK": {
@@ -1695,10 +1696,11 @@
       ]
     },
     "DASH": {
-      "last_price": 171.0,
+      "last_price": 167.5,
       "history": [
         "+1.82%",
-        "+0.72%"
+        "+0.72%",
+        "-1.34%"
       ]
     },
     "MSTR": {
@@ -1715,16 +1717,18 @@
       ]
     },
     "SNPS": {
-      "last_price": 435.0,
+      "last_price": 441.33,
       "history": [
-        "-1.43%"
+        "-1.43%",
+        "+0.00%"
       ]
     },
     "MRVL": {
-      "last_price": 145.36,
+      "last_price": 143.8774,
       "history": [
         "-1.23%",
-        "+0.00%"
+        "+0.00%",
+        "-1.02%"
       ]
     },
     "CEG": {
@@ -1775,6 +1779,18 @@
       "last_price": 199.99,
       "history": [
         "+1.01%"
+      ]
+    },
+    "TMUS": {
+      "last_price": 172.5,
+      "history": [
+        "+1.46%"
+      ]
+    },
+    "CSGP": {
+      "last_price": 30.8949,
+      "history": [
+        "-1.10%"
       ]
     }
   },
@@ -73767,18 +73783,48 @@
     "link_https://finance.yahoo.com/news/u-p-d-t-e-021400633.html?.tsrc=rss",
     "title_correctionunifor_2026-11-16",
     "link_https://finance.yahoo.com/markets/stocks/articles/canadas-telecom-map-could-redrawn-235800126.html?.tsrc=rss",
-    "title_canadastelecommapcouldberedrawnasatakeoverapproachgoespublic_2026-11-16"
+    "title_canadastelecommapcouldberedrawnasatakeoverapproachgoespublic_2026-11-16",
+    "link_https://finance.yahoo.com/markets/commodities/articles/largo-reports-q3-2026-financial-003300155.html",
+    "title_largoreportsq32026financialresultsstarttoreflectdiversificationintocoppergoldandplatinumgroupmetalsasbyproductofitscorevanadiumbusinessand35millioninoperatingcashflow_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/finding-yourself-nervous-nvidia-earnings-004406594.html",
+    "title_findingyourselfnervousaboutnvidiaearnings_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/taiwan-semiconductor-booked-record-nt-004110791.html",
+    "title_taiwansemiconductorbookedarecordnt587billionmonththestockhaslostnearly10inthreedaysanyway_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-iqiyi-stock-tanked-today-003914371.html",
+    "title_whyiqiyistocktankedtoday_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-directors-rule-huang-return-003700900.html",
+    "title_nvidiadirectorsruleouthuangsreturnascompanypreparestoreportearnings_2026-11-16",
+    "link_https://finance.yahoo.com/m/f487537a-09c4-3b0f-beb6-14e5629c10ed/david-tepper%E2%80%99s-appaloosa-goes.html",
+    "title_davidteppersappaloosagoesbigonspacexwhileslashingalphabetstake_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/boeing-ba-ula-rocket-failure-001959401.html",
+    "title_boeingbaularocketfailurehaltsdeploymentof40broadbandsatellites_2026-11-16",
+    "link_https://finance.yahoo.com/markets/options/articles/unusual-call-option-activity-coca-183003422.html",
+    "title_unusualcalloptionactivityincocacolaiskostockundervaluedorovervalued_2026-11-16",
+    "link_https://finance.yahoo.com/technology/ai/articles/qualcomm-ceo-no-ai-correction-002741944.html",
+    "title_qualcommceothereisnoaicorrectionatqualcommnvidiasnovember17earningsfaceamajortest_2026-11-16",
+    "link_https://finance.yahoo.com/technology/articles/qualcomm-qcom-gaining-cockpit-soop-001825325.html",
+    "title_whatisqualcommqcomgainingfromitscockpitandsoopmomentum_2026-11-16",
+    "link_https://finance.yahoo.com/technology/ai/articles/uipath-stock-other-software-picks-002100761.html",
+    "title_uipathstockandothersoftwarepicksbuiltforhigheraicosts_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/tripadvisor-loan-soars-600-million-001313148.html",
+    "title_tripadvisorloansoarsas600millionpaymentboostsconfidence_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/billionaire-rinehart-boosts-us-defense-004001738.html",
+    "title_billionairerinehartboostsusdefenseandspacex_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/doordash-instacart-deal-face-doj-002747844.html",
+    "title_doordashinstacartdealtofacedojreviewreuters_2026-11-16",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nebius-plans-spend-more-3-004044572.html",
+    "title_nebiusplanstospendmorethan3forevery1ofrevenuenextyearthestockhaslost31inthreedays_2026-11-16"
   ],
   "stats_today": {
-    "news_dispatches": 1064,
-    "price_fires": 392,
+    "news_dispatches": 1077,
+    "price_fires": 398,
     "earnings_cards": 293,
     "options_radars": 14,
     "options_setups": 1400
   },
   "stats_lifetime": {
-    "news_dispatches": 34170,
-    "price_fires": 10538,
+    "news_dispatches": 34183,
+    "price_fires": 10544,
     "earnings_cards": 1293,
     "options_radars": 1190,
     "options_setups": 20000
