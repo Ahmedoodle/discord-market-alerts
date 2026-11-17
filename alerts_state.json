@@ -1,7 +1,68 @@
 {
   "stock_session_date": "2026-11-17",
   "crypto_session_date": "2026-11-17",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "SI=F": {
+      "last_price": 47.435,
+      "history": [
+        "+1.39%"
+      ]
+    },
+    "IBIT": {
+      "last_price": 36.3,
+      "history": [
+        "-1.33%"
+      ]
+    },
+    "AVGO": {
+      "last_price": 338.05,
+      "history": [
+        "+1.39%"
+      ]
+    },
+    "AMD": {
+      "last_price": 514.57,
+      "history": [
+        "+2.04%"
+      ]
+    },
+    "AMAT": {
+      "last_price": 355.65,
+      "history": [
+        "+1.54%"
+      ]
+    },
+    "KLAC": {
+      "last_price": 145.41,
+      "history": [
+        "+1.01%"
+      ]
+    },
+    "MRVL": {
+      "last_price": 147.3,
+      "history": [
+        "+1.33%"
+      ]
+    },
+    "ARM": {
+      "last_price": 177.89,
+      "history": [
+        "+1.62%"
+      ]
+    },
+    "INTC": {
+      "last_price": 54.2323,
+      "history": [
+        "-2.23%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 124.5,
+      "history": [
+        "+1.90%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
@@ -72431,14 +72492,14 @@
   ],
   "stats_today": {
     "news_dispatches": 82,
-    "price_fires": 1,
+    "price_fires": 11,
     "earnings_cards": 293,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
     "news_dispatches": 34340,
-    "price_fires": 10545,
+    "price_fires": 10555,
     "earnings_cards": 1293,
     "options_radars": 1190,
     "options_setups": 20000
