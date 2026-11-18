@@ -1,6 +1,6 @@
 {
   "stock_session_date": "2026-11-17",
-  "crypto_session_date": "2026-11-17",
+  "crypto_session_date": "2026-11-18",
   "premarket_tickers": {
     "SI=F": {
       "last_price": 47.435,
@@ -1732,11 +1732,12 @@
       ]
     },
     "DDOG": {
-      "last_price": 167.4,
+      "last_price": 165.4,
       "history": [
         "+1.39%",
         "+0.13%",
-        "+1.34%"
+        "+1.34%",
+        "+0.13%"
       ]
     },
     "SMCI": {
@@ -1946,10 +1947,11 @@
       ]
     },
     "ON": {
-      "last_price": 69.01,
+      "last_price": 70.4296,
       "history": [
         "+3.05%",
-        "+1.59%"
+        "+1.59%",
+        "+3.68%"
       ]
     },
     "CEG": {
@@ -1983,9 +1985,10 @@
       ]
     },
     "ACN": {
-      "last_price": 243.181,
+      "last_price": 239.51,
       "history": [
-        "+1.63%"
+        "+1.63%",
+        "+0.10%"
       ]
     },
     "FTNT": {
@@ -2011,36 +2014,61 @@
       "history": [
         "+1.12%"
       ]
+    },
+    "PM": {
+      "last_price": 192.4246,
+      "history": [
+        "-1.01%"
+      ]
+    },
+    "UNP": {
+      "last_price": 294.0,
+      "history": [
+        "-1.02%"
+      ]
+    },
+    "SYK": {
+      "last_price": 310.78,
+      "history": [
+        "-2.13%"
+      ]
+    },
+    "NXPI": {
+      "last_price": 258.0,
+      "history": [
+        "+2.17%"
+      ]
+    },
+    "MRNA": {
+      "last_price": 209.7,
+      "history": [
+        "+1.40%"
+      ]
+    },
+    "DLTR": {
+      "last_price": 137.6042,
+      "history": [
+        "-1.51%"
+      ]
     }
   },
   "crypto_tickers": {
     "XRP-USD": {
-      "last_price": 0.9759,
+      "last_price": 0.9817,
       "history": [
-        "-2.02%",
-        "+2.53%",
-        "-0.23%",
-        "+1.88%"
+        "+3.03%"
       ]
     },
     "SOL-USD": {
-      "last_price": 75.02,
+      "last_price": 75.13,
       "history": [
-        "+2.52%",
-        "+4.91%"
+        "+5.06%"
       ]
     },
-    "ETH-USD": {
-      "last_price": 1813.81,
+    "LINK-USD": {
+      "last_price": 9.31,
       "history": [
-        "-2.68%",
-        "-0.76%"
-      ]
-    },
-    "BTC-USD": {
-      "last_price": 63680.74,
-      "history": [
-        "-2.00%"
+        "+2.47%"
       ]
     }
   },
@@ -77329,18 +77357,62 @@
     "link_https://finance.yahoo.com/m/3376b80d-14e7-305f-a7ce-d2d34108746a/%E2%80%98noxious-odors%E2%80%99-from-l.a..html?.tsrc=rss",
     "title_noxiousodorsfromlacountylandfillexplosiontaintthiswastehaulersstock_2026-11-17",
     "link_https://financialpost.com/news/news-of-the-day-oil-by-rail-firepower-home-building-robots-telus-data-centre-exit-picking-winners-and-losers-transat-fuel-costs-and-more/?.tsrc=rss",
-    "title_newsofthedayoilbyrailfirepowerhomebuildingrobotstelusdatacentreexittaxwinnersandlosersjetfuelcostsandmore_2026-11-17"
+    "title_newsofthedayoilbyrailfirepowerhomebuildingrobotstelusdatacentreexittaxwinnersandlosersjetfuelcostsandmore_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/raised-production-outlook-altering-investment-231824746.html",
+    "title_raisedproductionoutlookalteringtheinvestmentcaseforayagoldsilverstock_2026-11-17",
+    "link_https://finance.yahoo.com/energy/articles/cuba-energy-crisis-turns-goldmine-230000134.html",
+    "title_cubasenergycrisisturnsintoagoldmineforusfuelexporters_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/2-best-dividend-stocks-buy-234602110.html",
+    "title_2ofthebestdividendstockstobuywith5000innovember_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-founder-led-stocks-revenue-232311677.html",
+    "title_3founderledstockswithrevenuegrowthupto20_2026-11-17",
+    "link_https://finance.yahoo.com/healthcare/articles/johnson-johnson-vs-vertex-pharmaceuticals-234702301.html",
+    "title_johnsonjohnsonvsvertexpharmaceuticalswhichhealthcarestockisabetterbuyfor2027_2026-11-17",
+    "link_https://finance.yahoo.com/technology/ai/articles/ai-agents-vs-banks-win-233302535.html",
+    "title_aiagentsvsbankswhowillwinimbettingonbanks_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/coca-cola-ko-named-2027-232431419.html",
+    "title_cocacolakonameda2027bestideabytdcowen_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/home-depot-3-key-takeaways-231934602.html",
+    "title_homedepot3keytakeawaysforlongterminvestors_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/costco-near-high-bank-america-225820954.html",
+    "title_costcoisnearitshighbankofamericaseesanother13_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/investors-reacting-mcdonalds-mcd-ai-232120911.html",
+    "title_howinvestorsarereactingtomcdonaldsmcdaidrivethruexpansion_2026-11-17",
+    "link_https://finance.yahoo.com/real-estate/articles/kbra-assigns-preliminary-ratings-gs-233000010.html",
+    "title_kbraassignspreliminaryratingstogsmortgagebackedsecuritiestrust2026ces4gsmbs2026ces4_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/phillip-securities-raises-palantir-target-225938628.html",
+    "title_phillipsecuritiesraisesitspalantirtargetto248isitstilltoolow_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/5-top-earnings-charts-watch-223600810.html",
+    "title_5topearningschartstowatchthisweek_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-just-sent-powerful-signal-233300934.html",
+    "title_nvidiajustsentapowerfulsignaltospacexstockinvestors_2026-11-17",
+    "link_https://finance.yahoo.com/technology/articles/america-entering-mind-blowing-beginning-223005246.html",
+    "title_americaenteringamindblowingbeginningcathiewoodhailsspacexstarshipchopstickscatch_2026-11-17",
+    "link_https://finance.yahoo.com/video/business-leaders-learn-elite-athletes-232600805.html?.tsrc=rss",
+    "title_whatbusinessleaderscanlearnfromeliteathleteswsjli_2026-11-17",
+    "link_https://finance.yahoo.com/video/nvidia-with-a-positive-q3-despite-sec-probing-nvidia-amid-huang-scandal-223224298.html?.tsrc=rss",
+    "title_nvidiawithapositiveq3despitesecprobingnvidiaamidhuangscandal_2026-11-17",
+    "link_https://finance.yahoo.com/video/nvidias-q3-numbers-were-pretty-good-its-earnings-call-optics-were-another-story-234451647.html?.tsrc=rss",
+    "title_nvidiasq3numberswereprettygooditsearningscallopticswereanotherstory_2026-11-17",
+    "link_https://finance.yahoo.com/video/nvidia-earnings-special-coverage-the-street-wants-to-believe-in-nvidia-after-jensen-233044562.html?.tsrc=rss",
+    "title_nvidiaearningsspecialcoveragethestreetwantstobelieveinnvidiaafterjensen_2026-11-17",
+    "link_https://finance.yahoo.com/video/pepsico-targeting-glp-1-users-231300521.html?.tsrc=rss",
+    "title_howpepsicoistargetingglp1users_2026-11-17",
+    "link_https://finance.yahoo.com/video/pepsico-turns-fandom-brand-loyalty-230000232.html?.tsrc=rss",
+    "title_howpepsicoturnsfandomintobrandloyaltywsjleadershipinstitute_2026-11-17",
+    "link_https://finance.yahoo.com/markets/stocks/articles/did-lawsuit-over-production-outlook-231718860.html?.tsrc=rss",
+    "title_didlawsuitoverproductionoutlookjustshiftkinrossgoldstsxkinvestmentnarrative_2026-11-17"
   ],
   "stats_today": {
-    "news_dispatches": 1225,
-    "price_fires": 529,
+    "news_dispatches": 1239,
+    "price_fires": 541,
     "earnings_cards": 293,
     "options_radars": 14,
     "options_setups": 1400
   },
   "stats_lifetime": {
-    "news_dispatches": 35483,
-    "price_fires": 11073,
+    "news_dispatches": 35497,
+    "price_fires": 11085,
     "earnings_cards": 1293,
     "options_radars": 1204,
     "options_setups": 21400
