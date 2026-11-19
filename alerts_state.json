@@ -1,6 +1,6 @@
 {
   "stock_session_date": "2026-11-18",
-  "crypto_session_date": "2026-11-18",
+  "crypto_session_date": "2026-11-19",
   "premarket_tickers": {
     "GC=F": {
       "last_price": 3771.4,
@@ -1401,9 +1401,10 @@
       ]
     },
     "TJX": {
-      "last_price": 141.99,
+      "last_price": 140.06,
       "history": [
-        "+1.20%"
+        "+1.20%",
+        "-0.17%"
       ]
     },
     "PANW": {
@@ -1507,41 +1508,55 @@
       "history": [
         "+1.15%"
       ]
+    },
+    "PLTR": {
+      "last_price": 158.45,
+      "history": [
+        "+1.14%"
+      ]
+    },
+    "MRVL": {
+      "last_price": 147.0,
+      "history": [
+        "+1.00%"
+      ]
+    },
+    "DDOG": {
+      "last_price": 169.7,
+      "history": [
+        "+1.55%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 784.6984,
+      "history": [
+        "+1.09%"
+      ]
+    },
+    "CBRS": {
+      "last_price": 95.36,
+      "history": [
+        "+1.29%"
+      ]
     }
   },
   "crypto_tickers": {
-    "XRP-USD": {
-      "last_price": 0.9831,
-      "history": [
-        "+3.03%",
-        "+4.89%",
-        "+0.76%"
-      ]
-    },
-    "SOL-USD": {
-      "last_price": 73.29,
-      "history": [
-        "+5.06%",
-        "+1.86%"
-      ]
-    },
-    "LINK-USD": {
-      "last_price": 9.11,
-      "history": [
-        "+2.47%",
-        "+0.18%"
-      ]
-    },
     "BTC-USD": {
-      "last_price": 63114.93,
+      "last_price": 62882.7,
+      "history": [
+        "-3.07%"
+      ]
+    },
+    "ETH-USD": {
+      "last_price": 1773.45,
       "history": [
         "-2.71%"
       ]
     },
-    "ETH-USD": {
-      "last_price": 1778.17,
+    "LINK-USD": {
+      "last_price": 9.06,
       "history": [
-        "-2.45%"
+        "-2.76%"
       ]
     }
   },
@@ -79514,18 +79529,30 @@
     "link_https://financialpost.com/retail/metro-profits-down-from-laval-distribution-centre-strike/?.tsrc=rss",
     "title_metroexpandsdiscountstorenetworkasshoppershuntfordeals_2026-11-18",
     "link_https://www.fool.com/earnings/takeaways/2026/11/18/restaurant-brands-3-key-takeaways-for-long-term-investors/?.tsrc=rss",
-    "title_restaurantbrands3keytakeawaysforlongterminvestors_2026-11-18"
+    "title_restaurantbrands3keytakeawaysforlongterminvestors_2026-11-18",
+    "link_https://finance.yahoo.com/markets/stocks/articles/alphabet-stock-buy-now-235702314.html",
+    "title_isalphabetstockabuyrightnow_2026-11-18",
+    "link_https://finance.yahoo.com/media-advertising/articles/brookie-beauty-llc-announces-trestyler-234900589.html",
+    "title_brookiebeautyllcannouncestrestylerlaunchandinternationalmediaexpansion_2026-11-18",
+    "link_https://finance.yahoo.com/markets/stocks/articles/blackstone-digital-infrastructure-3-key-234655450.html",
+    "title_blackstonedigitalinfrastructure3keytakeawaysforlongterminvestors_2026-11-18",
+    "link_https://finance.yahoo.com/healthcare/articles/costco-recalls-food-product-popular-234500999.html",
+    "title_costcorecallsfoodproductthatspopularduringtheholidays_2026-11-18",
+    "link_https://finance.yahoo.com/markets/stocks/articles/prediction-sandisk-stock-price-end-235002628.html",
+    "title_predictionthiswillbesandisksstockpricebytheendof2027_2026-11-18",
+    "link_https://finance.yahoo.com/technology/articles/visa-unveils-next-generation-subscription-000000653.html?.tsrc=rss",
+    "title_visaunveilsnextgenerationofsubscriptionmanagementsolutionswithvisarecurrent_2026-11-18"
   ],
   "stats_today": {
-    "news_dispatches": 716,
-    "price_fires": 328,
+    "news_dispatches": 722,
+    "price_fires": 337,
     "earnings_cards": 293,
     "options_radars": 4,
     "options_setups": 400
   },
   "stats_lifetime": {
-    "news_dispatches": 36286,
-    "price_fires": 11418,
+    "news_dispatches": 36292,
+    "price_fires": 11427,
     "earnings_cards": 1293,
     "options_radars": 1208,
     "options_setups": 21800
