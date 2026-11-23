@@ -1103,11 +1103,12 @@
       ]
     },
     "AMD": {
-      "last_price": 463.52,
+      "last_price": 452.13,
       "history": [
         "-5.44%",
         "-8.34%",
-        "-5.25%"
+        "-5.25%",
+        "-7.58%"
       ]
     },
     "ORCL": {
@@ -1666,11 +1667,12 @@
       ]
     },
     "ANSS": {
-      "last_price": 14.73,
+      "last_price": 15.19,
       "history": [
         "+3.02%",
         "+0.87%",
-        "-1.21%"
+        "-1.21%",
+        "+1.88%"
       ]
     },
     "DLTR": {
@@ -1780,6 +1782,18 @@
       "history": [
         "+2.40%"
       ]
+    },
+    "ABX.TO": {
+      "last_price": 48.875,
+      "history": [
+        "+2.01%"
+      ]
+    },
+    "CSU.TO": {
+      "last_price": 3115.51,
+      "history": [
+        "-2.03%"
+      ]
     }
   },
   "afterhours_tickers": {},
@@ -1793,12 +1807,13 @@
       ]
     },
     "LINK-USD": {
-      "last_price": 9.247,
+      "last_price": 9.048,
       "history": [
         "+2.62%",
         "+5.78%",
         "+7.84%",
-        "+5.09%"
+        "+5.09%",
+        "+2.76%"
       ]
     },
     "BTC-USD": {
@@ -83911,21 +83926,95 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/cameco-vs-denison-uranium-stock-165900016.html?.tsrc=rss",
     "title_camecovsdenisonwhichuraniumstockoffersbetteropportunitytoday_2026-11-23",
     "link_https://www.marketbeat.com/instant-alerts/event-bce-sees-bigger-ai-infrastructure-opportunity-while-targeting-debt-reduction-2026-11-23/?utm_source=yahoofinance&utm_medium=yahoofinance&.tsrc=rss",
-    "title_bceseesbiggeraiinfrastructureopportunitywhiletargetingdebtreduction_2026-11-23"
+    "title_bceseesbiggeraiinfrastructureopportunitywhiletargetingdebtreduction_2026-11-23",
+    "link_https://finance.yahoo.com/m/8751de70-467e-380a-82cb-f4ee42adc461/stock-market-today%3A-nasdaq%2C.html",
+    "title_stockmarkettodaynasdaqdowleaponhuangdrivennvidiarallygoldplayspoplivecoverage_2026-11-23",
+    "link_https://finance.yahoo.com/markets/currencies/articles/us-dollar-edges-20-month-182104555.html",
+    "title_usdollaredgesupto20monthpeakagainstcanadasloonie_2026-11-23",
+    "link_https://finance.yahoo.com/markets/article/why-stocks-are-having-their-wildest-morning-since-2008-184837610.html",
+    "title_whystocksarehavingtheirwildestmondaysince2008_2026-11-23",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-softer-monday-183223532.html",
+    "title_sectorupdateenergystockssoftermondayafternoon_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/nvidia-just-jumped-more-30-183131083.html",
+    "title_nvidiajustjumpedmorethan30a66yearoldwhomoved500000outofvooonfridaymissedafivefigureday_2026-11-23",
+    "link_https://finance.yahoo.com/m/c5c70838-878f-3f77-9d1c-fd3bba9e4da7/is-it-time-to-buy-silver%3F.html",
+    "title_isittimetobuysilverthisputstrategyinoptionstradingcountsonalimiteddecline_2026-11-23",
+    "link_https://finance.yahoo.com/markets/live/stock-market-today-monday-november-23-dow-sp-500-nasdaq-surge-after-nvidia-reinstates-jensen-huang-182039397.html",
+    "title_stockmarkettodaydowsp500nasdaqsurgeasjensenhuangsreinstatementatnvidiasparksstunningrally_2026-11-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/whos-buying-whos-selling-ai-183607152.html",
+    "title_whosbuyingandwhossellingaithefulllistnextto2000_2026-11-23",
+    "link_https://finance.yahoo.com/m/7370b0be-717c-344a-9b50-5d4c679f2a82/amazon-makes-ai-chip-move%3B.html",
+    "title_amazonmakesaichipmovestockclimbsalongsidenvidiareliefrally_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/jim-cramer-sees-google-bargain-183300319.html",
+    "title_jimcramerseesagooglebargainafter120millionexit_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-consumer-stocks-advance-afternoon-183901762.html",
+    "title_sectorupdateconsumerstocksadvanceinafternoontrading_2026-11-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/elon-musk-warns-ai-companies-183702846.html",
+    "title_elonmuskwarnsaicompaniescouldbeinserioustroublenextyear_2026-11-23",
+    "link_https://finance.yahoo.com/m/e2fe0876-9cdd-3a2d-96b4-7860f584a20d/ai-energy-stocks%2C-from-fuel.html",
+    "title_aienergystocksfromfuelcellstouraniumleapasnvidiasoars_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-globalfoundries-gfs-stock-today-183102007.html",
+    "title_whyisglobalfoundriesgfsstockuptodaychiprallyonnvidiaceoreturn_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/costco-vs-walmart-one-retail-184709851.html",
+    "title_costcovswalmartoneretailgiantlooksbetterforretirementinvestors_2026-11-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/salesforce-ex-ceos-ai-startup-185502748.html",
+    "title_salesforceexceosaistartupsierrahits30billionvaluationitdoubledinjustsixmonths_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/rezolve-ai-rzlv-stock-14-183045994.html",
+    "title_rezolveairzlvstockisup149todayamidaisoftwarerally_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-oracle-stock-rising-today-183002586.html",
+    "title_whyoraclestockisrisingtoday_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-kla-klac-stock-today-183028209.html",
+    "title_whyklaklacstockisuptodaynewsingaporeplantmeets47billionguide_2026-11-23",
+    "link_https://finance.yahoo.com/technology/ai/articles/ondaro-unites-federal-sled-under-182800073.html",
+    "title_ondarounitesfederalandsledunderonepublicsectorleader_2026-11-23",
+    "link_https://finance.yahoo.com/energy/articles/doj-closes-nextera-dominion-antitrust-162712933.html",
+    "title_dojclosesnexteradominionantitrustprobeasstatehearingscontinue_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/invest-7-500-3-stocks-183308781.html",
+    "title_ifyouinvest7500intothese3stocksyoucouldhave15000by2030_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cerus-cers-stock-11-6-183028336.html",
+    "title_ceruscersstockisup116todaywithoutcompanynews_2026-11-23",
+    "link_https://finance.yahoo.com/markets/currencies/articles/goldman-sachs-sees-us-dollar-183336171.html",
+    "title_goldmansachsseesusdollarrallycontinuingbeforeapullbackin2027_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/key-earnings-reports-watch-holiday-184246842.html",
+    "title_keyearningsreportstowatchthisholidayshortenedweek_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-boeing-stock-popped-today-182909896.html",
+    "title_whyboeingstockpoppedtoday_2026-11-23",
+    "link_https://finance.yahoo.com/healthcare/articles/lark-health-appoints-gil-addo-182800220.html",
+    "title_larkhealthappointsgiladdoasceomarkinganewchapterinaipowereddigitalhealthcare_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/top-midday-decliners-185138908.html",
+    "title_topmiddaydecliners_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/could-lift-autozone-stock-losing-183048502.html",
+    "title_whatcouldliftautozonestockafteralosingyear_2026-11-23",
+    "link_https://finance.yahoo.com/personal-finance/credit-cards/article/two-points-booking-mistakes-i-made-with-eva-air-and-world-of-hyatt--and-the-lesson-184649376.html",
+    "title_twopointsbookingmistakesimadewithevaairandworldofhyattandthelesson_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/crowdstrike-earnings-beat-overshadowed-43-184105841.html",
+    "title_crowdstrikeearningsbeatovershadowedby439bzscaleracquisition_2026-11-23",
+    "link_https://247wallst.com/investing/cryptocurrency/2026/11/23/jensen-huang-is-back-at-nvidia-could-bitcoin-regain-what-it-lost-without-him/?.tsrc=rss",
+    "title_jensenhuangisbackatnvidiacouldbitcoinregainwhatitlostwithouthim_2026-11-23",
+    "link_https://finance.yahoo.com/video/jensen-huangs-return-to-nvidia-long-or-short-accountability-185949254.html?.tsrc=rss",
+    "title_jensenhuangsreturntonvidialongorshortaccountability_2026-11-23",
+    "link_https://finance.yahoo.com/technology/articles/handshake-jensen-why-tech-fought-184809553.html?.tsrc=rss",
+    "title_ahandshakewithjensenwhytechfoughttosavenvidiasfounder_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/diversified-etf-options-rotating-nvda-184626811.html?.tsrc=rss",
+    "title_diversifiedetfoptionsforrotatingoutofnvdaprofits_2026-11-23",
+    "link_https://www.barchart.com/story/news/8962508/palo-alto-networks-stock-has-nearly-doubled-ai-cyberattacks-could-trigger-a-new-cybersecurity-spending-boom?.tsrc=rss",
+    "title_paloaltonetworksstockhasnearlydoubledaicyberattackscouldtriggeranewcybersecurityspendingboom_2026-11-23",
+    "link_https://www.trefis.com/stock/ccj/articles/627836/what-sent-cameco-stock-lower-again/2026-11-23?.tsrc=rss",
+    "title_whatsentcamecostockloweragain_2026-11-23"
   ],
   "stats_today": {
-    "news_dispatches": 846,
-    "price_fires": 498,
+    "news_dispatches": 881,
+    "price_fires": 503,
     "earnings_cards": 293,
-    "options_radars": 9,
-    "options_setups": 900
+    "options_radars": 10,
+    "options_setups": 1000
   },
   "stats_lifetime": {
-    "news_dispatches": 37655,
-    "price_fires": 11910,
+    "news_dispatches": 37690,
+    "price_fires": 11915,
     "earnings_cards": 1293,
-    "options_radars": 1217,
-    "options_setups": 22700
+    "options_radars": 1218,
+    "options_setups": 22800
   },
   "persistent_analytics": {
     "lifetime_total_messages": 2084,
