@@ -2038,9 +2038,10 @@
       ]
     },
     "AMD": {
-      "last_price": 417.86,
+      "last_price": 412.24,
       "history": [
-        "+1.11%"
+        "+1.11%",
+        "-0.25%"
       ]
     },
     "MRVL": {
@@ -2056,9 +2057,10 @@
       ]
     },
     "RKLB": {
-      "last_price": 46.59,
+      "last_price": 46.1002,
       "history": [
-        "+1.33%"
+        "+1.33%",
+        "+0.26%"
       ]
     },
     "AVGO": {
@@ -2081,10 +2083,11 @@
       ]
     },
     "ANSS": {
-      "last_price": 16.21,
+      "last_price": 16.42,
       "history": [
         "-1.29%",
-        "-0.25%"
+        "-0.25%",
+        "+1.05%"
       ]
     },
     "MSTR": {
@@ -2098,6 +2101,18 @@
       "history": [
         "+1.36%",
         "-0.18%"
+      ]
+    },
+    "IREN": {
+      "last_price": 12.815,
+      "history": [
+        "-1.04%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 77.13,
+      "history": [
+        "-1.05%"
       ]
     }
   },
@@ -88134,14 +88149,14 @@
   ],
   "stats_today": {
     "news_dispatches": 1220,
-    "price_fires": 527,
+    "price_fires": 532,
     "earnings_cards": 293,
     "options_radars": 13,
     "options_setups": 1300
   },
   "stats_lifetime": {
     "news_dispatches": 39260,
-    "price_fires": 12518,
+    "price_fires": 12523,
     "earnings_cards": 1293,
     "options_radars": 1234,
     "options_setups": 24400
