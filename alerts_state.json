@@ -1,7 +1,128 @@
 {
   "stock_session_date": "2026-11-24",
   "crypto_session_date": "2026-11-24",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "SI=F": {
+      "last_price": 41.985,
+      "history": [
+        "-2.69%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 79.33,
+      "history": [
+        "-1.05%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 85.96,
+      "history": [
+        "-3.82%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.608,
+      "history": [
+        "+13.32%"
+      ]
+    },
+    "SLV": {
+      "last_price": 37.95,
+      "history": [
+        "-2.47%"
+      ]
+    },
+    "IBIT": {
+      "last_price": 34.03,
+      "history": [
+        "-1.70%"
+      ]
+    },
+    "ETHA": {
+      "last_price": 38.26,
+      "history": [
+        "-1.87%"
+      ]
+    },
+    "GOOGL": {
+      "last_price": 285.4,
+      "history": [
+        "+1.17%"
+      ]
+    },
+    "GOOG": {
+      "last_price": 283.8,
+      "history": [
+        "+1.53%"
+      ]
+    },
+    "COST": {
+      "last_price": 1067.0,
+      "history": [
+        "-2.82%"
+      ]
+    },
+    "MU": {
+      "last_price": 677.01,
+      "history": [
+        "-4.34%"
+      ]
+    },
+    "ANSS": {
+      "last_price": 15.5,
+      "history": [
+        "+1.84%"
+      ]
+    },
+    "SMCI": {
+      "last_price": 23.68,
+      "history": [
+        "-3.47%"
+      ]
+    },
+    "MSTR": {
+      "last_price": 81.45,
+      "history": [
+        "-3.50%"
+      ]
+    },
+    "IREN": {
+      "last_price": 13.98,
+      "history": [
+        "-4.51%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 84.68,
+      "history": [
+        "-3.45%"
+      ]
+    },
+    "INTC": {
+      "last_price": 56.77,
+      "history": [
+        "-4.84%"
+      ]
+    },
+    "SKHY": {
+      "last_price": 118.8,
+      "history": [
+        "-4.41%"
+      ]
+    },
+    "RKLB": {
+      "last_price": 48.4,
+      "history": [
+        "-2.48%"
+      ]
+    },
+    "NBIS": {
+      "last_price": 93.55,
+      "history": [
+        "-4.35%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
@@ -83172,18 +83293,40 @@
     "link_https://www.tikr.com/blog/trump-urges-nvidia-rehire-jensen-huang-second-chance?ref=yahoofinance&tlnk=yf-261124-4vqr9fj3&.tsrc=rss",
     "title_trumpcallsamericaacountryofsecondchancesandpushesnvidiatorehirejensenhuang_2026-11-24",
     "link_https://finance.yahoo.com/technology/ai/articles/trump-nvidia-power-could-nearing-080011472.html?.tsrc=rss",
-    "title_trumpnvidiaandpowercouldwebenearingtheendoftechsgildedage_2026-11-24"
+    "title_trumpnvidiaandpowercouldwebenearingtheendoftechsgildedage_2026-11-24",
+    "link_https://finance.yahoo.com/energy/articles/equinor-signs-18-gas-supply-083543624.html",
+    "title_equinorsigns18yeargassupplydealwithgermanysvng_2026-11-24",
+    "link_https://finance.yahoo.com/m/c6881563-05e1-3296-9c14-04d76aa8cb98/gold-falls-ahead-of-key-u.s..html",
+    "title_goldfallsaheadofkeyusinflationdata_2026-11-24",
+    "link_https://finance.yahoo.com/markets/currencies/articles/us-dollar-hits-20-month-083521107.html",
+    "title_usdollarhits20monthhighbeforewednesdaysbiginflationtest_2026-11-24",
+    "link_https://finance.yahoo.com/technology/ai/articles/jensen-huang-native-taiwan-welcome-084941247.html",
+    "title_someinjensenhuangsnativetaiwanwelcomehisreturntonvidiadespitescandal_2026-11-24",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-hewlett-packard-enterprise-develop-083915807.html",
+    "title_nvidiahewlettpackardenterprisetodevelopaifoundationwithsunway_2026-11-24",
+    "link_https://finance.yahoo.com/markets/stocks/articles/european-shares-pause-month-best-083749877.html",
+    "title_europeansharespauseaftermonthbestrallyonnvidiaeuphoria_2026-11-24",
+    "link_https://finance.yahoo.com/markets/stocks/articles/david-tepper-cathie-wood-44-082022010.html",
+    "title_davidteppercathiewoodand44otherbigfundsboughtnvidialastquarterwhile27soldwhosright_2026-11-24",
+    "link_https://finance.yahoo.com/technology/ai/articles/nvidia-3-ai-chip-stocks-081204748.html",
+    "title_nvidiaand3aichipstocksforexportcontrolresilientgrowth_2026-11-24",
+    "link_https://finance.yahoo.com/markets/crypto/articles/why-hyperliquid-ceo-rejected-michael-084927360.html",
+    "title_whyhyperliquidceorejectedthemichaelsaylorstylebitcointreasurymodelandbetonhypeinstead_2026-11-24",
+    "link_https://finance.yahoo.com/m/f693e89f-2e59-3030-b3de-9cf2a850423f/european-stocks-mixed-in.html",
+    "title_europeanstocksmixedinmutedopeningtrade_2026-11-24",
+    "link_https://finance.yahoo.com/technology/ai/articles/tech-firms-soar-huangs-return-023753159.html?.tsrc=rss",
+    "title_techfirmssoarashuangsreturnreinvigoratesaitrade_2026-11-24"
   ],
   "stats_today": {
-    "news_dispatches": 67,
-    "price_fires": 0,
+    "news_dispatches": 77,
+    "price_fires": 20,
     "earnings_cards": 293,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 38107,
-    "price_fires": 11991,
+    "news_dispatches": 38117,
+    "price_fires": 12011,
     "earnings_cards": 1293,
     "options_radars": 1221,
     "options_setups": 23100
