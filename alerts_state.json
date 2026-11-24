@@ -1988,10 +1988,11 @@
       ]
     },
     "CBRS": {
-      "last_price": 98.02,
+      "last_price": 99.03,
       "history": [
         "+1.29%",
-        "-0.50%"
+        "-0.50%",
+        "+0.53%"
       ]
     },
     "VRTX": {
@@ -2035,9 +2036,10 @@
       ]
     },
     "AMD": {
-      "last_price": 447.0,
+      "last_price": 451.57,
       "history": [
-        "-1.42%"
+        "-1.42%",
+        "-0.42%"
       ]
     },
     "INTC": {
@@ -2059,9 +2061,10 @@
       ]
     },
     "LRCX": {
-      "last_price": 207.5268,
+      "last_price": 209.6732,
       "history": [
-        "-1.06%"
+        "-1.06%",
+        "-0.04%"
       ]
     },
     "CI": {
@@ -2081,6 +2084,30 @@
       "history": [
         "-1.99%"
       ]
+    },
+    "SLV": {
+      "last_price": 39.4246,
+      "history": [
+        "+1.32%"
+      ]
+    },
+    "DASH": {
+      "last_price": 164.79,
+      "history": [
+        "+2.13%"
+      ]
+    },
+    "RBLX": {
+      "last_price": 50.9742,
+      "history": [
+        "-1.31%"
+      ]
+    },
+    "RKLB": {
+      "last_price": 50.2,
+      "history": [
+        "+1.15%"
+      ]
     }
   },
   "crypto_tickers": {
@@ -2088,6 +2115,12 @@
       "last_price": 8.998,
       "history": [
         "+2.16%"
+      ]
+    },
+    "XRP-USD": {
+      "last_price": 0.943,
+      "history": [
+        "+2.11%"
       ]
     }
   },
@@ -84846,18 +84879,56 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/lightspeed-commerce-tsx-lspd-stock-232221634.html?.tsrc=rss",
     "title_lightspeedcommercetsxlspdstocklooksreasonablegivenitssalesgap_2026-11-23",
     "link_https://finance.yahoo.com/markets/stocks/articles/canadian-pacific-kansas-city-tsx-232043775.html?.tsrc=rss",
-    "title_canadianpacifickansascitytsxcpstocklooksfullypricedfollowingits48run_2026-11-23"
+    "title_canadianpacifickansascitytsxcpstocklooksfullypricedfollowingits48run_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/newmont-stock-climb-back-130-235311274.html",
+    "title_cannewmontstockclimbbackto130_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/own-hp-stock-memory-costs-235829031.html",
+    "title_ownhpstockmemorycostsaretherisk_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/central-garden-pet-q4-earnings-001237837.html",
+    "title_centralgardenpetq4earningscallhighlights_2026-11-23",
+    "link_https://finance.yahoo.com/technology/articles/trump-says-nvidia-board-made-142832710.html",
+    "title_trumpflexesinfluenceaftermidtermlosseswithinterventionatnvidia_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/charged-wall-street-warms-tesla-000523740.html",
+    "title_chargedwallstreetwarmstoteslaasmergerreviewtakescenterstage_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/visa-approves-50-million-performance-001523590.html",
+    "title_visaapproves50millionperformancestockoptionawardforceoryanmcinerney_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/amd-stock-rallies-nearly-8-235832362.html",
+    "title_amdstockralliesnearly8asabernsteinanalystremainsbullishdespitethehunterbrookshortreport_2026-11-23",
+    "link_https://finance.yahoo.com/economy/policy/articles/tariffs-strike-again-343-companies-233642439.html",
+    "title_tariffsstrikeagain343companiesreport285billionintrumptariffrefundsretailbeatsneedasecondlook_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/forget-jpmorgan-upstart-more-lose-233138189.html",
+    "title_forgetjpmorganupstarthasmoretolosefroma10cardratecap_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-motorolas-premium-over-cisco-000246777.html",
+    "title_whymotorolaspremiumoverciscoishardertojustify_2026-11-23",
+    "link_https://finance.yahoo.com/technology/articles/starlink-40x-upgrade-targets-150mbps-233521129.html",
+    "title_starlinks40xupgradetargets150mbpstophonesastspacemobilehasabigproblem_2026-11-23",
+    "link_https://finance.yahoo.com/m/dd8e36db-17fd-3034-b149-73bcad844409/stocks-to-watch-recap%3A.html",
+    "title_stockstowatchrecapnvidiaanthropiczscaler_2026-11-23",
+    "link_https://finance.yahoo.com/media-advertising/articles/zeta-global-targets-2-3-001237824.html",
+    "title_zetaglobaltargets23billionin2028revenueasorganicgrowthaccelerates_2026-11-23",
+    "link_https://finance.yahoo.com/m/016acd67-c9d7-3842-a43f-a79f3eae6363/where-the-ai-trade-goes-after.html",
+    "title_wheretheaitradegoesafterjensenhuang_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palo-alto-really-good-chance-233250402.html",
+    "title_paloaltohasareallygoodchanceofbeingatrilliondollarbusinesssayschamathhereswhatittakes_2026-11-23",
+    "link_https://finance.yahoo.com/markets/stocks/articles/cathie-wood-swapped-nvidia-spacex-000746336.html",
+    "title_cathiewoodswappednvidiaforspacexovertheriskoflosingjensennowjensensback_2026-11-23",
+    "link_https://www.thestreet.com/crypto/markets/home-and-garden-retailer-scales-back-crypto-loses-2-8m?.tsrc=rss",
+    "title_homeandgardenretailerscalesbackcryptoloses28m_2026-11-23",
+    "link_https://www.cryptoprowl.com/releases/grayscale-calls-crypto-oversold-as-21shares-sticks-to-2027-bitcoin-forecast-8037?.tsrc=rss",
+    "title_grayscalecallscryptooversoldas21sharessticksto2027bitcoinforecast_2026-11-23",
+    "link_https://247wallst.com/investing/2026/11/23/jensen-huangs-return-sent-nvidia-soaring-31-heres-what-it-means-for-a-retiree-who-has-to-pull-money-out-of-an-ira-holding-the-stock-by-dec-31/?.tsrc=rss",
+    "title_jensenhuangsreturnsentnvidiasoaring31hereswhatitmeansforaretireewhohastopullmoneyoutofaniraholdingthestockbydec31_2026-11-23"
   ],
   "stats_today": {
-    "news_dispatches": 1144,
-    "price_fires": 567,
+    "news_dispatches": 1158,
+    "price_fires": 575,
     "earnings_cards": 293,
     "options_radars": 13,
     "options_setups": 1300
   },
   "stats_lifetime": {
-    "news_dispatches": 37953,
-    "price_fires": 11979,
+    "news_dispatches": 37967,
+    "price_fires": 11987,
     "earnings_cards": 1293,
     "options_radars": 1221,
     "options_setups": 23100
