@@ -2149,7 +2149,32 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "GC=F": {
+      "last_price": 3602.5,
+      "history": [
+        "+1.14%"
+      ]
+    },
+    "SI=F": {
+      "last_price": 41.335,
+      "history": [
+        "+1.41%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 84.07,
+      "history": [
+        "+2.46%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.674,
+      "history": [
+        "+10.56%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "BTC-USD": {
       "last_price": 59587.24,
@@ -90666,18 +90691,86 @@
     "link_https://unchainedcrypto.com/is-the-ai-correction-over-why-ram-ahluwalia-thinks-the-ai-trade-has-hit-bottom/?.tsrc=rss",
     "title_istheaicorrectionoverwhyramahluwaliathinkstheaitradehashitbottom_2026-11-25",
     "link_https://www.barchart.com/story/news/9003755/kinross-gold-looks-treacherous-but-options-data-highlights-a-high-risk-high-reward-wager-here?.tsrc=rss",
-    "title_kinrossgoldlookstreacherousbutoptionsdatahighlightsahighriskhighrewardwagerhere_2026-11-25"
+    "title_kinrossgoldlookstreacherousbutoptionsdatahighlightsahighriskhighrewardwagerhere_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/salesforce-stock-crm-looks-mispriced-205300259.html",
+    "title_salesforcestockcrmlooksmispricedaftertheaiselloff_2026-11-25",
+    "link_https://finance.yahoo.com/energy/articles/brazils-220-000-bpd-bacalhau-205200049.html",
+    "title_brazils220000bpdbacalhauoilfieldhitbymajorproductionoutage_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/small-caps-blue-chips-outpace-205500309.html",
+    "title_smallcapsandbluechipsoutpacebroadermarketthroughmidweeksession_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sector-tech-stocks-fall-afternoon-204936627.html",
+    "title_sectorupdatetechstocksfalllateafternoon_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/anthropic-broke-83-ipo-price-201635820.html",
+    "title_anthropicbrokeits83ipopricemostgiantsrecovered_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/market-chatter-european-union-meeting-203958161.html",
+    "title_updatemarketchattereuropeanunionmeetingtoapproveteslasfsdacrossblocpostponed_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/space-exploration-technologies-spcx-cheap-201121157.html",
+    "title_isspaceexplorationtechnologiesspcxcheapasteslamergertalksraisevaluationquestions_2026-11-25",
+    "link_https://finance.yahoo.com/healthcare/articles/genscript-convenes-ai-biotech-investment-205900609.html",
+    "title_genscriptconvenesaibiotechandinvestmentleadersinlondonasfasteraienableddrugdesignraisesthestakesforbiologicalevidence_2026-11-25",
+    "link_https://finance.yahoo.com/healthcare/articles/vision-warning-labels-change-novo-201554991.html",
+    "title_willvisionwarninglabelschangenovonordiskscpsenovobnarrative_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/chevron-cut-debt-8-4-204756487.html",
+    "title_chevroncutitsdebtby84billionthese4dividendstockshavefortressbalancesheets_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/much-d-dividend-stocks-generate-201745678.html",
+    "title_howmuchyoudneedindividendstockstogenerate5000amonthinpassiveincome_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sent-qualcomm-stock-higher-202330968.html",
+    "title_whatsentqualcommstockhigher_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/exxonmobil-xom-stock-looks-cheap-201551703.html",
+    "title_exxonmobilxomstocklookscheapagainstfuturecashflowestimates_2026-11-25",
+    "link_https://finance.yahoo.com/m/7a4a70d2-82a7-313f-b7bb-a323a8e6795c/wall-street-gravitates-to.html",
+    "title_wallstreetgravitatestoreliableretailercostcoinrockymarketbutthistestlooms_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-oracle-stock-slumped-today-204012229.html",
+    "title_whyoraclestockslumpedtoday_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/did-arista-networks-stock-fall-203922827.html",
+    "title_didaristanetworksstockfallonitsown_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/xfinity-price-increase-could-game-201232882.html",
+    "title_xfinitypriceincreasecouldbeagamechangerforcomcastcmcsa_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/michael-burry-bets-stock-market-200735599.html",
+    "title_michaelburrybetsonstockmarketrecoveryafterthanksgiving_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/deere-earnings-analysis-questions-answered-204442414.html",
+    "title_deereearningsanalysisquestionsansweredandnextcatalysts_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/deere-q4-2026-earnings-call-204303873.html",
+    "title_deeredeq42026earningscalltranscript_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/why-did-alnylam-stock-move-203202384.html",
+    "title_whydidalnylamstockmove_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/addus-homecare-2-cash-flow-201301359.html",
+    "title_addushomecareand2cashflowstockstowatch_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/microchip-technology-mchp-could-35-201109158.html",
+    "title_microchiptechnologymchpcouldbe35undervaluedfollowingnewfpgaandautonetworkwins_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/does-lyft-lyft-merit-discount-201059070.html",
+    "title_doeslyftlyftmeritadiscountafteritsdriverrewardsdeal_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/workday-earnings-analysis-questions-answered-205123467.html",
+    "title_workdayearningsanalysisquestionsansweredandnextcatalysts_2026-11-25",
+    "link_https://finance.yahoo.com/markets/article/spacex-elon-musk-to-give-one-share-each-to-active-trump-accounts-205719872.html",
+    "title_spacexelonmusktogiveoneshareeachtoactivetrumpaccounts_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/spacex-contribute-newly-issued-shares-203231172.html",
+    "title_spacextocontributenewlyissuedsharestotrumpaccounts_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/asml-holding-enxtam-asml-faces-201500190.html",
+    "title_asmlholdingenxtamasmlfacesdutchpushbackonnewuschinachipcurbs_2026-11-25",
+    "link_https://blockspace.media/short/with-bitcoin-crashing-is-strategy-mstr-in-trouble/?.tsrc=rss",
+    "title_withbitcoincrashingisstrategymstrintrouble_2026-11-25",
+    "link_https://blockspace.media/short/iren-stock-price-is-down-80-over-six-months-heres-why/?.tsrc=rss",
+    "title_irenstockpriceisdown80oversixmonthshereswhy_2026-11-25",
+    "link_https://finance.yahoo.com/video/nvidia-is-cheap-on-paper-so-why-wont-the-market-buy-it-192215326.html?.tsrc=rss",
+    "title_nvidiaischeaponpapersowhywontthemarketbuyit_2026-11-25",
+    "link_https://www.fool.com/investing/2026/11/25/is-jensen-huang-really-worth-usd954-billion-to-nvidia/?.tsrc=rss",
+    "title_isjensenhuangreallyworth954billiontonvidia_2026-11-25",
+    "link_https://www.tikr.com/blog/dells-jeff-clarke-weve-had-no-customers-reschedule-business-thats-good-news-for-nvidia?ref=yahoofinance&tlnk=yf-261125-pm9r283x&.tsrc=rss",
+    "title_dellsjeffclarkewevehadnocustomersreschedulebusinessthatsgoodnewsfornvidia_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/did-free-cash-flow-outlook-201031965.html?.tsrc=rss",
+    "title_didfreecashflowoutlookjustshiftwasteconnectionswcninvestmentnarrative_2026-11-25"
   ],
   "stats_today": {
-    "news_dispatches": 886,
-    "price_fires": 625,
+    "news_dispatches": 909,
+    "price_fires": 629,
     "earnings_cards": 293,
     "options_radars": 13,
     "options_setups": 1300
   },
   "stats_lifetime": {
-    "news_dispatches": 40225,
-    "price_fires": 13164,
+    "news_dispatches": 40248,
+    "price_fires": 13168,
     "earnings_cards": 1293,
     "options_radars": 1247,
     "options_setups": 25700
