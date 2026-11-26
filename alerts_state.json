@@ -1,6 +1,6 @@
 {
   "stock_session_date": "2026-11-25",
-  "crypto_session_date": "2026-11-25",
+  "crypto_session_date": "2026-11-26",
   "premarket_tickers": {
     "CL=F": {
       "last_price": 82.5,
@@ -2190,9 +2190,10 @@
       ]
     },
     "MSTR": {
-      "last_price": 80.7628,
+      "last_price": 81.6093,
       "history": [
-        "+1.00%"
+        "+1.00%",
+        "+2.06%"
       ]
     },
     "AMAT": {
@@ -2210,9 +2211,10 @@
       ]
     },
     "MRVL": {
-      "last_price": 129.6,
+      "last_price": 131.2,
       "history": [
-        "-1.02%"
+        "-1.02%",
+        "+0.21%"
       ]
     },
     "ZS": {
@@ -2228,9 +2230,10 @@
       ]
     },
     "CBRS": {
-      "last_price": 88.75,
+      "last_price": 90.4,
       "history": [
-        "-1.04%"
+        "-1.04%",
+        "+0.80%"
       ]
     },
     "NQ=F": {
@@ -2259,9 +2262,10 @@
       ]
     },
     "ADP": {
-      "last_price": 311.417,
+      "last_price": 316.72,
       "history": [
-        "-1.67%"
+        "-1.67%",
+        "+0.00%"
       ]
     },
     "DASH": {
@@ -2271,59 +2275,67 @@
       ]
     },
     "IREN": {
-      "last_price": 13.0,
+      "last_price": 13.2196,
       "history": [
-        "+1.17%"
+        "+1.17%",
+        "+2.88%"
       ]
     },
     "NBIS": {
-      "last_price": 85.95,
+      "last_price": 87.1,
       "history": [
-        "+1.13%"
+        "+1.13%",
+        "+2.48%"
+      ]
+    },
+    "ORCL": {
+      "last_price": 105.5,
+      "history": [
+        "+1.56%"
+      ]
+    },
+    "INTU": {
+      "last_price": 274.5,
+      "history": [
+        "+1.02%"
+      ]
+    },
+    "TJX": {
+      "last_price": 144.62,
+      "history": [
+        "-1.01%"
+      ]
+    },
+    "ANSS": {
+      "last_price": 15.74,
+      "history": [
+        "-2.14%"
+      ]
+    },
+    "ARM": {
+      "last_price": 163.5059,
+      "history": [
+        "+1.24%"
+      ]
+    },
+    "SNDK": {
+      "last_price": 74.6872,
+      "history": [
+        "+1.46%"
+      ]
+    },
+    "RKLB": {
+      "last_price": 47.76,
+      "history": [
+        "+1.57%"
       ]
     }
   },
   "crypto_tickers": {
-    "BTC-USD": {
-      "last_price": 59587.24,
-      "history": [
-        "-2.44%",
-        "-3.20%",
-        "-0.74%"
-      ]
-    },
-    "SOL-USD": {
-      "last_price": 69.39,
-      "history": [
-        "-3.59%",
-        "-5.00%",
-        "+0.23%"
-      ]
-    },
-    "ETH-USD": {
-      "last_price": 1677.06,
-      "history": [
-        "-2.28%",
-        "-3.91%",
-        "+0.02%"
-      ]
-    },
-    "XRP-USD": {
-      "last_price": 0.9442,
-      "history": [
-        "-2.17%",
-        "-1.75%",
-        "+0.55%",
-        "+2.45%"
-      ]
-    },
     "LINK-USD": {
-      "last_price": 9.077,
+      "last_price": 9.057,
       "history": [
-        "-2.56%",
-        "-4.74%",
-        "-1.05%",
-        "+3.01%"
+        "+2.91%"
       ]
     }
   },
@@ -91132,18 +91144,46 @@
     "link_https://www.tikr.com/blog/aep-or-oge-energy-only-one-gets-my-dividend-dollars-for-the-next-10-years?ref=yahoofinancedividend&tlnk=yf-261125-2m7qqhjq&.tsrc=rss",
     "title_aeporogeenergyonlyonegetsmydividenddollarsforthenext10years_2026-11-23",
     "link_https://finance.yahoo.com/markets/stocks/articles/constellation-software-tsx-csu-stock-231643075.html?.tsrc=rss",
-    "title_constellationsoftwaretsxcsustockcouldbeabargainoncashflow_2026-11-25"
+    "title_constellationsoftwaretsxcsustockcouldbeabargainoncashflow_2026-11-25",
+    "link_https://finance.yahoo.com/markets/commodities/articles/ora-banda-mining-expands-davyhurst-232100649.html",
+    "title_orabandaminingexpandsdavyhurstgoldpipelinewithnewblueytrendandhighgraderegionalhits_2026-11-25",
+    "link_https://finance.yahoo.com/markets/crypto/articles/xrp-good-investment-building-wealth-234250300.html",
+    "title_isxrpagoodinvestmentforbuildingwealthby2035_2026-11-25",
+    "link_https://finance.yahoo.com/technology/articles/microsofts-green-card-filings-reveal-234807020.html",
+    "title_microsoftsgreencardfilingsrevealastrikingpatternaftermasslayoffstrumpsnewrulecouldfreezesponsorshipsfortwoyears_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/overpaying-palantir-stock-versus-rivals-233104992.html",
+    "title_areyouoverpayingforpalantirstockversusitsrivals_2026-11-25",
+    "link_https://finance.yahoo.com/economy/policy/articles/trump-message-big-tech-firms-223005233.html",
+    "title_trumphasamessageforbigtechfirmslikeamazongoogleandmicrosoftbuildingdatacentersabroadweregoingtoputatremendoustaxonthem_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/many-coca-cola-shares-takes-234802485.html",
+    "title_hereshowmanycocacolasharesittakestoearn1300everyquarterindividends_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/altimeter-brad-gerstner-says-nvidia-233902558.html",
+    "title_altimetersbradgerstnersaysnvidiawaspricedfornegativegrowthfor2028and2029wallstreetexpects29_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/spacex-tesla-merge-next-heres-232402788.html",
+    "title_ifspacexandteslamergenextyearhereswhata5000investmentinthecombinedcompanycouldbeworthbytheendof2028_2026-11-25",
+    "link_https://finance.yahoo.com/technology/articles/why-analysis-points-nearly-40-234234929.html",
+    "title_whymyanalysispointstonearly40semiconductorequipmentgrowthin2026_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/sent-moderna-stock-higher-233621042.html",
+    "title_whatsentmodernastockhigher_2026-11-25",
+    "link_https://finance.yahoo.com/markets/crypto/articles/circle-down-13-week-just-233449625.html",
+    "title_circleisdown13inaweekandjusthitanew52weeklowisthesellingoverdone_2026-11-25",
+    "link_https://www.thestreet.com/crypto/markets/bitcoin-miners-bet-big-on-ai-now-one-is-down-70?.tsrc=rss",
+    "title_bitcoinminersbetbigonainowoneisdown70_2026-11-25",
+    "link_https://finance.yahoo.com/markets/stocks/articles/investors-reacting-magna-international-tsx-231534158.html?.tsrc=rss",
+    "title_howinvestorsarereactingtomagnainternationaltsxmgstrongq3results_2026-11-25",
+    "link_https://finance.yahoo.com/energy/articles/caribbean-utilities-company-ltd-welcomes-233800094.html?.tsrc=rss",
+    "title_caribbeanutilitiescompanyltdwelcomesfranzmandersontoboardofdirectors_2026-11-25"
   ],
   "stats_today": {
-    "news_dispatches": 1015,
-    "price_fires": 653,
+    "news_dispatches": 1027,
+    "price_fires": 667,
     "earnings_cards": 293,
     "options_radars": 13,
     "options_setups": 1300
   },
   "stats_lifetime": {
-    "news_dispatches": 40354,
-    "price_fires": 13192,
+    "news_dispatches": 40366,
+    "price_fires": 13206,
     "earnings_cards": 1293,
     "options_radars": 1247,
     "options_setups": 25700
