@@ -1,7 +1,62 @@
 {
   "stock_session_date": "2026-11-27",
   "crypto_session_date": "2026-11-27",
-  "premarket_tickers": {},
+  "premarket_tickers": {
+    "GC=F": {
+      "last_price": 3706.4,
+      "history": [
+        "+4.06%"
+      ]
+    },
+    "SI=F": {
+      "last_price": 44.81,
+      "history": [
+        "+9.94%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 85.84,
+      "history": [
+        "+4.62%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 92.34,
+      "history": [
+        "+1.03%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.593,
+      "history": [
+        "+8.13%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 26851.0,
+      "history": [
+        "+2.19%"
+      ]
+    },
+    "ES=F": {
+      "last_price": 7340.25,
+      "history": [
+        "+1.70%"
+      ]
+    },
+    "YM=F": {
+      "last_price": 50885.0,
+      "history": [
+        "+1.65%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2747.2,
+      "history": [
+        "+2.15%"
+      ]
+    }
+  },
   "regular_tickers": {},
   "afterhours_tickers": {},
   "crypto_tickers": {
@@ -90798,18 +90853,34 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/kyndryl-hermes-international-highlighted-zacks-070900516.html",
     "title_kyndrylandhermesinternationalhavebeenhighlightedaszacksbullandbearoftheday_2026-11-27",
     "link_https://finance.yahoo.com/markets/stocks/articles/stryker-insider-sold-shares-worth-082037819.html",
-    "title_strykerinsidersoldsharesworth1999140accordingtoarecentsecfiling_2026-11-27"
+    "title_strykerinsidersoldsharesworth1999140accordingtoarecentsecfiling_2026-11-27",
+    "link_https://finance.yahoo.com/markets/world-indices/articles/ftse-100-today-stocks-rise-085208572.html",
+    "title_ftse100todaystocksriseasminersleadonmetalsrebound_2026-11-27",
+    "link_https://finance.yahoo.com/energy/articles/zacks-industry-outlook-highlights-conocophillips-074400946.html",
+    "title_zacksindustryoutlookhighlightsconocophillipsoccidentalandcalumet_2026-11-27",
+    "link_https://finance.yahoo.com/energy/articles/berkshire-cut-chevron-third-kept-085000850.html",
+    "title_berkshirecutchevronbyaboutathirdthisyearandkeptoccidentalwhatdoesthatsayaboutoilprices_2026-11-27",
+    "link_https://finance.yahoo.com/energy/articles/oil-track-snap-3-week-082519990.html",
+    "title_oilontracktosnap3weeklosingstreakoversupplyfears_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/european-shares-extend-rally-bruising-083741729.html",
+    "title_europeansharesextendrallybutbruisingnovemberleavesaiscars_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/zacks-market-edge-highlights-royal-073400939.html",
+    "title_zacksmarketedgehighlightsroyalcaribbeancruisesabercrombiefitchandburlingtonstores_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/goldman-sachs-initiates-andritz-buy-083907786.html",
+    "title_goldmansachsinitiatesandritzatbuysees25upsideonhydrogrowth_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/altria-group-considers-cash-offer-084513829.html",
+    "title_altriagroupconsidersallcashofferforimperialbrands_2026-11-27"
   ],
   "stats_today": {
-    "news_dispatches": 30,
-    "price_fires": 2,
+    "news_dispatches": 36,
+    "price_fires": 11,
     "earnings_cards": 302,
     "options_radars": 0,
     "options_setups": 0
   },
   "stats_lifetime": {
-    "news_dispatches": 41043,
-    "price_fires": 13238,
+    "news_dispatches": 41049,
+    "price_fires": 13247,
     "earnings_cards": 1302,
     "options_radars": 1247,
     "options_setups": 25700
