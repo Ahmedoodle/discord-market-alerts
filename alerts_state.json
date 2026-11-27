@@ -939,7 +939,56 @@
       ]
     }
   },
-  "afterhours_tickers": {},
+  "afterhours_tickers": {
+    "GC=F": {
+      "last_price": 3662.8,
+      "history": [
+        "+3.59%"
+      ]
+    },
+    "SI=F": {
+      "last_price": 43.555,
+      "history": [
+        "+8.75%"
+      ]
+    },
+    "CL=F": {
+      "last_price": 82.68,
+      "history": [
+        "-1.20%"
+      ]
+    },
+    "BZ=F": {
+      "last_price": 89.98,
+      "history": [
+        "-4.89%"
+      ]
+    },
+    "NG=F": {
+      "last_price": 3.501,
+      "history": [
+        "+7.10%"
+      ]
+    },
+    "NQ=F": {
+      "last_price": 26608.25,
+      "history": [
+        "+1.95%"
+      ]
+    },
+    "ES=F": {
+      "last_price": 7286.5,
+      "history": [
+        "+1.26%"
+      ]
+    },
+    "RTY=F": {
+      "last_price": 2740.9,
+      "history": [
+        "+1.29%"
+      ]
+    }
+  },
   "crypto_tickers": {
     "LINK-USD": {
       "last_price": 9.313,
@@ -93037,18 +93086,86 @@
     "link_https://finance.yahoo.com/markets/stocks/articles/trump-says-market-selloff-briefly-170723440.html?.tsrc=rss",
     "title_trumpsaysmarketselloffbrieflyworriedhimashedefendsnvidiaceojensenhuang_2026-11-27",
     "link_https://finance.yahoo.com/markets/stocks/articles/royal-bank-scaling-inorganic-efforts-161800084.html?.tsrc=rss",
-    "title_royalbankscalingthroughinorganiceffortswillitdrivegrowth_2026-11-27"
+    "title_royalbankscalingthroughinorganiceffortswillitdrivegrowth_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/stock-market-midday-nov-27-173117564.html",
+    "title_stockmarketmiddaynov27techstocksrecoverandamazonpostsblackfridaygains_2026-11-27",
+    "link_https://finance.yahoo.com/markets/commodities/articles/gold-mining-stocks-hit-oversold-173040173.html",
+    "title_goldminingstockshitoversoldlevelsasfeargripsmarkets_2026-11-27",
+    "link_https://finance.yahoo.com/energy/articles/sector-energy-stocks-rise-friday-174441830.html",
+    "title_sectorupdateenergystocksrisefridayafternoon_2026-11-27",
+    "link_https://finance.yahoo.com/energy/articles/tethys-petroleum-press-release-tpl-174300442.html",
+    "title_tethyspetroleumpressreleasetplinterimresultsandcorporateupdate_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/oracle-frustrated-even-zero-ai-174551474.html",
+    "title_oraclehasfrustratedmebutevenwithzeroairevenuethestockisworth133soimbuyingat104_2026-11-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/hsbc-makes-bullish-2027-call-173744361.html",
+    "title_hsbcmakesbullish2027callastechstocksstruggle_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/tech-stock-sell-off-down-175102945.html",
+    "title_techstockselloffdown32isalphabetabuynow_2026-11-27",
+    "link_https://finance.yahoo.com/m/86a4597f-ee47-3048-ae92-1a56fa4711e5/stock-market-today%3A-dow%2C.html",
+    "title_stockmarkettodaydownasdaqpopinpostholidaytradenvidiafallssandiskvaultshigherlivecoverage_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/snap-vs-trade-desk-stock-175235024.html",
+    "title_snapvsthetradedeskwhichstockisabetterbuyfor2027_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/target-140-entries-240-exits-174502367.html",
+    "title_target140entries240exitsafterkengriffinandcitadelsdistressedbloomenergybuy_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/banks-facing-bond-price-fixing-161219624.html",
+    "title_banksfacingbondpricefixingtrialagreetopayover400million_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/not-amd-1-company-nvidia-173502133.html",
+    "title_notamdthisisthe1companynvidiashouldworryaboutmost_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/adobe-33-2026-slide-worth-174546119.html",
+    "title_adobes332026slideisworthbuyingsayswallstreetanalystpredicting60gainsafterrecentrerating_2026-11-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/adbe-stock-track-4-day-173901382.html",
+    "title_adbestockontrackfor4dayrallyadobereportssurgeinaitraffic71bthanksgivingsales_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/heres-why-spacex-starship-could-174603357.html",
+    "title_hereswhyspacexsstarshipcouldliftlindesspacerevenueupto700_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/one-cash-number-scare-walt-171818293.html",
+    "title_shouldonecashnumberscarewaltdisneyholders_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/adi-stock-still-worth-owning-172500661.html",
+    "title_isadistockstillworthowningafteritsquarter_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/atex-stock-jumps-spacex-reportedly-175256922.html",
+    "title_atexstockjumpsafterspacexreportedlyeyes900mhzspectrumfordirecttodeviceexpansionalternativetargetnnclimbsdoubledigits_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/t-mobile-stocks-next-big-174209152.html",
+    "title_istmobilestocksnextbigthingalreadyhere_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/3-reasons-why-growth-investors-164503786.html",
+    "title_3reasonswhygrowthinvestorsshouldntoverlookintuitivesurgicalisrg_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/anthropic-short-interest-climbs-ipo-172907093.html",
+    "title_anthropicshortinterestclimbsasipolockupexpirynears_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palantir-raised-2026-growth-outlook-173336289.html",
+    "title_palantirraisedits2026growthoutlookto91couldthestockhavemoreroomtorun_2026-11-27",
+    "link_https://finance.yahoo.com/technology/ai/articles/pltr-vs-arm-ai-tech-165200990.html",
+    "title_pltrvsarmwhichaitechstockisbetterpositionednow_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/archer-aviation-still-down-18-175743264.html",
+    "title_archeraviationisstilldown18inamonthwas3thepermanentfloorforachrstock_2026-11-27",
+    "link_https://finance.yahoo.com/m/dbedc11e-6aeb-3d91-9dd5-1e1027e44b33/anthropic-jumps-back-above.html",
+    "title_anthropicjumpsbackaboveitsipopriceasaistocksrebound_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/palo-alto-networks-hit-fraud-174700567.html",
+    "title_paloaltonetworkshitwithfraudclaimsafterblowoutquarter_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/paypal-vs-remitly-digital-payments-165200907.html",
+    "title_paypalvsremitlywhichdigitalpaymentsstockhastheedge_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/investors-hold-csx-stock-despite-162600831.html",
+    "title_shouldinvestorsholdcsxstockdespiteitshighervaluation_2026-11-27",
+    "link_https://finance.yahoo.com/m/6f3e2d6d-374b-3f3f-83a4-0cbdd1522dab/viking%2C-ibd-stock-of-the-day%2C.html",
+    "title_vikingibdstockofthedayiscruisingtowardbuypointsafterscrapingbottom_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/iren-stock-jumps-8-analysts-173438398.html",
+    "title_irenstockjumps8asanalystssee340upsidedespitesellsignals_2026-11-27",
+    "link_https://finance.yahoo.com/energy/articles/oil-glut-everyone-expected-looking-170400606.html?.tsrc=rss",
+    "title_theoilgluteveryoneexpectedislookingincreasinglyelusive_2026-11-27",
+    "link_https://www.trefis.com/stock/amzn/articles/629380/does-amazon-s-profit-hang-on-one-business/2026-11-27?.tsrc=rss",
+    "title_doesamazonsprofithangononebusiness_2026-11-27",
+    "link_https://finance.yahoo.com/markets/stocks/articles/shopify-vs-wix-com-e-162100901.html?.tsrc=rss",
+    "title_shopifyvswixcomwhichecommercestockhasanedgerightnow_2026-11-27",
+    "link_https://247wallst.com/investing/2026/11/27/three-companies-control-canadas-phone-bills-and-hockey-broadcasts-90000-in-their-stocks-pays-4373-a-year/?.tsrc=rss",
+    "title_threecompaniescontrolcanadasphonebillsandhockeybroadcasts90000intheirstockspays4373ayear_2026-11-27"
   ],
   "stats_today": {
-    "news_dispatches": 499,
-    "price_fires": 208,
+    "news_dispatches": 526,
+    "price_fires": 216,
     "earnings_cards": 310,
     "options_radars": 7,
     "options_setups": 700
   },
   "stats_lifetime": {
-    "news_dispatches": 41512,
-    "price_fires": 13444,
+    "news_dispatches": 41539,
+    "price_fires": 13452,
     "earnings_cards": 1310,
     "options_radars": 1254,
     "options_setups": 26400
